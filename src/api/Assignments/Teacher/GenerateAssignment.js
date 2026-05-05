@@ -1,6 +1,4 @@
-export const generateAssignment = async (title, subject, difficulty, className, questionCount) => {
-    
-    console.log(className)
+export const generateAssignment = async (title, subject, difficulty, className, questionCount, questionType) => {
     try {
         const response = await fetch('/api/assignments/teacher/generate', {
             method: 'POST',
@@ -13,7 +11,8 @@ export const generateAssignment = async (title, subject, difficulty, className, 
                 subject,
                 difficulty,
                 className,
-                questionCount
+                questionCount,
+                questionType,
             }),
         });
 

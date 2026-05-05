@@ -4,57 +4,72 @@ import { fetchClasses } from '../api/ClassesForReg';
 import '../styles/Registration.css';
 import logo from '../assets/logo-400.png';
 
+const CANONICAL_SUBJECTS = ['Nyelvtan', 'Irodalom', 'Angol', 'Matematika', 'Környezetismeret'];
+
 const RegistrationForm = () => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         password: '',
         role: 'student',
-        subject: '',
+        subjects: [],
         className: '',
     });
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [classes, setClasses] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const loadClasses = async () => {
             try {
                 const fetchedClasses = await fetchClasses();
                 setClasses(fetchedClasses);
-            } catch (error) {
-                setError(error.message || 'Hiba történt az osztályok betöltése során.');
+            } catch (err) {
+                setError(err.message || 'Hiba történt az osztályok betöltése során.');
             }
         };
-
         loadClasses();
     }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData((prevData) => ({
-            ...prevData,
-            [name]: value,
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubjectToggle = (subject) => {
+        setFormData((prev) => ({
+            ...prev,
+            subjects: prev.subjects.includes(subject)
+                ? prev.subjects.filter((s) => s !== subject)
+                : [...prev.subjects, subject],
         }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (formData.role === 'teacher' && formData.subjects.length === 0) {
+            setError('Legalább egy tantárgyat kötelező kiválasztani.');
+            return;
+        }
+        setIsSubmitting(true);
+        setError('');
+        setMessage('');
         try {
-            const response = await registerUser(formData);
+            const payload = {
+                name: formData.name,
+                email: formData.email,
+                password: formData.password,
+                role: formData.role,
+                ...(formData.role === 'teacher' ? { subjects: formData.subjects } : { className: formData.className }),
+            };
+            const response = await registerUser(payload);
             setMessage(response.message);
-            setError('');
-            setFormData({
-                name: '',
-                email: '',
-                password: '',
-                role: 'student',
-                subject: '',
-                className: '',
-            });
-        } catch (error) {
-            setError(error.message);
-            setMessage('');
+            setFormData({ name: '', email: '', password: '', role: 'student', subjects: [], className: '' });
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -94,33 +109,42 @@ const RegistrationForm = () => {
                     <option value="student">Diák</option>
                     <option value="teacher">Tanár</option>
                 </select>
+
                 {formData.role === 'teacher' && (
-                    <input
-                        type="text"
-                        name="subject"
-                        placeholder="Tantárgy"
-                        value={formData.subject}
-                        onChange={handleChange}
-                    />
+                    <div className="subjects-group">
+                        <span className="subjects-label">Tantárgyak (legalább 1):</span>
+                        {CANONICAL_SUBJECTS.map((subject) => (
+                            <label key={subject} className="subject-checkbox-label">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.subjects.includes(subject)}
+                                    onChange={() => handleSubjectToggle(subject)}
+                                />
+                                {subject}
+                            </label>
+                        ))}
+                    </div>
                 )}
+
                 {formData.role === 'student' && (
-                    <>
-                        <select
-                            name="className"
-                            value={formData.className}
-                            onChange={handleChange}
-                            required
-                        >
-                            <option value="">Válassz osztályt</option>
-                            {classes.map((classItem) => (
-                                <option key={classItem._id} value={classItem.name}>
-                                    {classItem.name}
-                                </option>
-                            ))}
-                        </select>
-                    </>
+                    <select
+                        name="className"
+                        value={formData.className}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="">Válassz osztályt</option>
+                        {classes.map((classItem) => (
+                            <option key={classItem._id} value={classItem.name}>
+                                {classItem.name}
+                            </option>
+                        ))}
+                    </select>
                 )}
-                <button type="submit" className="main-button">Regisztráció</button>
+
+                <button type="submit" className="main-button" disabled={isSubmitting}>
+                    {isSubmitting ? 'Regisztráció...' : 'Regisztráció'}
+                </button>
 
                 {message && <p className="success-message">{message}</p>}
                 {error && <p className="error-message">{error}</p>}

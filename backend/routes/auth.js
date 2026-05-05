@@ -10,7 +10,7 @@ const authenticateUser = require('../middleware/authenticateUser');
 // Regisztráció végpont
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, role, subject, className } = req.body;
+    const { name, email, password, role, subjects, className } = req.body;
 
     // Ellenőrzi, hogy az email cím már használatban van-e
     const existingUser = await User.findOne({ email });
@@ -26,7 +26,7 @@ router.post('/register', async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      subject: role === 'teacher' ? subject : null,
+      subjects: role === 'teacher' ? (subjects || []) : [],
       className: role === 'student' ? className : null,
       createdAt: new Date()
     });
@@ -200,6 +200,35 @@ router.put('/update-password', authenticateUser, async (req, res) => {
   } catch (error) {
     console.error('Hiba történt a jelszó módosítása során:', error);
     res.status(500).json({ message: 'Hiba történt a jelszó módosítása során.' });
+  }
+});
+
+const ALLOWED_SUBJECTS = ['Nyelvtan', 'Irodalom', 'Angol', 'Matematika', 'Környezetismeret'];
+
+// Profil frissítése (név, email, tantárgyak)
+router.put('/update-profile', authenticateUser, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { name, email, subjects } = req.body;
+
+    const updateFields = {};
+    if (name && name.trim()) updateFields.name = name.trim();
+    if (email && email.trim()) {
+      const existing = await User.findOne({ email: email.trim(), _id: { $ne: userId } });
+      if (existing) return res.status(400).json({ message: 'Ez az e-mail cím már foglalt.' });
+      updateFields.email = email.trim();
+    }
+    if (Array.isArray(subjects)) {
+      updateFields.subjects = subjects.filter(s => ALLOWED_SUBJECTS.includes(s));
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, updateFields, { new: true }).select('-password');
+    if (!updatedUser) return res.status(404).json({ message: 'Felhasználó nem található.' });
+
+    res.status(200).json({ message: 'Profil sikeresen frissítve.', user: updatedUser });
+  } catch (error) {
+    console.error('Hiba a profil frissítése során:', error);
+    res.status(500).json({ message: 'Hiba történt a profil frissítése során.' });
   }
 });
 

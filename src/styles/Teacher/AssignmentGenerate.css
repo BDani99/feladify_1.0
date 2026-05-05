@@ -83,6 +83,12 @@ h1 {
     font-weight: bold;
 }
 
+.generate-info-text {
+    color: #bbb;
+    font-size: 0.9rem;
+    margin-top: 4px;
+}
+
 .generate-loading-container {
     display: flex;
     flex-direction: column;

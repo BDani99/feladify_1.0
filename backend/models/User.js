@@ -18,10 +18,16 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['teacher', 'student'], required: true },
-  subject: { 
-    type: String, 
-    required: function() { return this.role === 'teacher'; }, 
-    message: 'A tantárgy megadása kötelező a tanároknak.' 
+  subjects: {
+    type: [String],
+    default: [],
+    validate: {
+      validator: function(v) {
+        if (this.role === 'teacher') return v && v.length > 0;
+        return true;
+      },
+      message: 'Legalább egy tantárgy megadása kötelező a tanároknak.'
+    }
   },
   className: { 
     type: String, 

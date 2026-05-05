@@ -3,39 +3,53 @@ const jwt = require('jsonwebtoken'); // Importáljuk a JWT-t a token kezeléséh
 const Assignment = require('../models/Assignment');
 const User = require('../models/User');
 const Class = require('../models/Class');
-const openai = require('../services/openai');
+const { generateText, generateChat } = require('../services/groq');
 const router = express.Router();
 const authenticateTeacher = require('../middleware/authenticateTeacher');
 const authenticateStudent = require('../middleware/authenticateStudent');
 const authenticateUser = require('../middleware/authenticateUser');
 
+const DIFFICULTY_DESCRIPTIONS = {
+  'Könnyű': 'egyszerű, egylépéses kérdések, amelyek közvetlen tényismeretet mérnek, 1-4. osztályos szinten',
+  'Közepes': 'többlépéses kérdések, amelyek megértést és alkalmazást igényelnek, 5-6. osztályos szinten',
+  'Nehéz': 'összetett kérdések, amelyek analízist és kritikus gondolkodást igényelnek, 7-8. osztályos szinten',
+};
+
+function parseJsonQuestions(text) {
+  const attempts = [
+    () => JSON.parse(text),
+    () => { const m = text.match(/```(?:json)?\s*([\s\S]+?)\s*```/); if (m) return JSON.parse(m[1]); },
+    () => { const m = text.match(/\{[\s\S]+\}/); if (m) return JSON.parse(m[0]); },
+  ];
+  for (const attempt of attempts) {
+    try { const r = attempt(); if (r) return r; } catch {}
+  }
+  return null;
+}
+
 // Feladatsor generálása, csak tanároknak
 router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
   try {
-    const { title, subject, difficulty, className, questionCount } = req.body;
+    const { title, subject, difficulty, className, questionCount, questionType = 'nyilt' } = req.body;
 
-    // Hiányzó mezők ellenőrzése
     const missingFields = [];
     if (!title) missingFields.push('title');
     if (!subject) missingFields.push('subject');
     if (!difficulty) missingFields.push('difficulty');
     if (!className) missingFields.push('className');
     if (!questionCount) missingFields.push('questionCount');
-
-    // Ha vannak hiányzó mezők, visszaadjuk őket egy részletes hibaüzenetben
     if (missingFields.length > 0) {
       return res.status(400).json({ message: `A következő mezők megadása kötelező: ${missingFields.join(', ')}.` });
     }
 
     const numQuestions = Number.isInteger(questionCount) && questionCount > 0 ? questionCount : 5;
+    const diffDesc = DIFFICULTY_DESCRIPTIONS[difficulty] || difficulty;
 
-    // Osztály ID lekérdezése a megadott osztály név alapján
     const classData = await Class.findOne({ name: className });
     if (!classData) {
       return res.status(400).json({ message: 'Az adott osztály nem található.' });
     }
 
-    // Osztály diákjainak lekérdezése
     const students = await User.find({ role: 'student', className: classData.name }).select('_id');
     if (students.length === 0) {
       return res.status(400).json({ message: 'Nincs diák az adott osztályban.' });
@@ -43,32 +57,40 @@ router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
 
     const studentIds = students.map(student => student._id);
 
-    // Prompt a kérdések generálásához
-    const prompt = `Készíts ${numQuestions} darab ${difficulty} nehézségű ${subject} kérdést a következő témában: "${title}". Minden kérdéshez add meg a helyes választ is. Példa formátum: "1. Kérdés: ... Helyes válasz: ...".`;
-    const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 500 * numQuestions,
-      temperature: 0.7,
-    });
+    let prompt;
+    if (questionType === 'feleletvalasztos') {
+      prompt = `Készíts pontosan ${numQuestions} db feleletválasztós ${subject} kérdést a(z) "${title}" témakörből.
+Nehézség: ${diffDesc}.
+Minden kérdésnek legyen 4 válaszlehetősége (A, B, C, D), amelyek közül pontosan egy helyes.
+A kérdések és válaszok legyenek általános iskolás szintűek, rövidek és egyértelműek.
 
-    const responseText = response.choices[0].message.content.trim();
-    const questionArray = responseText.split(/\d+\.\s+Kérdés:\s+/).filter(Boolean);
+Kizárólag ezt a JSON formátumot add vissza, semmi mást, semmi magyarázat:
+{"questions":[{"questionText":"Kérdés szövege","options":["A: első lehetőség","B: második lehetőség","C: harmadik lehetőség","D: negyedik lehetőség"],"correctAnswer":"A: első lehetőség"}]}`;
+    } else {
+      prompt = `Készíts pontosan ${numQuestions} db nyílt végű ${subject} kérdést a(z) "${title}" témakörből.
+Nehézség: ${diffDesc}.
+Minden kérdésre adj rövid, pontos helyes választ (1-2 mondat).
+A kérdések és válaszok legyenek általános iskolás szintűek és egyértelműek.
 
-    // Kérdések létrehozása
-    const questions = questionArray.slice(0, numQuestions).map((q) => {
-      const [questionText, correctAnswer] = q.split('Helyes válasz:').map((s) => s.trim());
-      return {
-        questionText: questionText,
-        correctAnswer: correctAnswer || null,
-        points: 1, // Minden kérdéshez 1 pontot állítunk be alapértelmezésként
-        studentAnswer: null,
-        score: 0,
-      };
-    });
+Kizárólag ezt a JSON formátumot add vissza, semmi mást, semmi magyarázat:
+{"questions":[{"questionText":"Kérdés szövege","correctAnswer":"Helyes válasz szövege"}]}`;
+    }
 
-    // Teljes pontszám kiszámítása
-    const totalPoints = questions.reduce((sum, question) => sum + question.points, 0);
+    const responseText = await generateText(prompt);
+    const parsed = parseJsonQuestions(responseText);
+
+    if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
+      return res.status(500).json({ message: 'A kérdések generálása sikertelen. Kérjük, próbálja újra.' });
+    }
+
+    const questions = parsed.questions.slice(0, numQuestions).map(q => ({
+      questionText: (q.questionText || '').trim(),
+      options: Array.isArray(q.options) ? q.options : [],
+      correctAnswer: (q.correctAnswer || '').trim() || null,
+      points: 1,
+    }));
+
+    const totalPoints = questions.length;
 
     const assignment = new Assignment({
       teacherId: req.userId,
@@ -77,8 +99,8 @@ router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
       difficulty,
       questions,
       studentIds,
-      totalPoints, // Maximális pontszám beállítása
-      achievedPoints: 0, // Kezdetben nincs elért pontszám
+      totalPoints,
+      achievedPoints: 0,
       createdAt: new Date(),
     });
 
@@ -364,24 +386,16 @@ router.post('/student/submit/:assignmentId', authenticateStudent, async (req, re
       let score = 0;
 
       if (studentAnswer) {
-        // Use GPT to check if the student's answer matches the correct answer
-        const prompt = `Is the following answer correct based on the provided correct answer? Please answer "yes" or "no".
-        
-        Question: ${question.questionText}
-        Correct Answer: ${question.correctAnswer}
-        Student's Answer: ${studentAnswer}`;
+        const evalPrompt = `Is the following answer correct based on the provided correct answer? Please answer "yes" or "no".
 
-        const response = await openai.chat.completions.create({
-          model: 'gpt-3.5-turbo',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 10,
-          temperature: 0.5,
-        });
+Question: ${question.questionText}
+Correct Answer: ${question.correctAnswer}
+Student's Answer: ${studentAnswer}`;
 
-        const gptResponse = response.choices[0].message.content.trim().toLowerCase();
+        const evalResponse = await generateText(evalPrompt);
+        const geminiAnswer = evalResponse.trim().toLowerCase();
 
-        // If GPT considers the answer correct, grant full points for the question
-        if (gptResponse === 'yes') {
+        if (geminiAnswer.startsWith('yes')) {
           score = question.points;
           achievedPoints += question.points;
         }
@@ -478,174 +492,142 @@ const mongoose = require('mongoose');
 
 router.post('/chat', authenticateUser, async (req, res) => {
   try {
-    const userMessage = req.body.message; // User message
-    const userId = req.userId; // Authenticated user ID
+    const userMessage = req.body.message;
+    const userObjectId = new mongoose.Types.ObjectId(req.userId);
 
-    const dbSchema = `
-    1. **Assignment / Dolgozat**: 
-       - **Table Name / Tábla neve**: \`assignments\` / \`dolgozatok\`
-       - **Description / Leírás**: Ez a tábla a tanárok által generált dolgozatokat tartalmazza a diákoknak.
-       - **Fields / Mezők**: 
-         - \`_id\`: \`ObjectId\` (required) - Az egyedi azonosító a dolgozathoz.
-         - \`teacherId\`: \`ObjectId\` (reference to User) - A tanár azonosítója, aki létrehozta a dolgozatot.
-         - \`title\`: \`String\` (required) - A dolgozat címe.
-         - \`subject\`: \`String\` (required) - A dolgozat tantárgya.
-         - \`difficulty\`: \`String\` (required) - A dolgozat nehézségi szintje (pl. könnyű, közepes, nehéz).
-         - \`questions\`: \`Array\` of question objects (sub-document) - A dolgozathoz kapcsolódó kérdések.
-           - \`questionText\`: \`String\` (required) - A kérdés szövege.
-           - \`correctAnswer\`: \`String\` (default: null) - A kérdésre a helyes válasz.
-           - \`points\`: \`Number\` (default: 1) - A helyes válaszért járó pontok száma.
-         - \`studentIds\`: \`Array\` of \`ObjectId\` (references to User) - A dolgozathoz rendelt diákok listája.
-         - \`totalPoints\`: \`Number\` (default: 0) - A dolgozat maximális elérhető pontszáma.
-         - \`completedCount\`: \`Number\` (default: 0) - A dolgozatot befejező diákok száma.
-         - \`createdAt\`: \`Date\` (default: Date.now) - A dolgozat létrehozásának dátuma.
-    
-    2. **User / Felhasználó**: 
-       - **Table Name / Tábla neve**: \`users\` / \`felhasználók\`
-       - **Description / Leírás**: Ez a tábla a felhasználók, beleértve a tanárokat és a diákokat tárolja.
-       - **Fields / Mezők**: 
-         - \`_id\`: \`ObjectId\` (required) - Az egyedi azonosító a felhasználóhoz.
-         - \`name\`: \`String\` (required) - A felhasználó neve.
-         - \`email\`: \`String\` (unique, required) - A felhasználó email címe.
-         - \`password\`: \`String\` (required) - A felhasználó jelszava (hash-elt).
-         - \`role\`: \`String\` (enum: ['teacher', 'student'], required) - A felhasználó szerepe a rendszerben.
-         - \`subject\`: \`String\` (required for teachers) - A tanár által tanított tantárgy.
-         - \`assignments\`: \`Array\` of assignmentAnswer objects (sub-document) - A felhasználó által adott válaszokat tartalmazza.
-           - \`assignmentId\`: \`ObjectId\` (reference to Assignment) - A dolgozat azonosítója.
-           - \`answers\`: \`Array\` of answer objects - A felhasználó által megadott válaszok.
-             - \`questionId\`: \`ObjectId\` (reference to Question, required) - A megválaszolt kérdés azonosítója.
-             - \`studentAnswer\`: \`String\` (required) - A diák által adott válasz.
-             - \`score\`: \`Number\` (default: 0) - A válaszért kapott pontszám.
-           - \`achievedPoints\`: \`Number\` (default: 0) - A felhasználó által a dolgozatokon elért összpontszám.
-           - \`completedAt\`: \`Date\` (default: Date.now) - A dolgozat befejezésének dátuma.
-         - \`createdAt\`: \`Date\` (default: Date.now) - A felhasználó létrehozásának dátuma.
-    
-    3. **Class / Osztály**: 
-       - **Table Name / Tábla neve**: \`classes\` / \`osztályok\`
-       - **Description / Leírás**: Ez a tábla az osztályokkal kapcsolatos információkat tárolja, beleértve a diákokat és a tanárokat.
-       - **Fields / Mezők**: 
-         - \`_id\`: \`ObjectId\` (required) - Az egyedi azonosító az osztályhoz.
-         - \`name\`: \`String\` (unique, required) - Az osztály neve. (kérdésnél, ha az osztályokat kérdezik, ezeket a neveket kell visszadani)
-         - \`studentIds\`: \`Array\` of \`ObjectId\` (references to User) - Az osztályba beiratkozott diákok listája.
-         - \`teacherIds\`: \`Array\` of \`ObjectId\` (references to User) - Az osztályhoz rendelt tanárok listája.
-    
-    4. **Question / Kérdés**: 
-       - **Table Name / Tábla neve**: \`questions\` / \`kérdések\`
-       - **Description / Leírás**: Ez a tábla a dolgozatokhoz tartozó kérdéseket tárolja.
-       - **Fields / Mezők**:
-         - \`_id\`: \`ObjectId\` (required) - Az egyedi azonosító a kérdéshez.
-         - \`questionText\`: \`String\` (required) - A kérdés szövege.
-         - \`correctAnswer\`: \`String\` (default: null) - A kérdés helyes válasza.
-         - \`points\`: \`Number\` (default: 1) - A helyes válaszért járó pontok száma.
-    `;
+    const [teacherAssignments, teacherClasses, teacherUser] = await Promise.all([
+      Assignment.find({ teacherId: userObjectId }).lean(),
+      Class.find({ teacherIds: userObjectId }).populate('studentIds', 'name className assignments').lean(),
+      User.findById(userObjectId).select('-password').lean(),
+    ]);
 
+    // Osztályok és diákok formázása
+    const classLines = teacherClasses.length > 0
+      ? teacherClasses.map(c => {
+          const students = c.studentIds || [];
+          const studentDetails = students.map(s => {
+            const completedCount = (s.assignments || []).length;
+            const totalAchieved = (s.assignments || []).reduce((sum, a) => sum + (a.achievedPoints || 0), 0);
+            return `    • ${s.name}: ${completedCount} megírt dolgozat, összesen ${totalAchieved} pont`;
+          });
+          return `  - ${c.name} (${students.length} diák)${studentDetails.length > 0 ? ':\n' + studentDetails.join('\n') : ''}`;
+        }).join('\n')
+      : '  Nincs hozzárendelt osztály.';
 
-    // Step 2: Send the user message and database schema to OpenAI
-    const prompt = `A felhasználó üzenete: "${userMessage}". A következő adatbázis felépítés áll rendelkezésre: ${dbSchema}. Kérlek, határozd meg, hogy melyik táblából és melyik oszlopból kell lekérdezni az adatokat a felhasználóhoz kapcsolódóan. A táblák nevei: "assignments", "users", "classes", "questions". Kérlek, add vissza JSON formátumban: {"table": "tableName", "fields": ["field1", "field2"]} vagy {"table": "tableName", "fields": null} ha az egész táblára szükség van. Semmilyen esetben sem adj meg más szöveget csak JSON választ!`;
+    // Dolgozatok formázása
+    const assignmentLines = teacherAssignments.length > 0
+      ? teacherAssignments.map(a => {
+          const studentCount = (a.studentIds || []).length;
+          return `  - "${a.title}" | tantárgy: ${a.subject} | nehézség: ${a.difficulty} | teljesítette: ${a.completedCount || 0}/${studentCount} diák | max pont: ${a.totalPoints}`;
+        }).join('\n')
+      : '  Még nem hozott létre dolgozatot.';
 
-    const aiResponse = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 150,
-      temperature: 0.5,
-    });
+    const systemPrompt = `Te a Feladify általános iskolai oktatási platform asszisztense vagy. Magyarul, magabiztosan és tömören válaszolj. A felhasználó egy tanár.
 
-    const aiInstruction = aiResponse.choices[0].message.content.trim();
-    console.log('AI instruction:', aiInstruction);
+=== A TANÁR ADATAI (ezek tények, nem kell hozzájuk kétség) ===
+Neve: ${teacherUser.name}
+Tantárgyai: ${(teacherUser.subjects || []).join(', ') || 'nincs megadva'}
 
-    // Parse the AI's JSON response
-    let parsedInstruction;
-    try {
-      // Handle multiple JSON responses
-      const instructions = aiInstruction.split(/\n/).filter(line => line.trim() !== '');
-      parsedInstruction = instructions.map(instruction => JSON.parse(instruction));
-    } catch (error) {
-      return res.status(400).json({ message: 'Érvénytelen JSON válasz az AI-tól.' });
-    }
+=== OSZTÁLYAI (ezekben tanít) ===
+${classLines}
 
-    const userObjectId = new mongoose.Types.ObjectId(userId);
-    let dataToReturn = [];
+=== DOLGOZATAI ===
+${assignmentLines}
+=== VÉGE ===
 
-    // Process each instruction
-    for (const { table, fields } of parsedInstruction) {
-      const normalizedTable = table.toLowerCase();
+Szabályok:
+1. A fenti adatok PONTOS TÉNYEK a rendszerből. Fogadd el őket igazként és válaszolj belőlük magabiztosan.
+2. Ne mondd azt, hogy "nem tudom pontosan" vagy "sajnos nincs információ" ha az adat szerepel fent.
+3. Ha valóban nincs adat (pl. üres lista), akkor és csak akkor jelezd.
+4. Ne adj általános tudásbázis-választ, csak a fenti adatokra alapozz.
+5. Rövid, lényegre törő válaszokat adj.`;
 
-      if (fields === null) {
-        // If fields is null, fetch all data
-        switch (normalizedTable) {
-          case 'assignments':
-            dataToReturn.push(await Assignment.find({ studentIds: userObjectId }).lean());
-            break;
-          case 'users':
-            dataToReturn.push(await User.find({ _id: userObjectId }).lean());
-            break;
-          case 'classes':
-            const classes = await Class.find({
-              $or: [{ studentIds: userObjectId }, { teacherIds: userObjectId }]
-            }).populate('studentIds', 'name').populate('teacherIds', 'name').lean();
-
-            if (classes.length === 0) {
-              return res.status(200).json({ message: 'Nincsenek osztályaid.' });
-            }
-
-            const classDetails = classes.map(cls => ({
-              name: cls.name,
-              students: cls.studentIds.map(student => student.name),
-              teachers: cls.teacherIds.map(teacher => teacher.name)
-            }));
-
-            dataToReturn.push(classDetails);
-            break;
-          case 'questions':
-            dataToReturn.push(await Question.find({}).lean());
-            break;
-          default:
-            return res.status(400).json({ message: 'Nem tudom értelmezni a kérdést.' });
-        }
-      } else {
-        // Specific fields requested
-        switch (normalizedTable) {
-          case 'assignments':
-            dataToReturn.push(await Assignment.find({ teacherId: userObjectId }, fields).lean());
-            break;
-          case 'users':
-            dataToReturn.push(await User.find({ _id: userObjectId }, fields).lean());
-            break;
-          case 'classes':
-            dataToReturn.push(await Class.find({
-              $or: [{ studentIds: userObjectId }, { teacherIds: userObjectId }]
-            }, fields).lean());
-            break;
-          case 'questions':
-            dataToReturn.push(await Question.find({}, fields).lean());
-            break;
-          default:
-            return res.status(400).json({ message: 'Nem tudom értelmezni a kérdést.' });
-        }
-      }
-    }
-
-    console.log('dataToReturn:', dataToReturn);
-
-    // Step 4: Send the original user message and the retrieved data back to OpenAI for a final response
-    const finalPrompt = `Te egy oktatási platform chatbotja vagy. Formális módon válaszolj. Minden adat amit kapsz a felhasználóhoz tartozik aki kérdez. A felhasználó a következő kérdést tette fel: "${userMessage}". Az adat, amit lekérdeztünk: ${JSON.stringify(dataToReturn)}. Kérlek, válaszolj a felhasználónak.`;
-
-    const finalResponse = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: finalPrompt }],
-      max_tokens: 200,
-      temperature: 0.5,
-    });
-
-    const userResponse = finalResponse.choices[0].message.content.trim();
-
-    // Step 5: Send the final response back to the user
-    res.status(200).json({ message: userResponse });
+    const responseText = await generateChat(systemPrompt, userMessage);
+    res.status(200).json({ message: responseText });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Hiba történt a chatbot feldolgozása során.' });
   }
 });
 
+
+// Részletes statisztika: osztályonként, tantárgyanként, top/bottom diákok
+router.get('/teacher/detailed-statistics', authenticateTeacher, async (req, res) => {
+  try {
+    const teacherId = req.userId;
+    const teacherObjectId = new mongoose.Types.ObjectId(teacherId);
+
+    const assignments = await Assignment.find({ teacherId: teacherObjectId }).lean();
+    const assignmentIds = assignments.map(a => a._id);
+
+    const classes = await Class.find({ teacherIds: teacherObjectId })
+      .populate('studentIds', 'name className assignments')
+      .lean();
+
+    // Tantárgyankénti bontás
+    const subjectMap = {};
+    for (const a of assignments) {
+      if (!subjectMap[a.subject]) subjectMap[a.subject] = { total: 0, completed: 0 };
+      subjectMap[a.subject].total += 1;
+      subjectMap[a.subject].completed += a.completedCount || 0;
+    }
+    const subjectBreakdown = Object.entries(subjectMap).map(([subject, data]) => ({
+      subject,
+      totalAssignments: data.total,
+      completedCount: data.completed,
+    }));
+
+    // Osztályonkénti bontás + diák teljesítmény
+    const classBreakdown = [];
+    const studentScores = [];
+
+    for (const cls of classes) {
+      let classAchieved = 0;
+      let classPossible = 0;
+      let classCompleted = 0;
+
+      for (const student of cls.studentIds || []) {
+        const relevantAnswers = (student.assignments || []).filter(ans =>
+          assignmentIds.some(id => id.equals(ans.assignmentId))
+        );
+        const achieved = relevantAnswers.reduce((sum, a) => sum + (a.achievedPoints || 0), 0);
+        const possible = relevantAnswers.reduce((sum, a) => {
+          const asgn = assignments.find(x => x._id.equals(a.assignmentId));
+          return sum + (asgn ? asgn.totalPoints : 0);
+        }, 0);
+
+        classCompleted += relevantAnswers.length;
+        classAchieved += achieved;
+        classPossible += possible;
+
+        if (possible > 0) {
+          studentScores.push({
+            name: student.name,
+            className: cls.name,
+            achievedPoints: achieved,
+            possiblePoints: possible,
+            percentage: ((achieved / possible) * 100).toFixed(1),
+          });
+        }
+      }
+
+      classBreakdown.push({
+        className: cls.name,
+        studentCount: (cls.studentIds || []).length,
+        completedAssignments: classCompleted,
+        avgPercentage: classPossible > 0 ? ((classAchieved / classPossible) * 100).toFixed(1) : '0.0',
+      });
+    }
+
+    studentScores.sort((a, b) => parseFloat(b.percentage) - parseFloat(a.percentage));
+    const topStudents = studentScores.slice(0, 5);
+    const bottomStudents = [...studentScores].reverse().slice(0, 5);
+
+    res.status(200).json({ classBreakdown, subjectBreakdown, topStudents, bottomStudents });
+  } catch (error) {
+    console.error('Részletes statisztika hiba:', error);
+    res.status(500).json({ message: 'Hiba történt a részletes statisztikák lekérdezése során.' });
+  }
+});
 
 module.exports = router;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { fetchUserData } from '../../api/Auth/ProfileData';
 import { fetchTeacherClasses } from '../../api/Assignments/Teacher/GetClasses';
 import { sendChatMessage } from '../../api/Chat';
@@ -8,36 +8,26 @@ import '../../styles/Welcome.css';
 import logo from '../../assets/logo-400.png';
 
 const TeacherWelcome = () => {
-    const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
     const [userName, setUserName] = useState('');
-    const [classes, setClasses] = useState([]);
     const [currentDate, setCurrentDate] = useState('');
     const [chatInput, setChatInput] = useState('');
     const [chatHistory, setChatHistory] = useState([]);
+    const [isBotTyping, setIsBotTyping] = useState(false);
+    const chatEndRef = useRef(null);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const userResponse = await fetchUserData();
-
                 if (userResponse.message === 'Felhasználó adatai sikeresen lekérve') {
                     setUserName(userResponse.user.name);
-                    setMessage('Sikeresen betöltve az adatok!');
-                } else {
-                    setMessage('Nem található felhasználói adat.');
                 }
-
-                const classesData = await fetchTeacherClasses();
-                setClasses(classesData);
-
+                await fetchTeacherClasses();
                 const date = new Date();
                 setCurrentDate(date.toLocaleDateString('hu-HU', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                 }));
             } catch (err) {
                 setError('Hiba történt az adatok lekérésekor.');
@@ -45,26 +35,29 @@ const TeacherWelcome = () => {
                 setLoading(false);
             }
         };
-
         fetchData();
     }, []);
 
-    const handleChatInputChange = (e) => {
-        setChatInput(e.target.value);
-    };
+    useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [chatHistory, isBotTyping]);
 
     const handleChatSubmit = async (e) => {
         e.preventDefault();
         if (!chatInput.trim()) return;
 
-        setChatHistory(prev => [...prev, { sender: 'user', text: chatInput }]);
+        const userMsg = chatInput;
+        setChatInput('');
+        setChatHistory(prev => [...prev, { sender: 'user', text: userMsg }]);
+        setIsBotTyping(true);
 
         try {
-            const responseMessage = await sendChatMessage(chatInput);
+            const responseMessage = await sendChatMessage(userMsg);
             setChatHistory(prev => [...prev, { sender: 'bot', text: responseMessage }]);
-            setChatInput('');
-        } catch (error) {
-            setError(error.message);
+        } catch (err) {
+            setChatHistory(prev => [...prev, { sender: 'bot', text: 'Hiba történt a válasz generálása során.' }]);
+        } finally {
+            setIsBotTyping(false);
         }
     };
 
@@ -92,16 +85,26 @@ const TeacherWelcome = () => {
                                 <div>{chat.text}</div>
                             </div>
                         ))}
+                        {isBotTyping && (
+                            <div className="chat-message bot">
+                                <img src={logo} alt="Logo" className="chat-logo" />
+                                <div className="typing-dots">
+                                    <span></span><span></span><span></span>
+                                </div>
+                            </div>
+                        )}
+                        <div ref={chatEndRef} />
                     </div>
                     <form onSubmit={handleChatSubmit} className="chat-input-form">
                         <input
                             type="text"
                             value={chatInput}
-                            onChange={handleChatInputChange}
+                            onChange={(e) => setChatInput(e.target.value)}
                             placeholder="Írj egy üzenetet..."
                             className="chat-input"
+                            disabled={isBotTyping}
                         />
-                        <button type="submit" className="chat-submit">
+                        <button type="submit" className="chat-submit" disabled={isBotTyping}>
                             <FaPaperPlane />
                         </button>
                     </form>

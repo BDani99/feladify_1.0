@@ -13,10 +13,10 @@
     display: flex;
     flex-direction: column;
     margin-bottom: 15px;
-    border: 1px solid #ccc;
-    padding: 10px;
+    border: 1px solid #555;
+    padding: 12px;
     border-radius: 6px;
-    background-color: #858585;
+    background-color: #4a4a4a;
 }
 
 .settings-form label {
@@ -78,6 +78,83 @@
 
 .settings-add-button:hover {
     background-color: rgba(2, 241, 121, 0.603);
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+
+.subject-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #f5f2f2f1;
+    cursor: pointer;
+    font-size: 15px;
+    padding: 3px 0;
+    font-weight: normal;
+}
+
+.subject-checkbox-label input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    accent-color: #1478e2;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.class-create-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.class-create-row input {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #666;
+    background-color: #f5f5f5;
+    font-size: 15px;
+}
+
+.class-create-btn {
+    padding: 8px 14px;
+    background-color: #1478e2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: background-color 0.2s ease;
+}
+
+.class-create-btn:hover {
+    background-color: #0e65c8;
+}
+
+.class-create-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.settings-success {
+    color: #2ecc71;
+    text-align: center;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+.settings-error {
+    color: #e74c3c;
+    text-align: center;
+    margin-top: 8px;
+    font-size: 14px;
 }
 
 @media (max-width: 768px) {

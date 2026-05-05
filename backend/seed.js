@@ -4,21 +4,25 @@ const bcrypt = require('bcryptjs');
 const User = require('./models/User');
 const Class = require('./models/Class');
 
-// Csatlakozás az adatbázishoz
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('Could not connect to MongoDB...', err));
 
 async function seedDatabase() {
   try {
-    // Jelszó hash-elése
     const hashedPassword = await bcrypt.hash('jelszo123', 10);
 
-    // Tanárok hozzáadása egyenként, emailcím alapján ellenőrizve
+    // Meglévő tanárok migrációja: subject (string) → subjects (tömb)
+    await User.updateMany(
+      { role: 'teacher', subject: { $exists: true } },
+      [{ $set: { subjects: ['$subject'] } }]
+    );
+    await User.updateMany({ role: 'teacher' }, { $unset: { subject: '' } });
+
     const teachersData = [
-      { name: 'Kovács Anna', email: 'kovacs.anna@iskola.hu', password: hashedPassword, role: 'teacher', subject: 'Magyar' },
-      { name: 'Nagy Péter', email: 'nagy.peter@iskola.hu', password: hashedPassword, role: 'teacher', subject: 'Matematika' },
-      { name: 'Szabó Zoltán', email: 'szabo.zoltan@iskola.hu', password: hashedPassword, role: 'teacher', subject: 'Történelem' },
+      { name: 'Kovács Anna', email: 'kovacs.anna@iskola.hu', password: hashedPassword, role: 'teacher', subjects: ['Nyelvtan', 'Irodalom'] },
+      { name: 'Nagy Péter', email: 'nagy.peter@iskola.hu', password: hashedPassword, role: 'teacher', subjects: ['Matematika'] },
+      { name: 'Szabó Zoltán', email: 'szabo.zoltan@iskola.hu', password: hashedPassword, role: 'teacher', subjects: ['Angol', 'Környezetismeret'] },
     ];
 
     const teacherIds = [];
@@ -29,12 +33,13 @@ async function seedDatabase() {
         await teacher.save();
         console.log(`Tanárok hozzáadva: ${teacherData.email}`);
       } else {
-        console.log(`Tanárok kihagyva: ${teacherData.email}`);
+        // Meglévő tanár subjects frissítése
+        await User.findByIdAndUpdate(teacher._id, { subjects: teacherData.subjects });
+        console.log(`Tanárok frissítve: ${teacherData.email}`);
       }
-      teacherIds.push(teacher._id); // Az azonosítókat összegyűjtjük
+      teacherIds.push(teacher._id);
     }
 
-    // Osztályok hozzáadása 1-8-ig, ha nem léteznek név alapján
     const classesData = Array.from({ length: 8 }, (_, i) => ({
       name: `${i + 1}. osztály`,
       teacherIds: teacherIds
@@ -53,7 +58,6 @@ async function seedDatabase() {
       classDocuments.push(schoolClass);
     }
 
-    // Diákok hozzáadása 7. és 8. osztályhoz
     const studentsData1 = [
       { name: 'Tóth János', email: 'toth.janos@iskola.hu' },
       { name: 'Kiss Éva', email: 'kiss.eva@iskola.hu' },
@@ -78,7 +82,7 @@ async function seedDatabase() {
           ...studentData,
           password: hashedPassword,
           role: 'student',
-          className: classDocuments[6].name // 7. osztály
+          className: classDocuments[6].name
         });
         await student.save();
         console.log(`Diák hozzáadva a 7. osztályhoz: ${studentData.email}`);
@@ -96,7 +100,7 @@ async function seedDatabase() {
           ...studentData,
           password: hashedPassword,
           role: 'student',
-          className: classDocuments[7].name // 8. osztály
+          className: classDocuments[7].name
         });
         await student.save();
         console.log(`Diák hozzáadva a 8. osztályhoz: ${studentData.email}`);
@@ -106,7 +110,6 @@ async function seedDatabase() {
       studentIdsClass8.push(student._id);
     }
 
-    // 7. és 8. osztályok frissítése a diákok azonosítóival
     await Class.findByIdAndUpdate(classDocuments[6]._id, { $addToSet: { studentIds: { $each: studentIdsClass7 } } });
     await Class.findByIdAndUpdate(classDocuments[7]._id, { $addToSet: { studentIds: { $each: studentIdsClass8 } } });
 

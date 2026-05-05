@@ -2,34 +2,42 @@ import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { fetchUserData } from '../../api/Auth/ProfileData';
 import { fetchTeacherClasses } from '../../api/Assignments/Teacher/GetClasses';
+import { updateProfile } from '../../api/Auth/UpdateProfile';
+import { fetchAllClasses, createClass, updateTeacherClasses } from '../../api/Classes/ClassApi';
 import '../../styles/Settings.css';
 
+const CANONICAL_SUBJECTS = ['Nyelvtan', 'Irodalom', 'Angol', 'Matematika', 'Környezetismeret'];
+
 const TeacherSettings = () => {
-    const [userData, setUserData] = useState({
-        email: '',
-        name: '',
-        subjects: [],
-        classes: []
-    });
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [selectedSubjects, setSelectedSubjects] = useState([]);
+    const [allClasses, setAllClasses] = useState([]);
+    const [myClassIds, setMyClassIds] = useState([]);
+    const [newClassName, setNewClassName] = useState('');
     const [isLoading, setIsLoading] = useState(true);
-    const [newSubject, setNewSubject] = useState('');
-    const [newClass, setNewClass] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
+    const [isCreatingClass, setIsCreatingClass] = useState(false);
+    const [saveMessage, setSaveMessage] = useState('');
+    const [saveError, setSaveError] = useState('');
+    const [classError, setClassError] = useState('');
 
     useEffect(() => {
         const loadData = async () => {
             try {
-                const userDataResponse = await fetchUserData();
-                const classesData = await fetchTeacherClasses();
-
-                setUserData({
-                    email: userDataResponse.user.email,
-                    name: userDataResponse.user.name,
-                    subjects: userDataResponse.user.subject ? [userDataResponse.user.subject] : [],
-                    classes: classesData.map((classItem) => classItem.name) || []
-                });
-                console.log(userDataResponse, classesData);
+                const [userResp, allCls, myCls] = await Promise.all([
+                    fetchUserData(),
+                    fetchAllClasses(),
+                    fetchTeacherClasses(),
+                ]);
+                setName(userResp.user.name || '');
+                setEmail(userResp.user.email || '');
+                setSelectedSubjects(userResp.user.subjects || []);
+                setAllClasses(allCls || []);
+                setMyClassIds((myCls || []).map(c => c._id));
             } catch (error) {
-                console.error('Error loading user data:', error);
+                console.error('Hiba az adatok betöltése során:', error);
+                setSaveError('Hiba történt az adatok betöltése során.');
             } finally {
                 setIsLoading(false);
             }
@@ -37,35 +45,50 @@ const TeacherSettings = () => {
         loadData();
     }, []);
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setUserData((prevData) => ({ ...prevData, [name]: value }));
+    const toggleSubject = (subject) => {
+        setSelectedSubjects(prev =>
+            prev.includes(subject) ? prev.filter(s => s !== subject) : [...prev, subject]
+        );
     };
 
-    const handleDelete = (type, index) => {
-        setUserData((prevData) => ({
-            ...prevData,
-            [type]: prevData[type].filter((_, i) => i !== index)
-        }));
+    const toggleClass = (classId) => {
+        setMyClassIds(prev =>
+            prev.includes(classId) ? prev.filter(id => id !== classId) : [...prev, classId]
+        );
     };
 
-    const handleAddSubject = () => {
-        if (newSubject.trim()) {
-            setUserData((prevData) => ({
-                ...prevData,
-                subjects: [...prevData.subjects, newSubject]
-            }));
-            setNewSubject('');
+    const handleCreateClass = async () => {
+        if (!newClassName.trim()) return;
+        setIsCreatingClass(true);
+        setClassError('');
+        try {
+            const result = await createClass(newClassName.trim());
+            setAllClasses(prev => [...prev, result.class]);
+            setMyClassIds(prev => [...prev, result.class._id]);
+            setNewClassName('');
+        } catch (err) {
+            setClassError(err.message);
+        } finally {
+            setIsCreatingClass(false);
         }
     };
 
-    const handleAddClass = () => {
-        if (newClass.trim()) {
-            setUserData((prevData) => ({
-                ...prevData,
-                classes: [...prevData.classes, newClass]
-            }));
-            setNewClass('');
+    const handleSave = async (e) => {
+        e.preventDefault();
+        setIsSaving(true);
+        setSaveMessage('');
+        setSaveError('');
+        try {
+            await Promise.all([
+                updateProfile({ name, email, subjects: selectedSubjects }),
+                updateTeacherClasses(myClassIds),
+            ]);
+            setSaveMessage('Beállítások sikeresen mentve.');
+            setTimeout(() => setSaveMessage(''), 3000);
+        } catch (err) {
+            setSaveError(err.message);
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -83,15 +106,15 @@ const TeacherSettings = () => {
                 <h1 className="title">Beállítások</h1>
                 <div className='generate-scroll-container'>
                     <div className="generate-container">
-                        <form className="settings-form">
+                        <form className="settings-form" onSubmit={handleSave}>
                             <div className="form-group">
                                 <label htmlFor="name">Név:</label>
                                 <input
                                     type="text"
                                     id="name"
-                                    name="name"
-                                    value={userData.name}
-                                    onChange={handleInputChange}
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    required
                                 />
                             </div>
                             <div className="form-group">
@@ -99,63 +122,73 @@ const TeacherSettings = () => {
                                 <input
                                     type="email"
                                     id="email"
-                                    name="email"
-                                    value={userData.email}
-                                    onChange={handleInputChange}
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
                                 />
                             </div>
 
                             <div className="form-group2">
                                 <label>Tantárgyak:</label>
-                                <div className="item-list">
-                                    {userData.subjects.map((subject, index) => (
-                                        <span key={index} className="item">
+                                <div className="checkbox-group">
+                                    {CANONICAL_SUBJECTS.map(subject => (
+                                        <label key={subject} className="subject-checkbox-label">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedSubjects.includes(subject)}
+                                                onChange={() => toggleSubject(subject)}
+                                            />
                                             {subject}
-                                            <button type="button" onClick={() => handleDelete('subjects', index)}>X</button>
-                                        </span>
+                                        </label>
                                     ))}
-                                    <input
-                                        type="text"
-                                        value={newSubject}
-                                        placeholder="Új tantárgy hozzáadása"
-                                        onChange={(e) => setNewSubject(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                e.preventDefault();
-                                                handleAddSubject();
-                                            }
-                                        }}
-                                    />
-                                    <button className="settings-add-button" type="button" onClick={handleAddSubject}>Tantárgy hozzáadása</button>
                                 </div>
                             </div>
 
                             <div className="form-group2">
                                 <label>Osztályok:</label>
-                                <div className="item-list">
-                                    {userData.classes.map((classItem, index) => (
-                                        <span key={index} className="item">
-                                            {classItem}
-                                            <button type="button" onClick={() => handleDelete('classes', index)}>X</button>
-                                        </span>
+                                <div className="checkbox-group">
+                                    {allClasses.map(cls => (
+                                        <label key={cls._id} className="subject-checkbox-label">
+                                            <input
+                                                type="checkbox"
+                                                checked={myClassIds.includes(cls._id)}
+                                                onChange={() => toggleClass(cls._id)}
+                                            />
+                                            {cls.name}
+                                        </label>
                                     ))}
+                                </div>
+                                <div className="class-create-row">
                                     <input
                                         type="text"
-                                        value={newClass}
-                                        placeholder="Új osztály hozzáadása"
-                                        onChange={(e) => setNewClass(e.target.value)}
+                                        placeholder="Új osztály neve..."
+                                        value={newClassName}
+                                        onChange={(e) => setNewClassName(e.target.value)}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter') {
                                                 e.preventDefault();
-                                                handleAddClass();
+                                                handleCreateClass();
                                             }
                                         }}
                                     />
-                                    <button className="settings-add-button" type="button" onClick={handleAddClass}>Osztály hozzáadása</button>
+                                    <button
+                                        type="button"
+                                        className="class-create-btn"
+                                        onClick={handleCreateClass}
+                                        disabled={isCreatingClass || !newClassName.trim()}
+                                    >
+                                        {isCreatingClass ? '...' : 'Létrehozás'}
+                                    </button>
                                 </div>
+                                {classError && <p className="settings-error">{classError}</p>}
                             </div>
 
-                            <button type="submit" className="main-button">Mentés</button>
+                            <button type="submit" className="main-button" disabled={isSaving}>
+                                {isSaving ? 'Mentés...' : 'Mentés'}
+                            </button>
+
+                            {saveMessage && <p className="settings-success">{saveMessage}</p>}
+                            {saveError && <p className="settings-error">{saveError}</p>}
                         </form>
                     </div>
                 </div>
