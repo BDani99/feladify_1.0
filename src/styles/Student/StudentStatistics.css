@@ -1,172 +1,313 @@
 .student-statistics-container {
-    max-width: 100%;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: linear-gradient(45deg, #3498db, #8e44ad);
-    height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .stat-title {
-    align-self: flex-start;
-    margin-left: 5.5rem;
-    color: #f5f2f2f1;
-    margin-top: 55px;
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--color-text);
+  font-size: 2rem;
 }
 
-.student-statistics {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    overflow-y: auto;
-    padding: 10px;
-    padding-inline: 45px;
-    width: 92%;
-    height: 83vh;
-    overflow-y: auto;
+/* Gamification Header */
+.stats-gamification-header {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
 }
 
-.statistics-grid {
-    display: grid;
-    gap: 2.5rem;
-    padding-inline: 3rem;
-    margin-top: 30px;
+.stat-card {
+  background: var(--bg-form-group);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.statistics-grid:first-of-type {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px var(--shadow);
 }
 
-.statistics-grid:last-of-type {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+.stat-icon {
+  font-size: 30px;
 }
 
-.stats {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+.xp-card .stat-icon    { color: #f1c40f; }
+.streak-card .stat-icon { color: #e74c3c; }
+.badges-card .stat-icon { color: #9b59b6; }
+.score-card .stat-icon  { color: var(--accent); }
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
 }
 
-.student-statistics::-webkit-scrollbar {
-    width: 8px;
+.stat-value {
+  font-size: 26px;
+  font-weight: bold;
+  color: var(--color-text);
 }
 
-.student-statistics::-webkit-scrollbar-track {
-    background: #f8f8f8f1;
-    border-radius: 10px;
+.stat-label {
+  font-size: 13px;
+  color: var(--color-text-dim);
 }
 
-.student-statistics::-webkit-scrollbar-thumb {
-    background: #838383e3;
-    border-radius: 10px;
+/* Badges Section */
+.badges-section {
+  margin-bottom: 28px;
 }
 
-.student-statistics::-webkit-scrollbar-thumb:hover {
-    background: #8888889c;
+.badges-section h2 {
+  color: var(--color-text);
+  margin-bottom: 14px;
 }
 
-.student-statistic-item {
-    background-color: #ffffff;
-    color: #333;
-    border-radius: 10px;
-    padding: 0.5rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    text-align: center;
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
 }
 
-.student-statistic-item2 {
-    background-color: #ffffff;
-    color: #333;
-    border-radius: 10px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    height: 46%;
-    text-align: center;
+.badge-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+  transition: transform 0.2s;
+  cursor: pointer;
 }
 
-.student-statistic-item:hover,
-.student-statistic-item2:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+.badge-card:hover {
+  transform: scale(1.05);
 }
 
-
-.student-statistic-item h2,
-.student-statistic-item2 h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: #3498db;
+.badge-emoji {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 6px;
 }
 
-.student-statistic-item p,
-.student-statistic-item2 p {
-    font-size: 1.25rem;
-    font-weight: bold;
-    color: #555;
+.badge-name {
+  font-weight: bold;
+  font-size: 13px;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.badge-desc {
+  font-size: 11px;
+  opacity: 0.9;
+  display: block;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.stat-card.large {
+  grid-column: span 1;
+}
+
+.stat-card h3 {
+  color: var(--color-text);
+  margin-bottom: 14px;
+  font-size: 15px;
 }
 
 .chart-container {
-    width: 100%;
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 1rem;
+  height: 280px;
+  position: relative;
 }
 
-.chart-container2 {
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 1rem;
+.no-data {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--color-text-dim);
+  font-style: italic;
+}
+
+/* Strengths and Weaknesses */
+.strengths-weaknesses {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sw-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sw-topic {
+  min-width: 100px;
+  font-size: 13px;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.sw-bar-container {
+  flex: 1;
+  height: 7px;
+  background: var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.sw-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.strength .sw-bar { background: linear-gradient(90deg, #2ecc71, #27ae60); }
+.weakness .sw-bar  { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+
+.sw-score {
+  min-width: 46px;
+  text-align: right;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.strength .sw-score { color: #2ecc71; }
+.weakness .sw-score { color: #e74c3c; }
+
+/* AI Analysis Section */
+.ai-analysis-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 22px;
+  margin-bottom: 28px;
+}
+
+.ai-analysis-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ai-icon {
+  font-size: 26px;
+  color: #667eea;
+}
+
+.ai-analysis-header h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 17px;
+}
+
+.ai-analysis-content {
+  background: var(--bg-form-group);
+  border-radius: 10px;
+  padding: 18px;
+  border: 1px solid var(--border-color);
+}
+
+.ai-analysis-content p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.ai-analysis-content strong {
+  color: var(--color-text);
+}
+
+.streak-motivation {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: rgba(243, 156, 18, 0.15);
+  border-radius: 8px;
+  border-left: 4px solid #f39c12;
+  font-size: 13px;
+  color: #f39c12;
+}
+
+/* Assignment Summary */
+.assignment-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.summary-card {
+  background: var(--bg-form-group);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 18px;
+  text-align: center;
+}
+
+.summary-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: var(--color-text-dim);
+}
+
+.summary-value {
+  font-size: 32px;
+  font-weight: bold;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.summary-card.completed .summary-value { color: #2ecc71; }
+.summary-card.pending .summary-value   { color: #f39c12; }
+
+/* Responsive */
+@media (max-width: 992px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card.large {
+    grid-column: span 1;
+  }
 }
 
 @media (max-width: 768px) {
-    .student-statistics {
-        width: 100%;
-        padding-inline: 8px;
-        height: 85vh;
-    }
+  .stats-gamification-header {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
-    .student-statistics::-webkit-scrollbar {
-        display: none;
-    }
+  .assignment-summary {
+    grid-template-columns: 1fr;
+  }
 
-    .stat-title {
-        margin-inline: auto;
-    }
+  .stat-value {
+    font-size: 22px;
+  }
 
-    .statistics-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 2rem;
-        padding-inline: 0;
-        padding: 0;
-    }
+  .stat-title {
+    font-size: 1.5rem;
+  }
+}
 
-    .student-statistic-item,
-    .student-statistic-item2 {
-        border-radius: 10px;
-        padding: 0.5rem;
-    }
+@media (max-width: 480px) {
+  .stats-gamification-header {
+    grid-template-columns: 1fr;
+  }
 
-    .student-statistic-item2 {
-        height: 200px;
-    }
-
-    .student-statistic-item2:first-child {
-        margin-bottom: 2rem;
-    }
-
-    .student-statistic-item h2,
-    .student-statistic-item2 h2 {
-        font-size: 1.25rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .student-statistic-item p,
-    .student-statistic-item2 p {
-        font-size: 1rem;
-    }
-
+  .badges-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

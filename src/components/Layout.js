@@ -19,6 +19,10 @@ import { FaBars, FaTimes } from 'react-icons/fa';
 import CompletedDetails from './Student/CompletedDetails';
 import TeacherSettings from '../pages/Teacher/TeacherSettings';
 import StudentSettings from '../pages/Student/StudentSettings';
+import AdaptiveRoadmap from '../pages/Student/AdaptiveRoadmap';
+import DiagnosticIntro from '../pages/Student/DiagnosticIntro';
+import DiagnosticTest from '../pages/Student/DiagnosticTest';
+import DiagnosticResult from '../pages/Student/DiagnosticResult';
 
 const Layout = ({ onLoginSuccess }) => {
     const { user } = useUser() || {};
@@ -78,6 +82,12 @@ const Layout = ({ onLoginSuccess }) => {
                         <Route path="/tanulo-statisztika" element={<StudentStatistics />} />
                         <Route path="/dolgozat/:id" element={<AssignmentSubmit />} />
                         <Route path="/diak-beallitasok" element={<StudentSettings />} />
+                        <Route path="/adaptiv-terkep" element={<AdaptiveRoadmap />} />
+                        
+                        {/* Diagnosztikai teszt route-ok */}
+                        <Route path="/diagnosztika/:subject" element={<DiagnosticIntro />} />
+                        <Route path="/diagnosztika/:subject/teszt" element={<DiagnosticTest />} />
+                        <Route path="/diagnosztika/:subject/eredmeny" element={<DiagnosticResult />} />
                     </>
                 )}
             </Routes>

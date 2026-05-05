@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const authRoutes = require('./routes/auth');
 const assignmentRoutes = require('./routes/assignments');
 const classRoutes = require('./routes/classes');
+const studentRoutes = require('./routes/student');
 
 const app = express();
 app.use(express.json());
@@ -25,5 +26,6 @@ app.get('/', (req, res) => {
 app.use('/api', classRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/assignments', assignmentRoutes);
+app.use('/api/student', studentRoutes);
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

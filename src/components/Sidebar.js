@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaHome, FaClipboardCheck, FaChartBar, FaListAlt, FaClipboard, FaCog } from 'react-icons/fa';
+import { FaHome, FaClipboardCheck, FaChartBar, FaListAlt, FaClipboard, FaCog, FaMap, FaGraduationCap } from 'react-icons/fa';
 import '../styles/Sidebar.css';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
@@ -69,13 +69,18 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                             </a>
                         </li>
                         <li>
+                            <a className={isActiveLink('/adaptiv-terkep') ? 'active-link' : ''} onClick={() => handleNavigation('/adaptiv-terkep')}>
+                                <FaMap className="icon" /> Tanulási Út
+                            </a>
+                        </li>
+                        <li>
                             <a className={isActiveLink('/elerheto-dolgozatok') ? 'active-link' : ''} onClick={() => handleNavigation('/elerheto-dolgozatok')}>
-                                <FaListAlt className="icon" /> Elérhető Dolgozatok
+                                <FaGraduationCap className="icon" /> Dolgozatok
                             </a>
                         </li>
                         <li>
                             <a className={isActiveLink('/megoldott-dolgozatok') ? 'active-link' : ''} onClick={() => handleNavigation('/megoldott-dolgozatok')}>
-                                <FaClipboardCheck className="icon" /> Megoldott Dolgozatok
+                                <FaClipboardCheck className="icon" /> Eredmények
                             </a>
                         </li>
                         <li>

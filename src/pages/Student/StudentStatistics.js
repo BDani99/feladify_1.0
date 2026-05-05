@@ -1,174 +1,337 @@
 import React, { useState, useEffect } from 'react';
-import { fetchStudentStatistics } from '../../api/Assignments/Student/Statistics';
+import { fetchStudentStatistics } from '../../api/Student/Roadmap';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { Bar, Pie, Doughnut } from 'react-chartjs-2';
 import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement,
+  RadialLinearScale
 } from 'chart.js';
+import { Bar, Pie, Doughnut, Line, Radar } from 'react-chartjs-2';
+import { FaStar, FaFire, FaTrophy, FaChartLine, FaBrain } from 'react-icons/fa';
 import '../../styles/Student/StudentStatistics.css';
 
 ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    ArcElement
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement,
+  RadialLinearScale
 );
 
 const StudentStatistics = () => {
-    const [statistics, setStatistics] = useState(null);
-    const [error, setError] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
+  const [statistics, setStatistics] = useState(null);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        const loadStatistics = async () => {
-            try {
-                const data = await fetchStudentStatistics();
-                setStatistics(data);
-                console.log(data)
-            } catch (error) {
-                setError('A statisztikák betöltése sikertelen');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        loadStatistics();
-    }, []);
-
-    if (isLoading) {
-        return (
-            <div id="content">
-                <LoadingSpinner />
-            </div>
-        );
+  const loadStatistics = async () => {
+    console.log('[StudentStatistics] Loading statistics...');
+    try {
+      const data = await fetchStudentStatistics();
+      console.log('[StudentStatistics] Statistics loaded:', data);
+      setStatistics(data);
+    } catch (error) {
+      console.error('[StudentStatistics] Error loading statistics:', error);
+      setError(error.message || 'A statisztikák betöltése sikertelen');
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    if (error) {
-        return <div className="error">{error}</div>;
-    }
+  useEffect(() => {
+    loadStatistics();
+  }, []);
 
-    const totalPoints = statistics.assignmentsStatistics.reduce(
-        (acc, assignment) => acc + assignment.totalPoints,
-        0
-    );
-    const achievedPoints = statistics.assignmentsStatistics.reduce(
-        (acc, assignment) => acc + assignment.achievedPoints,
-        0
-    );
-
-    const barChartData = {
-        labels: ['Összes dolgozat'],
-        datasets: [
-            {
-                label: 'Elért pontszámok',
-                data: [achievedPoints],
-                backgroundColor: '#3498db',
-                borderColor: '#2980b9',
-                borderWidth: 1
-            },
-            {
-                label: 'Maximális pontszám',
-                data: [totalPoints],
-                backgroundColor: '#e74c3c',
-                borderColor: '#c0392b',
-                borderWidth: 1
-            }
-        ]
-    };
-
-    const pieChartData = {
-        labels: ['Teljesített dolgozatok', 'Hiányzó dolgozatok'],
-        datasets: [
-            {
-                data: [
-                    statistics.completedAssignmentsCount,
-                    statistics.totalAssignmentsCount - statistics.completedAssignmentsCount
-                ],
-                backgroundColor: ['#2ecc71', '#e74c3c'],
-                borderColor: ['#27ae60', '#c0392b'],
-                borderWidth: 1
-            }
-        ]
-    };
-
-    const totalAssignmentsCount = statistics.assignmentsStatistics.length;
-    const averageScorePercentage = statistics.averageScorePercentage;
-
-    const donutChartData = {
-        labels: ['Átlagos pontszám'],
-        datasets: [
-            {
-                data: [averageScorePercentage, 100 - averageScorePercentage],
-                backgroundColor: ['#2ecc71', '#ecf0f1'],
-                borderColor: ['#27ae60', '#bdc3c7'],
-                borderWidth: 1
-            }
-        ]
-    };
-
+  if (isLoading) {
     return (
-        <div id="content">
-            <div className="student-statistics-container">
-                <h1 className="stat-title">Statisztikák</h1>
-                <div className='student-statistics'>
-                    <div className="statistics-grid">
-                        <div className='stats'>
-                            <div className="student-statistic-item2">
-                                <h2>Dolgozatok száma</h2>
-                                <p>Összes dolgozat: {totalAssignmentsCount}</p>
-                                <p>Teljesített dolgozatok: {statistics.completedAssignmentsCount}</p>
-                            </div>
-                            <div className="student-statistic-item2">
-                                <h2>Az utolsó dolgozat statisztikái</h2>
-                                <div className="last-assignment">
-                                    <p><strong>{statistics.assignmentsStatistics[statistics.assignmentsStatistics.length - 1].title}</strong></p>
-                                    <p>
-                                        Elért pontszám: {statistics.assignmentsStatistics[statistics.assignmentsStatistics.length - 1].achievedPoints}
-                                        / {statistics.assignmentsStatistics[statistics.assignmentsStatistics.length - 1].totalPoints}
-                                    </p>
-                                    <p>
-                                        Kitöltés dátuma: {new Date(statistics.assignmentsStatistics[statistics.assignmentsStatistics.length - 1].completedAt).toLocaleDateString()}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="student-statistic-item">
-                            <h2>Átlagos pontszám</h2>
-                            <div className="chart-container donut-chart">
-                                <Doughnut data={donutChartData} />
-                            </div>
-                            <p>{averageScorePercentage.toFixed(2)}%</p>
-                        </div>
-                    </div>
-                    <div className="statistics-grid">
-                        <div className="student-statistic-item">
-                            <h2>Elért Pontszámok Összesen</h2>
-                            <div className="chart-container2">
-                                <Bar data={barChartData} />
-                            </div>
-                        </div>
-
-                        <div className="student-statistic-item">
-                            <h2>Dolgozatok Teljesítése</h2>
-                            <div className="chart-container">
-                                <Pie data={pieChartData} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+      <div id="content">
+        <LoadingSpinner />
+      </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div id="content">
+        <div className="error-message">
+          <h2>⚠️ Hiba történt</h2>
+          <p>{error}</p>
+          <p className="error-details">
+            Kérjük, ellenőrizd, hogy a backend szerver fut, és be vagy jelentkezve.
+          </p>
+          <button onClick={() => { setIsLoading(true); loadStatistics(); }} className="retry-button">
+            Újrapróbálkozás
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!statistics) {
+    return null;
+  }
+
+  // Gamification stats
+  const { totalXP, streak, badges, averageScore, completedAssignments, totalAssignments } = statistics;
+
+  // Radar chart for topic-level breakdown
+  const radarChartData = {
+    labels: statistics.topicStats?.map(stat => stat.topic) || [],
+    datasets: [
+      {
+        label: 'Teljesítmény (%)',
+        data: statistics.topicStats?.map(stat => stat.averageScore) || [],
+        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+        borderColor: 'rgba(52, 152, 219, 1)',
+        borderWidth: 2,
+        pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+      }
+    ]
+  };
+
+  // Line chart for performance over time
+  const lineChartData = {
+    labels: statistics.assignmentsStatistics?.map((_, index) => `${index + 1}.`) || [],
+    datasets: [
+      {
+        label: 'Pontszám (%)',
+        data: statistics.assignmentsStatistics?.map(stat => 
+          stat.totalPoints > 0 ? (stat.achievedPoints / stat.totalPoints) * 100 : 0
+        ) || [],
+        borderColor: '#3498db',
+        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+        fill: true,
+        tension: 0.4
+      }
+    ]
+  };
+
+  // Strengths and weaknesses
+  const strengths = statistics.strengths || [];
+  const weaknesses = statistics.weaknesses || [];
+
+  return (
+    <div id="content">
+      <div className="student-statistics-container">
+        <h1 className="stat-title">📊 Statisztikák és Elemzések</h1>
+
+        {/* Gamification Header */}
+        <div className="stats-gamification-header">
+          <div className="stat-card xp-card">
+            <FaStar className="stat-icon" />
+            <div className="stat-info">
+              <span className="stat-value">{totalXP}</span>
+              <span className="stat-label">Összes XP</span>
+            </div>
+          </div>
+
+          <div className="stat-card streak-card">
+            <FaFire className="stat-icon" />
+            <div className="stat-info">
+              <span className="stat-value">{streak}</span>
+              <span className="stat-label">Napi Streak</span>
+            </div>
+          </div>
+
+          <div className="stat-card badges-card">
+            <FaTrophy className="stat-icon" />
+            <div className="stat-info">
+              <span className="stat-value">{badges.length}</span>
+              <span className="stat-label">Kitűzők</span>
+            </div>
+          </div>
+
+          <div className="stat-card score-card">
+            <FaChartLine className="stat-icon" />
+            <div className="stat-info">
+              <span className="stat-value">{averageScore}%</span>
+              <span className="stat-label">Átlag Pontszám</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Badges Section */}
+        {badges.length > 0 && (
+          <div className="badges-section">
+            <h2>🏆 Kitűzők</h2>
+            <div className="badges-grid">
+              {badges.map((badge, index) => (
+                <div key={index} className="badge-card" title={badge.description}>
+                  <span className="badge-emoji">{badge.icon}</span>
+                  <span className="badge-name">{badge.name}</span>
+                  <span className="badge-desc">{badge.description}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Main Stats Grid */}
+        <div className="stats-grid">
+          {/* Topic Performance Radar Chart */}
+          <div className="stat-card large">
+            <h3>Témakör Szintű Teljesítmény</h3>
+            <div className="chart-container">
+              {statistics.topicStats && statistics.topicStats.length > 0 ? (
+                <Radar data={radarChartData} options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    r: {
+                      beginAtZero: true,
+                      max: 100
+                    }
+                  }
+                }} />
+              ) : (
+                <div className="no-data">Még nincs elég adat a megjelenítéshez</div>
+              )}
+            </div>
+          </div>
+
+          {/* Performance Over Time */}
+          <div className="stat-card large">
+            <h3>Teljesítmény Időbeli Alakulása</h3>
+            <div className="chart-container">
+              {statistics.assignmentsStatistics && statistics.assignmentsStatistics.length > 0 ? (
+                <Line data={lineChartData} options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      max: 100
+                    }
+                  }
+                }} />
+              ) : (
+                <div className="no-data">Még nincs elég adat a megjelenítéshez</div>
+              )}
+            </div>
+          </div>
+
+          {/* Strengths */}
+          <div className="stat-card">
+            <h3>💪 Erősségeid</h3>
+            <div className="strengths-weaknesses">
+              {strengths.length > 0 ? (
+                strengths.map((item, index) => (
+                  <div key={index} className="sw-item strength">
+                    <span className="sw-topic">{item.topic}</span>
+                    <div className="sw-bar-container">
+                      <div 
+                        className="sw-bar" 
+                        style={{ width: `${item.averageScore}%` }}
+                      />
+                    </div>
+                    <span className="sw-score">{item.averageScore}%</span>
+                  </div>
+                ))
+              ) : (
+                <div className="no-data">Még nincs adat</div>
+              )}
+            </div>
+          </div>
+
+          {/* Weaknesses */}
+          <div className="stat-card">
+            <h3>📚 Fejlesztendő Területek</h3>
+            <div className="strengths-weaknesses">
+              {weaknesses.length > 0 ? (
+                weaknesses.map((item, index) => (
+                  <div key={index} className="sw-item weakness">
+                    <span className="sw-topic">{item.topic}</span>
+                    <div className="sw-bar-container">
+                      <div 
+                        className="sw-bar" 
+                        style={{ width: `${item.averageScore}%` }}
+                      />
+                    </div>
+                    <span className="sw-score">{item.averageScore}%</span>
+                  </div>
+                ))
+              ) : (
+                <div className="no-data">Még nincs adat</div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* AI Analysis Section */}
+        <div className="ai-analysis-section">
+          <div className="ai-analysis-header">
+            <FaBrain className="ai-icon" />
+            <h2>Az AI Tanárod Elemzése</h2>
+          </div>
+          <div className="ai-analysis-content">
+            <p>
+              {averageScore >= 80 ? (
+                <>
+                  🎉 <strong>Gratulálok!</strong> Kiváló teljesítményt nyújtasz! 
+                  Az átlagos pontszámod <strong>{averageScore}%</strong>, ami kiemelkedő. 
+                  Folytasd így, és érdemes lehet nehezebb kihívásokat is vállalnod!
+                </>
+              ) : averageScore >= 60 ? (
+                <>
+                  👍 <strong>Jó munkát végzel!</strong> Az átlagos pontszámod <strong>{averageScore}%</strong>. 
+                  {weaknesses.length > 0 && ` Érdemes több figyelmet fordítanod a "${weaknesses[0]?.topic}" témakörre, 
+                  ahol még van fejlődési lehetőség.`}
+                  <br/><br/>
+                  💡 <strong>Tipp:</strong> Használd az AI Tanár chatet, hogy segítsen a gyengébb területek fejlesztésében!
+                </>
+              ) : (
+                <>
+                  💪 <strong>Ne add fel!</strong> Mindenki így kezdte. 
+                  Az átlagos pontszámod jelenleg <strong>{averageScore}%</strong>, 
+                  de ez csak egy szám – a fontos, hogy fejlődj!
+                  <br/><br/>
+                  🎯 <strong>Javaslat:</strong> Kezdd az alapokkal, és használd az AI Tanár segítségét. 
+                  Napi 15 perc gyakorlással már egy hét alatt is javulhatsz!
+                </>
+              )}
+            </p>
+            
+            {streak > 0 && (
+              <div className="streak-motivation">
+                🔥 <strong>{streak} napos streak!</strong> 
+                {streak >= 7 ? ' Egy hete folyamatosan tanulsz – ez fantasztikus!' : 
+                 streak >= 3 ? ' Már 3 napja folyamatosan tanulsz – így tovább!' : 
+                 ' Kezdesz belejönni a rendszeres tanulásba!'}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Assignment Summary */}
+        <div className="assignment-summary">
+          <div className="summary-card">
+            <h3>Összes Dolgozat</h3>
+            <p className="summary-value">{totalAssignments}</p>
+          </div>
+          <div className="summary-card completed">
+            <h3>Teljesített</h3>
+            <p className="summary-value">{completedAssignments}</p>
+          </div>
+          <div className="summary-card pending">
+            <h3>Várakozó</h3>
+            <p className="summary-value">{totalAssignments - completedAssignments}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default StudentStatistics;
