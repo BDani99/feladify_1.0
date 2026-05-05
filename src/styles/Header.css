@@ -1,0 +1,71 @@
+.Header-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background-color: #333;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 2px -1px rgba(255, 255, 255, 0.082);
+    z-index: 950;
+}
+
+.logout-button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: #c0392b;
+}
+
+.header-images {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.logo {
+    width: 45px;
+}
+
+.name {
+    width: 190px;
+}
+
+.header-name {
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.945);
+    letter-spacing: 0.18rem;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    margin: 0;
+    margin-left: 5px;
+}
+
+@media (max-width: 768px) {
+    .header-images {
+        margin-inline: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-images {
+        margin-inline: unset;
+        margin-left: auto;
+    }
+}

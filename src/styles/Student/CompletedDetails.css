@@ -1,0 +1,119 @@
+.completed-details {
+    max-width: 90%;
+    margin: 0 auto;
+}
+
+.completed-details-container {
+    margin-inline: auto;
+}
+
+.assignment-data-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+.assignment-data-container div {
+    display: flex;
+    flex-direction: row;
+}
+
+.assignment-data-container p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #f5f2f2f1;
+    margin: 5px 0;
+}
+
+.assignment-data-container strong {
+    color: #f5f2f2f1;
+    margin-right: 5px;
+}
+
+.answers-container {
+    max-height: 78vh;
+    overflow-y: auto;
+    margin-top: 20px;
+    padding: 10px;
+    padding-inline: 25px;
+}
+
+.answers-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.answers-container::-webkit-scrollbar-track {
+    background: #f8f8f8f1;
+    border-radius: 10px;
+}
+
+.answers-container::-webkit-scrollbar-thumb {
+    background: #838383e3;
+    border-radius: 10px;
+}
+
+.answers-container::-webkit-scrollbar-thumb:hover {
+    background: #8888889c;
+}
+
+
+.answers-list {
+    margin-top: 20px;
+}
+
+.answer-item {
+    background-color: #eeeeee;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.answer-item p {
+    font-size: 1rem;
+    color: #333;
+    margin: 8px 0;
+}
+
+.answer-item strong {
+    font-weight: 600;
+    color: #333;
+}
+
+.answer-item p:last-child {
+    margin-bottom: 0;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .completed-details-container {
+        padding: 0;
+    }
+
+    .assignment-data-container p,
+    .answer-item p {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .completed-details-container {
+        padding: 0;
+    }
+
+    .assignment-data-container p,
+    .answer-item p {
+        font-size: 0.9rem;
+    }
+
+    .answers-container {
+        max-height: 75vh;
+        padding: 0;
+        margin-inline: auto;
+    }
+
+    .answers-container::-webkit-scrollbar {
+        display: none;
+    }
+
+}

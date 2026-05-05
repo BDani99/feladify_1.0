@@ -1,0 +1,136 @@
+.statistics-container {
+    max-width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(45deg, #3498db, #8e44ad);
+    height: 100vh;
+}
+
+.statistics {
+    width: 95%;
+    padding: 3rem;
+    text-align: center;
+    color: white;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+    margin-inline: auto;
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+}
+
+.statistics::-webkit-scrollbar {
+    width: 8px;
+}
+
+.statistics::-webkit-scrollbar-track {
+    background: #f8f8f8f1;
+    border-radius: 10px;
+}
+
+.statistics::-webkit-scrollbar-thumb {
+    background: #838383e3;
+    border-radius: 10px;
+}
+
+.statistics::-webkit-scrollbar-thumb:hover {
+    background: #8888889c;
+}
+
+.statistic-item {
+    background-color: #ffffff;
+    color: #333;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.statistic-item:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.statistic-item h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #3498db;
+}
+
+.statistic-item p {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #555;
+}
+
+.statistic-item p {
+    opacity: 0;
+    animation: fadeIn 1s forwards;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+
+    .statistics {
+        grid-template-columns: 1fr;
+        padding: 0.2rem;
+        overflow-y: auto;
+    }
+
+    .statistics::-webkit-scrollbar {
+        display: none;
+    }
+
+    .statistics-container {
+        width: 100%;
+    }
+
+    .statistic-item {
+        padding: 1rem;
+    }
+
+    .statistic-item h2 {
+        font-size: 1.25rem;
+    }
+
+    .statistic-item p {
+        font-size: 1rem;
+    }
+
+    .statistic-item canvas {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .statistics-container {
+        padding: 0.5rem;
+    }
+
+    .statistic-item {
+        padding: 0.75rem;
+    }
+
+    .statistic-item h2 {
+        font-size: 1rem;
+    }
+
+    .statistic-item p {
+        font-size: 0.875rem;
+    }
+}

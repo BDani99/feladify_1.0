@@ -1,0 +1,131 @@
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    min-width: 250px;
+    min-height: 100vh;
+    background-color: #333;
+    color: #000000;
+    padding-top: 12px;
+    z-index: 900;
+    transition: transform 0.3s ease-in-out;
+}
+
+.sidebar-header h3 {
+    color: #f5f2f2f1;
+}
+
+.list-unstyled {
+    margin-top: 55px;
+    cursor: pointer;
+}
+
+.list-unstyled a {
+    text-decoration: none;
+    color: #f5f2f2f1;
+    padding: 10px;
+    padding-inline: 15px;
+    display: block;
+    transition: background-color 0.3s;
+}
+
+.list-unstyled a:hover {
+    background-color: #d3d3d3;
+    color: #000 !important;
+}
+
+.active-link {
+    background-color: #0c0c0ca6;
+    font-weight: 600;
+    color: #f5f2f2f1 !important;
+}
+
+.icon {
+    margin-right: 8px;
+    margin-bottom: 5px;
+    font-size: 1.2rem;
+    color: inherit;
+}
+
+.sidebar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    position: fixed;
+    top: 2px;
+    left: 8px;
+    z-index: 1001;
+}
+
+.user-name {
+    margin-left: auto;
+    margin-right: 30px;
+    font-weight: 500;
+}
+
+.settings-link {
+    position: fixed;
+    bottom: 0;
+    padding: 6px;
+    padding-inline: 0;
+}
+
+#settings-link {
+    padding: 10px;
+    padding-inline: 15px;
+    display: block;
+}
+
+.settings-icon {
+    font-size: 30px;
+    color: #f5f2f2f1;
+    transition: color 0.3s;
+}
+
+.settings-active .settings-icon {
+    color: #007bffef;
+}
+
+#settings-link:hover .settings-icon {
+    color: #0056b3;
+}
+
+#settings-link:hover {
+    background-color: transparent;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 20%;
+        transform: translateX(-100%);
+    }
+
+    .sidebar-toggle {
+        display: block;
+    }
+
+    .list-unstyled {
+        display: none;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .list-unstyled.hidden {
+        display: none;
+    }
+
+    .sidebar.open .list-unstyled {
+        display: block;
+    }
+}
+
+@media (min-width: 1024px) {
+    .sidebar {
+        width: 14%;
+        transform: translateX(0);
+    }
+}

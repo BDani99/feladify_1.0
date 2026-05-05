@@ -1,0 +1,111 @@
+.assignments-container {
+    max-width: 90%;
+    margin: 0 auto;
+}
+
+.assignment-grid {
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    margin-top: 40px;
+    max-height: calc(100vh - 180px);
+    padding: 20px;
+    padding-inline: 40px;
+    overflow-y: auto;
+}
+
+.assignment-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.assignment-grid::-webkit-scrollbar-track {
+    background: #f8f8f8f1;
+    border-radius: 10px;
+}
+
+.assignment-grid::-webkit-scrollbar-thumb {
+    background: #838383e3;
+    border-radius: 10px;
+}
+
+.assignment-grid::-webkit-scrollbar-thumb:hover {
+    background: #8888889c;
+}
+
+.assignment-card {
+    border: 1px solid #858585;
+    border-radius: 6px;
+    background-color: #747474;
+    box-shadow: 0 4px 10px rgba(173, 173, 173, 0.24);
+    text-align: center;
+    transition: transform 0.2s;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.assignment-card:hover {
+    transform: scale(1.05);
+}
+
+.assignment-card-link {
+    text-decoration: none;
+    color: #f5f2f2f1;
+}
+
+.title-container {
+    background-color: #333333bd;
+    border-radius: 5px;
+    padding-top: 5px;
+    padding-bottom: 1px;
+    margin-bottom: 10px;
+}
+
+.assignment-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.assignment-card p {
+    font-size: 1rem;
+}
+
+.assignment-card-text {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    margin-inline: auto;
+    text-align: left;
+    width: 80%;
+}
+
+.assignment-card-text div:first-child p {
+    font-weight: 700;
+}
+
+@media (max-width: 1450px) {
+    .assignment-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    .assignment-grid {
+        grid-template-columns: repeat(1, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .assignments-container {
+        max-width: 100%;
+    }
+
+    .assignment-grid::-webkit-scrollbar {
+        display: none;
+    }
+
+    .assignment-grid {
+        height: calc(100vh - 60px);
+        padding-inline: 15px;
+    }
+}
