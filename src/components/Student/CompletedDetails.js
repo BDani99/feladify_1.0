@@ -1,11 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { FaCheck, FaTimes, FaClock } from 'react-icons/fa';
+import { flagAnswer } from '../../api/Student/FlagAnswer';
+import TutorChat from './TutorChat';
 import '../../styles/Student/CompletedDetails.css';
+import '../../styles/Student/TutorChat.css';
 
 const CompletedDetails = () => {
     const location = useLocation();
     const { assignment } = location.state;
+    const [openTutors, setOpenTutors] = useState({});
+    const [flaggedAnswers, setFlaggedAnswers] = useState({});
+
+    const toggleTutor = (questionId) =>
+        setOpenTutors(prev => ({ ...prev, [questionId]: !prev[questionId] }));
+
+    const handleFlag = async (questionId) => {
+        try {
+            await flagAnswer(assignment.assignmentId, questionId);
+            setFlaggedAnswers(prev => ({ ...prev, [questionId]: true }));
+        } catch {
+            // silent
+        }
+    };
 
     return (
         <div id='content'>
@@ -24,6 +41,9 @@ const CompletedDetails = () => {
                                 const isOpenEnded = !answer.correctAnswer?.startsWith('A:') && !answer.correctAnswer?.startsWith('B:');
                                 const isPending = answer.score === 0 && isOpenEnded;
                                 const isWrong = answer.score === 0 && !isOpenEnded;
+                                const isFlagged = flaggedAnswers[answer.questionId] || answer.flagged;
+                                const showTutor = openTutors[answer.questionId];
+
                                 return (
                                     <div key={answer.questionId} className="answer-item">
                                         <div className='answer-icon-container'>
@@ -39,9 +59,41 @@ const CompletedDetails = () => {
                                             )}
                                         </div>
                                         <p><strong>{index + 1}. kérdés:</strong> {answer.questionText}</p>
-                                        <p><strong>Helyes válasz:</strong> {answer.correctAnswer}</p>
+                                        <p>
+                                            <strong>Helyes válasz:</strong>{' '}
+                                            {isPending
+                                                ? <span style={{ color: 'var(--color-text-dim)' }}>—</span>
+                                                : answer.correctAnswer
+                                            }
+                                        </p>
                                         <p><strong>A te válaszod:</strong> {answer.studentAnswer}</p>
                                         <p><strong>Elért pont:</strong> {answer.score} pont</p>
+
+                                        {isPending && (
+                                            <div style={{ marginTop: 8 }}>
+                                                <button
+                                                    className="tutor-toggle-btn"
+                                                    onClick={() => toggleTutor(answer.questionId)}
+                                                >
+                                                    {showTutor ? 'Bezárás' : 'Kérek segítséget'}
+                                                </button>
+                                                <button
+                                                    className="flag-btn"
+                                                    onClick={() => handleFlag(answer.questionId)}
+                                                    disabled={isFlagged}
+                                                    style={{ marginLeft: 8 }}
+                                                >
+                                                    {isFlagged ? 'Jelzés elküldve' : 'Nem értem a javítást'}
+                                                </button>
+                                                {showTutor && (
+                                                    <TutorChat
+                                                        questionText={answer.questionText}
+                                                        correctAnswer={answer.correctAnswer}
+                                                        studentAnswer={answer.studentAnswer}
+                                                    />
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}

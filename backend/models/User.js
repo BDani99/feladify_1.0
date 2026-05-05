@@ -6,7 +6,9 @@ const assignmentAnswerSchema = new mongoose.Schema({
     {
       questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Question', required: true },
       studentAnswer: { type: String, required: true },
-      score: { type: Number, default: 0 }
+      score: { type: Number, default: 0 },
+      confidence: { type: Number, default: null },
+      flagged: { type: Boolean, default: false }
     }
   ],
   achievedPoints: { type: Number, default: 0 },

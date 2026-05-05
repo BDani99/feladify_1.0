@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken'); // Importáljuk a JWT-t a token kezeléséh
 const Assignment = require('../models/Assignment');
 const User = require('../models/User');
 const Class = require('../models/Class');
-const { generateText, generateChat } = require('../services/groq');
+const { generateText, generateChat, generateChatWithHistory } = require('../services/groq');
 const router = express.Router();
 const authenticateTeacher = require('../middleware/authenticateTeacher');
 const authenticateStudent = require('../middleware/authenticateStudent');
@@ -394,7 +394,9 @@ router.get('/student/completed-assignments', authenticateStudent, async (req, re
           questionText: question ? question.questionText : null,
           studentAnswer: answer.studentAnswer,
           correctAnswer: question ? question.correctAnswer : null,
-          score: answer.score
+          score: answer.score,
+          confidence: answer.confidence ?? null,
+          flagged: answer.flagged ?? false,
         };
       })
     }));
@@ -457,38 +459,44 @@ router.post('/student/submit/:assignmentId', authenticateStudent, async (req, re
     let achievedPoints = 0;
     const answerData = [];
 
-    // Loop through each question and evaluate the answer using GPT
     for (const question of assignment.questions) {
       const studentAnswer = answers[question._id];
       let score = 0;
+      let confidence = null;
 
       if (studentAnswer) {
-        const evalPrompt = `Is the following answer correct based on the provided correct answer? Please answer "yes" or "no".
+        const isMC = Array.isArray(question.options) && question.options.length > 0;
+        if (isMC) {
+          // Feleletválasztós: pontos string összehasonlítás
+          if (studentAnswer.trim() === (question.correctAnswer || '').trim()) {
+            score = question.points;
+            achievedPoints += question.points;
+          }
+          confidence = 1.0;
+        } else {
+          // Nyílt végű: AI értékelés konfidenciaszinttel
+          const evalPrompt = `Értékeld a diák válaszát az alábbi kérdésre. Válaszolj KIZÁRÓLAG ebben a JSON formátumban, semmi más szöveg:
+{"isCorrect": true, "confidence": 0.9}
 
-Question: ${question.questionText}
-Correct Answer: ${question.correctAnswer}
-Student's Answer: ${studentAnswer}`;
+Kérdés: ${question.questionText}
+Helyes válasz: ${question.correctAnswer}
+Diák válasza: ${studentAnswer}
 
-        const evalResponse = await generateText(evalPrompt);
-        const geminiAnswer = evalResponse.trim().toLowerCase();
+- isCorrect: igaz, ha a diák válasza lényegében helyes (lehet más szavakkal megfogalmazva)
+- confidence: mennyire biztos az értékelés (0.0–1.0; alacsony ha a kérdés szubjektív vagy a válasz részleges)`;
 
-        if (geminiAnswer.startsWith('yes')) {
-          score = question.points;
-          achievedPoints += question.points;
+          const evalResponse = await generateText(evalPrompt);
+          const parsed = parseJsonQuestions(evalResponse);
+          if (parsed && parsed.isCorrect === true) {
+            score = question.points;
+            achievedPoints += question.points;
+          }
+          confidence = (parsed && typeof parsed.confidence === 'number') ? parsed.confidence : 0.5;
         }
 
-        answerData.push({
-          questionId: question._id,
-          studentAnswer,
-          score
-        });
+        answerData.push({ questionId: question._id, studentAnswer, score, confidence });
       } else {
-        // Ha egy kérdéshez nincs válasz, ezt is jelzi
-        answerData.push({
-          questionId: question._id,
-          studentAnswer: null,
-          score: 0
-        });
+        answerData.push({ questionId: question._id, studentAnswer: null, score: 0, confidence: null });
       }
     }
 
@@ -523,6 +531,132 @@ Student's Answer: ${studentAnswer}`;
     }
 
     res.status(500).json({ message: 'Hiba történt a dolgozat beküldése során.' });
+  }
+});
+
+// Diák "Nem értem" jelzés beküldése
+router.patch('/student/flag-answer', authenticateStudent, async (req, res) => {
+  try {
+    const studentId = req.userId;
+    const { assignmentId, questionId } = req.body;
+    if (!assignmentId || !questionId) {
+      return res.status(400).json({ message: 'assignmentId és questionId megadása kötelező.' });
+    }
+    const mongoose = require('mongoose');
+    const aId = new mongoose.Types.ObjectId(assignmentId);
+    const qId = new mongoose.Types.ObjectId(questionId);
+    const result = await User.updateOne(
+      { _id: studentId },
+      { $set: { 'assignments.$[a].answers.$[ans].flagged': true } },
+      { arrayFilters: [{ 'a.assignmentId': aId }, { 'ans.questionId': qId }] }
+    );
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ message: 'Válasz nem található.' });
+    }
+    res.json({ message: 'Jelzés elküldve.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Hiba a jelzés mentésekor.' });
+  }
+});
+
+// Tanár: diákok válaszainak lekérése egy dolgozathoz
+router.get('/teacher/assignment-submissions/:assignmentId', authenticateTeacher, async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+    const assignment = await Assignment.findById(assignmentId);
+    if (!assignment) return res.status(404).json({ message: 'Dolgozat nem található.' });
+
+    const students = await User.find({ 'assignments.assignmentId': assignmentId }).select('name assignments');
+
+    const submissions = students.map(student => {
+      const submission = student.assignments.find(a => a.assignmentId.equals(assignmentId));
+      if (!submission) return null;
+      return {
+        studentId: student._id,
+        studentName: student.name,
+        achievedPoints: submission.achievedPoints,
+        totalPoints: assignment.totalPoints,
+        completedAt: submission.completedAt,
+        answers: submission.answers.map(answer => {
+          const question = assignment.questions.find(q => q._id.equals(answer.questionId));
+          return {
+            questionId: answer.questionId,
+            questionText: question ? question.questionText : null,
+            options: question ? question.options : [],
+            studentAnswer: answer.studentAnswer,
+            correctAnswer: question ? question.correctAnswer : null,
+            score: answer.score,
+            maxPoints: question ? question.points : 1,
+            confidence: answer.confidence ?? null,
+            flagged: answer.flagged ?? false,
+          };
+        }),
+      };
+    }).filter(Boolean);
+
+    res.json({ submissions });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Hiba a beküldések lekérésekor.' });
+  }
+});
+
+// Tanár: pontszám felülírása
+router.put('/teacher/override-score', authenticateTeacher, async (req, res) => {
+  try {
+    const { studentId, assignmentId, questionId, score } = req.body;
+    if (studentId === undefined || !assignmentId || !questionId || score === undefined) {
+      return res.status(400).json({ message: 'Hiányzó mezők.' });
+    }
+    const mongoose = require('mongoose');
+    const aId = new mongoose.Types.ObjectId(assignmentId);
+    const qId = new mongoose.Types.ObjectId(questionId);
+
+    await User.updateOne(
+      { _id: studentId },
+      { $set: { 'assignments.$[a].answers.$[ans].score': Number(score) } },
+      { arrayFilters: [{ 'a.assignmentId': aId }, { 'ans.questionId': qId }] }
+    );
+
+    // Újraszámol achievedPoints
+    const student = await User.findById(studentId);
+    const submission = student.assignments.find(a => a.assignmentId.equals(aId));
+    if (submission) {
+      const newAchievedPoints = submission.answers.reduce((sum, a) => sum + (a.score || 0), 0);
+      await User.updateOne(
+        { _id: studentId, 'assignments.assignmentId': aId },
+        { $set: { 'assignments.$.achievedPoints': newAchievedPoints } }
+      );
+    }
+
+    res.json({ message: 'Pontszám sikeresen frissítve.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Hiba a pontszám felülírásakor.' });
+  }
+});
+
+// Diák: Szókratészi AI tutor chat
+router.post('/student/tutor', authenticateStudent, async (req, res) => {
+  try {
+    const { questionText, correctAnswer, studentAnswer, chatHistory } = req.body;
+    if (!questionText || !studentAnswer) {
+      return res.status(400).json({ message: 'questionText és studentAnswer megadása kötelező.' });
+    }
+    const systemPrompt = `Te egy türelmes, segítőkész általános iskolai tanár vagy magyarul.
+A diák hibásan válaszolt egy kérdésre. A feladatod, hogy rávezető kérdésekkel segítsd megérteni a helyes választ.
+TILOS közvetlenül megadnod a helyes választ. Tegyél fel 1-2 rövid, egyszerű rávezető kérdést.
+Minden válaszod legyen magyarul és tömör (max 2-3 mondat).
+Kérdés: "${questionText}"
+A diák hibás válasza: "${studentAnswer}"`;
+
+    const history = Array.isArray(chatHistory) ? chatHistory : [];
+    const response = await generateChatWithHistory(systemPrompt, history);
+    res.json({ response });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Hiba a tutor válasz generálásakor.' });
   }
 });
 

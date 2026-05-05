@@ -27,4 +27,13 @@ async function generateChat(systemPrompt, userMessage) {
   return response.choices[0].message.content.trim();
 }
 
-module.exports = { generateText, generateChat };
+async function generateChatWithHistory(systemPrompt, messages) {
+  const response = await groq.chat.completions.create({
+    model: 'llama-3.1-8b-instant',
+    messages: [{ role: 'system', content: systemPrompt }, ...messages],
+    temperature: 0.5,
+  });
+  return response.choices[0].message.content.trim();
+}
+
+module.exports = { generateText, generateChat, generateChatWithHistory };
