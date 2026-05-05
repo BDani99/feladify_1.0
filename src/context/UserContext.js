@@ -7,6 +7,12 @@ export const useUser = () => useContext(UserContext);
 
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState(null);
+    const [theme, setTheme] = useState(() => localStorage.getItem('feladify-theme') || 'dark');
+
+    useEffect(() => {
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('feladify-theme', theme);
+    }, [theme]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -26,8 +32,12 @@ export const UserProvider = ({ children }) => {
 
     const isLoggedIn = !!sessionStorage.getItem('isLoggedIn');
 
+    const toggleTheme = () => {
+        setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    };
+
     return (
-        <UserContext.Provider value={{ user, isLoggedIn }}>
+        <UserContext.Provider value={{ user, isLoggedIn, theme, toggleTheme }}>
             {children}
         </UserContext.Provider>
     );

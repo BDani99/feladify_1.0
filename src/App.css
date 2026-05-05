@@ -1,23 +1,56 @@
+:root,
+[data-theme="dark"] {
+    --bg-page:        rgba(53, 53, 53, 0.856);
+    --bg-sidebar:     #333;
+    --bg-header:      #333;
+    --bg-card:        #747474;
+    --bg-form-group:  #4a4a4a;
+    --bg-input:       #f5f5f5;
+    --color-text:     #f5f2f2f1;
+    --color-text-dim: #bbb;
+    --border-color:   #555;
+    --border-color-2: #858585;
+    --accent:         #1478e2;
+    --accent-hover:   #007bff;
+    --shadow:         rgba(219, 219, 219, 0.1);
+}
+
+[data-theme="light"] {
+    --bg-page:        #f0f2f5;
+    --bg-sidebar:     #ffffff;
+    --bg-header:      #ffffff;
+    --bg-card:        #ffffff;
+    --bg-form-group:  #f8f8f8;
+    --bg-input:       #ffffff;
+    --color-text:     #1a1a1a;
+    --color-text-dim: #555;
+    --border-color:   #ddd;
+    --border-color-2: #ccc;
+    --accent:         #1478e2;
+    --accent-hover:   #0056b3;
+    --shadow:         rgba(0, 0, 0, 0.08);
+}
+
 body {
-    background-color: rgba(53, 53, 53, 0.856);
+    background-color: var(--bg-page);
     height: 80vh;
 }
 
 #content {
-    color: white;
+    color: var(--color-text);
     margin-left: 250px;
 }
 
 .title {
     text-align: left;
-    color: #f5f2f2f1;
+    color: var(--color-text);
     margin-top: 55px;
 }
 
 .main-button {
     width: 100%;
     padding: 10px;
-    background-color: #1478e2;
+    background-color: var(--accent);
     border: none;
     color: #fff;
     font-size: 16px;
@@ -29,7 +62,7 @@ body {
 }
 
 .main-button:hover {
-    background-color: #007bff;
+    background-color: var(--accent-hover);
 }
 
 .main-button:disabled {

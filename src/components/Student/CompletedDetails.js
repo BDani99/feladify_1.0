@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { FaCheck, FaTimes } from 'react-icons/fa';
+import { FaCheck, FaTimes, FaClock } from 'react-icons/fa';
 import '../../styles/Student/CompletedDetails.css';
 
 const CompletedDetails = () => {
@@ -20,21 +20,31 @@ const CompletedDetails = () => {
                     </div>
                     <div className='answers-container'>
                         <div className="answers-list">
-                            {assignment.answers.map((answer, index) => (
-                                <div key={answer.questionId} className="answer-item">
-                                    <div className='answer-icon-container'>
-                                        {answer.score === 0 ? (
-                                            <FaTimes style={{ color: 'red', fontSize: '25px' }} />
-                                        ) : (
-                                            <FaCheck style={{ color: 'green', fontSize: '25px' }} />
-                                        )}
+                            {assignment.answers.map((answer, index) => {
+                                const isOpenEnded = !answer.correctAnswer?.startsWith('A:') && !answer.correctAnswer?.startsWith('B:');
+                                const isPending = answer.score === 0 && isOpenEnded;
+                                const isWrong = answer.score === 0 && !isOpenEnded;
+                                return (
+                                    <div key={answer.questionId} className="answer-item">
+                                        <div className='answer-icon-container'>
+                                            {isPending ? (
+                                                <span className="answer-pending-badge">
+                                                    <FaClock style={{ fontSize: '14px' }} />
+                                                    Javítás alatt
+                                                </span>
+                                            ) : isWrong ? (
+                                                <FaTimes style={{ color: 'red', fontSize: '25px' }} />
+                                            ) : (
+                                                <FaCheck style={{ color: 'green', fontSize: '25px' }} />
+                                            )}
+                                        </div>
+                                        <p><strong>{index + 1}. kérdés:</strong> {answer.questionText}</p>
+                                        <p><strong>Helyes válasz:</strong> {answer.correctAnswer}</p>
+                                        <p><strong>A te válaszod:</strong> {answer.studentAnswer}</p>
+                                        <p><strong>Elért pont:</strong> {answer.score} pont</p>
                                     </div>
-                                    <p><strong>{index + 1}. kérdés:</strong> {answer.questionText}</p>
-                                    <p><strong>Helyes válasz:</strong> {answer.correctAnswer}</p>
-                                    <p><strong>A te válaszod:</strong> {answer.studentAnswer}</p>
-                                    <p><strong>Elért pont:</strong> {answer.score} pont</p>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

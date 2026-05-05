@@ -65,20 +65,41 @@ const AssignmentSubmitForm = () => {
                     ) : (
                         <form onSubmit={handleSubmit} className='assignment-form'>
                             <div className='question-container'>
-                                {assignment.questions.map((question, index) => (
-                                    <div key={question._id} className="question-box">
-                                        <label htmlFor={question._id}>
-                                            {index + 1}. {question.questionText}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id={question._id}
-                                            onChange={(e) => handleAnswerChange(question._id, e.target.value)}
-                                            placeholder="Add meg a válaszod!"
-                                            required
-                                        />
-                                    </div>
-                                ))}
+                                {assignment.questions.map((question, index) => {
+                                    const isMC = Array.isArray(question.options) && question.options.length > 0;
+                                    return (
+                                        <div key={question._id} className="question-box">
+                                            <label>
+                                                {index + 1}. {question.questionText}
+                                            </label>
+                                            {isMC ? (
+                                                <div className="mc-options">
+                                                    {question.options.map((opt) => (
+                                                        <label key={opt} className="mc-option-label">
+                                                            <input
+                                                                type="radio"
+                                                                name={question._id}
+                                                                value={opt}
+                                                                checked={answers[question._id] === opt}
+                                                                onChange={() => handleAnswerChange(question._id, opt)}
+                                                                required
+                                                            />
+                                                            {opt}
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    id={question._id}
+                                                    onChange={(e) => handleAnswerChange(question._id, e.target.value)}
+                                                    placeholder="Add meg a válaszod!"
+                                                    required
+                                                />
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                             <button
                                 type="submit"

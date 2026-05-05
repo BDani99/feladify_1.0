@@ -15,6 +15,26 @@ const DIFFICULTY_DESCRIPTIONS = {
   'Nehéz': 'összetett kérdések, amelyek analízist és kritikus gondolkodást igényelnek, 7-8. osztályos szinten',
 };
 
+function getDifficultyDescription(difficulty, className) {
+  if (DIFFICULTY_DESCRIPTIONS[difficulty]) return DIFFICULTY_DESCRIPTIONS[difficulty];
+  const match = className && className.match(/^(\d+)/);
+  const grade = match ? parseInt(match[1]) : null;
+  if (grade) {
+    if (difficulty === 'Könnyített') return `a ${grade}. osztályos tananyag könnyebb, alapszintű kérdései – az anyag egyszerűbb részei, könnyen megválaszolható feladatok ${grade}. osztályos tanulók számára`;
+    if (difficulty === 'Normál')     return `a ${grade}. osztályos tananyagnak megfelelő, standard nehézségű kérdések – az elvárható tudásszint szerint`;
+    if (difficulty === 'Kihívás')    return `a ${grade}. osztályos tananyag mélyebb megértését igénylő, összetettebb feladatok – kihívást jelentő, gondolkodtató kérdések ${grade}. osztályos szinten`;
+  }
+  return difficulty;
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function parseJsonQuestions(text) {
   const attempts = [
     () => JSON.parse(text),
@@ -27,39 +47,13 @@ function parseJsonQuestions(text) {
   return null;
 }
 
-// Feladatsor generálása, csak tanároknak
-router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
-  try {
-    const { title, subject, difficulty, className, questionCount, questionType = 'nyilt' } = req.body;
-
-    const missingFields = [];
-    if (!title) missingFields.push('title');
-    if (!subject) missingFields.push('subject');
-    if (!difficulty) missingFields.push('difficulty');
-    if (!className) missingFields.push('className');
-    if (!questionCount) missingFields.push('questionCount');
-    if (missingFields.length > 0) {
-      return res.status(400).json({ message: `A következő mezők megadása kötelező: ${missingFields.join(', ')}.` });
-    }
-
-    const numQuestions = Number.isInteger(questionCount) && questionCount > 0 ? questionCount : 5;
-    const diffDesc = DIFFICULTY_DESCRIPTIONS[difficulty] || difficulty;
-
-    const classData = await Class.findOne({ name: className });
-    if (!classData) {
-      return res.status(400).json({ message: 'Az adott osztály nem található.' });
-    }
-
-    const students = await User.find({ role: 'student', className: classData.name }).select('_id');
-    if (students.length === 0) {
-      return res.status(400).json({ message: 'Nincs diák az adott osztályban.' });
-    }
-
-    const studentIds = students.map(student => student._id);
-
+// Közös AI generálás helper (nem ment DB-be)
+async function generateQuestions(subject, title, diffDesc, resolvedTypes) {
+  const allQuestions = [];
+  for (const { type, count } of resolvedTypes) {
     let prompt;
-    if (questionType === 'feleletvalasztos') {
-      prompt = `Készíts pontosan ${numQuestions} db feleletválasztós ${subject} kérdést a(z) "${title}" témakörből.
+    if (type === 'feleletvalasztos') {
+      prompt = `Készíts pontosan ${count} db feleletválasztós ${subject} kérdést a(z) "${title}" témakörből.
 Nehézség: ${diffDesc}.
 Minden kérdésnek legyen 4 válaszlehetősége (A, B, C, D), amelyek közül pontosan egy helyes.
 A kérdések és válaszok legyenek általános iskolás szintűek, rövidek és egyértelműek.
@@ -67,7 +61,7 @@ A kérdések és válaszok legyenek általános iskolás szintűek, rövidek és
 Kizárólag ezt a JSON formátumot add vissza, semmi mást, semmi magyarázat:
 {"questions":[{"questionText":"Kérdés szövege","options":["A: első lehetőség","B: második lehetőség","C: harmadik lehetőség","D: negyedik lehetőség"],"correctAnswer":"A: első lehetőség"}]}`;
     } else {
-      prompt = `Készíts pontosan ${numQuestions} db nyílt végű ${subject} kérdést a(z) "${title}" témakörből.
+      prompt = `Készíts pontosan ${count} db nyílt végű ${subject} kérdést a(z) "${title}" témakörből.
 Nehézség: ${diffDesc}.
 Minden kérdésre adj rövid, pontos helyes választ (1-2 mondat).
 A kérdések és válaszok legyenek általános iskolás szintűek és egyértelműek.
@@ -75,41 +69,124 @@ A kérdések és válaszok legyenek általános iskolás szintűek és egyértel
 Kizárólag ezt a JSON formátumot add vissza, semmi mást, semmi magyarázat:
 {"questions":[{"questionText":"Kérdés szövege","correctAnswer":"Helyes válasz szövege"}]}`;
     }
-
     const responseText = await generateText(prompt);
     const parsed = parseJsonQuestions(responseText);
-
     if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
-      return res.status(500).json({ message: 'A kérdések generálása sikertelen. Kérjük, próbálja újra.' });
+      throw new Error('A kérdések generálása sikertelen. Kérjük, próbálja újra.');
     }
-
-    const questions = parsed.questions.slice(0, numQuestions).map(q => ({
+    const mapped = parsed.questions.slice(0, count).map(q => ({
       questionText: (q.questionText || '').trim(),
       options: Array.isArray(q.options) ? q.options : [],
       correctAnswer: (q.correctAnswer || '').trim() || null,
       points: 1,
     }));
+    allQuestions.push(...mapped);
+  }
+  return shuffleArray(allQuestions);
+}
 
-    const totalPoints = questions.length;
+function resolveQuestionTypes(body) {
+  if (Array.isArray(body.questionTypes) && body.questionTypes.length > 0) {
+    return body.questionTypes.filter(t => t.count >= 1 && t.count <= 20);
+  }
+  const count = Number(body.questionCount) || 5;
+  return [{ type: body.questionType || 'nyilt', count }];
+}
+
+// Előnézet generálása (DB írás nélkül)
+router.post('/teacher/preview', authenticateTeacher, async (req, res) => {
+  try {
+    const { title, subject, difficulty, className } = req.body;
+    const missing = ['title','subject','difficulty','className'].filter(f => !req.body[f]);
+    if (missing.length > 0) return res.status(400).json({ message: `Hiányzó mezők: ${missing.join(', ')}.` });
+
+    const validTypes = resolveQuestionTypes(req.body);
+    if (validTypes.length === 0) return res.status(400).json({ message: 'Legalább egy kérdéstípust meg kell adni.' });
+
+    const diffDesc = getDifficultyDescription(difficulty, className);
+    const questions = await generateQuestions(subject, title, diffDesc, validTypes);
+
+    res.status(200).json({ questions });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message || 'Hiba történt a generálás során.' });
+  }
+});
+
+// Szerkesztett dolgozat mentése DB-be
+router.post('/teacher/save', authenticateTeacher, async (req, res) => {
+  try {
+    const { title, subject, difficulty, className, questions, timeLimit, startDate, dueDate } = req.body;
+    const missing = ['title','subject','difficulty','className'].filter(f => !req.body[f]);
+    if (missing.length > 0) return res.status(400).json({ message: `Hiányzó mezők: ${missing.join(', ')}.` });
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ message: 'Nincsenek kérdések a mentéshez.' });
+    }
+
+    const classData = await Class.findOne({ name: className });
+    if (!classData) return res.status(400).json({ message: 'Az adott osztály nem található.' });
+
+    const students = await User.find({ role: 'student', className: classData.name }).select('_id');
+    if (students.length === 0) return res.status(400).json({ message: 'Nincs diák az adott osztályban.' });
+
+    const cleanQuestions = questions.map(q => ({
+      questionText: (q.questionText || '').trim(),
+      options: Array.isArray(q.options) ? q.options : [],
+      correctAnswer: (q.correctAnswer || '').trim() || null,
+      points: Number(q.points) || 1,
+    }));
 
     const assignment = new Assignment({
       teacherId: req.userId,
       title,
       subject,
       difficulty,
-      questions,
-      studentIds,
-      totalPoints,
-      achievedPoints: 0,
+      questions: cleanQuestions,
+      studentIds: students.map(s => s._id),
+      totalPoints: cleanQuestions.length,
+      timeLimit: timeLimit ? Number(timeLimit) : null,
+      startDate: startDate ? new Date(startDate) : null,
+      dueDate: dueDate ? new Date(dueDate) : null,
       createdAt: new Date(),
     });
 
     await assignment.save();
+    res.status(201).json({ message: 'Feladatsor sikeresen mentve és hozzárendelve az osztály diákjaihoz.', assignment });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Hiba történt a mentés során.' });
+  }
+});
 
+// Feladatsor generálása, csak tanároknak (legacy - közvetlen mentés)
+router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
+  try {
+    const { title, subject, difficulty, className } = req.body;
+    const missing = ['title','subject','difficulty','className'].filter(f => !req.body[f]);
+    if (missing.length > 0) return res.status(400).json({ message: `Hiányzó mezők: ${missing.join(', ')}.` });
+
+    const validTypes = resolveQuestionTypes(req.body);
+    if (validTypes.length === 0) return res.status(400).json({ message: 'Legalább egy kérdéstípust meg kell adni.' });
+
+    const diffDesc = getDifficultyDescription(difficulty, className);
+    const classData = await Class.findOne({ name: className });
+    if (!classData) return res.status(400).json({ message: 'Az adott osztály nem található.' });
+
+    const students = await User.find({ role: 'student', className: classData.name }).select('_id');
+    if (students.length === 0) return res.status(400).json({ message: 'Nincs diák az adott osztályban.' });
+
+    const questions = await generateQuestions(subject, title, diffDesc, validTypes);
+
+    const assignment = new Assignment({
+      teacherId: req.userId, title, subject, difficulty,
+      questions, studentIds: students.map(s => s._id),
+      totalPoints: questions.length, createdAt: new Date(),
+    });
+    await assignment.save();
     res.status(201).json({ message: 'Feladatsor sikeresen generálva és hozzárendelve a kiválasztott osztály diákjaihoz', assignment });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Hiba történt a feladatsor generálása közben.' });
+    res.status(500).json({ message: error.message || 'Hiba történt a feladatsor generálása közben.' });
   }
 });
 

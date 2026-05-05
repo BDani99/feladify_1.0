@@ -16,6 +16,9 @@ const assignmentSchema = new mongoose.Schema({
   studentIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   totalPoints: { type: Number, default: 0 },
   completedCount: { type: Number, default: 0 },
+  timeLimit: { type: Number, default: null },
+  startDate: { type: Date, default: null },
+  dueDate: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 

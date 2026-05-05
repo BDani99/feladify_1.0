@@ -107,80 +107,94 @@ const TeacherSettings = () => {
                 <div className='generate-scroll-container'>
                     <div className="generate-container">
                         <form className="settings-form" onSubmit={handleSave}>
-                            <div className="form-group">
-                                <label htmlFor="name">Név:</label>
-                                <input
-                                    type="text"
-                                    id="name"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="email">Email:</label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
-                            </div>
 
-                            <div className="form-group2">
-                                <label>Tantárgyak:</label>
-                                <div className="checkbox-group">
-                                    {CANONICAL_SUBJECTS.map(subject => (
-                                        <label key={subject} className="subject-checkbox-label">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedSubjects.includes(subject)}
-                                                onChange={() => toggleSubject(subject)}
-                                            />
-                                            {subject}
-                                        </label>
-                                    ))}
+                            <div className="card settings-card">
+                                <div className="card-body">
+                                    <h5 className="card-title">Személyes adatok</h5>
+                                    <div className="form-group">
+                                        <label htmlFor="name">Név:</label>
+                                        <input
+                                            type="text"
+                                            id="name"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label htmlFor="email">Email:</label>
+                                        <input
+                                            type="email"
+                                            id="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            required
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="form-group2">
-                                <label>Osztályok:</label>
-                                <div className="checkbox-group">
-                                    {allClasses.map(cls => (
-                                        <label key={cls._id} className="subject-checkbox-label">
+                            <div className="card settings-card">
+                                <div className="card-body">
+                                    <h5 className="card-title">Tantárgyak</h5>
+                                    <div className="form-group2">
+                                        <div className="checkbox-group">
+                                            {CANONICAL_SUBJECTS.map(subject => (
+                                                <label key={subject} className="subject-checkbox-label">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedSubjects.includes(subject)}
+                                                        onChange={() => toggleSubject(subject)}
+                                                    />
+                                                    {subject}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="card settings-card">
+                                <div className="card-body">
+                                    <h5 className="card-title">Osztályok</h5>
+                                    <div className="form-group2">
+                                        <div className="checkbox-group">
+                                            {allClasses.map(cls => (
+                                                <label key={cls._id} className="subject-checkbox-label">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={myClassIds.includes(cls._id)}
+                                                        onChange={() => toggleClass(cls._id)}
+                                                    />
+                                                    {cls.name}
+                                                </label>
+                                            ))}
+                                        </div>
+                                        <div className="class-create-row">
                                             <input
-                                                type="checkbox"
-                                                checked={myClassIds.includes(cls._id)}
-                                                onChange={() => toggleClass(cls._id)}
+                                                type="text"
+                                                placeholder="Új osztály neve..."
+                                                value={newClassName}
+                                                onChange={(e) => setNewClassName(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        handleCreateClass();
+                                                    }
+                                                }}
                                             />
-                                            {cls.name}
-                                        </label>
-                                    ))}
+                                            <button
+                                                type="button"
+                                                className="class-create-btn"
+                                                onClick={handleCreateClass}
+                                                disabled={isCreatingClass || !newClassName.trim()}
+                                            >
+                                                {isCreatingClass ? '...' : 'Létrehozás'}
+                                            </button>
+                                        </div>
+                                        {classError && <p className="settings-error">{classError}</p>}
+                                    </div>
                                 </div>
-                                <div className="class-create-row">
-                                    <input
-                                        type="text"
-                                        placeholder="Új osztály neve..."
-                                        value={newClassName}
-                                        onChange={(e) => setNewClassName(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                e.preventDefault();
-                                                handleCreateClass();
-                                            }
-                                        }}
-                                    />
-                                    <button
-                                        type="button"
-                                        className="class-create-btn"
-                                        onClick={handleCreateClass}
-                                        disabled={isCreatingClass || !newClassName.trim()}
-                                    >
-                                        {isCreatingClass ? '...' : 'Létrehozás'}
-                                    </button>
-                                </div>
-                                {classError && <p className="settings-error">{classError}</p>}
                             </div>
 
                             <button type="submit" className="main-button" disabled={isSaving}>

@@ -1,21 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { generateAssignment } from '../../api/Assignments/Teacher/GenerateAssignment';
+import { previewAssignment, saveAssignment } from '../../api/Assignments/Teacher/GenerateAssignment';
 import { fetchTeacherClasses } from '../../api/Assignments/Teacher/GetClasses';
 import { fetchUserData } from '../../api/Auth/ProfileData';
+import PreviewModal from '../../components/Teacher/PreviewModal';
 import '../../styles/Teacher/AssignmentGenerate.css';
+
+const DIFFICULTY_OPTIONS = ['Könnyített', 'Normál', 'Kihívás'];
 
 const AssignmentGenerate = ({ token }) => {
     const [title, setTitle] = useState('');
     const [subject, setSubject] = useState('');
-    const [difficulty, setDifficulty] = useState('Könnyű');
+    const [difficulty, setDifficulty] = useState('Normál');
     const [className, setClassName] = useState('');
-    const [questionCount, setQuestionCount] = useState(5);
-    const [questionType, setQuestionType] = useState('nyilt');
+    const [nyiltChecked, setNyiltChecked] = useState(true);
+    const [nyiltCount, setNyiltCount] = useState(3);
+    const [feleletChecked, setFeleletChecked] = useState(false);
+    const [feleletCount, setFeleletCount] = useState(3);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [timeLimit, setTimeLimit] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [dueDate, setDueDate] = useState('');
+    const [showModal, setShowModal] = useState(false);
+    const [previewQuestions, setPreviewQuestions] = useState([]);
     const [classes, setClasses] = useState([]);
     const [teacherSubjects, setTeacherSubjects] = useState([]);
+
+    const difficultyOptions = DIFFICULTY_OPTIONS;
 
     useEffect(() => {
         const loadData = async () => {
@@ -25,9 +37,10 @@ const AssignmentGenerate = ({ token }) => {
                     fetchUserData(),
                 ]);
                 setClasses(fetchedClasses);
-                setTeacherSubjects(userData.subjects || []);
-                if (userData.subjects && userData.subjects.length === 1) {
-                    setSubject(userData.subjects[0]);
+                const subjects = userData.user?.subjects || userData.subjects || [];
+                setTeacherSubjects(subjects);
+                if (subjects.length === 1) {
+                    setSubject(subjects[0]);
                 }
             } catch (err) {
                 setError(err.message || 'Hiba történt az adatok betöltése során.');
@@ -36,28 +49,49 @@ const AssignmentGenerate = ({ token }) => {
         loadData();
     }, [token]);
 
+    const handleClassChange = (e) => {
+        setClassName(e.target.value);
+        setDifficulty('Normál');
+    };
+
     const handleGenerate = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         setMessage('');
         setError('');
 
-        if (questionCount < 1 || questionCount > 20) {
-            setError('A kérdések száma 1 és 20 között kell, hogy legyen!');
+        if (!subject) {
+            setError('Kérjük, válassz tantárgyat!');
             setIsLoading(false);
             return;
         }
 
+        if (!nyiltChecked && !feleletChecked) {
+            setError('Legalább egy kérdéstípust ki kell jelölni!');
+            setIsLoading(false);
+            return;
+        }
+
+        if (nyiltChecked && (nyiltCount < 1 || nyiltCount > 20)) {
+            setError('A nyílt végű kérdések száma 1 és 20 között kell, hogy legyen!');
+            setIsLoading(false);
+            return;
+        }
+
+        if (feleletChecked && (feleletCount < 1 || feleletCount > 20)) {
+            setError('A feleletválasztós kérdések száma 1 és 20 között kell, hogy legyen!');
+            setIsLoading(false);
+            return;
+        }
+
+        const questionTypes = [];
+        if (nyiltChecked) questionTypes.push({ type: 'nyilt', count: nyiltCount });
+        if (feleletChecked) questionTypes.push({ type: 'feleletvalasztos', count: feleletCount });
+
         try {
-            const data = await generateAssignment(title, subject, difficulty, className, questionCount, questionType);
-            setMessage(data.message || 'A dolgozat sikeresen legenerálva!');
-            setTitle('');
-            setSubject(teacherSubjects.length === 1 ? teacherSubjects[0] : '');
-            setDifficulty('Könnyű');
-            setClassName('');
-            setQuestionCount(5);
-            setQuestionType('nyilt');
-            setTimeout(() => setMessage(''), 4000);
+            const data = await previewAssignment(title, subject, difficulty, className, questionTypes);
+            setPreviewQuestions(data.questions);
+            setShowModal(true);
         } catch (err) {
             setError(err.message || 'Hiba történt a dolgozat generálása során.');
         } finally {
@@ -65,16 +99,39 @@ const AssignmentGenerate = ({ token }) => {
         }
     };
 
-    const handleQuestionCountChange = (e) => {
-        const value = parseInt(e.target.value, 10);
-        if (!isNaN(value) && value >= 1 && value <= 20) {
-            setQuestionCount(value);
-        } else {
-            setQuestionCount('');
+    const handleSave = async (editedQuestions) => {
+        setIsLoading(true);
+        setError('');
+        try {
+            const data = await saveAssignment(
+                title, subject, difficulty, className, editedQuestions,
+                timeLimit ? Number(timeLimit) : null,
+                startDate || null,
+                dueDate || null
+            );
+            setShowModal(false);
+            setMessage(data.message || 'Dolgozat sikeresen létrehozva!');
+            setTitle('');
+            setSubject(teacherSubjects.length === 1 ? teacherSubjects[0] : '');
+            setDifficulty('Normál');
+            setClassName('');
+            setNyiltChecked(true);
+            setNyiltCount(3);
+            setFeleletChecked(false);
+            setFeleletCount(3);
+            setTimeLimit('');
+            setStartDate('');
+            setDueDate('');
+            setTimeout(() => setMessage(''), 4000);
+        } catch (err) {
+            setError(err.message || 'Hiba történt a mentés során.');
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
+        <>
         <div id="content">
             <div className="assignment-generate-container">
                 <h1 className='title'>Dolgozat Generálás</h1>
@@ -100,7 +157,6 @@ const AssignmentGenerate = ({ token }) => {
                                         id="subject"
                                         value={subject}
                                         onChange={(e) => setSubject(e.target.value)}
-                                        required
                                     >
                                         <option value="">Válassz tantárgyat</option>
                                         {teacherSubjects.map(s => (
@@ -109,35 +165,9 @@ const AssignmentGenerate = ({ token }) => {
                                     </select>
                                 ) : (
                                     <p className="generate-info-text">
-                                        Nincsenek tantárgyak beállítva. A <a href="/beallitasok" style={{color:'#1478e2'}}>Beállítások</a> oldalon adhatsz hozzá tantárgyakat.
+                                        Nincsenek tantárgyak beállítva. A <a href="/tanar-beallitasok" style={{color:'#1478e2'}}>Beállítások</a> oldalon adhatsz hozzá tantárgyakat.
                                     </p>
                                 )}
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="questionType">Kérdés típusa</label>
-                                <select
-                                    id="questionType"
-                                    value={questionType}
-                                    onChange={(e) => setQuestionType(e.target.value)}
-                                >
-                                    <option value="nyilt">Nyílt végű (írásbeli válasz)</option>
-                                    <option value="feleletvalasztos">Feleletválasztós (A/B/C/D)</option>
-                                </select>
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="difficulty">Nehézségi szint</label>
-                                <select
-                                    id="difficulty"
-                                    value={difficulty}
-                                    onChange={(e) => setDifficulty(e.target.value)}
-                                    required
-                                >
-                                    <option value="Könnyű">Könnyű – 1–4. osztály</option>
-                                    <option value="Közepes">Közepes – 5–6. osztály</option>
-                                    <option value="Nehéz">Nehéz – 7–8. osztály</option>
-                                </select>
                             </div>
 
                             <div className="form-group">
@@ -145,7 +175,7 @@ const AssignmentGenerate = ({ token }) => {
                                 <select
                                     id="className"
                                     value={className}
-                                    onChange={(e) => setClassName(e.target.value)}
+                                    onChange={handleClassChange}
                                     required
                                 >
                                     <option value="">Válassz osztályt</option>
@@ -158,15 +188,91 @@ const AssignmentGenerate = ({ token }) => {
                             </div>
 
                             <div className="form-group">
-                                <label htmlFor="questionCount">Kérdések száma (1–20)</label>
+                                <label htmlFor="difficulty">Nehézségi szint</label>
+                                <select
+                                    id="difficulty"
+                                    value={difficulty}
+                                    onChange={(e) => setDifficulty(e.target.value)}
+                                    required
+                                >
+                                    {difficultyOptions.map(opt => (
+                                        <option key={opt} value={opt}>{opt}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Kérdés típusok</label>
+                                <div className="question-type-row">
+                                    <label className="qt-checkbox-label">
+                                        <input
+                                            type="checkbox"
+                                            checked={nyiltChecked}
+                                            onChange={(e) => setNyiltChecked(e.target.checked)}
+                                        />
+                                        Nyílt végű
+                                    </label>
+                                    <input
+                                        type="number"
+                                        className="qt-count-input"
+                                        value={nyiltCount}
+                                        min="1"
+                                        max="20"
+                                        disabled={!nyiltChecked}
+                                        onChange={(e) => setNyiltCount(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+                                    />
+                                </div>
+                                <div className="question-type-row">
+                                    <label className="qt-checkbox-label">
+                                        <input
+                                            type="checkbox"
+                                            checked={feleletChecked}
+                                            onChange={(e) => setFeleletChecked(e.target.checked)}
+                                        />
+                                        Feleletválasztós
+                                    </label>
+                                    <input
+                                        type="number"
+                                        className="qt-count-input"
+                                        value={feleletCount}
+                                        min="1"
+                                        max="20"
+                                        disabled={!feleletChecked}
+                                        onChange={(e) => setFeleletCount(Math.max(1, Math.min(20, parseInt(e.target.value) || 1)))}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="timeLimit">Időkorlát (perc, opcionális)</label>
                                 <input
                                     type="number"
-                                    id="questionCount"
-                                    value={questionCount}
-                                    onChange={handleQuestionCountChange}
+                                    id="timeLimit"
                                     min="1"
-                                    max="20"
-                                    required
+                                    max="180"
+                                    placeholder="Pl. 45"
+                                    value={timeLimit}
+                                    onChange={(e) => setTimeLimit(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="startDate">Kezdő dátum (opcionális)</label>
+                                <input
+                                    type="datetime-local"
+                                    id="startDate"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="dueDate">Határidő (opcionális)</label>
+                                <input
+                                    type="datetime-local"
+                                    id="dueDate"
+                                    value={dueDate}
+                                    onChange={(e) => setDueDate(e.target.value)}
                                 />
                             </div>
 
@@ -226,6 +332,15 @@ const AssignmentGenerate = ({ token }) => {
                 </div>
             </div>
         </div>
+        {showModal && (
+            <PreviewModal
+                questions={previewQuestions}
+                onSave={handleSave}
+                onClose={() => setShowModal(false)}
+                isLoading={isLoading}
+            />
+        )}
+        </>
     );
 };
 

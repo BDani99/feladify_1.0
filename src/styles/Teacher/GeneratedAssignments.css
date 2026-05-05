@@ -9,7 +9,7 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 30px;
     margin-top: 40px;
-    max-height: calc(100vh - 180px);
+    max-height: calc(100vh - 220px);
     padding: 20px;
     padding-inline: 40px;
     overflow-y: auto;
@@ -34,9 +34,9 @@
 }
 
 .assignment-card {
-    border: 1px solid #858585;
+    border: 1px solid var(--border-color-2);
     border-radius: 6px;
-    background-color: #747474;
+    background-color: var(--bg-card);
     box-shadow: 0 4px 10px rgba(173, 173, 173, 0.24);
     text-align: center;
     transition: transform 0.2s;
@@ -50,11 +50,11 @@
 
 .assignment-card-link {
     text-decoration: none;
-    color: #f5f2f2f1;
+    color: var(--color-text);
 }
 
 .title-container {
-    background-color: #333333bd;
+    background-color: var(--bg-sidebar);
     border-radius: 5px;
     padding-top: 5px;
     padding-bottom: 1px;
@@ -83,6 +83,50 @@
     font-weight: 700;
 }
 
+.deadline-urgent {
+    color: #e74c3c;
+    font-weight: 600;
+}
+
+/* Completed assignments tabs */
+.completed-tabs {
+    margin-top: 24px;
+    padding-inline: 40px;
+    border-bottom: 2px solid var(--border-color);
+    list-style: none;
+    display: flex;
+    padding-left: 40px;
+    margin-bottom: 0;
+}
+
+.completed-tabs .nav-item {
+    list-style: none;
+}
+
+.completed-tabs .nav-link {
+    color: var(--color-text-dim);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 18px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    margin-bottom: -2px;
+    transition: color 0.2s;
+}
+
+.completed-tabs .nav-link.active {
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+    font-weight: 600;
+}
+
+.completed-tabs .nav-link:hover:not(.active) {
+    color: var(--color-text);
+    background-color: rgba(128, 128, 128, 0.1);
+    border-radius: 4px 4px 0 0;
+}
+
 @media (max-width: 1450px) {
     .assignment-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -107,5 +151,10 @@
     .assignment-grid {
         height: calc(100vh - 60px);
         padding-inline: 15px;
+    }
+
+    .completed-tabs {
+        padding-inline: 15px;
+        padding-left: 15px;
     }
 }

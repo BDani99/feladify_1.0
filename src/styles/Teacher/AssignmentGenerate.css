@@ -7,11 +7,11 @@
     max-width: 80%;
     min-width: 450px;
     margin-inline: auto;
-    background-color: #747474;
+    background-color: var(--bg-card);
     padding: 30px;
     padding-inline: 50px;
     border-radius: 6px;
-    box-shadow: 0 4px 10px rgba(219, 219, 219, 0.1);
+    box-shadow: 0 4px 10px var(--shadow);
     margin-top: 40px;
 }
 
@@ -100,7 +100,7 @@ h1 {
 .generate-loading-text {
     margin-top: 30px;
     margin-bottom: -20px;
-    color: #f5f2f2f1;
+    color: var(--color-text);
     font-size: 30px;
 }
 
@@ -257,6 +257,47 @@ h1 {
     font-size: 1.05rem;
     font-weight: 700;
     color: transparent;
+}
+
+.question-type-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+}
+
+.qt-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 160px;
+    color: var(--color-text);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: normal;
+}
+
+.qt-checkbox-label input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.qt-count-input {
+    width: 70px;
+    padding: 6px 8px;
+    border: 1px solid var(--border-color-2);
+    border-radius: 6px;
+    font-size: 15px;
+    background-color: var(--bg-input);
+    color: #333;
+}
+
+.qt-count-input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
