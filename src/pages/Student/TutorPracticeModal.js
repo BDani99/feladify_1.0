@@ -1,139 +1,170 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { getPracticeQuestion, checkAnswer } from '../../api/Student/Tutor';
-import { FaBrain, FaCheck, FaTimes, FaStar, FaArrowRight, FaRedo } from 'react-icons/fa';
-import logo from '../../assets/logo-400.png';
+﻿import React, { useState, useEffect, useCallback } from 'react';
+import { getPracticeQuestionSet, checkAnswer } from '../../api/Student/Tutor';
+import { FaBrain, FaCheck, FaTimes, FaStar, FaRedo, FaRobot, FaLightbulb } from 'react-icons/fa';
 import '../../styles/Student/TutorPracticeModal.css';
 
-// Pontszám az alapján, hány próbálkozásnál sikerült
-const scoreFromAttempts = (attempts) => {
-  if (attempts <= 1) return 100;
-  if (attempts === 2) return 75;
-  if (attempts === 3) return 50;
-  return 25;
-};
-
-const TutorPracticeModal = ({ node, aiTone = 'teacher', hintLevel = 'normal', onClose, onComplete }) => {
-  const [phase, setPhase] = useState('loading'); // loading | question | feedback | done
-  const [question, setQuestion] = useState(null);
+const TutorPracticeModal = ({ checkpoint, subject, onClose, onComplete }) => {
+  const [phase, setPhase] = useState('loading'); // loading | question | feedback
+  const [questions, setQuestions] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState('');
   const [textAnswer, setTextAnswer] = useState('');
-  const [attempts, setAttempts] = useState(0);
+  const [answers, setAnswers] = useState([]);
+  const [attemptCounts, setAttemptCounts] = useState([]);
   const [aiMessage, setAiMessage] = useState('');
-  const [isCorrect, setIsCorrect] = useState(false);
-  const [finalScore, setFinalScore] = useState(null);
   const [loadingCheck, setLoadingCheck] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [isCorrect, setIsCorrect] = useState(false);
 
-  const loadQuestion = useCallback(async () => {
+  const loadQuestions = useCallback(async () => {
     setPhase('loading');
     setLoadError('');
     setSelectedAnswer('');
     setTextAnswer('');
-    setAttempts(0);
+    setAnswers([]);
+    setAttemptCounts([]);
     setAiMessage('');
     setIsCorrect(false);
+
     try {
-      const q = await getPracticeQuestion(node.subject, node.topic);
-      setQuestion(q);
+      // 3 kérdést kérünk az adott nehézségen
+      const result = await getPracticeQuestionSet(subject, checkpoint.topic, checkpoint.difficulty, 3);
+      const qset = result.questions || [];
+      setQuestions(qset);
+      setAnswers(new Array(qset.length).fill(null));
+      setAttemptCounts(new Array(qset.length).fill(0));
+      setCurrentIndex(0);
       setPhase('question');
     } catch (err) {
-      setLoadError('Nem sikerült betölteni a kérdést. Próbáld újra!');
+      console.error('[TutorPracticeModal] loadQuestions error:', err);
+      setLoadError('Nem sikerült betölteni a gyakorló kérdéssort. Próbáld újra!');
       setPhase('loading');
     }
-  }, [node.subject, node.topic]);
+  }, [checkpoint, subject]);
 
   useEffect(() => {
-    loadQuestion();
-  }, [loadQuestion]);
+    loadQuestions();
+  }, [loadQuestions]);
 
-  const getStudentAnswer = () =>
-    question?.type === 'shorttext' ? textAnswer : selectedAnswer;
+  const currentQuestion = questions[currentIndex];
+
+  const getStudentAnswer = () => {
+    if (!currentQuestion) return '';
+    return currentQuestion.type === 'shorttext' ? textAnswer : selectedAnswer;
+  };
 
   const handleSubmitAnswer = async () => {
+    if (!currentQuestion) return;
     const answer = getStudentAnswer();
-    if (!answer.trim()) return;
+    if (!answer || !answer.toString().trim()) return;
 
     setLoadingCheck(true);
-    const newAttempts = attempts + 1;
-    setAttempts(newAttempts);
+    const newAttemptCounts = [...attemptCounts];
+    newAttemptCounts[currentIndex] += 1;
+    setAttemptCounts(newAttemptCounts);
 
     try {
       const result = await checkAnswer({
-        subject: node.subject,
-        topic: node.topic,
-        questionText: question.questionText,
-        questionType: question.type,
+        subject: subject,
+        topic: checkpoint.topic,
+        questionText: currentQuestion.questionText,
+        questionType: currentQuestion.type,
         studentAnswer: answer,
-        correctAnswer: question.correctAnswer,
-        attemptNumber: newAttempts,
-        tone: aiTone
+        correctAnswer: currentQuestion.correctAnswer,
+        attemptNumber: newAttemptCounts[currentIndex]
       });
 
       if (result.correct) {
+        // Helyes válasz esetén
+        const newAnswers = [...answers];
+        newAnswers[currentIndex] = {
+          answer,
+          correct: true,
+          questionText: currentQuestion.questionText
+        };
+        setAnswers(newAnswers);
+        
+        setAiMessage(result.message || 'Helyes válasz! Szép munka, lépjünk is tovább!');
         setIsCorrect(true);
-        setAiMessage(result.message || 'Helyes! Szuper munka! 🎉');
-        setFinalScore(scoreFromAttempts(newAttempts));
-        setPhase('feedback');
-      } else {
-        // Lenient mode: after 2 wrong attempts, give the answer
-        const maxAttempts = hintLevel === 'lenient' ? 2 : 3;
-        if (newAttempts >= maxAttempts) {
-          setIsCorrect(false);
-          setAiMessage(`A helyes válasz: **${question.correctAnswer}**\n\n${question.explanation || ''}`);
-          setFinalScore(scoreFromAttempts(newAttempts + 1));
-          setPhase('feedback');
+
+        // Rövid várakozás után jön a következő kérdés vagy az összegzés
+        if (currentIndex < questions.length - 1) {
+          setTimeout(() => {
+            setCurrentIndex(currentIndex + 1);
+            setSelectedAnswer('');
+            setTextAnswer('');
+            setAiMessage('');
+            setIsCorrect(false);
+          }, 1500);
         } else {
-          setAiMessage(result.hint || 'Gondold át újra! Próbálkozz még egyszer.');
+          setTimeout(() => {
+            setPhase('feedback');
+          }, 1500);
+        }
+      } else {
+        // Helytelen válasz esetén jön a Szókratészi mentorálás (nincs továbblépés!)
+        setAiMessage(result.hint || 'Ebbe még gondolj bele egy kicsit! Próbáld más szemszögből megközelíteni.');
+        setIsCorrect(false);
+        // Csak a kiválasztott választ töröljük, a szövegesnél benne hagyjuk, hogy javíthassa
+        if (currentQuestion.type !== 'shorttext') {
           setSelectedAnswer('');
-          setTextAnswer('');
-          setPhase('question');
         }
       }
     } catch (err) {
-      setAiMessage('Hiba történt az ellenőrzés során. Próbáld újra!');
+      console.error('[TutorPracticeModal] checkAnswer error:', err);
+      setAiMessage('Hiba történt az ellenőrzés során. Kérlek, próbáld újra!');
     } finally {
       setLoadingCheck(false);
     }
   };
 
-  const handleFinish = () => {
-    onComplete(finalScore ?? 25);
+  const computeFinalScore = () => {
+    const correctCount = answers.filter(a => a?.correct).length;
+    return Math.round((correctCount / questions.length) * 100);
   };
 
-  const handleNewQuestion = () => {
-    loadQuestion();
+  const handleFinish = () => {
+    onComplete({
+      score: computeFinalScore(),
+      answers: answers.map((item, index) => ({
+        questionText: questions[index]?.questionText,
+        studentAnswer: item?.answer,
+        correct: item?.correct || false
+      }))
+    });
   };
 
   const renderAnswerArea = () => {
-    if (!question) return null;
-    if (question.type === 'shorttext') {
+    if (!currentQuestion) return null;
+
+    if (currentQuestion.type === 'shorttext') {
       return (
-        <input
-          type="text"
+        <textarea
           className="practice-text-input"
           value={textAnswer}
           onChange={(e) => setTextAnswer(e.target.value)}
-          placeholder="Írd ide a választ..."
-          onKeyDown={(e) => e.key === 'Enter' && handleSubmitAnswer()}
+          placeholder="Ide írd a válaszod..."
+          rows={3}
           autoFocus
+          disabled={isCorrect || loadingCheck}
         />
       );
     }
-    const opts = question.type === 'truefalse'
-      ? ['Igaz', 'Hamis']
-      : (question.options || []);
+
+    const options = currentQuestion.options || [];
     return (
       <div className="practice-options">
-        {opts.map((opt, i) => (
+        {options.map((opt, i) => (
           <button
             key={i}
-            className={`practice-option${selectedAnswer === opt ? ' selected' : ''}`}
+            className={`practice-option ${selectedAnswer === opt ? 'selected' : ''}`}
             onClick={() => setSelectedAnswer(opt)}
+            disabled={isCorrect || loadingCheck}
           >
-            {question.type === 'mcq' && (
+            {currentQuestion.type === 'mcq' && (
               <span className="option-letter">{String.fromCharCode(65 + i)}</span>
             )}
-            <span>{opt}</span>
+            <span className="option-text">{opt}</span>
           </button>
         ))}
       </div>
@@ -143,123 +174,101 @@ const TutorPracticeModal = ({ node, aiTone = 'teacher', hintLevel = 'normal', on
   return (
     <div className="practice-overlay" onClick={onClose}>
       <div className="practice-modal" onClick={(e) => e.stopPropagation()}>
-
-        {/* Header */}
         <div className="practice-header">
           <div className="practice-node-info">
-            <span className="practice-subject">{node.subject}</span>
-            <span className="practice-topic">{node.topic}</span>
+            <span className="practice-subject">{subject}</span>
+            <span className="practice-topic">{checkpoint.topic || 'Kihívás'}</span>
           </div>
-          {attempts > 0 && (
-            <div className="practice-attempts">
-              {[1, 2, 3].map((n) => (
-                <span
-                  key={n}
-                  className={`attempt-dot ${attempts >= n ? (isCorrect && attempts === n ? 'correct' : 'used') : ''}`}
-                />
-              ))}
-            </div>
-          )}
-          <button className="practice-close" onClick={onClose} title="Bezárás">
+          <button className="btn-icon" onClick={onClose} title="Bezárás">
             <FaTimes />
           </button>
         </div>
 
-        {/* Body */}
         <div className="practice-body">
-
-          {/* Loading */}
           {phase === 'loading' && !loadError && (
             <div className="practice-loading">
               <FaBrain className="loading-brain" />
-              <p>Kérdés generálása...</p>
+              <p>Feladatok generálása AI segítséggel...</p>
             </div>
           )}
 
           {loadError && (
-            <div className="practice-loading">
+            <div className="practice-loading error-state">
               <p className="practice-error">{loadError}</p>
-              <button className="practice-btn primary" onClick={loadQuestion}>
+              <button className="btn btn-primary" onClick={loadQuestions}>
                 <FaRedo /> Újrapróbálás
               </button>
             </div>
           )}
 
-          {/* Question phase */}
-          {phase === 'question' && question && (
+          {phase === 'question' && currentQuestion && (
             <>
-              <div className="practice-question-area">
-                {attempts > 0 && aiMessage && (
-                  <div className="ai-hint-banner">
-                    <img src={logo} alt="AI" className="ai-avatar-sm" />
-                    <p>{aiMessage}</p>
-                  </div>
-                )}
-                <p className="practice-question-text">{question.questionText}</p>
-                {renderAnswerArea()}
-              </div>
-
-              <button
-                className="practice-btn primary submit-btn"
-                onClick={handleSubmitAnswer}
-                disabled={loadingCheck || !getStudentAnswer().trim()}
-              >
-                {loadingCheck ? 'Ellenőrzés...' : 'Beküldés'}
-              </button>
-            </>
-          )}
-
-          {/* Feedback phase */}
-          {phase === 'feedback' && (
-            <div className="practice-feedback-area">
-              <div className={`feedback-result ${isCorrect ? 'correct' : 'incorrect'}`}>
-                {isCorrect
-                  ? <FaCheck className="result-icon correct" />
-                  : <FaTimes className="result-icon incorrect" />}
-                <p className="result-label">
-                  {isCorrect ? 'Helyes válasz!' : 'Nem sikerült ezúttal'}
-                </p>
-              </div>
-
-              {/* AI feedback */}
-              <div className="ai-feedback-strip">
-                <img src={logo} alt="AI Tanár" className="ai-avatar" />
-                <div className="ai-feedback-text">
-                  <strong>AI Tanár</strong>
-                  <p>{aiMessage}</p>
-                  {!isCorrect && (
-                    <p className="explanation-text">{question?.explanation}</p>
-                  )}
+              <div className="question-meta">
+                <div className="progress-indicator">
+                  Kérdés: {currentIndex + 1} / {questions.length}
+                </div>
+                <div className="difficulty-indicator">
+                  Nehézség: {checkpoint.difficulty}
                 </div>
               </div>
 
-              {/* Score */}
-              <div className="score-earned">
-                <FaStar className="star-icon" />
-                <span>{finalScore}% elért eredmény</span>
+              {aiMessage && (
+                <div className={`ai-hint-banner ${isCorrect ? 'correct' : 'hint'}`}>
+                  <div className="ai-icon">
+                    {isCorrect ? <FaCheck /> : <FaLightbulb />}
+                  </div>
+                  <p>{aiMessage}</p>
+                </div>
+              )}
+
+              <div className="practice-question-area">
+                <h3 className="practice-question-text">{currentQuestion.questionText}</h3>
+                {renderAnswerArea()}
               </div>
 
-              {/* Actions */}
               <div className="practice-actions">
-                <button className="practice-btn secondary" onClick={handleFinish}>
-                  Befejezés
+                <button
+                  className="btn btn-primary submit-btn"
+                  onClick={handleSubmitAnswer}
+                  disabled={loadingCheck || !getStudentAnswer().toString().trim() || isCorrect}
+                >
+                  {loadingCheck ? 'Ellenőrzés...' : 'Válasz ellenőrzése'}
                 </button>
-                <button className="practice-btn primary" onClick={handleNewQuestion}>
-                  <FaArrowRight /> Újabb kérdés
+              </div>
+            </>
+          )}
+
+          {phase === 'feedback' && (
+            <div className="practice-feedback-area">
+              <div className="feedback-result success">
+                <FaStar className="result-icon correct" />
+                <h2>Küldetés Teljesítve!</h2>
+              </div>
+
+              <div className="score-earned">
+                <span>Eredmény:</span>
+                <strong>{computeFinalScore()}%</strong>
+              </div>
+              
+              <p className="feedback-text">
+                Büszke lehetsz magadra, sikeresen végigmentél a feladatokon!
+              </p>
+
+              <div className="practice-actions center">
+                <button className="btn btn-primary" onClick={handleFinish}>
+                  Tovább a térképre
                 </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* AI Assistant Strip (bottom) – visible during question phase */}
-        {phase === 'question' && attempts === 0 && (
+        {phase === 'question' && (
           <div className="ai-assistant-strip">
-            <img src={logo} alt="AI Tanár" className="ai-avatar-sm" />
-            <p>Üdv! Én vagyok az AI Tanárod. Oldd meg a feladatot, és segítek, ha elakadtál! 🎓</p>
+            <FaRobot className="ai-avatar-icon" />
+            <p>Az AI mentorod figyeli a válaszaidat, és segít rávezetni a megoldásra, ha elakadnál!</p>
           </div>
         )}
-
       </div>
     </div>
   );

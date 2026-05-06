@@ -82,7 +82,7 @@ const Layout = ({ onLoginSuccess }) => {
                         <Route path="/tanulo-statisztika" element={<StudentStatistics />} />
                         <Route path="/dolgozat/:id" element={<AssignmentSubmit />} />
                         <Route path="/diak-beallitasok" element={<StudentSettings />} />
-                        <Route path="/adaptiv-terkep" element={<AdaptiveRoadmap />} />
+                        <Route path="/egyeni-gyakorlas" element={<AdaptiveRoadmap />} />
                         
                         {/* Diagnosztikai teszt route-ok */}
                         <Route path="/diagnosztika/:subject" element={<DiagnosticIntro />} />

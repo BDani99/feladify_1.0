@@ -1,26 +1,37 @@
 const mongoose = require('mongoose');
 
-const nodeSchema = new mongoose.Schema({
-  nodeId: { type: String, required: true },
-  subject: { type: String, required: true },
-  topic: { type: String, default: '' },
-  status: { 
-    type: String, 
-    enum: ['locked', 'unlocked', 'completed'], 
-    default: 'locked' 
-  },
-  score: { type: Number, default: 0, min: 0, max: 100 },
-  isExtraPractice: { type: Boolean, default: false },
-  completedAt: { type: Date },
-  attempts: { type: Number, default: 0 }
-});
-
 const badgeSchema = new mongoose.Schema({
   id: { type: String, required: true },
   name: { type: String, required: true },
   description: { type: String },
   icon: { type: String },
   earnedAt: { type: Date, default: Date.now }
+});
+
+const subjectCheckpointSchema = new mongoose.Schema({
+  checkpointId: { type: String, required: true },
+  topic: { type: String, default: 'Gyakorlás' },
+  difficulty: { type: Number, default: 3, min: 1, max: 5 },
+  status: {
+    type: String,
+    enum: ['locked', 'unlocked', 'completed'],
+    default: 'locked'
+  },
+  score: { type: Number, default: 0, min: 0, max: 100 },
+  attempts: { type: Number, default: 0 },
+  completedAt: { type: Date }
+});
+
+const subjectProgressSchema = new mongoose.Schema({
+  subject: { type: String, required: true },
+  status: {
+    type: String,
+    enum: ['not_started', 'requires_diagnostic', 'in_progress', 'level_complete'],
+    default: 'requires_diagnostic' // Alapból diagnosztika kell az új koncepció szerint
+  },
+  currentLevel: { type: Number, default: 1 },
+  checkpoints: [subjectCheckpointSchema],
+  lastUpdated: { type: Date, default: Date.now }
 });
 
 const studentProgressSchema = new mongoose.Schema({
@@ -34,20 +45,18 @@ const studentProgressSchema = new mongoose.Schema({
   streak: { type: Number, default: 0, min: 0 },
   lastActiveDate: { type: Date },
   badges: [badgeSchema],
-  roadmap: [nodeSchema],
-  dailyGoal: { type: Number, default: 100 },
-  weeklyGoal: { type: Number, default: 700 },
+  subjectProgress: [subjectProgressSchema],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
 
-// Pre-save middleware to update the updatedAt field
+// Pre-save middleware az updatedAt frissítésére
 studentProgressSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
 });
 
-// Method to check and update streak
+// Metódus a streak kezelésére
 studentProgressSchema.methods.updateStreak = function() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -59,17 +68,13 @@ studentProgressSchema.methods.updateStreak = function() {
     const diffDays = Math.floor((today - lastActive) / (1000 * 60 * 60 * 24));
     
     if (diffDays === 0) {
-      // Same day, no change
       return this.streak;
     } else if (diffDays === 1) {
-      // Consecutive day, increment streak
       this.streak += 1;
     } else {
-      // Streak broken, reset to 1
       this.streak = 1;
     }
   } else {
-    // First time, start streak
     this.streak = 1;
   }
   
@@ -77,68 +82,38 @@ studentProgressSchema.methods.updateStreak = function() {
   return this.streak;
 };
 
-// Method to add XP
+// Metódus XP hozzáadásához
 studentProgressSchema.methods.addXP = function(amount) {
   this.totalXP += amount;
   this.updateStreak();
   return this.totalXP;
 };
 
-// Method to check and award badges
+// Metódus kitűzők ellenőrzésére (kibővíthető)
 studentProgressSchema.methods.checkBadges = function() {
   const newBadges = [];
   
-  // Streak badges
-  if (this.streak >= 7 && !this.badges.find(b => b.id === 'streak_7')) {
+  if (this.streak >= 3 && !this.badges.find(b => b.id === 'streak_3')) {
     newBadges.push({
-      id: 'streak_7',
-      name: 'Hétnapos Láncreakció',
-      description: '7 egymást követő napon át aktív voltál!',
+      id: 'streak_3',
+      name: 'Háromnapos lendület',
+      description: '3 napon át folyamatosan gyakoroltál!',
       icon: '🔥'
     });
   }
-  
-  if (this.streak >= 30 && !this.badges.find(b => b.id === 'streak_30')) {
+
+  if (this.totalXP >= 500 && !this.badges.find(b => b.id === 'xp_500')) {
     newBadges.push({
-      id: 'streak_30',
-      name: 'Hónapos Mester',
-      description: '30 egymást követő napon át aktív voltál!',
-      icon: '🏆'
-    });
-  }
-  
-  // XP badges
-  if (this.totalXP >= 1000 && !this.badges.find(b => b.id === 'xp_1000')) {
-    newBadges.push({
-      id: 'xp_1000',
-      name: 'Ezer XP Klub',
-      description: 'Elérted az 1000 XP-t!',
+      id: 'xp_500',
+      name: 'Kezdő Gyakorló',
+      description: 'Elérted az 500 XP-t az egyéni gyakorlás során!',
       icon: '⭐'
     });
   }
   
-  if (this.totalXP >= 5000 && !this.badges.find(b => b.id === 'xp_5000')) {
-    newBadges.push({
-      id: 'xp_5000',
-      name: 'XP Mester',
-      description: 'Elérted az 5000 XP-t!',
-      icon: '🌟'
-    });
+  if (newBadges.length > 0) {
+    this.badges.push(...newBadges);
   }
-  
-  // Perfect score badge
-  const perfectScores = this.roadmap.filter(n => n.score === 100).length;
-  if (perfectScores >= 5 && !this.badges.find(b => b.id === 'perfect_5')) {
-    newBadges.push({
-      id: 'perfect_5',
-      name: 'Tökéletes Ötös',
-      description: '5 dolgozatot oldottál meg 100%-os eredményekkel!',
-      icon: '💯'
-    });
-  }
-  
-  // Add new badges to the collection
-  this.badges.push(...newBadges);
   
   return newBadges;
 };

@@ -1,89 +1,76 @@
-const getAuthHeaders = () => ({
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`
-});
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
-export const fetchRoadmap = async () => {
-  console.log('[Roadmap API] Fetching roadmap...');
+const getAuthHeaders = () => {
+  const token = sessionStorage.getItem('AccessToken');
+  if (!token) {
+    console.error('[API] Hiányzó AccessToken a sessionStorage-ből!');
+  }
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+};
+
+export const fetchPracticePath = async (subject) => {
   try {
-    const token = sessionStorage.getItem('AccessToken');
-    console.log('[Roadmap API] Token exists:', !!token);
-    
-    const response = await fetch(`/api/student/roadmap`, {
+    const response = await fetch(`${API_BASE_URL}/student/practice?subject=${encodeURIComponent(subject)}`, {
       method: 'GET',
       headers: getAuthHeaders()
     });
 
-    console.log('[Roadmap API] Response status:', response.status);
-    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('[Roadmap API] Error response:', errorData);
-      throw new Error(errorData.message || `HTTP ${response.status}: Hiba történt az útvonal lekérésekor`);
+      throw new Error(errorData.message || 'Hiba történt az egyéni gyakorlóút lekérésekor');
     }
 
-    const data = await response.json();
-    console.log('[Roadmap API] Success:', data);
-    return data;
+    return await response.json();
   } catch (error) {
-    console.error('[Roadmap API] fetchRoadmap error:', error);
+    console.error('[Roadmap API] fetchPracticePath hiba:', error);
     throw error;
   }
 };
 
-export const submitRoadmapNode = async (nodeId, score, answers = []) => {
-  console.log('[Roadmap API] Submitting node:', nodeId, score);
+export const submitPracticeCheckpoint = async ({ subject, checkpointId, score, answers }) => {
   try {
-    const token = sessionStorage.getItem('AccessToken');
-    console.log('[Roadmap API] Token exists:', !!token);
-    
-    const response = await fetch(`/api/student/roadmap/submit`, {
+    const response = await fetch(`${API_BASE_URL}/student/practice/submit`, {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ nodeId, score, answers })
+      body: JSON.stringify({ subject, checkpointId, score, answers })
     });
 
-    console.log('[Roadmap API] Response status:', response.status);
-    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('[Roadmap API] Error response:', errorData);
-      throw new Error(errorData.message || `HTTP ${response.status}: Hiba történt a beküldéskor`);
+      throw new Error(errorData.message || 'Hiba történt a feladat beküldésekor');
     }
 
-    const data = await response.json();
-    console.log('[Roadmap API] Success:', data);
-    return data;
+    return await response.json();
   } catch (error) {
-    console.error('[Roadmap API] submitRoadmapNode error:', error);
+    console.error('[Roadmap API] submitPracticeCheckpoint hiba:', error);
     throw error;
   }
+};
+
+// Visszafelé kompatibilitás miatt, ha valahol még hívnád
+export const fetchRoadmap = async () => {
+  console.warn('[Roadmap API] A fetchRoadmap elavult; használd a fetchPracticePath függvényt!');
+  return fetchPracticePath('Matematika');
 };
 
 export const fetchStudentStatistics = async () => {
-  console.log('[Roadmap API] Fetching statistics...');
   try {
-    const token = sessionStorage.getItem('AccessToken');
-    console.log('[Roadmap API] Token exists:', !!token);
-    
-    const response = await fetch(`/api/student/statistics`, {
+    const response = await fetch(`${API_BASE_URL}/student/statistics`, {
       method: 'GET',
       headers: getAuthHeaders()
     });
 
-    console.log('[Roadmap API] Response status:', response.status);
-    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('[Roadmap API] Error response:', errorData);
-      throw new Error(errorData.message || `HTTP ${response.status}: Hiba történt a statisztikák lekérésekor`);
+      throw new Error(errorData.message || 'Hiba történt a statisztikák lekérésekor');
     }
 
-    const data = await response.json();
-    console.log('[Roadmap API] Success:', data);
-    return data;
+    return await response.json();
   } catch (error) {
-    console.error('[Roadmap API] fetchStudentStatistics error:', error);
+    console.error('[Roadmap API] fetchStudentStatistics hiba:', error);
     throw error;
   }
 };

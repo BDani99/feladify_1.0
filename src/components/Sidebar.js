@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaHome, FaClipboardCheck, FaChartBar, FaListAlt, FaClipboard, FaCog, FaMap, FaGraduationCap } from 'react-icons/fa';
+import { FaHome, FaClipboardCheck, FaChartBar, FaListAlt, FaClipboard, FaCog, FaCompass, FaGraduationCap } from 'react-icons/fa';
 import '../styles/Sidebar.css';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
@@ -68,9 +68,10 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                                 <FaHome className="icon" /> Kezdőlap
                             </a>
                         </li>
+                        {/* Itt módosítottuk az Egyéni Gyakorlás menüpontot az új koncepcióra */}
                         <li>
-                            <a className={isActiveLink('/adaptiv-terkep') ? 'active-link' : ''} onClick={() => handleNavigation('/adaptiv-terkep')}>
-                                <FaMap className="icon" /> Tanulási Út
+                            <a className={isActiveLink('/egyeni-gyakorlas') ? 'active-link' : ''} onClick={() => handleNavigation('/egyeni-gyakorlas')}>
+                                <FaCompass className="icon" /> Egyéni Gyakorlás
                             </a>
                         </li>
                         <li>
