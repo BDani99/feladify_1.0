@@ -168,27 +168,40 @@ const StudentWelcome = () => {
 
         {/* Session History Panel */}
         {showSessionHistory && (
-          <div className="session-history-panel">
-            <h3>Előzmények</h3>
-            {sessions.length === 0 ? (
-              <p style={{ color: 'var(--color-text-dim)', fontSize: '13px' }}>Nincsenek korábbi beszélgetések</p>
-            ) : (
-              <ul>
-                {sessions.map((session) => (
-                  <li
-                    key={session.sessionId}
-                    onClick={() => handleLoadSession(session.sessionId)}
-                    className={session.sessionId === currentSessionId ? 'active' : ''}
-                  >
-                    <span className="session-title">{session.title}</span>
-                    <span className="session-date">
-                      {new Date(session.updatedAt).toLocaleDateString('hu-HU')}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          <>
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 199
+              }}
+              onClick={() => setShowSessionHistory(false)}
+            />
+            <div className="session-history-panel">
+              <h3>Előzmények</h3>
+              {sessions.length === 0 ? (
+                <p style={{ color: 'var(--color-text-dim)', fontSize: '13px' }}>Nincsenek korábbi beszélgetések</p>
+              ) : (
+                <ul>
+                  {sessions.map((session) => (
+                    <li
+                      key={session.sessionId}
+                      onClick={() => handleLoadSession(session.sessionId)}
+                      className={session.sessionId === currentSessionId ? 'active' : ''}
+                    >
+                      <span className="session-title">{session.title}</span>
+                      <span className="session-date">
+                        {new Date(session.updatedAt).toLocaleDateString('hu-HU')}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </>
         )}
 
         {/* Chat Body */}

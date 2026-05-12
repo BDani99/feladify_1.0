@@ -4,7 +4,12 @@
   padding: 0;
   overflow: hidden;
   display: flex;
-  height: calc(100vh - 70px);
+  position: fixed;
+  top: 70px;
+  left: 280px;
+  right: 0;
+  bottom: 0;
+  margin-left: 0;
 }
 
 .welcome-container {
@@ -14,6 +19,9 @@
   flex: 1;
   width: 100%;
   position: relative;
+  height: 100%;
+  overflow: hidden;
+  padding-bottom: 100px;
 }
 
 /* ─── Header (Láthatatlan háttérrel) ────────────────────────── */
@@ -74,16 +82,18 @@
 
 /* ─── Session History Panel ─────────────────────────────────── */
 .session-history-panel {
-  position: absolute;
-  top: 90px;
+  position: fixed;
+  top: 130px;
   right: 40px;
   width: 320px;
+  max-height: 400px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   box-shadow: var(--shadow-hover);
   padding: 16px;
   z-index: 200;
+  overflow-y: auto;
 }
 
 .session-history-panel h3 {
@@ -103,9 +113,19 @@
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 8px;
   font-size: 14px;
+}
+
+.session-title {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.session-date {
+  font-size: 12px;
 }
 
 .session-history-panel li:hover { background: var(--bg-page); }
@@ -118,6 +138,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .welcome-screen {
@@ -198,6 +219,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  padding-bottom: 140px;
 }
 
 .chat-message {
@@ -245,13 +267,12 @@
   display: flex;
   align-items: flex-end;
   gap: 16px;
-  padding: 0 40px 40px 40px;
+  padding: 16px 40px 16px 40px;
   background: transparent; /* NINCS külön doboz! */
   border: none;
   flex-shrink: 0;
-  max-width: 900px;
-  margin: 0 auto;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .chat-input {
@@ -301,6 +322,30 @@
   background: var(--border-color-2);
   box-shadow: none;
   cursor: not-allowed;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.typing-dots span {
+  width: 8px;
+  height: 8px;
+  background: var(--color-text-dim);
+  border-radius: 50%;
+  animation: typing-bounce 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: 0s; }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
 }
 
 @media (max-width: 768px) {

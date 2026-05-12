@@ -697,6 +697,10 @@ router.post('/chat/send', authMiddleware, async (req, res) => {
       specialContext = `\n\n[SPECIÁLIS KÉRÉS: A diák egy téma magyarázatát szeretné. Kezd egyszerűen, majd fokozatosan menj mélyebbre. Kérdéseket is tegyen fel, hogy ellenőrizze a megértést.]`;
     }
 
+    const today = new Date().toLocaleDateString('hu-HU', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
     const systemPrompt = `Te a Feladify AI Tanulótársa vagy – ${student.name} (${student.className || 'ismeretlen osztály'}) személyes asszisztense.
 
 Diák profil:
@@ -706,16 +710,18 @@ Diák profil:
 - Összesített XP: ${progress ? progress.totalXP : 0}
 - Tanulási streak: ${progress ? progress.streak : 0} nap
 - Függőben lévő dolgozatok: ${assignmentInfo}
+- Mai dátum: ${today}
 
 FONTOS SZABÁLYOK:
-1. CSAK tanulással és tantárgyakkal kapcsolatos kérdésekre válaszolj
+1. Elsősorban tanulással és tantárgyakkal kapcsolatos kérdésekre válaszolj
 2. Barátságos, bátorító, KONKRÉT, RÉSZLETES magyar válaszok (NEM generic felvezetés!)
-3. Ha nem tanulási kérdés: "Elnézést, de csak tanulással kapcsolatos kérdésekre tudok válaszolni! 📚"
-4. AZONNALI válasz az első üzenetre is – Ne köszöntözz, azonnal lépj a lényre!
-5. Személyre szabva válaszolj a diák szintjéhez és szükségleteihez
-6. Soha ne magyarázz meg mindent – kérdésekkel segíts rájönni (Szókratikus módszer)
-7. KONKRÉT válaszok: Ha dolgozatokról kérdez → felsorolj dolgozatokat; Ha magyarázatra kérdez → kezdj azonnal magyarázni
-8. Proaktív: tanácsok, motiváció, konkrét lépések${specialContext}`;
+3. Ha a diák köszön (pl. "Szia", "Helló", "Jó reggelt"), köszönj vissza barátságosan, majd ajánlj segítséget a tanuláshoz
+4. Egyszerű általános kérdésekre (pl. "Milyen nap van ma?", "Hogy vagy?") röviden, barátságosan válaszolj
+5. Egyértelműen nem tanulással kapcsolatos témáknál (szórakozás, filmek, zene, játékok): "Elnézést, de csak tanulással kapcsolatos kérdésekre tudok válaszolni! 📚"
+6. Személyre szabva válaszolj a diák szintjéhez és szükségleteihez
+7. Soha ne magyarázz meg mindent – kérdésekkel segíts rájönni (Szókratikus módszer)
+8. KONKRÉT válaszok: Ha dolgozatokról kérdez → felsorolj; Ha magyarázatra kérdez → kezdj azonnal
+9. Proaktív: tanácsok, motiváció, konkrét lépések${specialContext}`;
 
     // Készítsd elő a histrória üzeneteit (korábbi beszélgetés, az aktuális üzenet nélkül)
     const allMessages = chatDoc.getRecentMessages(20);
@@ -897,6 +903,89 @@ router.get('/roadmap/:subject', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('[Student API] Error in roadmap/:subject:', error);
     res.status(500).json({ message: 'Hiba a roadmap lekérésekor', error: error.message });
+  }
+});
+
+// GET /api/student/statistics
+router.get('/statistics', authMiddleware, async (req, res) => {
+  try {
+    const student = await User.findById(req.user._id).select('-password');
+    const progress = await StudentProgress.findOne({ studentId: req.user._id });
+    const assignments = await Assignment.find({ submittedBy: req.user._id }).lean();
+
+    const totalXP = progress?.totalXP || 0;
+    const streak = progress?.streak || 0;
+    const badges = progress?.badges || [];
+
+    let totalAssignments = 0;
+    let completedAssignments = 0;
+    let totalPoints = 0;
+    let achievedPoints = 0;
+    const assignmentsStatistics = [];
+    const topicStats = {};
+
+    assignments.forEach(assignment => {
+      totalAssignments++;
+      const points = assignment.totalPoints || 100;
+      const achieved = assignment.achievedPoints || 0;
+      totalPoints += points;
+      achievedPoints += achieved;
+
+      if (assignment.submissionStatus === 'graded') {
+        completedAssignments++;
+      }
+
+      assignmentsStatistics.push({
+        totalPoints: points,
+        achievedPoints: achieved,
+        title: assignment.title
+      });
+
+      // Témakör statisztikák
+      if (assignment.subject) {
+        if (!topicStats[assignment.subject]) {
+          topicStats[assignment.subject] = { scores: [], count: 0 };
+        }
+        const scorePercentage = points > 0 ? (achieved / points) * 100 : 0;
+        topicStats[assignment.subject].scores.push(scorePercentage);
+        topicStats[assignment.subject].count++;
+      }
+    });
+
+    const averageScore = totalPoints > 0 ? Math.round((achievedPoints / totalPoints) * 100) : 0;
+
+    // Témakör átlagok
+    const topicStatsArray = Object.entries(topicStats).map(([topic, data]) => ({
+      topic,
+      averageScore: Math.round(data.scores.reduce((a, b) => a + b, 0) / data.count)
+    }));
+
+    // Erősségek és gyengeségek
+    const strengths = topicStatsArray
+      .sort((a, b) => b.averageScore - a.averageScore)
+      .slice(0, 3)
+      .filter(t => t.averageScore >= 60);
+
+    const weaknesses = topicStatsArray
+      .sort((a, b) => a.averageScore - b.averageScore)
+      .slice(0, 3)
+      .filter(t => t.averageScore < 80);
+
+    res.json({
+      totalXP,
+      streak,
+      badges,
+      averageScore,
+      completedAssignments,
+      totalAssignments,
+      assignmentsStatistics,
+      topicStats: topicStatsArray,
+      strengths,
+      weaknesses
+    });
+  } catch (error) {
+    console.error('[Student API] Statistics error:', error);
+    res.status(500).json({ message: 'Hiba a statisztikák lekérésekor', error: error.message });
   }
 });
 
