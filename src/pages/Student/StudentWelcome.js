@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { fetchUserData } from '../../api/Auth/ProfileData';
 import { fetchChatHistory, sendChatMessage } from '../../api/Student/Chat';
+import { useChat } from '../../context/ChatContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Welcome.css';
 import logo from '../../assets/logo-400.png';
@@ -8,15 +9,13 @@ import { FaPaperPlane, FaPlus, FaHistory } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 
 const StudentWelcome = () => {
+  const { messages, setMessages, sessions, setSessions, currentSessionId, setCurrentSessionId, chatLoaded, setChatLoaded } = useChat();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('');
   const [currentDate, setCurrentDate] = useState('');
   const [chatInput, setChatInput] = useState('');
-  const [chatHistory, setChatHistory] = useState([]);
   const [isBotTyping, setIsBotTyping] = useState(false);
-  const [sessions, setSessions] = useState([]);
-  const [currentSessionId, setCurrentSessionId] = useState(null);
   const [showSessionHistory, setShowSessionHistory] = useState(false);
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -49,23 +48,28 @@ const StudentWelcome = () => {
   }, []);
 
   useEffect(() => {
-    loadChatHistory();
-  }, []);
+    if (!chatLoaded) {
+      loadChatHistory();
+    }
+  }, [chatLoaded]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatHistory, isBotTyping]);
+  }, [messages, isBotTyping]);
 
   const loadChatHistory = async () => {
     try {
       const data = await fetchChatHistory();
-      if (data.messages && data.messages.length > 0) {
-        setChatHistory(data.messages);
+      if (data.messages) {
+        setMessages(data.messages.length > 0 ? data.messages : []);
       }
       if (data.sessions) setSessions(data.sessions);
       if (data.currentSessionId) setCurrentSessionId(data.currentSessionId);
+      setChatLoaded(true);
     } catch (err) {
       console.error('Hiba a chat előzmények betöltésekor:', err);
+      setMessages([]);
+      setChatLoaded(true);
     }
   };
 
@@ -75,12 +79,12 @@ const StudentWelcome = () => {
 
     const userMsg = chatInput;
     setChatInput('');
-    setChatHistory(prev => [...prev, { role: 'user', content: userMsg, timestamp: new Date() }]);
+    setMessages(prev => [...(prev || []), { role: 'user', content: userMsg, timestamp: new Date() }]);
     setIsBotTyping(true);
 
     try {
       const response = await sendChatMessage(userMsg);
-      setChatHistory(prev => [...prev, {
+      setMessages(prev => [...(prev || []), {
         role: 'assistant',
         content: response.message,
         timestamp: new Date()
@@ -89,7 +93,7 @@ const StudentWelcome = () => {
         setCurrentSessionId(response.sessionId);
       }
     } catch (err) {
-      setChatHistory(prev => [...prev, {
+      setMessages(prev => [...(prev || []), {
         role: 'assistant',
         content: 'Hiba történt a válasz generálása során.',
         timestamp: new Date()
@@ -104,10 +108,20 @@ const StudentWelcome = () => {
     inputRef.current?.focus();
   };
 
-  const handleNewChat = () => {
-    setChatHistory([]);
+  const handleNewChat = async () => {
+    setMessages([]);
     setCurrentSessionId(null);
     setShowSessionHistory(false);
+    try {
+      await fetch('/api/student/chat/new-session', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`
+        }
+      });
+    } catch (err) {
+      console.error('Hiba új session létrehozásakor:', err);
+    }
   };
 
   const handleLoadSession = (sessionId) => {
@@ -123,7 +137,7 @@ const StudentWelcome = () => {
   }
 
   return (
-    <div id="content">
+    <div id="content" className="student-welcome">
       <div className="welcome-container" style={{ position: 'relative' }}>
 
         {/* Header */}
@@ -180,7 +194,7 @@ const StudentWelcome = () => {
         {/* Chat Body */}
         <div className="chat-body">
           {/* Welcome Screen (no messages) */}
-          {chatHistory.length === 0 && !isBotTyping && (
+          {(!messages || messages.length === 0) && !isBotTyping && (
             <div className="welcome-screen">
               <div className="welcome-avatar">
                 <img src={logo} alt="AI Tanár" />
@@ -205,9 +219,9 @@ const StudentWelcome = () => {
           )}
 
           {/* Chat Messages */}
-          {(chatHistory.length > 0 || isBotTyping) && (
+          {((messages && messages.length > 0) || isBotTyping) && (
             <div className="chat-history">
-              {chatHistory.map((chat, index) => (
+              {messages && messages.map((chat, index) => (
                 <div
                   key={index}
                   className={`chat-message ${chat.role === 'user' ? 'user' : 'bot'}`}

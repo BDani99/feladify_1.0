@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter } from 'react-router-dom';
 import Layout from './components/Layout';
 import { UserProvider } from './context/UserContext';
+import { ChatProvider } from './context/ChatContext';
 import './App.css';
 
 function App() {
@@ -22,7 +23,9 @@ function App() {
         <div className="App">
             <BrowserRouter>
                 <UserProvider>
-                    <Layout isLoggedIn={isLoggedIn} onLoginSuccess={handleLoginSuccess} />
+                    <ChatProvider>
+                        <Layout isLoggedIn={isLoggedIn} onLoginSuccess={handleLoginSuccess} />
+                    </ChatProvider>
                 </UserProvider>
             </BrowserRouter>
         </div>

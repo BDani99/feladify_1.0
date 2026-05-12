@@ -4,8 +4,7 @@ class GroqService {
   constructor() {
     this.apiKey = process.env.GROQ_API_KEY;
     this.apiBase = 'https://api.groq.com/openai/v1';
-    // Érdemes a legújabb vagy leginkább alkalmas modellt használni, pl. llama-3.1-70b-versatile vagy llama3-70b-8192
-    this.model = 'llama-3.1-70b-versatile';
+    this.model = 'llama-3.3-70b-versatile';
 
     if (!this.apiKey) {
       console.warn('[GroqService] FIGYELMEZTETÉS: GROQ_API_KEY nincs beállítva! Az AI funkciók nem fognak működni.');
@@ -14,10 +13,15 @@ class GroqService {
 
   async generateResponse(prompt, messages = [], options = {}) {
     if (!this.apiKey) {
+      console.warn('[GroqService] FIGYELMEZTETÉS: API kulcs nincs beállítva!');
       return this._getFallbackResponse(prompt, messages);
     }
 
     try {
+      console.log('[GroqService] API hívás indítása - Modell:', this.model);
+      console.log('[GroqService] Rendszerprompt hossza:', prompt.length);
+      console.log('[GroqService] Üzenetek száma:', messages.length);
+
       const response = await axios.post(
         `${this.apiBase}/chat/completions`,
         {
@@ -40,9 +44,15 @@ class GroqService {
         }
       );
 
-      return response.data.choices[0].message.content;
+      const aiResponse = response.data.choices[0].message.content;
+      console.log('[GroqService] Sikeres válasz - hossz:', aiResponse.length);
+      return aiResponse;
     } catch (error) {
-      console.error('[GroqService] API hiba:', error.response?.data || error.message);
+      console.error('[GroqService] API hiba - Típus:', error.response?.status);
+      console.error('[GroqService] API hiba - Részletek:', error.response?.data || error.message);
+      if (error.code === 'ECONNABORTED') {
+        console.error('[GroqService] Timeout a Groq API-hoz (30s)');
+      }
       return this._getFallbackResponse(prompt, messages);
     }
   }

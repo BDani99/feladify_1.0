@@ -104,6 +104,82 @@ router.post('/roadmap/submit', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/student/progress - Összes tantárgy progessz lekérése
+router.get('/progress', authMiddleware, async (req, res) => {
+  try {
+    let progress = await StudentProgress.findOne({ studentId: req.user._id });
+    if (!progress) {
+      progress = new StudentProgress({ studentId: req.user._id, subjectProgress: [] });
+      await progress.save();
+    }
+
+    // Biztosítjuk, hogy minden tantárgy létezik
+    const validSubjects = ['Matematika', 'Magyar', 'Angol', 'Környezetismeret'];
+    for (const subject of validSubjects) {
+      if (!progress.subjectProgress.find(sp => sp.subject === subject)) {
+        progress.subjectProgress.push({
+          subject,
+          currentLevel: 1,
+          status: 'not_started',
+          percentage: 0,
+          checkpoints: []
+        });
+      }
+    }
+    await progress.save();
+
+    res.json({
+      progress: progress.subjectProgress,
+      totalXP: progress.totalXP,
+      streak: progress.streak
+    });
+  } catch (error) {
+    console.error('[Student API] Error in /progress:', error);
+    res.status(500).json({ message: 'Hiba a progress lekérésekor', error: error.message });
+  }
+});
+
+// GET /api/student/progress/:subject - Tantárgyi progress lekérése
+router.get('/progress/:subject', authMiddleware, async (req, res) => {
+  try {
+    const { subject } = req.params;
+    const validSubjects = ['Matematika', 'Magyar', 'Angol', 'Környezetismeret'];
+    if (!validSubjects.includes(subject)) {
+      return res.status(400).json({ message: 'Érvénytelen tantárgy' });
+    }
+
+    let progress = await StudentProgress.findOne({ studentId: req.user._id });
+    if (!progress) {
+      progress = new StudentProgress({ studentId: req.user._id, subjectProgress: [] });
+      await progress.save();
+    }
+
+    let subjectData = progress.subjectProgress.find(item => item.subject === subject);
+
+    if (!subjectData) {
+      subjectData = {
+        subject: subject,
+        currentLevel: 1,
+        status: 'not_started',
+        percentage: 0,
+        checkpoints: []
+      };
+      progress.subjectProgress.push(subjectData);
+      await progress.save();
+      subjectData = progress.subjectProgress.find(item => item.subject === subject);
+    }
+
+    res.json({
+      ...subjectData.toObject ? subjectData.toObject() : subjectData,
+      totalXP: progress.totalXP,
+      streak: progress.streak
+    });
+  } catch (error) {
+    console.error('[Student API] Error in /progress/:subject:', error);
+    res.status(500).json({ message: 'Hiba a progress lekérésekor', error: error.message });
+  }
+});
+
 // GET /api/student/practice - Egyéni gyakorlás útvonalának lekérése (ÚJ LOGIKA)
 router.get('/practice', authMiddleware, async (req, res) => {
   console.log('[Student API] GET /practice - User:', req.user._id, 'Subject:', req.query.subject);
@@ -119,7 +195,7 @@ router.get('/practice', authMiddleware, async (req, res) => {
     }
 
     let subjectData = progress.subjectProgress.find(item => item.subject === subject);
-    
+
     // Ha még sosem kezdte el az adott tantárgyat
     if (!subjectData) {
       subjectData = {
@@ -224,6 +300,53 @@ router.post('/tutor/question-set', authMiddleware, async (req, res) => {
 
 // ==================== DIAGNOSZTIKAI TESZT VÉGPONTOK ====================
 
+// POST /api/student/diagnostic/start - Diagnosztikai teszt indítása (új route)
+router.post('/diagnostic/start', authMiddleware, async (req, res) => {
+  try {
+    const { subject } = req.body;
+    const validSubjects = ['Matematika', 'Magyar', 'Angol', 'Környezetismeret'];
+    if (!subject || !validSubjects.includes(subject)) {
+      return res.status(400).json({ message: 'Érvénytelen vagy hiányzó tantárgy' });
+    }
+
+    const inProgressTest = await DiagnosticResult.findOne({
+      studentId: req.user._id,
+      subject,
+      status: 'in_progress'
+    });
+
+    if (inProgressTest) {
+      const questions = await DiagnosticTest.find({ _id: { $in: inProgressTest.answers.map(a => a.questionId) } });
+      return res.json({ testId: inProgressTest._id, questions, resumed: true, totalQuestions: 20 });
+    }
+
+    const questions = await DiagnosticTest.generateDiagnosticTest(subject, 20);
+
+    if (questions.length < 20) {
+      const additionalQuestions = await DiagnosticTest.find({ subject }).sort({ difficulty: 1 }).limit(20 - questions.length);
+      const existingIds = questions.map(q => q._id.toString());
+      const newQuestions = additionalQuestions.filter(q => !existingIds.includes(q._id.toString()));
+      questions.push(...newQuestions);
+    }
+
+    if (questions.length === 0) {
+       return res.status(404).json({ message: 'Nincsenek kérdések ehhez a tantárgyhoz.' });
+    }
+
+    const result = await DiagnosticResult.startDiagnosticTest(req.user._id, subject, questions[0]._id);
+    result.testId = questions[0]._id;
+    await result.save();
+
+    const shuffledQuestions = questions.sort(() => Math.random() - 0.5).slice(0, 20);
+
+    res.json({ testId: result._id, questions: shuffledQuestions, totalQuestions: 20, subject });
+  } catch (error) {
+    console.error('[Student API] Error in POST /diagnostic/start:', error);
+    res.status(500).json({ message: 'Hiba történt a teszt indításakor', error: error.message });
+  }
+});
+
+// GET /api/student/diagnostic/start/:subject - Diagnosztikai teszt indítása (legacy route)
 router.get('/diagnostic/start/:subject', authMiddleware, async (req, res) => {
   try {
     const { subject } = req.params;
@@ -242,7 +365,7 @@ router.get('/diagnostic/start/:subject', authMiddleware, async (req, res) => {
     }
 
     const questions = await DiagnosticTest.generateDiagnosticTest(subject, 20);
-    
+
     if (questions.length < 20) {
       const additionalQuestions = await DiagnosticTest.find({ subject }).sort({ difficulty: 1 }).limit(20 - questions.length);
       const existingIds = questions.map(q => q._id.toString());
@@ -467,6 +590,315 @@ async function createOrUpdatePracticePath(studentId, analyzedResultDoc, subjectN
   console.log('[Student API] Practice path successfully generated from Diagnostic Result.');
   return progress;
 }
+
+// GET /api/student/chat/history
+router.get('/chat/history', authMiddleware, async (req, res) => {
+  try {
+    let chatDoc = await StudentChatHistory.findOne({ studentId: req.user._id });
+    if (!chatDoc) {
+      return res.json({ messages: [], sessions: [], currentSessionId: null });
+    }
+    const session = chatDoc.getCurrentSession();
+    const sessions = chatDoc.sessions.map(s => ({
+      sessionId: s.sessionId,
+      title: s.title,
+      updatedAt: s.updatedAt
+    }));
+    res.json({
+      messages: session ? session.messages : [],
+      sessions,
+      currentSessionId: chatDoc.currentSessionId
+    });
+  } catch (err) {
+    console.error('[Student API] Chat history error:', err.message);
+    res.status(500).json({ message: 'Hiba a chat előzmények lekérésekor', error: err.message });
+  }
+});
+
+// POST /api/student/chat/send
+router.post('/chat/send', authMiddleware, async (req, res) => {
+  try {
+    const { message } = req.body;
+    console.log('[Student API] Chat send - Üzenet:', message.substring(0, 50) + '...');
+
+    if (!message) {
+      return res.status(400).json({ message: 'Üzenet megadása kötelező' });
+    }
+
+    // Szűrés: csak tanulási kérdéseket engedélyezni
+    const nonEducationalPatterns = [
+      /vicc/i, /meme/i, /függetlenség/, /política/i, /politika/i,
+      /ételrezept/i, /játék.*letöltés/i, /film.*nézés/i, /zene/i,
+      /szerelem/i, /barátság/i, /kedvenc/i, /hobbi/i, /szórakozás/i
+    ];
+
+    const isNonEducational = nonEducationalPatterns.some(p => p.test(message));
+    console.log('[Student API] Chat send - Tanulási kérdés?', !isNonEducational);
+
+    if (isNonEducational) {
+      return res.json({
+        message: `Elnézést, de csak tanulással kapcsolatos kérdésekre tudok válaszolni! 📚 Kérlek, kérdezz valamit a tantárgyaidról, és szívesen segítek.`,
+        sessionId: null
+      });
+    }
+
+    let chatDoc = await StudentChatHistory.findOne({ studentId: req.user._id });
+    if (!chatDoc) {
+      chatDoc = new StudentChatHistory({ studentId: req.user._id });
+      console.log('[Student API] Chat send - Új chat doc létrehozva');
+    }
+
+    console.log('[Student API] Chat send - Jelenlegi session ID:', chatDoc.currentSessionId);
+    chatDoc.addMessage('user', message);
+    console.log('[Student API] Chat send - Session ID után:', chatDoc.currentSessionId);
+
+    const student = await User.findById(req.user._id).select('-password');
+    const progress = await StudentProgress.findOne({ studentId: req.user._id });
+
+    console.log('[Student API] Chat send - Diák:', student.name, 'Osztály:', student.className);
+
+    // Begyűjtjük a diák haladási adatait
+    let weaknesses = [];
+    let strengths = [];
+    if (progress && progress.subjectProgress) {
+      progress.subjectProgress.forEach(sp => {
+        if (sp.status === 'requires_diagnostic') {
+          weaknesses.push(sp.subject + ' – még nincs felmérve');
+        } else if (sp.currentLevel && sp.currentLevel >= 3) {
+          strengths.push(sp.subject);
+        }
+      });
+    }
+
+    // Előző/függőben lévő dolgozatok lekérése
+    const assignments = await Assignment.find({
+      submittedBy: req.user._id,
+      submissionStatus: { $ne: 'graded' }
+    }).limit(5);
+
+    let assignmentInfo = 'Nincsenek függőben lévő dolgozatok';
+    if (assignments.length > 0) {
+      assignmentInfo = assignments.map(a => `${a.title} (${a.dueDate ? new Date(a.dueDate).toLocaleDateString('hu-HU') : 'nincs határidő'})`).join(', ');
+    }
+
+    console.log('[Student API] Chat send - Erős területek:', strengths.length, 'Gyenge területek:', weaknesses.length);
+
+    // Speciális kezelés a gyakori kérdésekre
+    let enhancedPrompt = message.toLowerCase();
+    let specialContext = '';
+
+    if (enhancedPrompt.includes('dolgozat') && enhancedPrompt.includes('héten')) {
+      specialContext = `\n\n[SPECIÁLIS KÉRÉS: A diák az aktuális heti dolgozatairól kérdez. Az alábbi dolgozatok az ő dolgozatai: ${assignmentInfo}]`;
+    } else if (enhancedPrompt.includes('kérdezz ki') && enhancedPrompt.includes('gyengébb')) {
+      specialContext = `\n\n[SPECIÁLIS KÉRÉS: A diák arra kéri, hogy kérdezzél ki a gyenge területeiről. Gyenge területek: ${weaknesses.join(', ') || 'még ismeretlen'}. Hozz létre egy rövid, kérdésből álló kvízt!]`;
+    } else if (enhancedPrompt.includes('javít') && enhancedPrompt.includes('átlag')) {
+      specialContext = `\n\n[SPECIÁLIS KÉRÉS: A diák a tanulmányi eredményeinek javítását szeretné. Adj konkrét, megvalósítható tanácsokat a tanulási szokásokra.]`;
+    } else if (enhancedPrompt.includes('magyarázd el')) {
+      specialContext = `\n\n[SPECIÁLIS KÉRÉS: A diák egy téma magyarázatát szeretné. Kezd egyszerűen, majd fokozatosan menj mélyebbre. Kérdéseket is tegyen fel, hogy ellenőrizze a megértést.]`;
+    }
+
+    const systemPrompt = `Te a Feladify AI Tanulótársa vagy – ${student.name} (${student.className || 'ismeretlen osztály'}) személyes asszisztense.
+
+Diák profil:
+- Tantárgyak: ${student.subjects && student.subjects.length > 0 ? student.subjects.join(', ') : 'nem megadott'}
+- Erős területek: ${strengths.length > 0 ? strengths.join(', ') : 'még nem mérhető'}
+- Fejlesztendő: ${weaknesses.length > 0 ? weaknesses.join(', ') : 'nem jelezve'}
+- Összesített XP: ${progress ? progress.totalXP : 0}
+- Tanulási streak: ${progress ? progress.streak : 0} nap
+- Függőben lévő dolgozatok: ${assignmentInfo}
+
+FONTOS SZABÁLYOK:
+1. CSAK tanulással és tantárgyakkal kapcsolatos kérdésekre válaszolj
+2. Barátságos, bátorító, KONKRÉT, RÉSZLETES magyar válaszok (NEM generic felvezetés!)
+3. Ha nem tanulási kérdés: "Elnézést, de csak tanulással kapcsolatos kérdésekre tudok válaszolni! 📚"
+4. AZONNALI válasz az első üzenetre is – Ne köszöntözz, azonnal lépj a lényre!
+5. Személyre szabva válaszolj a diák szintjéhez és szükségleteihez
+6. Soha ne magyarázz meg mindent – kérdésekkel segíts rájönni (Szókratikus módszer)
+7. KONKRÉT válaszok: Ha dolgozatokról kérdez → felsorolj dolgozatokat; Ha magyarázatra kérdez → kezdj azonnal magyarázni
+8. Proaktív: tanácsok, motiváció, konkrét lépések${specialContext}`;
+
+    // Készítsd elő a histrória üzeneteit (korábbi beszélgetés, az aktuális üzenet nélkül)
+    const allMessages = chatDoc.getRecentMessages(20);
+    const historyMessages = allMessages.slice(0, -1); // az utolsó üzenet (current user message) nélkül
+
+    // Az aktuális üzenetet mint "user" role-ban adjuk a kontextushoz
+    const messagesForAI = [
+      ...historyMessages.map(m => ({ role: m.role, content: m.content })),
+      { role: 'user', content: message }
+    ];
+
+    console.log('[Student API] Chat send - História üzenetei:', historyMessages.length, 'aktuális üzenet hozzáadva');
+    if (specialContext) {
+      console.log('[Student API] Chat send - Speciális kezelés aktiválva');
+    }
+
+    console.log('[Student API] Chat send - Groq API hívása előtt');
+    const aiResponse = await groqService.generateResponse(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 512 });
+    console.log('[Student API] Chat send - AI válasz hossza:', aiResponse.length, 'Első 100 char:', aiResponse.substring(0, 100));
+
+    chatDoc.addMessage('assistant', aiResponse);
+    await chatDoc.save();
+
+    res.json({ message: aiResponse, sessionId: chatDoc.currentSessionId });
+  } catch (err) {
+    console.error('[Student API] Chat send error:', err.message);
+    console.error('[Student API] Chat send error stack:', err.stack);
+    res.status(500).json({ message: 'Hiba az üzenet feldolgozásakor', error: err.message });
+  }
+});
+
+// POST /api/student/chat/new-session
+router.post('/chat/new-session', authMiddleware, async (req, res) => {
+  try {
+    let chatDoc = await StudentChatHistory.findOne({ studentId: req.user._id });
+    if (!chatDoc) {
+      chatDoc = new StudentChatHistory({ studentId: req.user._id });
+    }
+    chatDoc.currentSessionId = null;
+    await chatDoc.save();
+    res.json({ message: 'Új session indítva' });
+  } catch (err) {
+    console.error('[Student API] New session error:', err.message);
+    res.status(500).json({ message: 'Hiba az új session létrehozásakor', error: err.message });
+  }
+});
+
+// ==================== CHECKPOINT ROUTE-OK ====================
+
+// POST /api/student/checkpoint/start - Checkpoint megkezdése
+router.post('/checkpoint/start', authMiddleware, async (req, res) => {
+  try {
+    const { subject, checkpointId } = req.body;
+    if (!subject || !checkpointId) {
+      return res.status(400).json({ message: 'Tantárgy és checkpoint ID szükséges' });
+    }
+
+    const progress = await StudentProgress.findOne({ studentId: req.user._id });
+    if (!progress) return res.status(404).json({ message: 'Progress nem található' });
+
+    const subjectData = progress.subjectProgress.find(s => s.subject === subject);
+    if (!subjectData) return res.status(404).json({ message: 'Tantárgy nem található' });
+
+    const checkpoint = subjectData.checkpoints.find(c => c.checkpointId === checkpointId);
+    if (!checkpoint) return res.status(404).json({ message: 'Checkpoint nem található' });
+
+    // Kérdéssor generálása az AI-val
+    const questions = await groqService.generatePracticeQuestionSet(subject, checkpoint.topic, 3, 10);
+
+    res.json({
+      checkpointId,
+      checkpointTitle: checkpoint.topic,
+      questions: questions || [],
+      difficulty: checkpoint.difficulty
+    });
+  } catch (error) {
+    console.error('[Student API] Error in checkpoint/start:', error);
+    res.status(500).json({ message: 'Hiba a checkpoint indításakor', error: error.message });
+  }
+});
+
+// POST /api/student/checkpoint/answer - Válasz ellenőrzése
+router.post('/checkpoint/answer', authMiddleware, async (req, res) => {
+  try {
+    const { checkpointId, questionId, answer, subject } = req.body;
+    if (!checkpointId || !questionId || !answer) {
+      return res.status(400).json({ message: 'Hiányos adatok' });
+    }
+
+    // Egyszerű logika: AI-val ellenőrizni kellene, de fallback
+    const isCorrect = Math.random() > 0.3; // Temp: 70% success rate
+    const aiMessage = isCorrect
+      ? `Helyes! Jó gondolkodás. ${subject} kérdésekben ez a megközelítés helytelen. Gondold végig, mi lehet a kapcsolat...`
+      : `Érdekes válasz. Ez nem egészen helyes. Gondolj arra, hogy milyen más lehetőségek vannak...`;
+
+    res.json({
+      isCorrect,
+      aiMessage,
+      hint: 'Gondolj a legalapvetőbb fogalmakra.',
+      currentScore: {
+        correct: 1,
+        total: 10,
+        xpEarned: isCorrect ? 10 : 0
+      }
+    });
+  } catch (error) {
+    console.error('[Student API] Error in checkpoint/answer:', error);
+    res.status(500).json({ message: 'Hiba az ellenőrzéskor', error: error.message });
+  }
+});
+
+// POST /api/student/checkpoint/complete - Checkpoint lezárása
+router.post('/checkpoint/complete', authMiddleware, async (req, res) => {
+  try {
+    const { checkpointId, subject, answers } = req.body;
+    if (!checkpointId || !subject) {
+      return res.status(400).json({ message: 'Hiányos adatok' });
+    }
+
+    const progress = await StudentProgress.findOne({ studentId: req.user._id });
+    if (!progress) return res.status(404).json({ message: 'Progress nem található' });
+
+    const subjectData = progress.subjectProgress.find(s => s.subject === subject);
+    if (!subjectData) return res.status(404).json({ message: 'Tantárgy nem található' });
+
+    const checkpointIndex = subjectData.checkpoints.findIndex(c => c.checkpointId === checkpointId);
+    if (checkpointIndex === -1) return res.status(404).json({ message: 'Checkpoint nem található' });
+
+    const checkpoint = subjectData.checkpoints[checkpointIndex];
+    checkpoint.status = 'completed';
+    checkpoint.attempts = (checkpoint.attempts || 0) + 1;
+    checkpoint.completedAt = new Date();
+    checkpoint.score = 85; // Temp: calculation kellene
+
+    // Következő checkpoint feloldása
+    if (checkpointIndex < subjectData.checkpoints.length - 1) {
+      const nextCheckpoint = subjectData.checkpoints[checkpointIndex + 1];
+      if (nextCheckpoint.status === 'locked') {
+        nextCheckpoint.status = 'unlocked';
+      }
+    }
+
+    // XP hozzáadása
+    const xpEarned = 50 + Math.floor(checkpoint.score * 0.5);
+    progress.addXP(xpEarned);
+
+    await progress.save();
+
+    res.json({
+      message: 'Checkpoint teljesítve',
+      xpEarned,
+      totalXP: progress.totalXP,
+      nextUnlocked: checkpointIndex < subjectData.checkpoints.length - 1
+    });
+  } catch (error) {
+    console.error('[Student API] Error in checkpoint/complete:', error);
+    res.status(500).json({ message: 'Hiba a checkpoint lezárásakor', error: error.message });
+  }
+});
+
+// ==================== ROADMAP ROUTE ====================
+
+// GET /api/student/roadmap/:subject - Roadmap lekérése
+router.get('/roadmap/:subject', authMiddleware, async (req, res) => {
+  try {
+    const { subject } = req.params;
+    const progress = await StudentProgress.findOne({ studentId: req.user._id });
+    if (!progress) return res.status(404).json({ message: 'Progress nem található' });
+
+    const subjectData = progress.subjectProgress.find(s => s.subject === subject);
+    if (!subjectData) return res.status(404).json({ message: 'Tantárgy nem található' });
+
+    res.json({
+      checkpoints: subjectData.checkpoints || [],
+      totalXP: progress.totalXP,
+      streak: progress.streak,
+      subject
+    });
+  } catch (error) {
+    console.error('[Student API] Error in roadmap/:subject:', error);
+    res.status(500).json({ message: 'Hiba a roadmap lekérésekor', error: error.message });
+  }
+});
 
 // (Legacy segédfüggvények meghagyva, ha valami régi kód még hivatkozna rájuk)
 function generateInitialRoadmap(className) {

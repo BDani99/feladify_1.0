@@ -1,0 +1,295 @@
+.roadmap-view {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: #2196f3;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 30px;
+  transition: color 0.3s;
+}
+
+.back-btn:hover {
+  color: #1976d2;
+}
+
+.roadmap-header {
+  margin-bottom: 40px;
+}
+
+.roadmap-header h1 {
+  font-size: 28px;
+  color: var(--color-text);
+  margin: 0 0 20px 0;
+}
+
+.header-stats {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 30px;
+  background: var(--color-bg-secondary);
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stat-label {
+  color: var(--color-text-dim);
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ff9800;
+}
+
+.progress-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2196f3, #21cbf3);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 13px;
+  color: var(--color-text-dim);
+  font-weight: 600;
+  min-width: 50px;
+  text-align: right;
+}
+
+.checkpoints-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.checkpoint-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  align-items: center;
+  padding: 16px;
+  background: var(--color-bg-secondary);
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.checkpoint-card:hover {
+  border-color: #2196f3;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+.checkpoint-card.completed {
+  border-color: #4caf50;
+  background: rgba(76, 175, 80, 0.05);
+}
+
+.checkpoint-card.unlocked {
+  border-color: #2196f3;
+  background: rgba(33, 150, 243, 0.05);
+}
+
+.checkpoint-card.locked {
+  opacity: 0.6;
+  background: var(--color-bg-secondary);
+  cursor: not-allowed;
+}
+
+.checkpoint-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  color: white;
+}
+
+.checkpoint-card.completed .checkpoint-icon {
+  background: #4caf50;
+}
+
+.checkpoint-card.unlocked .checkpoint-icon {
+  background: #2196f3;
+  animation: pulse 1.5s infinite;
+}
+
+.checkpoint-card.locked .checkpoint-icon {
+  background: #999;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(33, 150, 243, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0); }
+}
+
+.checkpoint-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.checkpoint-number {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 16px;
+}
+
+.checkpoint-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--color-text-dim);
+}
+
+.difficulty {
+  background: rgba(255, 152, 0, 0.1);
+  color: #e65100;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.score {
+  background: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.locked-msg {
+  background: rgba(153, 153, 153, 0.1);
+  color: #666;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.start-btn {
+  background: linear-gradient(135deg, #2196f3, #21cbf3);
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.completion-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4caf50;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.checkpoint-detail-panel {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--color-bg-secondary);
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  max-width: 300px;
+  z-index: 100;
+}
+
+.detail-content {
+  margin-bottom: 8px;
+}
+
+.detail-content h3 {
+  margin: 0 0 8px 0;
+  color: var(--color-text);
+}
+
+.detail-content p {
+  margin: 4px 0;
+  color: var(--color-text-dim);
+  font-size: 13px;
+}
+
+.close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--color-text-dim);
+  transition: color 0.3s;
+}
+
+.close-btn:hover {
+  color: var(--color-text);
+}
+
+@media (max-width: 768px) {
+  .roadmap-view {
+    padding: 12px;
+  }
+
+  .header-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .checkpoint-card {
+    grid-template-columns: auto 1fr;
+  }
+
+  .start-btn {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .checkpoint-detail-panel {
+    position: static;
+    max-width: 100%;
+    margin-top: 20px;
+  }
+
+  .checkpoint-meta {
+    flex-wrap: wrap;
+  }
+}

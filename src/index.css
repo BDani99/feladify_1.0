@@ -1,3 +1,51 @@
+/* Globális UI Változók a modern megjelenéshez */
+:root {
+  /* Világos mód */
+  --bg-page: #f8f9fa;
+  --bg-header: rgba(255, 255, 255, 0.85);
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --bg-form-group: #ffffff;
+  --bg-input: #f1f3f5;
+  
+  --color-text: #2c3e50;
+  --color-text-dim: #6c757d;
+  
+  --border-color: #e9ecef;
+  --border-color-2: #dee2e6;
+  
+  --accent: #667eea;
+  --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 8px 30px rgba(102, 126, 234, 0.15);
+}
+
+/* Sötét mód (A témaváltód vélhetően egy data-theme attribútumot vagy classt használ, ezért többet is megadunk biztosra) */
+[data-theme='dark'],
+.dark-theme,
+body.dark {
+  --bg-page: #0f111a;
+  --bg-header: rgba(20, 22, 31, 0.85);
+  --bg-sidebar: #14161f;
+  --bg-card: #1c1e2b;
+  --bg-form-group: #1c1e2b;
+  --bg-input: #0f111a;
+  
+  --color-text: #f8f9fa;
+  --color-text-dim: #adb5bd;
+  
+  --border-color: #2b2e3e;
+  --border-color-2: #3f445a;
+  
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 8px 30px rgba(102, 126, 234, 0.25);
+}
+
+/* Alapvető dobozmodell beállítás a konzisztens megjelenéshez */
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,9 +53,33 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  /* Modern UI alapok */
+  background-color: var(--bg-page);
+  color: var(--color-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Egyedi letisztult scrollbar az egész appra */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color-2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-dim);
 }

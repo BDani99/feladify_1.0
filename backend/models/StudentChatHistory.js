@@ -49,8 +49,15 @@ studentChatHistorySchema.pre('save', function(next) {
 
 // Method to get or create current session
 studentChatHistorySchema.methods.getCurrentSession = function() {
-  if (!this.currentSessionId || !this.sessions.id(this.currentSessionId)) {
-    // Create new session
+  // Check if we have a current session ID and if that session exists
+  let session = null;
+
+  if (this.currentSessionId) {
+    session = this.sessions.find(s => s.sessionId === this.currentSessionId);
+  }
+
+  // If no current session or it doesn't exist, create a new one
+  if (!session) {
     const newSession = {
       sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       title: 'Új beszélgetés',
@@ -58,10 +65,9 @@ studentChatHistorySchema.methods.getCurrentSession = function() {
     };
     this.sessions.push(newSession);
     this.currentSessionId = newSession.sessionId;
+    session = newSession;
   }
-  
-  // Return the session object directly from the array
-  const session = this.sessions.find(s => s.sessionId === this.currentSessionId);
+
   return session;
 };
 
