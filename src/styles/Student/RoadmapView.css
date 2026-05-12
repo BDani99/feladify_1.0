@@ -1,295 +1,275 @@
+/* RoadmapView.css - A Tanulási Térkép */
+
 .roadmap-view {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.back-btn {
-  background: none;
-  border: none;
-  color: #2196f3;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 30px;
-  transition: color 0.3s;
-}
-
-.back-btn:hover {
-  color: #1976d2;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px;
 }
 
 .roadmap-header {
-  margin-bottom: 40px;
+    margin-bottom: 48px;
 }
 
 .roadmap-header h1 {
-  font-size: 28px;
-  color: var(--color-text);
-  margin: 0 0 20px 0;
+    font-size: 2.5rem;
+    color: var(--color-text);
+    margin: 0 0 24px 0;
+    font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
 .header-stats {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 30px;
-  background: var(--color-bg-secondary);
-  padding: 20px;
-  border-radius: 12px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 40px;
+    background: var(--bg-card);
+    padding: 32px 40px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-soft);
+    align-items: center;
 }
 
 .stat-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
 .stat-label {
-  color: var(--color-text-dim);
-  font-weight: 600;
+    color: var(--color-text-dim);
+    font-weight: 700;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #ff9800;
+    font-size: 2.2rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .progress-indicator {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }
 
 .progress-bar {
-  flex: 1;
-  height: 6px;
-  background: #e0e0e0;
-  border-radius: 3px;
-  overflow: hidden;
+    flex: 1;
+    height: 12px;
+    background: var(--bg-input);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #2196f3, #21cbf3);
-  transition: width 0.3s ease;
+    height: 100%;
+    background: var(--accent-gradient);
+    border-radius: 6px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .progress-text {
-  font-size: 13px;
-  color: var(--color-text-dim);
-  font-weight: 600;
-  min-width: 50px;
-  text-align: right;
+    font-size: 1.1rem;
+    color: var(--color-text);
+    font-weight: 700;
+    min-width: 60px;
+    text-align: right;
 }
 
+/* Checkpoint Lista - A Térkép vonala */
 .checkpoints-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: relative;
+    padding-left: 20px;
+}
+
+/* Függőleges vonal */
+.checkpoints-list::before {
+    content: '';
+    position: absolute;
+    top: 30px;
+    bottom: 30px;
+    left: 48px; /* Az ikon közepére igazítva */
+    width: 4px;
+    background: var(--border-color-2);
+    z-index: 0;
+    border-radius: 2px;
 }
 
 .checkpoint-card {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 20px;
-  align-items: center;
-  padding: 16px;
-  background: var(--color-bg-secondary);
-  border: 2px solid var(--color-border);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 24px;
+    align-items: center;
+    padding: 24px 32px;
+    background: var(--bg-card);
+    border: 2px solid var(--border-color);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+    position: relative;
+    box-shadow: var(--shadow-soft);
 }
 
-.checkpoint-card:hover {
-  border-color: #2196f3;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+.checkpoint-card:hover:not(.locked) {
+    transform: translateX(8px);
+    box-shadow: var(--shadow-hover);
 }
 
 .checkpoint-card.completed {
-  border-color: #4caf50;
-  background: rgba(76, 175, 80, 0.05);
+    border-color: rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.02);
 }
 
 .checkpoint-card.unlocked {
-  border-color: #2196f3;
-  background: rgba(33, 150, 243, 0.05);
+    border-color: var(--accent);
+    background: var(--bg-card);
 }
 
 .checkpoint-card.locked {
-  opacity: 0.6;
-  background: var(--color-bg-secondary);
-  cursor: not-allowed;
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--bg-input);
+    border-color: transparent;
 }
 
 .checkpoint-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  font-size: 20px;
-  color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    font-size: 1.4rem;
+    color: white;
+    background: var(--border-color-2);
+    border: 6px solid var(--bg-page);
+    transition: all 0.3s ease;
 }
 
-.checkpoint-card.completed .checkpoint-icon {
-  background: #4caf50;
+.checkpoint-card.completed .checkpoint-icon { background: #10b981; }
+
+/* WOW Faktor: Aktív csomópont lüktetése */
+.checkpoint-card.unlocked .checkpoint-icon { 
+    background: var(--accent-gradient); 
+    box-shadow: 0 0 0 0 var(--accent-glow);
+    animation: pulse-node 2s infinite; 
 }
 
-.checkpoint-card.unlocked .checkpoint-icon {
-  background: #2196f3;
-  animation: pulse 1.5s infinite;
-}
-
-.checkpoint-card.locked .checkpoint-icon {
-  background: #999;
-}
-
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7); }
-  70% { box-shadow: 0 0 0 10px rgba(33, 150, 243, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0); }
+@keyframes pulse-node {
+    0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6); }
+    70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
 }
 
 .checkpoint-content {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .checkpoint-number {
-  font-weight: 600;
-  color: var(--color-text);
-  font-size: 16px;
+    font-weight: 800;
+    color: var(--color-text);
+    font-size: 1.25rem;
 }
 
 .checkpoint-meta {
-  display: flex;
-  gap: 16px;
-  font-size: 13px;
-  color: var(--color-text-dim);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
 }
 
-.difficulty {
-  background: rgba(255, 152, 0, 0.1);
-  color: #e65100;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.score {
-  background: rgba(76, 175, 80, 0.1);
-  color: #2e7d32;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.locked-msg {
-  background: rgba(153, 153, 153, 0.1);
-  color: #666;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
+.difficulty { background: rgba(245, 158, 11, 0.15); color: #d97706; padding: 6px 12px; border-radius: 8px; }
+.score { background: rgba(16, 185, 129, 0.15); color: #059669; padding: 6px 12px; border-radius: 8px; }
+.locked-msg { background: var(--border-color); color: var(--color-text-dim); padding: 6px 12px; border-radius: 8px; }
 
 .start-btn {
-  background: linear-gradient(135deg, #2196f3, #21cbf3);
-  color: white;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s;
-  white-space: nowrap;
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1.05rem;
+    font-weight: 800;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px var(--accent-glow);
 }
 
 .start-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
 }
 
 .completion-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #4caf50;
-  font-weight: 600;
-  font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #10b981;
+    font-weight: 800;
+    font-size: 1.1rem;
 }
 
+/* Felugró Részletek Panel */
 .checkpoint-detail-panel {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: var(--color-bg-secondary);
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  max-width: 300px;
-  z-index: 100;
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--bg-card);
+    padding: 24px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    max-width: 320px;
+    z-index: 100;
+    animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.detail-content {
-  margin-bottom: 8px;
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.detail-content h3 {
-  margin: 0 0 8px 0;
-  color: var(--color-text);
-}
-
-.detail-content p {
-  margin: 4px 0;
-  color: var(--color-text-dim);
-  font-size: 13px;
-}
+.detail-content h3 { color: var(--color-text); margin: 0 0 12px 0; font-size: 1.2rem; font-weight: 800; }
+.detail-content p { color: var(--color-text-dim); font-size: 1rem; margin: 8px 0; font-weight: 500;}
 
 .close-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  color: var(--color-text-dim);
-  transition: color 0.3s;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: var(--bg-input);
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--color-text);
+    transition: all 0.2s;
+    font-size: 1.2rem;
 }
 
-.close-btn:hover {
-  color: var(--color-text);
-}
+.close-btn:hover { background: var(--border-color-2); color: #ef4444;}
 
 @media (max-width: 768px) {
-  .roadmap-view {
-    padding: 12px;
-  }
-
-  .header-stats {
-    grid-template-columns: 1fr;
-  }
-
-  .checkpoint-card {
-    grid-template-columns: auto 1fr;
-  }
-
-  .start-btn {
-    grid-column: 1 / -1;
-    width: 100%;
-  }
-
-  .checkpoint-detail-panel {
-    position: static;
-    max-width: 100%;
-    margin-top: 20px;
-  }
-
-  .checkpoint-meta {
-    flex-wrap: wrap;
-  }
+    .roadmap-view { padding: 16px; }
+    .header-stats { grid-template-columns: 1fr; gap: 24px; padding: 24px; }
+    .checkpoint-card { grid-template-columns: auto 1fr; padding: 20px; gap: 16px; }
+    .start-btn { grid-column: 1 / -1; width: 100%; margin-top: 8px; }
+    .checkpoints-list { padding-left: 0; }
+    .checkpoints-list::before { left: 28px; }
 }

@@ -1,160 +1,175 @@
+/* GeneratedAssignments.css - Modern, lebegő kártyák és kapszula tabok */
+
 .assignments-container {
-    max-width: 90%;
+    max-width: 1200px;
     margin: 0 auto;
-}
-
-.assignment-grid {
-    margin-inline: auto;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
-    margin-top: 40px;
-    max-height: calc(100vh - 220px);
-    padding: 20px;
-    padding-inline: 40px;
-    overflow-y: auto;
-}
-
-.assignment-grid::-webkit-scrollbar {
-    width: 8px;
-}
-
-.assignment-grid::-webkit-scrollbar-track {
-    background: #f8f8f8f1;
-    border-radius: 10px;
-}
-
-.assignment-grid::-webkit-scrollbar-thumb {
-    background: #838383e3;
-    border-radius: 10px;
-}
-
-.assignment-grid::-webkit-scrollbar-thumb:hover {
-    background: #8888889c;
-}
-
-.assignment-card {
-    border: 1px solid var(--border-color-2);
-    border-radius: 6px;
-    background-color: var(--bg-card);
-    box-shadow: 0 4px 10px rgba(173, 173, 173, 0.24);
-    text-align: center;
-    transition: transform 0.2s;
     padding: 10px;
+}
+
+.assignments-container .title {
+    font-size: 2.2rem;
+    color: var(--color-text);
+    margin-bottom: 32px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+/* Modern, Kapszula (Pill) stílusú Tabok */
+.completed-tabs {
+    display: inline-flex;
+    gap: 8px;
+    background: var(--bg-input);
+    padding: 8px;
+    border-radius: 16px;
+    margin-bottom: 32px;
+    list-style: none;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.nav-item {
+    margin: 0;
+}
+
+.nav-link {
+    background: transparent;
+    border: none;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text-dim);
     cursor: pointer;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.assignment-card:hover {
-    transform: scale(1.05);
-}
-
-.assignment-card-link {
-    text-decoration: none;
+.nav-link:hover {
     color: var(--color-text);
 }
 
+.nav-link.active {
+    background: var(--bg-card);
+    color: var(--accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Grid elrendezés */
+.assignment-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 24px;
+}
+
+/* Kártya stílusok - Rejtett kék csíkkal a tetején */
+.assignment-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    outline: none;
+}
+
+.assignment-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Kártya felső fénylő csík effekt hoverre */
+.assignment-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--accent-gradient);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.assignment-card-link:focus-visible .assignment-card,
+.assignment-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--border-color-2);
+}
+
+.assignment-card-link:focus-visible .assignment-card::before,
+.assignment-card:hover::before {
+    opacity: 1;
+}
+
 .title-container {
-    background-color: var(--bg-sidebar);
-    border-radius: 5px;
-    padding-top: 5px;
-    padding-bottom: 1px;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.assignment-card h3 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-}
-
-.assignment-card p {
-    font-size: 1rem;
+.title-container h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: var(--color-text);
+    font-weight: 700;
+    line-height: 1.4;
 }
 
 .assignment-card-text {
     display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    margin-inline: auto;
-    text-align: left;
-    width: 80%;
+    justify-content: space-between;
+    flex: 1;
+    font-size: 14.5px;
 }
 
-.assignment-card-text div:first-child p {
-    font-weight: 700;
-}
-
-.deadline-urgent {
-    color: #e74c3c;
-    font-weight: 600;
-}
-
-/* Completed assignments tabs */
-.completed-tabs {
-    margin-top: 24px;
-    padding-inline: 40px;
-    border-bottom: 2px solid var(--border-color);
-    list-style: none;
-    display: flex;
-    padding-left: 40px;
-    margin-bottom: 0;
-}
-
-.completed-tabs .nav-item {
-    list-style: none;
-}
-
-.completed-tabs .nav-link {
+.assignment-card-text div:first-child {
     color: var(--color-text-dim);
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    padding: 8px 18px;
-    font-size: 0.95rem;
-    cursor: pointer;
-    margin-bottom: -2px;
-    transition: color 0.2s;
+    font-weight: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
-.completed-tabs .nav-link.active {
-    color: var(--accent);
-    border-bottom: 2px solid var(--accent);
-    font-weight: 600;
-}
-
-.completed-tabs .nav-link:hover:not(.active) {
+.assignment-card-text div:last-child {
     color: var(--color-text);
-    background-color: rgba(128, 128, 128, 0.1);
-    border-radius: 4px 4px 0 0;
+    font-weight: 600;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
 }
 
-@media (max-width: 1450px) {
-    .assignment-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.assignment-card-text p {
+    margin: 0;
 }
 
-@media (max-width: 1024px) {
-    .assignment-grid {
-        grid-template-columns: repeat(1, 1fr);
-    }
+/* Sürgős határidő kiemelés - finom lüktetéssel */
+.deadline-urgent {
+    color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.1);
+    padding: 4px 10px;
+    border-radius: 8px;
+    display: inline-block;
+    animation: pulse-urgent 2s infinite;
+}
+
+@keyframes pulse-urgent {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); }
+    70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.created {
+    font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 768px) {
-    .assignments-container {
-        max-width: 100%;
-    }
-
-    .assignment-grid::-webkit-scrollbar {
-        display: none;
-    }
-
-    .assignment-grid {
-        height: calc(100vh - 60px);
-        padding-inline: 15px;
-    }
-
-    .completed-tabs {
-        padding-inline: 15px;
-        padding-left: 15px;
-    }
+    .assignment-grid { grid-template-columns: 1fr; }
+    .completed-tabs { display: flex; flex-direction: column; width: 100%; border-radius: 12px; }
+    .nav-link { width: 100%; text-align: center; }
 }

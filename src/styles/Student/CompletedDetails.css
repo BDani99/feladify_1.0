@@ -1,135 +1,212 @@
+/* CompletedDetails.css - Lenyűgöző Eredmény Megjelenítés */
+
 .completed-details {
-    max-width: 90%;
+    max-width: 900px;
     margin: 0 auto;
+    padding: 24px 16px;
+}
+
+.completed-details .title {
+    font-size: 2.4rem;
+    color: var(--color-text);
+    margin-bottom: 32px;
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: -0.5px;
 }
 
 .completed-details-container {
-    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
 }
 
+/* WOW Faktor: A pontszám kártya kiemelése */
 .assignment-data-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px;
+    background: var(--bg-card);
+    padding: 32px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    overflow: hidden;
 }
 
-.assignment-data-container div {
-    display: flex;
-    flex-direction: row;
+/* Egy hatalmas, gyönyörű színátmenetes pontszám kiemelés */
+.assignment-data-container p:nth-child(4) {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 24px 0;
+    background: var(--bg-input);
+    border-radius: 16px;
+    margin-top: 10px;
+}
+
+.assignment-data-container p:nth-child(4) strong {
+    display: block;
+    font-size: 1rem;
+    color: var(--color-text-dim);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.assignment-data-container p:nth-child(4) {
+    font-size: 3.5rem;
+    font-weight: 900;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.2;
 }
 
 .assignment-data-container p {
-    font-size: 1.1rem;
-    line-height: 1.6;
+    font-size: 1rem;
     color: var(--color-text);
-    margin: 5px 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .assignment-data-container strong {
-    color: var(--color-text);
-    margin-right: 5px;
+    color: var(--color-text-dim);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
+/* Kérdések listája */
 .answers-container {
-    max-height: 78vh;
-    overflow-y: auto;
-    margin-top: 20px;
-    padding: 10px;
-    padding-inline: 25px;
-}
-
-.answers-container::-webkit-scrollbar {
-    width: 8px;
-}
-
-.answers-container::-webkit-scrollbar-track {
-    background: #f8f8f8f1;
-    border-radius: 10px;
-}
-
-.answers-container::-webkit-scrollbar-thumb {
-    background: #838383e3;
-    border-radius: 10px;
-}
-
-.answers-container::-webkit-scrollbar-thumb:hover {
-    background: #8888889c;
-}
-
-.answers-list {
-    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
 }
 
 .answer-item {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 4px var(--shadow);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.answer-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+/* Státusz jelző bal oldali vastag csík */
+.answer-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 100%;
+    background: var(--border-color-2);
+}
+
+.answer-item:has(.fa-check)::before { background: #10b981; } /* Modern Smaragdzöld */
+.answer-item:has(.fa-times)::before { background: #ef4444; } /* Modern Piros */
+.answer-item:has(.answer-pending-badge)::before { background: #f59e0b; } /* Modern Sárga */
+
+.answer-icon-container {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
 }
 
 .answer-item p {
-    font-size: 1rem;
+    font-size: 1.05rem;
     color: var(--color-text);
-    margin: 8px 0;
+    margin: 12px 0;
+    line-height: 1.6;
 }
 
 .answer-item strong {
-    font-weight: 600;
-    color: var(--color-text);
-}
-
-.answer-item p:last-child {
-    margin-bottom: 0;
-}
-
-.answer-icon-container {
+    font-weight: 700;
+    color: var(--color-text-dim);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: block;
     margin-bottom: 6px;
 }
 
 .answer-pending-badge {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    background: rgba(255, 193, 7, 0.15);
-    color: #ffc107;
-    border: 1px solid rgba(255, 193, 7, 0.4);
-    border-radius: 12px;
-    padding: 3px 10px;
-    font-size: 0.82rem;
-    font-weight: 600;
+    gap: 8px;
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
 }
 
-/* Responsive Styles */
-@media (max-width: 768px) {
-    .completed-details-container {
-        padding: 0;
-    }
+/* Gombok - AI Tutor és Jelentés */
+.tutor-toggle-btn {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    color: var(--accent);
+    padding: 12px 24px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    margin-top: 20px;
+}
 
-    .assignment-data-container p,
-    .answer-item p {
-        font-size: 1rem;
-    }
+.tutor-toggle-btn:hover {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 4px 15px var(--accent-glow);
+    transform: translateY(-1px);
+}
+
+.flag-btn {
+    background: transparent;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: 12px 24px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    margin-top: 20px;
+    margin-left: 12px;
+}
+
+.flag-btn:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+}
+
+.flag-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: var(--border-color);
+    color: var(--color-text-dim);
+}
+
+@media (max-width: 768px) {
+    .assignment-data-container { grid-template-columns: 1fr 1fr; padding: 24px; }
+    .answer-item { padding: 24px 20px; }
+    .assignment-data-container p:nth-child(4) { font-size: 2.5rem; }
 }
 
 @media (max-width: 480px) {
-    .completed-details-container {
-        padding: 0;
-    }
-
-    .assignment-data-container p,
-    .answer-item p {
-        font-size: 0.9rem;
-    }
-
-    .answers-container {
-        max-height: 75vh;
-        padding: 0;
-        margin-inline: auto;
-    }
-
-    .answers-container::-webkit-scrollbar {
-        display: none;
-    }
+    .assignment-data-container { grid-template-columns: 1fr; }
+    .tutor-toggle-btn, .flag-btn { width: 100%; margin-left: 0; margin-bottom: 12px; }
 }

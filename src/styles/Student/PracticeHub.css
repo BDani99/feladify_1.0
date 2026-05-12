@@ -1,174 +1,170 @@
+/* PracticeHub.css - A szintfelmérő kapuja */
+
 .practice-hub {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
+    max-width: 850px;
+    margin: 0 auto;
+    padding: 24px;
 }
 
 .back-btn {
-  background: none;
-  border: none;
-  color: #2196f3;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 30px;
-  transition: color 0.3s;
+    background: none;
+    border: none;
+    color: var(--color-text-dim);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 32px;
+    transition: all 0.2s ease;
+    padding: 8px 16px;
+    border-radius: 10px;
 }
 
 .back-btn:hover {
-  color: #1976d2;
+    color: var(--accent);
+    background: var(--bg-card);
 }
 
 .hub-container {
-  background: var(--color-bg-secondary);
-  border-radius: 12px;
-  padding: 40px 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: var(--bg-card);
+    border-radius: 24px;
+    padding: 56px 40px;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid var(--border-color);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
 }
 
-.diagnostic-header {
-  text-align: center;
-  margin-bottom: 30px;
+/* Finom háttérfény a kártya mögött */
+.hub-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 50%);
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.diagnostic-section, .roadmap-section {
+    position: relative;
+    z-index: 1;
 }
 
 .book-icon {
-  font-size: 48px;
-  color: #2196f3;
-  margin-bottom: 12px;
+    font-size: 4rem;
+    color: var(--accent);
+    margin-bottom: 24px;
+    filter: drop-shadow(0 4px 12px var(--accent-glow));
 }
 
 .practice-hub h1 {
-  font-size: 28px;
-  color: var(--color-text);
-  margin: 0;
-}
-
-.diagnostic-content {
-  text-align: center;
+    font-size: 2.4rem;
+    color: var(--color-text);
+    margin: 0;
+    font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
 .intro-text {
-  color: var(--color-text-dim);
-  font-size: 16px;
-  margin: 20px 0 30px;
-  line-height: 1.6;
+    color: var(--color-text-dim);
+    font-size: 1.15rem;
+    margin: 24px auto 40px;
+    line-height: 1.6;
+    max-width: 550px;
 }
 
 .grade-selector {
-  margin: 30px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
+    margin: 0 auto 40px;
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--bg-input);
+    padding: 16px 24px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
 }
 
 .grade-selector label {
-  font-weight: 600;
-  color: var(--color-text);
+    font-weight: 700;
+    color: var(--color-text);
+    font-size: 1.05rem;
 }
 
 .grade-selector select {
-  padding: 8px 12px;
-  border: 2px solid var(--color-border);
-  border-radius: 6px;
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-size: 14px;
-  cursor: pointer;
-  transition: border-color 0.3s;
+    padding: 12px 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-card);
+    color: var(--color-text);
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
 }
 
-.grade-selector select:hover,
 .grade-selector select:focus {
-  border-color: #2196f3;
-  outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-glow);
 }
 
 .test-info {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin: 30px 0;
-  padding: 20px;
-  background: rgba(33, 150, 243, 0.05);
-  border-radius: 8px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin: 40px auto;
+    max-width: 600px;
 }
 
 .info-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  color: var(--color-text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 24px;
+    background: var(--bg-input);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease;
 }
 
-.info-icon {
-  font-size: 24px;
+.info-item:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-color-2);
 }
 
-.start-btn {
-  background: linear-gradient(135deg, #2196f3, #21cbf3);
-  color: white;
-  border: none;
-  padding: 14px 36px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
-  margin-top: 20px;
+.info-icon { font-size: 2rem; }
+.info-item span:last-child { color: var(--color-text); font-weight: 600; }
+
+.start-btn, .view-roadmap-btn {
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+    padding: 20px 48px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px var(--accent-glow);
+    letter-spacing: 0.5px;
 }
 
-.start-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(33, 150, 243, 0.4);
-}
-
-.roadmap-section {
-  text-align: center;
-}
-
-.roadmap-section p {
-  color: var(--color-text-dim);
-  font-size: 16px;
-  margin: 20px 0;
-}
-
-.view-roadmap-btn {
-  background: linear-gradient(135deg, #4caf50, #66bb6a);
-  color: white;
-  border: none;
-  padding: 14px 36px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
-  margin-top: 20px;
-}
-
-.view-roadmap-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4);
+.start-btn:hover, .view-roadmap-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.4);
 }
 
 @media (max-width: 768px) {
-  .hub-container {
-    padding: 24px 16px;
-  }
-
-  .practice-hub h1 {
-    font-size: 24px;
-  }
-
-  .test-info {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .grade-selector {
-    flex-direction: column;
-  }
+    .hub-container { padding: 40px 24px; }
+    .test-info { grid-template-columns: 1fr; }
+    .grade-selector { flex-direction: column; width: 100%; }
+    .grade-selector select { width: 100%; }
 }

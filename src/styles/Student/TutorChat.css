@@ -1,139 +1,131 @@
+/* TutorChat.css - Beágyazott AI Magyarázó */
+
 .tutor-chat-container {
-    margin-top: 14px;
+    margin-top: 24px;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 20px;
     overflow: hidden;
+    background: var(--bg-card);
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    flex-direction: column;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .tutor-chat-messages {
-    max-height: 220px;
+    max-height: 350px;
     overflow-y: auto;
-    padding: 12px 14px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 16px;
     background: var(--bg-page);
 }
 
-.tutor-chat-messages::-webkit-scrollbar {
-    width: 5px;
-}
-
-.tutor-chat-messages::-webkit-scrollbar-thumb {
-    background: #838383;
-    border-radius: 10px;
-}
+.tutor-chat-messages::-webkit-scrollbar { width: 6px; }
+.tutor-chat-messages::-webkit-scrollbar-track { background: transparent; }
+.tutor-chat-messages::-webkit-scrollbar-thumb { background: var(--border-color-2); border-radius: 10px; }
 
 .tutor-msg {
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 0.88rem;
-    line-height: 1.5;
-    max-width: 88%;
+    padding: 14px 18px;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 85%;
     word-break: break-word;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .tutor-msg.assistant {
-    background: rgba(20, 120, 226, 0.13);
+    background: var(--bg-card);
     color: var(--color-text);
     align-self: flex-start;
-    border-bottom-left-radius: 2px;
+    border-bottom-left-radius: 4px;
+    border: 1px solid var(--border-color);
 }
 
+/* WOW Faktor: A diák üzenete színátmenetes */
 .tutor-msg.user {
-    background: var(--bg-form-group);
-    color: var(--color-text);
+    background: var(--accent-gradient);
+    color: #ffffff;
     align-self: flex-end;
-    border-bottom-right-radius: 2px;
+    border-bottom-right-radius: 4px;
+    border: none;
+    box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 .tutor-msg-loading {
     color: var(--color-text-dim);
-    font-size: 0.82rem;
-    font-style: italic;
+    font-size: 0.85rem;
+    font-weight: 500;
     align-self: flex-start;
+    margin-left: 12px;
+    animation: pulse-text 1.5s infinite;
+}
+
+@keyframes pulse-text {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
 }
 
 .tutor-chat-input-row {
     display: flex;
-    gap: 8px;
-    padding: 10px 12px;
+    gap: 12px;
+    padding: 16px 20px;
     border-top: 1px solid var(--border-color);
     background: var(--bg-card);
 }
 
 .tutor-chat-input-row input {
     flex: 1;
-    padding: 8px 10px;
-    border-radius: 6px;
-    border: 1px solid var(--border-color-2);
+    padding: 14px 20px;
+    border-radius: 14px;
+    border: 2px solid var(--border-color);
     background: var(--bg-input);
     color: var(--color-text);
-    font-size: 0.9rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    font-family: inherit;
 }
 
 .tutor-chat-input-row input:focus {
     outline: none;
-    border-color: #1478e2;
+    border-color: var(--accent);
+    background: var(--bg-card);
+    box-shadow: 0 0 0 4px var(--accent-glow);
 }
 
 .tutor-chat-send {
-    padding: 8px 16px;
-    background: #1478e2;
+    padding: 0 24px;
+    background: var(--accent-gradient);
     color: #fff;
     border: none;
-    border-radius: 6px;
+    border-radius: 14px;
     cursor: pointer;
-    font-size: 0.88rem;
-    font-weight: 600;
-    white-space: nowrap;
-    transition: background 0.15s;
+    font-size: 1.1rem;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 .tutor-chat-send:hover:not(:disabled) {
-    background: #1060c0;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
 .tutor-chat-send:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.tutor-toggle-btn {
-    margin-top: 10px;
-    background: none;
-    border: 1px solid var(--border-color-2);
-    color: #1478e2;
-    padding: 5px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: background 0.15s;
-}
-
-.tutor-toggle-btn:hover {
-    background: rgba(20, 120, 226, 0.08);
-}
-
-.flag-btn {
-    margin-top: 8px;
-    background: none;
-    border: 1px solid rgba(231, 76, 60, 0.4);
-    color: #e74c3c;
-    padding: 5px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: background 0.15s;
-}
-
-.flag-btn:hover:not(:disabled) {
-    background: rgba(231, 76, 60, 0.08);
-}
-
-.flag-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    border-color: var(--border-color);
+    background: var(--bg-input);
     color: var(--color-text-dim);
+    border: 1px solid var(--border-color);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
 }

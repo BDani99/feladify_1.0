@@ -1,20 +1,20 @@
+/* Sidebar.css */
 .sidebar {
     position: fixed;
-    top: 64px; /* Header magassága alatt kezdődik */
+    top: 64px;
     left: 0;
     width: 260px;
     height: calc(100vh - 64px);
     background-color: var(--bg-sidebar);
     border-right: 1px solid var(--border-color);
     color: var(--color-text);
-    padding: 24px 12px;
+    padding: 24px 16px;
     z-index: 900;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
 }
 
-/* Fő tartalom eltolása */
 #content {
     margin-left: 260px;
     margin-top: 64px;
@@ -27,7 +27,7 @@
 .list-unstyled {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     list-style: none;
     padding: 0;
     margin: 0;
@@ -36,42 +36,46 @@
 .list-unstyled a {
     text-decoration: none;
     color: var(--color-text-dim);
-    padding: 12px 16px;
+    padding: 14px 18px;
     display: flex;
     align-items: center;
-    border-radius: 10px;
-    font-weight: 500;
-    font-size: 14.5px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 15px;
     transition: all 0.2s ease;
+    border: 1px solid transparent;
 }
 
 .icon {
-    margin-right: 14px;
-    font-size: 1.2rem;
-    transition: transform 0.2s ease;
+    margin-right: 16px;
+    font-size: 1.3rem;
+    transition: all 0.2s ease;
+    color: var(--color-text-dim);
 }
 
 .list-unstyled a:hover {
     background-color: var(--bg-input);
-    color: var(--color-text);
+    color: var(--accent);
 }
 
 .list-unstyled a:hover .icon {
+    color: var(--accent);
     transform: scale(1.1);
 }
 
+/* Az aktív gomb egy gyönyörű kék átmenetet kap */
 .active-link {
     background: var(--accent-gradient) !important;
     color: #ffffff !important;
-    box-shadow: var(--shadow-hover);
+    box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 .active-link .icon {
-    color: #ffffff;
+    color: #ffffff !important;
 }
 
 .settings-link {
-    margin-top: auto; /* Lenyomja a menü aljára */
+    margin-top: auto;
     padding-top: 16px;
     border-top: 1px solid var(--border-color);
 }
@@ -80,32 +84,42 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px;
-    border-radius: 10px;
+    padding: 14px;
+    border-radius: 12px;
     color: var(--color-text-dim);
     transition: all 0.2s ease;
     cursor: pointer;
+    background: var(--bg-input);
+    border: 1px solid transparent;
 }
 
 .settings-icon {
     font-size: 1.4rem;
+    transition: transform 0.3s ease;
 }
 
 #settings-link:hover {
-    background-color: var(--bg-input);
-    color: var(--color-text);
+    background-color: var(--bg-card);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: var(--shadow-hover);
+}
+
+#settings-link:hover .settings-icon {
+    transform: rotate(90deg);
 }
 
 .settings-active {
     color: var(--accent) !important;
-    background-color: rgba(102, 126, 234, 0.1) !important;
+    background-color: rgba(59, 130, 246, 0.1) !important;
+    border-color: rgba(59, 130, 246, 0.2) !important;
 }
 
 .sidebar-toggle {
     display: none;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 10px;
     color: var(--color-text);
     font-size: 1.2rem;
     position: fixed;
@@ -118,29 +132,18 @@
     box-shadow: var(--shadow-soft);
     align-items: center;
     justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+    color: var(--accent);
+    border-color: var(--accent);
 }
 
 @media (max-width: 1024px) {
-    .sidebar {
-        transform: translateX(-100%);
-        box-shadow: 4px 0 24px rgba(0,0,0,0.1);
-    }
-
-    .sidebar.open {
-        transform: translateX(0);
-    }
-
-    #content {
-        margin-left: 0;
-        padding: 20px 16px;
-    }
-
-    .sidebar-toggle {
-        display: flex;
-    }
-    
-    /* A Header logóját beljebb toljuk mobilon, hogy elférjen a hamburger menü */
-    .Header-container {
-        padding-left: 68px;
-    }
+    .sidebar { transform: translateX(-100%); box-shadow: 4px 0 24px rgba(0,0,0,0.1); }
+    .sidebar.open { transform: translateX(0); }
+    #content { margin-left: 0; padding: 24px 16px; }
+    .sidebar-toggle { display: flex; }
+    .Header-container { padding-left: 70px; }
 }

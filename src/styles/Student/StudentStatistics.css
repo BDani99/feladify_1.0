@@ -1,313 +1,330 @@
+/* StudentStatistics.css - Prémium Vezérlőpult */
+
 .student-statistics-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px;
 }
 
 .stat-title {
-  text-align: center;
-  margin-bottom: 30px;
-  color: var(--color-text);
-  font-size: 2rem;
+    text-align: left;
+    margin-bottom: 40px;
+    color: var(--color-text);
+    font-size: 2.4rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
 }
 
-/* Gamification Header */
+/* Gamifikációs Fejléc */
 .stats-gamification-header {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 28px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    margin-bottom: 48px;
 }
 
 .stat-card {
-  background: var(--bg-form-group);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 18px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  transition: transform 0.2s, box-shadow 0.2s;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Felső finom szín-vonal */
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--border-color-2);
+    transition: all 0.3s ease;
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px var(--shadow);
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-hover);
 }
+
+.xp-card:hover::before { background: #f59e0b; }
+.streak-card:hover::before { background: #ef4444; }
+.badges-card:hover::before { background: #8b5cf6; }
+.score-card:hover::before { background: var(--accent); }
 
 .stat-icon {
-  font-size: 30px;
+    font-size: 2.5rem;
+    padding: 16px;
+    border-radius: 16px;
 }
 
-.xp-card .stat-icon    { color: #f1c40f; }
-.streak-card .stat-icon { color: #e74c3c; }
-.badges-card .stat-icon { color: #9b59b6; }
-.score-card .stat-icon  { color: var(--accent); }
+.xp-card .stat-icon    { color: #f59e0b; background: rgba(245, 158, 11, 0.15); }
+.streak-card .stat-icon { color: #ef4444; background: rgba(239, 68, 68, 0.15); }
+.badges-card .stat-icon { color: #8b5cf6; background: rgba(139, 92, 246, 0.15); }
+.score-card .stat-icon  { color: var(--accent); background: rgba(59, 130, 246, 0.15); }
 
 .stat-info {
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .stat-value {
-  font-size: 26px;
-  font-weight: bold;
-  color: var(--color-text);
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--color-text);
+    line-height: 1;
 }
 
 .stat-label {
-  font-size: 13px;
-  color: var(--color-text-dim);
+    font-size: 1rem;
+    color: var(--color-text-dim);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* Badges Section */
+/* Kitűzők (Badges) */
 .badges-section {
-  margin-bottom: 28px;
+    margin-bottom: 48px;
 }
 
 .badges-section h2 {
-  color: var(--color-text);
-  margin-bottom: 14px;
+    color: var(--color-text);
+    margin-bottom: 24px;
+    font-size: 1.6rem;
+    font-weight: 800;
 }
 
 .badges-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
 }
 
 .badge-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border-radius: 10px;
-  padding: 14px;
-  text-align: center;
-  transition: transform 0.2s;
-  cursor: pointer;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 24px 16px;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    box-shadow: var(--shadow-soft);
 }
 
 .badge-card:hover {
-  transform: scale(1.05);
+    transform: translateY(-6px) scale(1.03);
+    border-color: var(--accent);
+    box-shadow: var(--shadow-hover);
 }
 
 .badge-emoji {
-  font-size: 32px;
-  display: block;
-  margin-bottom: 6px;
+    font-size: 3.5rem;
+    display: block;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
 }
 
 .badge-name {
-  font-weight: bold;
-  font-size: 13px;
-  display: block;
-  margin-bottom: 3px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 6px;
+    color: var(--color-text);
 }
 
 .badge-desc {
-  font-size: 11px;
-  opacity: 0.9;
-  display: block;
+    font-size: 0.9rem;
+    color: var(--color-text-dim);
+    display: block;
+    line-height: 1.4;
 }
 
-/* Stats Grid */
+/* Grafikonok és Elemzések Grid */
 .stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 18px;
-  margin-bottom: 28px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+    margin-bottom: 48px;
 }
 
 .stat-card.large {
-  grid-column: span 1;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 32px;
 }
 
 .stat-card h3 {
-  color: var(--color-text);
-  margin-bottom: 14px;
-  font-size: 15px;
+    color: var(--color-text);
+    margin: 0 0 24px 0;
+    font-size: 1.4rem;
+    font-weight: 800;
+    width: 100%;
 }
 
 .chart-container {
-  height: 280px;
-  position: relative;
+    height: 320px;
+    width: 100%;
+    position: relative;
 }
 
-.no-data {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--color-text-dim);
-  font-style: italic;
-}
-
-/* Strengths and Weaknesses */
+/* Erősségek és Gyengeségek Sávok */
 .strengths-weaknesses {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
 }
 
 .sw-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }
 
 .sw-topic {
-  min-width: 100px;
-  font-size: 13px;
-  color: var(--color-text);
-  font-weight: 500;
+    min-width: 130px;
+    font-size: 1.05rem;
+    color: var(--color-text);
+    font-weight: 700;
 }
 
 .sw-bar-container {
-  flex: 1;
-  height: 7px;
-  background: var(--border-color);
-  border-radius: 4px;
-  overflow: hidden;
+    flex: 1;
+    height: 12px;
+    background: var(--bg-input);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .sw-bar {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.5s ease;
+    height: 100%;
+    border-radius: 6px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.strength .sw-bar { background: linear-gradient(90deg, #2ecc71, #27ae60); }
-.weakness .sw-bar  { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+.strength .sw-bar { background: linear-gradient(90deg, #10b981, #34d399); }
+.weakness .sw-bar  { background: linear-gradient(90deg, #ef4444, #f87171); }
 
 .sw-score {
-  min-width: 46px;
-  text-align: right;
-  font-weight: bold;
-  font-size: 13px;
+    min-width: 60px;
+    text-align: right;
+    font-weight: 800;
+    font-size: 1.1rem;
 }
 
-.strength .sw-score { color: #2ecc71; }
-.weakness .sw-score { color: #e74c3c; }
+.strength .sw-score { color: #10b981; }
+.weakness .sw-score { color: #ef4444; }
 
-/* AI Analysis Section */
+/* AI Elemzés */
 .ai-analysis-section {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 22px;
-  margin-bottom: 28px;
+    background: var(--bg-card);
+    border: 1px solid var(--accent);
+    border-radius: 24px;
+    padding: 40px;
+    margin-bottom: 48px;
+    box-shadow: 0 10px 40px var(--accent-glow);
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-analysis-section::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 200px;
+    height: 200px;
+    background: var(--accent);
+    filter: blur(100px);
+    opacity: 0.15;
+    pointer-events: none;
 }
 
 .ai-analysis-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
 }
 
 .ai-icon {
-  font-size: 26px;
-  color: #667eea;
+    font-size: 2.5rem;
+    color: var(--accent);
+    filter: drop-shadow(0 4px 10px var(--accent-glow));
 }
 
 .ai-analysis-header h2 {
-  margin: 0;
-  color: var(--color-text);
-  font-size: 17px;
+    margin: 0;
+    color: var(--color-text);
+    font-size: 1.8rem;
+    font-weight: 800;
 }
 
 .ai-analysis-content {
-  background: var(--bg-form-group);
-  border-radius: 10px;
-  padding: 18px;
-  border: 1px solid var(--border-color);
-}
-
-.ai-analysis-content p {
-  margin: 0;
-  line-height: 1.6;
-  color: var(--color-text);
-}
-
-.ai-analysis-content strong {
-  color: var(--color-text);
+    background: var(--bg-input);
+    border-radius: 16px;
+    padding: 32px;
+    border: 1px solid var(--border-color);
+    color: var(--color-text);
+    line-height: 1.7;
+    font-size: 1.15rem;
+    font-weight: 500;
 }
 
 .streak-motivation {
-  margin-top: 14px;
-  padding: 10px 14px;
-  background: rgba(243, 156, 18, 0.15);
-  border-radius: 8px;
-  border-left: 4px solid #f39c12;
-  font-size: 13px;
-  color: #f39c12;
+    margin-top: 24px;
+    padding: 20px 24px;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 16px;
+    border-left: 6px solid #f59e0b;
+    font-size: 1.1rem;
+    color: #d97706;
+    font-weight: 700;
 }
 
-/* Assignment Summary */
+/* Áttekintés - Kis kártyák lent */
 .assignment-summary {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
 }
 
 .summary-card {
-  background: var(--bg-form-group);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 18px;
-  text-align: center;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
 }
 
 .summary-card h3 {
-  margin: 0 0 8px 0;
-  font-size: 13px;
-  color: var(--color-text-dim);
+    margin: 0 0 12px 0;
+    font-size: 1.1rem;
+    color: var(--color-text-dim);
+    font-weight: 600;
 }
 
 .summary-value {
-  font-size: 32px;
-  font-weight: bold;
-  color: var(--color-text);
-  margin: 0;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--color-text);
+    margin: 0;
 }
 
-.summary-card.completed .summary-value { color: #2ecc71; }
-.summary-card.pending .summary-value   { color: #f39c12; }
+.summary-card.completed .summary-value { color: #10b981; }
+.summary-card.pending .summary-value   { color: #f59e0b; }
 
-/* Responsive */
 @media (max-width: 992px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .stat-card.large {
-    grid-column: span 1;
-  }
-}
-
-@media (max-width: 768px) {
-  .stats-gamification-header {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .assignment-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .stat-value {
-    font-size: 22px;
-  }
-
-  .stat-title {
-    font-size: 1.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .stats-gamification-header {
-    grid-template-columns: 1fr;
-  }
-
-  .badges-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+    .stats-grid { grid-template-columns: 1fr; }
+    .assignment-summary { grid-template-columns: 1fr; }
 }
