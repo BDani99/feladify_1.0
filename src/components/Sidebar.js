@@ -34,66 +34,65 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                 {userRole === 'teacher' && (
                     <>
                         <li>
-                            <a className={isActiveLink('/') ? 'active-link' : ''} onClick={() => handleNavigation('/')}>
+                            <a tabIndex={0} className={isActiveLink('/') ? 'active-link' : ''} onClick={() => handleNavigation('/')}>
                                 <FaHome className="icon" /> Kezdőlap
                             </a>
                         </li>
                         <li>
-                            <a className={isActiveLink('/dolgozat-generalas') ? 'active-link' : ''} onClick={() => handleNavigation('/dolgozat-generalas')}>
+                            <a tabIndex={0} className={isActiveLink('/dolgozat-generalas') ? 'active-link' : ''} onClick={() => handleNavigation('/dolgozat-generalas')}>
                                 <FaListAlt className="icon" /> Dolgozat Generálás
                             </a>
                         </li>
                         <li>
-                            <a className={isActiveLink('/generalt-dolgozatok') ? 'active-link' : ''} onClick={() => handleNavigation('/generalt-dolgozatok')}>
+                            <a tabIndex={0} className={isActiveLink('/generalt-dolgozatok') ? 'active-link' : ''} onClick={() => handleNavigation('/generalt-dolgozatok')}>
                                 <FaClipboard className="icon" /> Generált Dolgozatok
                             </a>
                         </li>
                         <li>
-                            <a className={isActiveLink('/statisztika') ? 'active-link' : ''} onClick={() => handleNavigation('/statisztika')}>
+                            <a tabIndex={0} className={isActiveLink('/statisztika') ? 'active-link' : ''} onClick={() => handleNavigation('/statisztika')}>
                                 <FaChartBar className="icon" /> Statisztika
                             </a>
                         </li>
-                        <div className="settings-link">
-                            <a id="settings-link" className={isActiveLink('/tanar-beallitasok') ? 'settings-active' : ''} onClick={() => handleNavigation('/tanar-beallitasok')}>
+                        <li className="settings-link">
+                            <a id="settings-link" tabIndex={0} className={isActiveLink('/tanar-beallitasok') ? 'settings-active' : ''} onClick={() => handleNavigation('/tanar-beallitasok')}>
                                 <FaCog className="settings-icon" />
                             </a>
-                        </div>
+                        </li>
                     </>
                 )}
 
                 {userRole === 'student' && (
                     <>
                         <li>
-                            <a className={isActiveLink('/') ? 'active-link' : ''} onClick={() => handleNavigation('/')}>
+                            <a tabIndex={0} className={isActiveLink('/') ? 'active-link' : ''} onClick={() => handleNavigation('/')}>
                                 <FaHome className="icon" /> Kezdőlap
                             </a>
                         </li>
-                        {/* Itt módosítottuk az Egyéni Gyakorlás menüpontot az új koncepcióra */}
                         <li>
-                            <a className={isActiveLink('/egyeni-gyakorlas') ? 'active-link' : ''} onClick={() => handleNavigation('/egyeni-gyakorlas')}>
+                            <a tabIndex={0} className={isActiveLink('/egyeni-gyakorlas') ? 'active-link' : ''} onClick={() => handleNavigation('/egyeni-gyakorlas')}>
                                 <FaCompass className="icon" /> Egyéni Gyakorlás
                             </a>
                         </li>
                         <li>
-                            <a className={isActiveLink('/elerheto-dolgozatok') ? 'active-link' : ''} onClick={() => handleNavigation('/elerheto-dolgozatok')}>
+                            <a tabIndex={0} className={isActiveLink('/elerheto-dolgozatok') ? 'active-link' : ''} onClick={() => handleNavigation('/elerheto-dolgozatok')}>
                                 <FaGraduationCap className="icon" /> Dolgozatok
                             </a>
                         </li>
                         <li>
-                            <a className={isActiveLink('/megoldott-dolgozatok') ? 'active-link' : ''} onClick={() => handleNavigation('/megoldott-dolgozatok')}>
+                            <a tabIndex={0} className={isActiveLink('/megoldott-dolgozatok') ? 'active-link' : ''} onClick={() => handleNavigation('/megoldott-dolgozatok')}>
                                 <FaClipboardCheck className="icon" /> Eredmények
                             </a>
                         </li>
                         <li>
-                            <a className={isActiveLink('/tanulo-statisztika') ? 'active-link' : ''} onClick={() => handleNavigation('/tanulo-statisztika')}>
+                            <a tabIndex={0} className={isActiveLink('/tanulo-statisztika') ? 'active-link' : ''} onClick={() => handleNavigation('/tanulo-statisztika')}>
                                 <FaChartBar className="icon" /> Statisztika
                             </a>
                         </li>
-                        <div className="settings-link">
-                            <a id="settings-link" className={isActiveLink('/diak-beallitasok') ? 'settings-active' : ''} onClick={() => handleNavigation('/diak-beallitasok')}>
+                        <li className="settings-link">
+                            <a id="settings-link" tabIndex={0} className={isActiveLink('/diak-beallitasok') ? 'settings-active' : ''} onClick={() => handleNavigation('/diak-beallitasok')}>
                                 <FaCog className="settings-icon" />
                             </a>
-                        </div>
+                        </li>
                     </>
                 )}
             </ul>

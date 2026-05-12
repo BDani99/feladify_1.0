@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { FaCheck, FaTimes, FaChevronDown, FaChevronUp, FaExclamationTriangle } from 'react-icons/fa';
 import { fetchAssignmentSubmissions } from '../../api/Assignments/Teacher/GetSubmissions';
 import { overrideScore } from '../../api/Assignments/Teacher/OverrideScore';
-import '../../styles/Teacher/AssignmentDetails.css';
+import '../../styles/Teacher/AssignmentDetailsPage.css';
 
 const SubmissionAnswerRow = ({ answer, studentId, assignmentId, onScoreUpdate }) => {
     const isMC = answer.confidence === 1.0;
@@ -55,8 +55,8 @@ const SubmissionAnswerRow = ({ answer, studentId, assignmentId, onScoreUpdate })
                 Pont: <span>{answer.score} / {answer.maxPoints}</span>
                 {isMC && (
                     answer.score > 0
-                        ? <FaCheck style={{ color: '#4caf50', marginLeft: 6 }} />
-                        : <FaTimes style={{ color: '#e74c3c', marginLeft: 6 }} />
+                        ? <FaCheck style={{ color: '#10b981', marginLeft: 6 }} />
+                        : <FaTimes style={{ color: '#ef4444', marginLeft: 6 }} />
                 )}
             </p>
             {!isMC && (

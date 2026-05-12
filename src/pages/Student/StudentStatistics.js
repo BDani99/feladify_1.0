@@ -3,29 +3,21 @@ import { fetchStudentStatistics } from '../../api/Student/Roadmap';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import {
   Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
   Title,
   Tooltip,
   Legend,
-  ArcElement,
   PointElement,
   LineElement,
   RadialLinearScale
 } from 'chart.js';
-import { Bar, Pie, Doughnut, Line, Radar } from 'react-chartjs-2';
+import { Line, Radar } from 'react-chartjs-2';
 import { FaStar, FaFire, FaTrophy, FaChartLine, FaBrain } from 'react-icons/fa';
 import '../../styles/Student/StudentStatistics.css';
 
 ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
   Title,
   Tooltip,
   Legend,
-  ArcElement,
   PointElement,
   LineElement,
   RadialLinearScale
@@ -37,10 +29,8 @@ const StudentStatistics = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const loadStatistics = async () => {
-    console.log('[StudentStatistics] Loading statistics...');
     try {
       const data = await fetchStudentStatistics();
-      console.log('[StudentStatistics] Statistics loaded:', data);
       setStatistics(data);
     } catch (error) {
       console.error('[StudentStatistics] Error loading statistics:', error);

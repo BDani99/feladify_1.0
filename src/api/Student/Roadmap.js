@@ -50,12 +50,6 @@ export const submitPracticeCheckpoint = async ({ subject, checkpointId, score, a
   }
 };
 
-// Visszafelé kompatibilitás miatt, ha valahol még hívnád
-export const fetchRoadmap = async () => {
-  console.warn('[Roadmap API] A fetchRoadmap elavult; használd a fetchPracticePath függvényt!');
-  return fetchPracticePath('Matematika');
-};
-
 export const fetchStudentStatistics = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/student/statistics`, {

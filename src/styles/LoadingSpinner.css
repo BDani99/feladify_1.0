@@ -1,53 +1,49 @@
+/* LoadingSpinner.css */
+
 .loading-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    font-size: 2rem;
-    text-align: center;
+    min-height: 200px;
+    height: 100%;
+    gap: 16px;
 }
 
 .loading-text {
-    color: #f5f2f2f1;
+    color: var(--color-text-dim);
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    animation: pulse-opacity 1.5s infinite;
 }
 
 .loading-dots {
-    font-size: 2rem;
     display: flex;
     justify-content: center;
+    gap: 8px;
 }
 
 .dot {
-    margin: 0 5px;
-    font-size: 50px;
+    width: 12px;
+    height: 12px;
+    background: var(--accent-gradient);
+    border-radius: 50%;
     opacity: 0;
-    animation: dot-blink 2.5s infinite;
-    color: #f5f2f2f1;
+    animation: dot-bounce 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dot:nth-child(1) {
-    animation-delay: 0s;
+.dot:nth-child(1) { animation-delay: 0s; }
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dot-bounce {
+    0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.3; }
+    50% { transform: translateY(-10px) scale(1.2); opacity: 1; }
 }
 
-.dot:nth-child(2) {
-    animation-delay: 0.5s;
-}
-
-.dot:nth-child(3) {
-    animation-delay: 1s;
-}
-
-@keyframes dot-blink {
-    0% {
-        opacity: 0;
-    }
-
-    50% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0;
-    }
+@keyframes pulse-opacity {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
 }

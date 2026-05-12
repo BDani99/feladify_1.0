@@ -33,7 +33,6 @@ const Header = () => {
     const handleLogout = async () => {
         try {
             const response = await logoutUser();
-            console.log(response.message);
             window.location.reload();
         } catch (error) {
             console.error('Failed to logout:', error);
@@ -48,16 +47,9 @@ const Header = () => {
                     <img src={name} alt='logo' className='name' />
                 </div>
                 <div className='header-right'>
-                    <button
-                        className='theme-toggle-button'
-                        onClick={toggleTheme}
-                        aria-label='Témaváltás'
-                        title={theme === 'dark' ? 'Váltás világos módra' : 'Váltás sötét módra'}
-                    >
-                        {theme === 'dark' ? '☀️' : '🌙'}
-                    </button>
+                    {userName && <span className='header-username'>{userName}</span>}
                     <button className='logout-button' onClick={handleLogout}>
-                        Kijelentkezés
+                        <span>Kijelentkezés</span>
                     </button>
                 </div>
             </div>

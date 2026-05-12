@@ -10,12 +10,12 @@
 
 .preview-modal {
     background: var(--bg-card);
-    border-radius: 10px;
+    border-radius: 16px;
     width: min(820px, 95vw);
     max-height: 90vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    box-shadow: var(--shadow-hover);
 }
 
 .preview-modal-header {
@@ -67,8 +67,12 @@
 }
 
 .preview-questions-list::-webkit-scrollbar-thumb {
-    background: #838383e3;
+    background: var(--border-color-2);
     border-radius: 10px;
+}
+
+.preview-questions-list::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-dim);
 }
 
 .preview-question-item {
@@ -121,7 +125,7 @@
 }
 
 .pq-correct {
-    color: #4caf50;
+    color: #10b981;
     font-size: 0.87rem;
     margin-top: 6px;
     font-weight: 600;
@@ -202,14 +206,14 @@
 }
 
 .btn-preview-cancel:hover {
-    background: rgba(255, 255, 255, 0.07);
+    background: var(--bg-page);
 }
 
 .btn-preview-save {
     padding: 8px 22px;
     border-radius: 6px;
     border: none;
-    background: #1478e2;
+    background: var(--accent);
     color: #fff;
     cursor: pointer;
     font-size: 0.95rem;
@@ -218,7 +222,7 @@
 }
 
 .btn-preview-save:hover:not(:disabled) {
-    background: #1060c0;
+    background: var(--accent-hover);
 }
 
 .btn-preview-save:disabled {
@@ -229,7 +233,7 @@
 @media (max-width: 600px) {
     .preview-modal {
         max-height: 98vh;
-        border-radius: 8px;
+        border-radius: 12px;
     }
 
     .preview-questions-list {

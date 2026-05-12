@@ -1,14 +1,18 @@
 .practice-test {
   max-width: 900px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 24px;
 }
 
 .test-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 28px;
+  padding: 20px;
+  background: var(--bg-form-group);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
 }
 
 .test-header h1 {
@@ -29,23 +33,25 @@
 .back-btn {
   background: none;
   border: none;
-  color: #2196f3;
+  color: var(--accent);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  transition: color 0.3s;
+  font-weight: 600;
+  transition: color 0.2s;
+  padding: 0;
 }
 
 .back-btn:hover {
-  color: #1976d2;
+  color: var(--accent-hover);
 }
 
 .progress-bar {
   width: 100%;
   height: 6px;
-  background: #e0e0e0;
+  background: var(--border-color);
   border-radius: 3px;
   margin-bottom: 20px;
   overflow: hidden;
@@ -53,7 +59,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #2196f3, #21cbf3);
+  background: var(--accent-gradient);
   transition: width 0.3s ease;
 }
 
@@ -69,42 +75,50 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 2px solid #ddd;
-  background: white;
+  border: 2px solid var(--border-color);
+  background: var(--bg-card);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
   font-size: 12px;
+  font-weight: 600;
   color: var(--color-text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dot:hover {
-  border-color: #2196f3;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .dot.active {
-  border-color: #2196f3;
-  background: #2196f3;
+  border-color: var(--accent);
+  background: var(--accent);
   color: white;
 }
 
 .dot.answered {
-  border-color: #4caf50;
-  background: #e8f5e9;
-  color: #4caf50;
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
 }
 
 .question-container {
-  background: var(--color-bg-secondary);
-  border-radius: 12px;
-  padding: 30px;
-  margin-bottom: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-soft);
 }
 
 .question-container h2 {
   font-size: 20px;
   color: var(--color-text);
   margin: 0 0 20px 0;
-  line-height: 1.4;
+  line-height: 1.5;
+  font-weight: 700;
 }
 
 .question-content {
@@ -114,79 +128,86 @@
 .options {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .option {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
+  padding: 14px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
+  background: var(--bg-form-group);
 }
 
 .option:hover {
-  border-color: #2196f3;
-  background: rgba(33, 150, 243, 0.05);
+  border-color: var(--accent);
+  background: var(--accent-glow);
 }
 
 .option input[type="radio"] {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .option-text {
   color: var(--color-text);
+  font-size: 15px;
 }
 
 .true-false-btns {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  gap: 12px;
 }
 
 .tf-btn {
-  padding: 16px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  background: white;
+  padding: 18px;
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-form-group);
   color: var(--color-text);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 
 .tf-btn:hover {
-  border-color: #2196f3;
+  border-color: var(--accent);
+  background: var(--accent-glow);
 }
 
 .tf-btn.selected {
-  border-color: #2196f3;
-  background: #2196f3;
+  border-color: var(--accent);
+  background: var(--accent);
   color: white;
 }
 
 .short-answer-input,
 .fill-blank-input {
   width: 100%;
-  padding: 12px;
-  border: 2px solid var(--color-border);
-  border-radius: 8px;
-  background: var(--color-bg);
+  padding: 14px 16px;
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  background: var(--bg-input);
   color: var(--color-text);
-  font-size: 14px;
+  font-size: 15px;
   font-family: inherit;
   box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .short-answer-input:focus,
 .fill-blank-input:focus {
-  border-color: #2196f3;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
   outline: none;
 }
 
@@ -204,31 +225,36 @@
 }
 
 .left-item {
-  padding: 12px;
-  background: rgba(33, 150, 243, 0.1);
-  border-radius: 6px;
+  padding: 12px 14px;
+  background: var(--accent-glow);
+  border-radius: 8px;
   color: var(--color-text);
-  font-weight: 500;
+  font-weight: 600;
+  border: 1px solid var(--border-color);
 }
 
 .matching-row select {
-  padding: 10px;
-  border: 2px solid var(--color-border);
-  border-radius: 6px;
-  background: var(--color-bg);
+  padding: 10px 12px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-input);
   color: var(--color-text);
   cursor: pointer;
+  font-size: 15px;
+  font-family: inherit;
+  transition: border-color 0.2s;
 }
 
 .matching-row select:focus {
-  border-color: #2196f3;
+  border-color: var(--accent);
   outline: none;
 }
 
 .ordering {
   padding: 20px;
-  background: rgba(33, 150, 243, 0.05);
-  border-radius: 8px;
+  background: var(--bg-form-group);
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
 }
 
 .ordering-instruction {
@@ -240,16 +266,17 @@
 .order-item {
   display: flex;
   gap: 12px;
-  padding: 10px;
+  padding: 10px 14px;
   margin-bottom: 8px;
-  background: white;
-  border-radius: 6px;
-  border-left: 4px solid #2196f3;
+  background: var(--bg-card);
+  border-radius: 8px;
+  border-left: 4px solid var(--accent);
+  box-shadow: var(--shadow-soft);
 }
 
 .order-num {
-  font-weight: 600;
-  color: #2196f3;
+  font-weight: 700;
+  color: var(--accent);
   min-width: 30px;
 }
 
@@ -262,17 +289,18 @@
 .nav-buttons {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 16px;
+  margin-top: 32px;
 }
 
 .nav-btn {
-  padding: 12px 20px;
+  padding: 14px 20px;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 10px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -280,46 +308,46 @@
 }
 
 .nav-btn.prev {
-  background: #f0f0f0;
+  background: var(--bg-form-group);
   color: var(--color-text);
+  border: 1px solid var(--border-color);
 }
 
 .nav-btn.prev:hover:not(:disabled) {
-  background: #e0e0e0;
+  background: var(--bg-page);
+  border-color: var(--border-color-2);
 }
 
 .nav-btn.next {
-  background: #2196f3;
+  background: var(--accent-gradient);
   color: white;
 }
 
 .nav-btn.next:hover:not(:disabled) {
-  background: #1976d2;
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px);
 }
 
 .nav-btn.submit {
   grid-column: 1 / -1;
-  background: #4caf50;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
 }
 
 .nav-btn.submit:hover:not(:disabled) {
-  background: #388e3c;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+  transform: translateY(-1px);
 }
 
 .nav-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
 }
 
 @media (max-width: 768px) {
-  .practice-test {
-    padding: 12px;
-  }
-
-  .question-container {
-    padding: 16px;
-  }
+  .practice-test { padding: 12px; }
+  .question-container { padding: 16px; }
 
   .test-header {
     flex-direction: column;
@@ -327,28 +355,10 @@
     text-align: center;
   }
 
-  .test-header h1 {
-    font-size: 20px;
-  }
-
-  .progress-info {
-    text-align: center;
-    min-width: auto;
-  }
-
-  .true-false-btns {
-    grid-template-columns: 1fr;
-  }
-
-  .matching-row {
-    grid-template-columns: 1fr;
-  }
-
-  .nav-buttons {
-    grid-template-columns: 1fr;
-  }
-
-  .nav-btn.submit {
-    grid-column: 1;
-  }
+  .test-header h1 { font-size: 20px; }
+  .progress-info { text-align: center; min-width: auto; }
+  .true-false-btns { grid-template-columns: 1fr; }
+  .matching-row { grid-template-columns: 1fr; }
+  .nav-buttons { grid-template-columns: 1fr; }
+  .nav-btn.submit { grid-column: 1; }
 }

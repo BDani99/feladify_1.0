@@ -1,13 +1,11 @@
-/* Sidebar.css */
 .sidebar {
     position: fixed;
-    top: 64px;
+    top: 70px;
     left: 0;
-    width: 260px;
-    height: calc(100vh - 64px);
+    width: 280px;
+    height: calc(100vh - 70px);
     background-color: var(--bg-sidebar);
     border-right: 1px solid var(--border-color);
-    color: var(--color-text);
     padding: 24px 16px;
     z-index: 900;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -15,19 +13,10 @@
     flex-direction: column;
 }
 
-#content {
-    margin-left: 260px;
-    margin-top: 64px;
-    padding: 32px;
-    min-height: calc(100vh - 64px);
-    background-color: var(--bg-page);
-    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 .list-unstyled {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     list-style: none;
     padding: 0;
     margin: 0;
@@ -36,42 +25,43 @@
 .list-unstyled a {
     text-decoration: none;
     color: var(--color-text-dim);
-    padding: 14px 18px;
+    padding: 14px 16px;
     display: flex;
     align-items: center;
     border-radius: 12px;
     font-weight: 600;
     font-size: 15px;
     transition: all 0.2s ease;
-    border: 1px solid transparent;
+    cursor: pointer;
 }
 
 .icon {
     margin-right: 16px;
     font-size: 1.3rem;
     transition: all 0.2s ease;
-    color: var(--color-text-dim);
+    opacity: 0.8;
 }
 
 .list-unstyled a:hover {
-    background-color: var(--bg-input);
-    color: var(--accent);
+    color: var(--color-text);
+    background-color: var(--bg-page);
 }
 
 .list-unstyled a:hover .icon {
+    opacity: 1;
     color: var(--accent);
-    transform: scale(1.1);
 }
 
-/* Az aktív gomb egy gyönyörű kék átmenetet kap */
+/* Fő kiemelés: A kért Gradient aktív állapot */
 .active-link {
     background: var(--accent-gradient) !important;
     color: #ffffff !important;
-    box-shadow: 0 4px 12px var(--accent-glow);
+    box-shadow: 0 4px 15px var(--accent-glow);
 }
 
 .active-link .icon {
     color: #ffffff !important;
+    opacity: 1;
 }
 
 .settings-link {
@@ -89,20 +79,13 @@
     color: var(--color-text-dim);
     transition: all 0.2s ease;
     cursor: pointer;
-    background: var(--bg-input);
-    border: 1px solid transparent;
 }
 
-.settings-icon {
-    font-size: 1.4rem;
-    transition: transform 0.3s ease;
-}
+.settings-icon { font-size: 1.4rem; transition: transform 0.3s ease; }
 
 #settings-link:hover {
-    background-color: var(--bg-card);
-    border-color: var(--accent);
-    color: var(--accent);
-    box-shadow: var(--shadow-hover);
+    color: var(--color-text);
+    background-color: var(--bg-page);
 }
 
 #settings-link:hover .settings-icon {
@@ -111,19 +94,18 @@
 
 .settings-active {
     color: var(--accent) !important;
-    background-color: rgba(59, 130, 246, 0.1) !important;
-    border-color: rgba(59, 130, 246, 0.2) !important;
+    background-color: var(--accent-glow) !important;
 }
 
 .sidebar-toggle {
     display: none;
-    background: var(--bg-card);
+    background: var(--bg-sidebar);
     border: 1px solid var(--border-color);
     border-radius: 10px;
     color: var(--color-text);
     font-size: 1.2rem;
     position: fixed;
-    top: 12px;
+    top: 15px;
     left: 16px;
     width: 40px;
     height: 40px;
@@ -132,18 +114,11 @@
     box-shadow: var(--shadow-soft);
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
-}
-
-.sidebar-toggle:hover {
-    color: var(--accent);
-    border-color: var(--accent);
 }
 
 @media (max-width: 1024px) {
-    .sidebar { transform: translateX(-100%); box-shadow: 4px 0 24px rgba(0,0,0,0.1); }
+    .sidebar { transform: translateX(-100%); }
     .sidebar.open { transform: translateX(0); }
-    #content { margin-left: 0; padding: 24px 16px; }
     .sidebar-toggle { display: flex; }
     .Header-container { padding-left: 70px; }
 }

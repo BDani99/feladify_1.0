@@ -7,8 +7,8 @@ import '../../styles/Student/DiagnosticResult.css';
 
 const SUBJECT_COLORS = {
   'Matematika': '#3498db',
-  'Magyar': '#e74c3c',
-  'Angol': '#2ecc71',
+  'Magyar': '#ef4444',
+  'Angol': '#10b981',
   'Környezetismeret': '#9b59b6'
 };
 
@@ -86,7 +86,7 @@ const DiagnosticResult = () => {
   }
 
   const subjectColor = SUBJECT_COLORS[result.subject] || '#3498db';
-  const scoreColor = result.score >= 70 ? '#2ecc71' : result.score >= 40 ? '#f39c12' : '#e74c3c';
+  const scoreColor = result.score >= 70 ? '#10b981' : result.score >= 40 ? '#f39c12' : '#ef4444';
 
   return (
     <div id="content">
@@ -143,7 +143,7 @@ const DiagnosticResult = () => {
                 .sort((a, b) => a.score - b.score) // Leggyengébb elöl
                 .map((category, index) => {
                   const score = category.score;
-                  const color = score >= 70 ? '#2ecc71' : score >= 40 ? '#f39c12' : '#e74c3c';
+                  const color = score >= 70 ? '#10b981' : score >= 40 ? '#f39c12' : '#ef4444';
                   
                   return (
                     <div 

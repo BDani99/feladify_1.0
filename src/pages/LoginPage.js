@@ -28,7 +28,6 @@ const Login = ({ onLoginSuccess }) => {
                 <div className='login-images'>
                     <img src={logo} alt='logo' className='login-logo' />
                     <img src={name} alt='logo' className='login-name-png' />
-                    {/*<h1 className='login-name'>FELADIFY</h1>*/}
                 </div>
                 <h2>Bejelentkezés</h2>
                 <div>

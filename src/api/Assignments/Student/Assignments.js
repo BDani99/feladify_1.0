@@ -1,4 +1,4 @@
-export const fetchAvaiableAssignments = async () => {
+export const fetchAvailableAssignments = async () => {
   try {
     const response = await fetch('/api/assignments/student/available-assignments', {
       method: 'GET',
@@ -13,7 +13,7 @@ export const fetchAvaiableAssignments = async () => {
     }
 
     const data = await response.json();
-    return data;
+    return data.assignments;
   } catch (error) {
     console.error('Fetch error:', error);
     throw error;

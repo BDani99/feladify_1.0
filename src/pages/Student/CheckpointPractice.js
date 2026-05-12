@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useUser } from '../../context/UserContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { FaArrowLeft, FaPaperPlane, FaChevronUp, FaChevronDown } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
@@ -9,7 +8,6 @@ import '../../styles/Student/CheckpointPractice.css';
 const CheckpointPractice = () => {
   const { subject, checkpointId } = useParams();
   const navigate = useNavigate();
-  const { user } = useUser();
 
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);

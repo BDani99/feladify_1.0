@@ -27,8 +27,6 @@ const AssignmentGenerate = ({ token }) => {
     const [classes, setClasses] = useState([]);
     const [teacherSubjects, setTeacherSubjects] = useState([]);
 
-    const difficultyOptions = DIFFICULTY_OPTIONS;
-
     useEffect(() => {
         const loadData = async () => {
             try {
@@ -165,7 +163,7 @@ const AssignmentGenerate = ({ token }) => {
                                     </select>
                                 ) : (
                                     <p className="generate-info-text">
-                                        Nincsenek tantárgyak beállítva. A <a href="/tanar-beallitasok" style={{color:'#1478e2'}}>Beállítások</a> oldalon adhatsz hozzá tantárgyakat.
+                                        Nincsenek tantárgyak beállítva. A <a href="/tanar-beallitasok" style={{color:'var(--accent)'}}>Beállítások</a> oldalon adhatsz hozzá tantárgyakat.
                                     </p>
                                 )}
                             </div>
@@ -195,7 +193,7 @@ const AssignmentGenerate = ({ token }) => {
                                     onChange={(e) => setDifficulty(e.target.value)}
                                     required
                                 >
-                                    {difficultyOptions.map(opt => (
+                                    {DIFFICULTY_OPTIONS.map(opt => (
                                         <option key={opt} value={opt}>{opt}</option>
                                     ))}
                                 </select>

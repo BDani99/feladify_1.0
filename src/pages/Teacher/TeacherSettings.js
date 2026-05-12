@@ -4,11 +4,13 @@ import { fetchUserData } from '../../api/Auth/ProfileData';
 import { fetchTeacherClasses } from '../../api/Assignments/Teacher/GetClasses';
 import { updateProfile } from '../../api/Auth/UpdateProfile';
 import { fetchAllClasses, createClass, updateTeacherClasses } from '../../api/Classes/ClassApi';
+import { useUser } from '../../context/UserContext';
 import '../../styles/Settings.css';
 
 const CANONICAL_SUBJECTS = ['Nyelvtan', 'Irodalom', 'Angol', 'Matematika', 'Környezetismeret'];
 
 const TeacherSettings = () => {
+    const { toggleTheme } = useUser() || {};
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [selectedSubjects, setSelectedSubjects] = useState([]);
@@ -70,6 +72,12 @@ const TeacherSettings = () => {
             setClassError(err.message);
         } finally {
             setIsCreatingClass(false);
+        }
+    };
+
+    const handleThemeChange = (newTheme) => {
+        if (toggleTheme && (newTheme === 'dark' || newTheme === 'light')) {
+            toggleTheme();
         }
     };
 

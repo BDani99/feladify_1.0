@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAvaiableAssignments } from '../../api/Assignments/Student/Assignments';
+import { fetchAvailableAssignments } from '../../api/Assignments/Student/Assignments';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -15,24 +15,25 @@ function getDeadlineInfo(dueDate) {
     return { due, isUrgent, isPast, formatted: format(due, 'yyyy.MM.dd HH:mm') };
 }
 
-const AvaiableAssignments = () => {
+const AvailableAssignments = () => {
     const [assignments, setAssignments] = useState([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        let isMounted = true;
         const loadAssignments = async () => {
             try {
-                const data = await fetchAvaiableAssignments();
-                setAssignments(Array.isArray(data.assignments) ? data.assignments : []);
+                const data = await fetchAvailableAssignments();
+                if (isMounted) setAssignments(Array.isArray(data) ? [...data].reverse() : []);
             } catch (err) {
-                setError('Hiba történt a dolgozatok lekérésekor');
+                if (isMounted) setError('Hiba történt a dolgozatok lekérésekor');
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
-
         loadAssignments();
+        return () => { isMounted = false; };
     }, []);
 
     if (loading) {
@@ -50,7 +51,7 @@ const AvaiableAssignments = () => {
                 {error && <p className="error-message">{error}</p>}
                 <div className="assignment-grid">
                     {assignments.length > 0 ? (
-                        assignments.slice().reverse().map((assignment) => {
+                        assignments.map((assignment) => {
                             const dl = getDeadlineInfo(assignment.dueDate);
                             const estimatedMinutes = (assignment.questions || []).length * 2;
                             return (
@@ -99,4 +100,4 @@ const AvaiableAssignments = () => {
     );
 };
 
-export default AvaiableAssignments;
+export default AvailableAssignments;

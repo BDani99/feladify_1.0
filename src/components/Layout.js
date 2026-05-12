@@ -4,13 +4,13 @@ import { useUser } from '../context/UserContext';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import WelcomePage from '../pages/Teacher/TeacherWelcome';
-import DolgozatGeneralasPage from '../pages/Teacher/AssignmentGenerate';
+import AssignmentGeneratePage from '../pages/Teacher/AssignmentGenerate';
 import GeneratedAssignments from '../pages/Teacher/GeneratedAssignments';
-import StatisztikaPage from '../pages/Teacher/TeacherStatistics';
+import TeacherStatisticsPage from '../pages/Teacher/TeacherStatistics';
 import AssignmentDetails from './Teacher/AssignmentDetailsPage';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/Registration';
-import AvaiableAssignments from '../pages/Student/AvaiableAssignments';
+import AvailableAssignments from '../pages/Student/AvailableAssignments';
 import SolvedAssignments from '../pages/Student/CompletedAssignments';
 import StudentStatistics from '../pages/Student/StudentStatistics';
 import AssignmentSubmit from './Student/AssignmentSubmit';
@@ -68,9 +68,9 @@ const Layout = ({ onLoginSuccess }) => {
 
                 {user?.role === 'teacher' && (
                     <>
-                        <Route path="/dolgozat-generalas" element={<DolgozatGeneralasPage />} />
+                        <Route path="/dolgozat-generalas" element={<AssignmentGeneratePage />} />
                         <Route path="/generalt-dolgozatok" element={<GeneratedAssignments />} />
-                        <Route path="/statisztika" element={<StatisztikaPage />} />
+                        <Route path="/statisztika" element={<TeacherStatisticsPage />} />
                         <Route path="/generalt-dolgozatok/:id" element={<AssignmentDetails />} />
                         <Route path="/tanar-beallitasok" element={<TeacherSettings />} />
                     </>
@@ -78,7 +78,7 @@ const Layout = ({ onLoginSuccess }) => {
 
                 {user?.role === 'student' && (
                     <>
-                        <Route path="/elerheto-dolgozatok" element={<AvaiableAssignments />} />
+                        <Route path="/elerheto-dolgozatok" element={<AvailableAssignments />} />
                         <Route path="/megoldott-dolgozatok" element={<SolvedAssignments />} />
                         <Route path="/megoldott-dolgozatok/:id" element={<CompletedDetails />} />
                         <Route path="/tanulo-statisztika" element={<StudentStatistics />} />

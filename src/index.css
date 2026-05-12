@@ -1,91 +1,15 @@
-/* index.css */
-:root {
-  /* Világos mód - Prémium Kék/Slate paletta */
-  --bg-page: #f1f5f9; /* Nagyon finom világos kékesszürke */
-  --bg-header: rgba(255, 255, 255, 0.85);
-  --bg-sidebar: #ffffff;
-  --bg-card: #ffffff;
-  --bg-form-group: #ffffff;
-  --bg-input: #f8fafc;
-  
-  --color-text: #0f172a; /* Majdnem fekete, mélykék beütéssel */
-  --color-text-dim: #64748b; /* Kellemes, olvasható szürke */
-  
-  --border-color: #e2e8f0;
-  --border-color-2: #cbd5e1;
-  
-  --accent: #3b82f6; /* Modern, élénk kék */
-  --accent-hover: #2563eb;
-  --accent-glow: rgba(59, 130, 246, 0.25);
-  --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
-  
-  --shadow-soft: 0 4px 20px rgba(15, 23, 42, 0.05);
-  --shadow-hover: 0 10px 30px rgba(59, 130, 246, 0.15);
-}
-
-[data-theme='dark'],
-.dark-theme,
-body.dark {
-  /* Sötét mód - Elegáns, mély éjszakai színek */
-  --bg-page: #0b0f19;
-  --bg-header: rgba(15, 23, 42, 0.85);
-  --bg-sidebar: #0f172a;
-  --bg-card: #1e293b;
-  --bg-form-group: #1e293b;
-  --bg-input: #0f172a;
-  
-  --color-text: #f8fafc;
-  --color-text-dim: #94a3b8;
-  
-  --border-color: #334155;
-  --border-color-2: #475569;
-  
-  --accent: #3b82f6;
-  --accent-hover: #60a5fa;
-  --accent-glow: rgba(96, 165, 250, 0.25);
-  --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
-  
-  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.4);
-  --shadow-hover: 0 10px 30px rgba(59, 130, 246, 0.2);
-}
-
 * {
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto',
-    sans-serif; /* Az Inter vagy a rendszer betűtípus sokkal profibb */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bg-page);
-  color: var(--color-text);
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, monospace;
-}
-
-/* Egyedi letisztult scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border-color-2);
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-dim);
-}
-
-/* Globális fókusz stílus - Ez oldja meg a belekattintás inkonzisztenciáját! */
+/* Konzisztens fókusz állapok minden interaktív elemen */
 *:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px var(--accent-glow), 0 0 0 1px var(--accent);
 }
+
+/* Szép, letisztult scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-color-2); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-dim); }

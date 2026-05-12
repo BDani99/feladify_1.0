@@ -48,7 +48,7 @@
 }
 
 .settings-tab.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--accent-gradient);
   color: white;
 }
 
@@ -99,9 +99,10 @@
   border-radius: 8px;
   font-size: 14px;
   background: var(--bg-input);
-  color: #1a1a1a;
-  transition: border-color 0.2s;
+  color: var(--color-text);
+  transition: border-color 0.2s, box-shadow 0.2s;
   box-sizing: border-box;
+  font-family: inherit;
 }
 
 .form-group input:focus {
@@ -135,7 +136,7 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--accent-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -191,12 +192,12 @@
 }
 
 .btn-danger {
-  background: #e74c3c;
+  background: #ef4444;
   color: white;
 }
 
 .btn-danger:hover {
-  background: #c0392b;
+  background: #dc2626;
 }
 
 /* Theme Options */
@@ -227,7 +228,7 @@
 
 .theme-btn.active {
   border-color: var(--accent);
-  background: rgba(20, 120, 226, 0.15);
+  background: var(--accent-glow);
 }
 
 .theme-icon {
@@ -258,7 +259,7 @@
 
 .font-btn.active {
   border-color: var(--accent);
-  background: rgba(20, 120, 226, 0.15);
+  background: var(--accent-glow);
 }
 
 /* Toggle Switches */
@@ -368,7 +369,7 @@
 
 .goal-btn.active {
   border-color: var(--accent);
-  background: rgba(20, 120, 226, 0.15);
+  background: var(--accent-glow);
 }
 
 .goal-value {
@@ -406,7 +407,7 @@
 
 .goal-progress {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent), #2ecc71);
+  background: linear-gradient(90deg, var(--accent), #10b981);
   border-radius: 5px;
 }
 
@@ -424,13 +425,13 @@
 
 .danger-zone {
   padding: 18px;
-  background: rgba(231, 76, 60, 0.1);
-  border: 1px solid rgba(231, 76, 60, 0.3);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
   border-radius: 10px;
 }
 
 .danger-zone h4 {
-  color: #e74c3c;
+  color: #ef4444;
   margin: 0 0 8px 0;
 }
 
@@ -459,7 +460,7 @@
 }
 
 .save-status {
-  color: #2ecc71;
+  color: #10b981;
   font-size: 13px;
 }
 
@@ -502,7 +503,7 @@
 .tone-btn.active,
 .hint-btn.active {
   border-color: var(--accent);
-  background: rgba(20, 120, 226, 0.12);
+  background: var(--accent-glow);
 }
 
 .tone-btn strong,

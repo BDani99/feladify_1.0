@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { registerUser } from '../api/Auth/RegisterApi';
-import { fetchClasses } from '../api/ClassesForReg';
-import '../styles/Registration.css';
+import { fetchAllClasses } from '../api/Classes/ClassApi';
+import '../styles/Login.css';
 import logo from '../assets/logo-400.png';
 
 const CANONICAL_SUBJECTS = ['Nyelvtan', 'Irodalom', 'Angol', 'Matematika', 'Környezetismeret'];
@@ -21,15 +21,17 @@ const RegistrationForm = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
+        let isMounted = true;
         const loadClasses = async () => {
             try {
-                const fetchedClasses = await fetchClasses();
-                setClasses(fetchedClasses);
+                const fetchedClasses = await fetchAllClasses();
+                if (isMounted) setClasses(fetchedClasses);
             } catch (err) {
-                setError(err.message || 'Hiba történt az osztályok betöltése során.');
+                if (isMounted) setError(err.message || 'Hiba történt az osztályok betöltése során.');
             }
         };
         loadClasses();
+        return () => { isMounted = false; };
     }, []);
 
     const handleChange = (e) => {

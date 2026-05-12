@@ -7,8 +7,11 @@ export const fetchAllClasses = async () => {
   const response = await fetch('/api/classes', {
     headers: getAuthHeaders(),
   });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Hiba az osztályok lekérésekor.');
+  }
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || 'Hiba az osztályok lekérésekor.');
   return data.classes;
 };
 
@@ -18,8 +21,11 @@ export const createClass = async (name) => {
     headers: getAuthHeaders(),
     body: JSON.stringify({ name }),
   });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Hiba az osztály létrehozásakor.');
+  }
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || 'Hiba az osztály létrehozásakor.');
   return data;
 };
 
@@ -29,7 +35,10 @@ export const updateTeacherClasses = async (classIds) => {
     headers: getAuthHeaders(),
     body: JSON.stringify({ classIds }),
   });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Hiba az osztályok frissítésekor.');
+  }
   const data = await response.json();
-  if (!response.ok) throw new Error(data.message || 'Hiba az osztályok frissítésekor.');
   return data;
 };

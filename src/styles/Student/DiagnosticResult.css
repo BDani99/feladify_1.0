@@ -110,9 +110,9 @@
 }
 
 .badge.excellent      { background: linear-gradient(135deg, #ffd700, #ffed4e); color: #856404; }
-.badge.good           { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
+.badge.good           { background: linear-gradient(135deg, #10b981, #059669); color: white; }
 .badge.average        { background: linear-gradient(135deg, #f39c12, #e67e22); color: white; }
-.badge.needs_improvement { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+.badge.needs_improvement { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
 
 /* Category Analysis */
 .category-analysis {
@@ -190,9 +190,9 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.45rem;
-  background: rgba(231, 76, 60, 0.12);
+  background: rgba(239, 68, 68, 0.10);
   border-radius: 6px;
-  color: #e74c3c;
+  color: #ef4444;
   font-size: 0.82rem;
 }
 
@@ -253,7 +253,7 @@
 }
 
 .priority-badge.priority-1,
-.priority-badge.priority-2 { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
+.priority-badge.priority-2 { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
 .priority-badge.priority-3  { background: rgba(243, 156, 18, 0.15); color: #f39c12; }
 
 .weakness-category {
@@ -394,7 +394,7 @@
 
 .error-icon {
   font-size: 3.5rem;
-  color: #e74c3c;
+  color: #ef4444;
   margin-bottom: 1rem;
 }
 

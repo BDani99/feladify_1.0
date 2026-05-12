@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useUser } from '../../context/UserContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { FaArrowLeft, FaLock, FaPlay, FaCheck, FaTrophy } from 'react-icons/fa';
 import '../../styles/Student/RoadmapView.css';
@@ -8,7 +7,6 @@ import '../../styles/Student/RoadmapView.css';
 const RoadmapView = () => {
   const { subject } = useParams();
   const navigate = useNavigate();
-  const { user } = useUser();
   const [checkpoints, setCheckpoints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalXP: 0, progress: 0 });

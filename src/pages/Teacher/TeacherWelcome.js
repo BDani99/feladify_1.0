@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { fetchUserData } from '../../api/Auth/ProfileData';
 import { fetchTeacherClasses } from '../../api/Assignments/Teacher/GetClasses';
-import { sendChatMessage } from '../../api/Chat';
+import { sendChatMessage } from '../../api/Teacher/Chat';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { FaPaperPlane } from 'react-icons/fa';
 import '../../styles/Welcome.css';

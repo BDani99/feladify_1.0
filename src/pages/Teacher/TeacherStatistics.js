@@ -47,7 +47,7 @@ const TeacherStatistics = () => {
         datasets: [{
             label: 'Dolgozatok',
             data: [statistics.totalAssignments, statistics.completedAssignments],
-            backgroundColor: ['#1478e2', '#8e44ad'],
+            backgroundColor: ['#3b82f6', '#8b5cf6'],
             borderWidth: 0,
         }],
     };
@@ -56,7 +56,7 @@ const TeacherStatistics = () => {
         labels: ['Teljesített', 'Nem teljesített'],
         datasets: [{
             data: [statistics.completionRate, 100 - statistics.completionRate],
-            backgroundColor: ['#2ecc71', '#e74c3c'],
+            backgroundColor: ['#10b981', '#ef4444'],
             borderWidth: 0,
         }],
     };

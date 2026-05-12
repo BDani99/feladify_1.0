@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { fetchUserData } from '../../api/Auth/ProfileData';
 import { FaUser, FaPalette, FaBell, FaBullseye, FaLock, FaSave, FaBrain } from 'react-icons/fa';
+import { useUser } from '../../context/UserContext';
 import '../../styles/Settings.css';
 
 const StudentSettings = () => {
+  const { toggleTheme, theme } = useUser() || {};
   const [userData, setUserData] = useState({
     email: '',
     name: '',
@@ -79,6 +81,16 @@ const StudentSettings = () => {
       ...prev,
       privacy: { ...prev.privacy, [key]: value }
     }));
+  };
+
+  const handleThemeChange = (newTheme) => {
+    setSettings(prev => ({
+      ...prev,
+      theme: newTheme
+    }));
+    if (toggleTheme && (newTheme === 'dark' || newTheme === 'light')) {
+      toggleTheme();
+    }
   };
 
   const handleSave = async () => {
@@ -200,21 +212,21 @@ const StudentSettings = () => {
                   <div className="theme-options">
                     <button
                       className={`theme-btn ${settings.theme === 'light' ? 'active' : ''}`}
-                      onClick={() => handleSettingChange('theme', null, 'light')}
+                      onClick={() => handleThemeChange('light')}
                     >
                       <span className="theme-icon">☀️</span>
                       <span>Világos</span>
                     </button>
                     <button
                       className={`theme-btn ${settings.theme === 'dark' ? 'active' : ''}`}
-                      onClick={() => handleSettingChange('theme', null, 'dark')}
+                      onClick={() => handleThemeChange('dark')}
                     >
                       <span className="theme-icon">🌙</span>
                       <span>Sötét</span>
                     </button>
                     <button
                       className={`theme-btn ${settings.theme === 'system' ? 'active' : ''}`}
-                      onClick={() => handleSettingChange('theme', null, 'system')}
+                      onClick={() => handleThemeChange('system')}
                     >
                       <span className="theme-icon">💻</span>
                       <span>Rendszer</span>
