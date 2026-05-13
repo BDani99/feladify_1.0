@@ -108,7 +108,7 @@ const StudentStatistics = () => {
   return (
     <div id="content">
       <div className="student-statistics-container">
-        <h1 className="stat-title">📊 Statisztikák és Elemzések</h1>
+        <h1 className="stat-title">Statisztikák és Elemzések</h1>
 
         {/* Gamification Header */}
         <div className="stats-gamification-header">
