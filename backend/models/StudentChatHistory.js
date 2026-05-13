@@ -102,6 +102,7 @@ studentChatHistorySchema.methods.addMessage = function(role, content, userId) {
   }
 
   session.messages.push(messageObj);
+  console.log('[ChatHistory] Message added:', role, 'total messages in session:', session.messages.length, 'userId:', userId ? 'set' : 'not set');
 
   // Auto-generate title from first user message
   if (session.messages.length === 1 && role === 'user') {
