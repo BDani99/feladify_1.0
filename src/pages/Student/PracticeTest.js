@@ -19,10 +19,16 @@ const PracticeTest = () => {
   const [testId, setTestId] = useState(null);
 
   useEffect(() => {
-    const testIdFromState = location.state?.testId;
-    if (testIdFromState) {
-      setTestId(testIdFromState);
-      fetchDiagnosticTest(testIdFromState);
+    const { testId: stateTestId, questions: stateQuestions } = location.state || {};
+    if (stateTestId && stateQuestions?.length > 0) {
+      // Kérdések már megvannak a navigation state-ben (PracticeHub-tól)
+      setTestId(stateTestId);
+      setQuestions(stateQuestions);
+      setLoading(false);
+    } else if (stateTestId) {
+      // Csak testId van, de kérdések nincsenek – indítsunk új tesztet
+      setTestId(stateTestId);
+      startNewTest();
     } else {
       startNewTest();
     }
@@ -47,23 +53,6 @@ const PracticeTest = () => {
     } catch (err) {
       console.error('Hiba a teszt indításakor:', err);
       alert('Hiba a teszt indításakor.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchDiagnosticTest = async (id) => {
-    try {
-      const token = sessionStorage.getItem('AccessToken');
-      const response = await fetch(`/api/student/diagnostic/${id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setQuestions(data.questions || []);
-      }
-    } catch (err) {
-      console.error('Hiba a teszt lekérésekor:', err);
     } finally {
       setLoading(false);
     }

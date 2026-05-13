@@ -49,7 +49,7 @@ const PracticeHub = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        navigate(`/egyeni-gyakorlas/${subject}/teszt`, { state: { testId: data.testId } });
+        navigate(`/egyeni-gyakorlas/${subject}/teszt`, { state: { testId: data.testId, questions: data.questions } });
       } else {
         const errorData = await response.json();
         console.error('Backend hiba:', response.status, errorData);
