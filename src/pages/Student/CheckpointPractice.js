@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { FaArrowLeft, FaPaperPlane, FaChevronUp, FaChevronDown } from 'react-icons/fa';
+import { FaArrowLeft, FaPaperPlane, FaChevronUp, FaChevronDown, FaCheck, FaTimes } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import '../../styles/Student/CheckpointPractice.css';
+
+const API_BASE = '/api/student/checkpoint';
+const getAuthHeaders = () => ({
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`
+});
 
 const CheckpointPractice = () => {
   const { subject, checkpointId } = useParams();
@@ -13,40 +19,35 @@ const CheckpointPractice = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(true);
+  const [checkpointTitle, setCheckpointTitle] = useState('');
   const [chatMessages, setChatMessages] = useState([]);
   const [mentorInput, setMentorInput] = useState('');
   const [mentorLoading, setMentorLoading] = useState(false);
   const [feedback, setFeedback] = useState(null);
-  const [xpEarned, setXpEarned] = useState(0);
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [totalXpEarned, setTotalXpEarned] = useState(0);
+  const [isChatOpen, setIsChatOpen] = useState(true);
+  const [completing, setCompleting] = useState(false);
   const chatEndRef = useRef(null);
 
-  useEffect(() => {
-    startCheckpoint();
-  }, [subject, checkpointId]);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages]);
+  useEffect(() => { startCheckpoint(); }, [subject, checkpointId]);
+  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages]);
 
   const startCheckpoint = async () => {
     try {
-      const token = sessionStorage.getItem('AccessToken');
-      const response = await fetch('/api/student/checkpoint/start', {
+      const res = await fetch(`${API_BASE}/start`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ subject, checkpointId })
       });
-      if (response.ok) {
-        const data = await response.json();
+      if (res.ok) {
+        const data = await res.json();
         setQuestions(data.questions || []);
-        setChatMessages([{
-          role: 'bot',
-          content: `Üdvözöllek a "${data.checkpointTitle}" fejezetben! ${data.questions ? data.questions.length : '0'} kérdést kell megoldanod. Sok sikerert! 🎯`
-        }]);
+        setCheckpointTitle(data.checkpointTitle || '');
+        setScore({ correct: 0, total: data.questions?.length || 0 });
+        addBotMessage(`Üdvözöllek a **"${data.checkpointTitle}"** fejezetben! ${data.questions?.length || 0} feladat vár rád, legalább 6 különböző típusban. Sok sikert! 🎯`);
+      } else {
+        addBotMessage('Hiba a checkpoint betöltésekor. Kérlek, próbálj vissza navigálni.');
       }
     } catch (err) {
       console.error('Hiba a checkpoint indításakor:', err);
@@ -55,57 +56,90 @@ const CheckpointPractice = () => {
     }
   };
 
-  const handleAnswerChange = (questionId, answer) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: answer
-    }));
+  const addBotMessage = (content) => {
+    setChatMessages(prev => [...prev, { role: 'bot', content, timestamp: new Date() }]);
+  };
+
+  const addUserMessage = (content) => {
+    setChatMessages(prev => [...prev, { role: 'user', content, timestamp: new Date() }]);
+  };
+
+  // Egységes answer kezelő - kulcs: questionId vagy questionId-idx (matching)
+  const handleAnswerChange = (key, value) => {
+    setAnswers(prev => ({ ...prev, [key]: value }));
     setFeedback(null);
+  };
+
+  // Ordering: elemek sorrendjének változtatása fel/le gombokkal
+  const handleOrderingMove = (questionId, items, fromIdx, toIdx) => {
+    if (toIdx < 0 || toIdx >= items.length) return;
+    const currentOrder = answers[questionId] || [...items];
+    const newOrder = [...currentOrder];
+    [newOrder[fromIdx], newOrder[toIdx]] = [newOrder[toIdx], newOrder[fromIdx]];
+    setAnswers(prev => ({ ...prev, [questionId]: newOrder }));
+    setFeedback(null);
+  };
+
+  // Összegyűjti a jelenlegi kérdés válaszát küldéshez
+  const collectAnswer = (question) => {
+    const qid = question.questionId;
+    if (question.questionType === 'matching') {
+      const result = {};
+      (question.pairs || []).forEach((pair, idx) => {
+        const val = answers[`${qid}-${idx}`];
+        if (val) result[pair.left] = val;
+      });
+      return Object.keys(result).length === (question.pairs || []).length ? result : null;
+    }
+    if (question.questionType === 'ordering') {
+      const order = answers[qid] || [...(question.items || [])];
+      return order;
+    }
+    const val = answers[qid];
+    return val !== undefined && val !== '' ? val : null;
+  };
+
+  const isAnswered = (question) => {
+    const qid = question.questionId;
+    if (question.questionType === 'matching') {
+      return (question.pairs || []).every((_, idx) => answers[`${qid}-${idx}`]);
+    }
+    if (question.questionType === 'ordering') {
+      return true; // mindig van sorrend (alapértelmezett)
+    }
+    return answers[qid] !== undefined && answers[qid] !== '';
   };
 
   const handleCheckAnswer = async () => {
     const question = questions[currentIndex];
-    const userAnswer = answers[question._id];
-    if (!userAnswer) return;
+    const answer = collectAnswer(question);
+    if (answer === null) return;
 
     setFeedback({ loading: true });
     try {
-      const token = sessionStorage.getItem('AccessToken');
-      const response = await fetch('/api/student/checkpoint/answer', {
+      const res = await fetch(`${API_BASE}/answer`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          checkpointId,
-          questionId: question._id,
-          answer: userAnswer,
-          subject
-        })
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ checkpointId, questionId: question.questionId, answer, subject })
       });
-      if (response.ok) {
-        const data = await response.json();
-        setFeedback({
-          isCorrect: data.isCorrect,
-          message: data.aiMessage,
-          hint: data.hint,
-          xpEarned: data.currentScore?.xpEarned || 0
-        });
-        if (data.isCorrect) {
-          setXpEarned(prev => prev + (data.currentScore?.xpEarned || 0));
-        }
-        addChatMessage('bot', data.aiMessage);
+      if (res.ok) {
+        const data = await res.json();
+        setFeedback({ isCorrect: data.isCorrect, message: data.aiMessage, hint: data.hint });
+        setScore({ correct: data.currentScore.correct, total: data.currentScore.total });
+        addBotMessage(data.isCorrect
+          ? `✅ ${data.aiMessage}`
+          : `❌ ${data.aiMessage}${data.hint ? `\n\n💡 *${data.hint}*` : ''}`
+        );
       }
     } catch (err) {
       console.error('Hiba a válasz ellenőrzésekor:', err);
-      setFeedback({ error: true, message: 'Hiba történt' });
+      setFeedback({ error: true, message: 'Hiba történt az ellenőrzés során.' });
     }
   };
 
   const handleNextQuestion = () => {
     if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
+      setCurrentIndex(prev => prev + 1);
       setFeedback(null);
     } else {
       completeCheckpoint();
@@ -113,116 +147,119 @@ const CheckpointPractice = () => {
   };
 
   const completeCheckpoint = async () => {
+    setCompleting(true);
     try {
-      const token = sessionStorage.getItem('AccessToken');
-      const response = await fetch('/api/student/checkpoint/complete', {
+      const res = await fetch(`${API_BASE}/complete`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ checkpointId, subject, answers })
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ checkpointId, subject })
       });
-      if (response.ok) {
+      if (res.ok) {
+        const data = await res.json();
+        setTotalXpEarned(data.xpEarned || 0);
         navigate(`/egyeni-gyakorlas/${subject}/roadmap`, {
-          state: { completedCheckpoint: checkpointId, xpEarned }
+          state: {
+            completedCheckpoint: checkpointId,
+            xpEarned: data.xpEarned,
+            score: data.score,
+            newBadges: data.newBadges
+          }
         });
       }
     } catch (err) {
       console.error('Hiba a fejezet lezárásakor:', err);
+    } finally {
+      setCompleting(false);
     }
   };
 
   const handleMentorChat = async (e) => {
     e.preventDefault();
-    if (!mentorInput.trim()) return;
+    if (!mentorInput.trim() || mentorLoading) return;
 
-    const userMsg = mentorInput;
-    addChatMessage('user', userMsg);
+    const userMsg = mentorInput.trim();
+    addUserMessage(userMsg);
     setMentorInput('');
     setMentorLoading(true);
 
+    const question = questions[currentIndex];
+    const answer = collectAnswer(question);
+
     try {
-      const token = sessionStorage.getItem('AccessToken');
-      const response = await fetch('/api/assignments/student/tutor', {
+      const attempts = chatMessages.filter(m => m.role === 'user').length + 1;
+      const res = await fetch(`${API_BASE}/hint`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
-          questionText: questions[currentIndex]?.questionText,
-          correctAnswer: questions[currentIndex]?.correctAnswer,
-          studentAnswer: answers[questions[currentIndex]?._id],
-          chatHistory: chatMessages.slice(-5)
+          checkpointId,
+          questionId: question.questionId,
+          studentAnswer: answer || userMsg,
+          attemptNumber: attempts
         })
       });
-      if (response.ok) {
-        const data = await response.json();
-        addChatMessage('bot', data.message);
+      if (res.ok) {
+        const data = await res.json();
+        addBotMessage(data.hint || 'Próbáld meg más megközelítésből!');
       }
     } catch (err) {
-      console.error('Hiba a mentor chat során:', err);
+      addBotMessage('Hiba történt. Próbáld újra!');
     } finally {
       setMentorLoading(false);
     }
   };
 
-  const addChatMessage = (role, content) => {
-    setChatMessages(prev => [...prev, { role, content, timestamp: new Date() }]);
-  };
-
-  if (loading) {
-    return (
-      <div id="content">
-        <LoadingSpinner />
-      </div>
-    );
-  }
+  if (loading) return <div id="content"><LoadingSpinner /></div>;
 
   if (!questions || questions.length === 0) {
     return (
       <div id="content" className="checkpoint-practice">
-        <p>Hiba: Nincs betöltött kérdés</p>
+        <button className="back-btn" onClick={() => navigate(`/egyeni-gyakorlas/${subject}/roadmap`)}>
+          <FaArrowLeft /> Vissza
+        </button>
+        <p style={{ textAlign: 'center', marginTop: '40px' }}>Nem sikerült betölteni a feladatokat. Próbálj vissza navigálni.</p>
       </div>
     );
   }
 
   const question = questions[currentIndex];
-  const progress = ((currentIndex + 1) / questions.length) * 100;
-  const answered = answers[question._id] !== undefined;
+  const qid = question.questionId;
+  const progressPct = ((currentIndex + 1) / questions.length) * 100;
+  const answered = isAnswered(question);
 
   return (
     <div id="content" className="checkpoint-practice">
       <button className="back-btn" onClick={() => navigate(`/egyeni-gyakorlas/${subject}/roadmap`)}>
-        <FaArrowLeft /> Vissza
+        <FaArrowLeft /> Vissza a térképre
       </button>
 
       <div className="practice-wrapper">
         {/* Bal oldal – Feladat */}
         <div className="practice-left">
           <div className="question-header">
-            <h2>{currentIndex + 1} / {questions.length}</h2>
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${progress}%` }} />
+            <div className="question-meta">
+              <span className="question-count">{currentIndex + 1} / {questions.length}</span>
+              <span className="score-display">✓ {score.correct}/{score.total}</span>
             </div>
-            <span className="xp-display">+{xpEarned} XP</span>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: `${progressPct}%` }} />
+            </div>
           </div>
 
           <div className="question-card">
             <h3>{question.questionText}</h3>
 
-            {/* Kérdéstípusok renderelése */}
-            {question.questionType === 'multiple_choice' && (
+            {/* MCQ */}
+            {question.questionType === 'mcq' && (
               <div className="options">
-                {question.options && question.options.map((opt, idx) => (
-                  <label key={idx} className="option">
+                {(question.options || []).map((opt, idx) => (
+                  <label key={idx} className={`option ${answers[qid] === opt ? 'selected' : ''}`}>
                     <input
                       type="radio"
-                      name={`q-${question._id}`}
+                      name={`q-${qid}`}
                       value={opt}
-                      checked={answers[question._id] === opt}
-                      onChange={() => handleAnswerChange(question._id, opt)}
+                      checked={answers[qid] === opt}
+                      onChange={() => handleAnswerChange(qid, opt)}
+                      disabled={!!feedback}
                     />
                     <span>{String.fromCharCode(65 + idx)}. {opt}</span>
                   </label>
@@ -230,55 +267,61 @@ const CheckpointPractice = () => {
               </div>
             )}
 
+            {/* Igaz / Hamis */}
             {question.questionType === 'true_false' && (
               <div className="true-false-btns">
-                <button
-                  className={`tf-btn ${answers[question._id] === 'igaz' ? 'selected' : ''}`}
-                  onClick={() => handleAnswerChange(question._id, 'igaz')}
-                >
-                  ✓ Igaz
-                </button>
-                <button
-                  className={`tf-btn ${answers[question._id] === 'hamis' ? 'selected' : ''}`}
-                  onClick={() => handleAnswerChange(question._id, 'hamis')}
-                >
-                  ✗ Hamis
-                </button>
+                {['Igaz', 'Hamis'].map(val => (
+                  <button
+                    key={val}
+                    className={`tf-btn ${answers[qid] === val ? 'selected' : ''}`}
+                    onClick={() => handleAnswerChange(qid, val)}
+                    disabled={!!feedback}
+                  >
+                    {val === 'Igaz' ? '✓ Igaz' : '✗ Hamis'}
+                  </button>
+                ))}
               </div>
             )}
 
+            {/* Rövid válasz */}
             {question.questionType === 'short_answer' && (
               <textarea
                 className="answer-input"
-                placeholder="Válaszod itt..."
-                value={answers[question._id] || ''}
-                onChange={(e) => handleAnswerChange(question._id, e.target.value)}
-                rows="4"
+                placeholder="Írd le a válaszod..."
+                value={answers[qid] || ''}
+                onChange={e => handleAnswerChange(qid, e.target.value)}
+                rows={4}
+                disabled={!!feedback}
               />
             )}
 
+            {/* Szövegkiegészítés */}
             {question.questionType === 'fill_blank' && (
               <input
                 type="text"
                 className="answer-input"
-                placeholder="Hiányzó szó/kifejezés"
-                value={answers[question._id] || ''}
-                onChange={(e) => handleAnswerChange(question._id, e.target.value)}
+                placeholder="Hiányzó szó vagy kifejezés..."
+                value={answers[qid] || ''}
+                onChange={e => handleAnswerChange(qid, e.target.value)}
+                disabled={!!feedback}
               />
             )}
 
+            {/* Párosítás */}
             {question.questionType === 'matching' && (
               <div className="matching">
-                {question.pairs && question.pairs.map((pair, idx) => (
+                {(question.pairs || []).map((pair, idx) => (
                   <div key={idx} className="match-row">
-                    <span>{pair.left}</span>
+                    <span className="match-left">{pair.left}</span>
                     <select
-                      value={answers[`${question._id}-${idx}`] || ''}
-                      onChange={(e) => handleAnswerChange(`${question._id}-${idx}`, e.target.value)}
+                      className="match-select"
+                      value={answers[`${qid}-${idx}`] || ''}
+                      onChange={e => handleAnswerChange(`${qid}-${idx}`, e.target.value)}
+                      disabled={!!feedback}
                     >
                       <option value="">Válassz...</option>
-                      {question.options && question.options.map((opt, optIdx) => (
-                        <option key={optIdx} value={opt}>{opt}</option>
+                      {(question.options || question.pairs.map(p => p.right)).map((opt, oi) => (
+                        <option key={oi} value={opt}>{opt}</option>
                       ))}
                     </select>
                   </div>
@@ -286,21 +329,39 @@ const CheckpointPractice = () => {
               </div>
             )}
 
+            {/* Sorba rendezés */}
             {question.questionType === 'ordering' && (
               <div className="ordering">
-                <p>Sorba rendezendő:</p>
-                {question.items && question.items.map((item, idx) => (
-                  <div key={idx} className="order-item">{idx + 1}. {item}</div>
+                <p className="ordering-hint">Rendezd a helyes sorrendbe (fel/le nyilakkal):</p>
+                {(answers[qid] || question.items || []).map((item, idx) => (
+                  <div key={idx} className="order-item">
+                    <span className="order-num">{idx + 1}.</span>
+                    <span className="order-text">{item}</span>
+                    <div className="order-controls">
+                      <button
+                        onClick={() => handleOrderingMove(qid, answers[qid] || question.items, idx, idx - 1)}
+                        disabled={idx === 0 || !!feedback}
+                        title="Feljebb"
+                      >▲</button>
+                      <button
+                        onClick={() => handleOrderingMove(qid, answers[qid] || question.items, idx, idx + 1)}
+                        disabled={idx === (answers[qid] || question.items || []).length - 1 || !!feedback}
+                        title="Lejjebb"
+                      >▼</button>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
 
-            {/* Feedback */}
+            {/* Visszajelzés */}
             {feedback && (
-              <div className={`feedback ${feedback.isCorrect ? 'correct' : feedback.error ? 'error' : 'incorrect'}`}>
-                {feedback.loading && <p>Ellenőrzés...</p>}
-                {!feedback.loading && (
+              <div className={`feedback ${feedback.loading ? 'loading' : feedback.isCorrect ? 'correct' : feedback.error ? 'error' : 'incorrect'}`}>
+                {feedback.loading ? (
+                  <p>Ellenőrzés...</p>
+                ) : (
                   <>
+                    <span className="feedback-icon">{feedback.isCorrect ? <FaCheck /> : <FaTimes />}</span>
                     <p>{feedback.message}</p>
                     {feedback.hint && <p className="hint">💡 {feedback.hint}</p>}
                   </>
@@ -311,55 +372,71 @@ const CheckpointPractice = () => {
             {/* Gombok */}
             <div className="action-buttons">
               {!feedback ? (
-                <button className="check-btn" onClick={handleCheckAnswer} disabled={!answered}>
+                <button
+                  className="check-btn"
+                  onClick={handleCheckAnswer}
+                  disabled={!answered}
+                >
                   Ellenőrzés
                 </button>
               ) : (
-                <button className="next-btn" onClick={handleNextQuestion}>
-                  {currentIndex === questions.length - 1 ? 'Fejezet befejezése' : 'Következő kérdés'}
+                <button
+                  className="next-btn"
+                  onClick={handleNextQuestion}
+                  disabled={completing}
+                >
+                  {completing
+                    ? 'Mentés...'
+                    : currentIndex === questions.length - 1
+                      ? '🏁 Fejezet befejezése'
+                      : 'Következő kérdés →'}
                 </button>
               )}
             </div>
           </div>
         </div>
 
-        {/* Jobb oldal – AI Mentor */}
+        {/* Jobb oldal – AI Mentor chat */}
         <div className={`practice-right ${isChatOpen ? 'open' : 'closed'}`}>
-          <div className="chat-header">
+          <div className="chat-header" onClick={() => setIsChatOpen(!isChatOpen)} style={{ cursor: 'pointer' }}>
             <h4>🤖 AI Tanár</h4>
-            <button className="chat-toggle" onClick={() => setIsChatOpen(!isChatOpen)}>
+            <button className="chat-toggle" aria-label="Csevegő megnyitása/zárása">
               {isChatOpen ? <FaChevronDown /> : <FaChevronUp />}
             </button>
           </div>
 
-          <div className="chat-messages">
-            {chatMessages.map((msg, idx) => (
-              <div key={idx} className={`chat-msg ${msg.role}`}>
-                <div className="msg-content">
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
-                </div>
+          {isChatOpen && (
+            <>
+              <div className="chat-messages">
+                {chatMessages.map((msg, idx) => (
+                  <div key={idx} className={`chat-msg ${msg.role}`}>
+                    <div className="msg-content">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                  </div>
+                ))}
+                {mentorLoading && (
+                  <div className="chat-msg bot">
+                    <div className="typing-dots"><span /><span /><span /></div>
+                  </div>
+                )}
+                <div ref={chatEndRef} />
               </div>
-            ))}
-            {mentorLoading && (
-              <div className="chat-msg bot">
-                <div className="typing-dots"><span></span><span></span><span></span></div>
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
 
-          <form className="chat-form" onSubmit={handleMentorChat}>
-            <input
-              type="text"
-              placeholder="Kérdésed..."
-              value={mentorInput}
-              onChange={(e) => setMentorInput(e.target.value)}
-              disabled={mentorLoading}
-            />
-            <button type="submit" disabled={mentorLoading || !mentorInput.trim()}>
-              <FaPaperPlane />
-            </button>
-          </form>
+              <form className="chat-form" onSubmit={handleMentorChat}>
+                <input
+                  type="text"
+                  placeholder="Kérdezd az AI tanárt..."
+                  value={mentorInput}
+                  onChange={e => setMentorInput(e.target.value)}
+                  disabled={mentorLoading}
+                />
+                <button type="submit" disabled={mentorLoading || !mentorInput.trim()}>
+                  <FaPaperPlane />
+                </button>
+              </form>
+            </>
+          )}
         </div>
       </div>
     </div>

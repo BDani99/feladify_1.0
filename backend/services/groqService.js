@@ -120,38 +120,52 @@ Utasítások:
     }
   }
 
-  async generatePracticeQuestionSet(subject, topic, difficulty = 3, count = 3) {
+  async generatePracticeQuestionSet(subject, topic, difficulty = 3, count = 10) {
     const prompt = `Te egy általános iskolai feladatgenerátor AI vagy. Generálj pontosan ${count} darab gyakorló kérdést ${subject} tantárgyból, a "${topic}" témakörhöz.
 Nehézség: ${difficulty} (1-5 skálán, ahol az 1 nagyon alapozó, az 5 pedig összetett gondolkodást igényel).
-A kérdések változatosak legyenek: legalább egy feleletválasztós (mcq) és legalább egy rövid szöveges (shorttext).
 
-Válaszolj KIZÁRÓLAG érvényes JSON formátumban:
+KÖTELEZŐ: legalább 6 különböző feladattípust használj, ezeket a típusokat:
+- "mcq": feleletválasztós, 4 lehetőség, egy helyes. options: ["A","B","C","D"], correctAnswer: "A"
+- "true_false": igaz/hamis. options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"
+- "short_answer": rövid szöveges válasz. options: [], correctAnswer: "szöveges válasz"
+- "fill_blank": szövegkiegészítős, az üres helyet ___ jelöli. options: [], correctAnswer: "hiányzó szó"
+- "matching": párosítás. pairs: [{"left":"fogalom","right":"magyarázat"},...], options: ["jobb oldali értékek keverve",...], correctAnswer: {"fogalom":"magyarázat",...}
+- "ordering": sorba rendezés. items: ["elem C","elem A","elem B"], correctAnswer: ["elem A","elem B","elem C"] (helyes sorrendben)
+
+Válaszolj KIZÁRÓLAG érvényes JSON formátumban, kommentek nélkül:
 {
   "questions": [
     {
-      "questionText": "A kérdés szövege, érthetően megfogalmazva",
-      "type": "mcq|shorttext",
+      "questionId": "q1",
+      "questionText": "A kérdés szövege",
+      "questionType": "mcq",
       "difficulty": ${difficulty},
-      "options": ["A","B","C","D"], // Csak 'mcq' esetén, 'shorttext' esetén hagyd üresen []
-      "correctAnswer": "A helyes válasz",
-      "explanation": "Rövid magyarázat a tanárnak, hogy miért ez a jó válasz"
+      "options": ["A lehetőség","B lehetőség","C lehetőség","D lehetőség"],
+      "pairs": [],
+      "items": [],
+      "correctAnswer": "A lehetőség",
+      "explanation": "Rövid magyarázat"
     }
   ]
-}`;
+}
+Fontos: minden kérdésnél adj meg "questionId" mezőt "q1", "q2", stb. értékekkel. A pairs és items mindig szerepeljen (üres tömbként, ha nem releváns).`;
 
     try {
-      const raw = await this.generateResponse(prompt, [], { temperature: 0.7, max_tokens: 1200 });
+      const raw = await this.generateResponse(prompt, [], { temperature: 0.7, max_tokens: 2500 });
       const match = raw.match(/\{[\s\S]*\}/);
       if (match) {
         const parsed = JSON.parse(match[0]);
         if (Array.isArray(parsed.questions)) {
-          return parsed.questions.map(q => ({
+          return parsed.questions.map((q, idx) => ({
+            questionId:   q.questionId || `q${idx + 1}`,
             questionText: q.questionText || 'Hiányzó kérdés',
-            type: q.type === 'mcq' || q.type === 'shorttext' ? q.type : 'shorttext',
-            difficulty: q.difficulty || difficulty,
-            options: q.options || [],
-            correctAnswer: q.correctAnswer || '',
-            explanation: q.explanation || ''
+            questionType: ['mcq','true_false','short_answer','fill_blank','matching','ordering'].includes(q.questionType) ? q.questionType : 'short_answer',
+            difficulty:   q.difficulty || difficulty,
+            options:      Array.isArray(q.options) ? q.options : [],
+            pairs:        Array.isArray(q.pairs) ? q.pairs : [],
+            items:        Array.isArray(q.items) ? q.items : [],
+            correctAnswer: q.correctAnswer !== undefined ? q.correctAnswer : '',
+            explanation:  q.explanation || ''
           }));
         }
       }
@@ -159,15 +173,54 @@ Válaszolj KIZÁRÓLAG érvényes JSON formátumban:
       console.warn('[GroqService] generatePracticeQuestionSet parse hiba:', error.message);
     }
 
-    // Fallback adatok, ha valami elszáll
-    return Array.from({ length: count }, (_, index) => ({
-      questionText: `Magyarázd el a saját szavaiddal a következőt: ${topic}`,
-      type: 'shorttext',
+    // Fallback
+    return Array.from({ length: count }, (_, idx) => ({
+      questionId:    `q${idx + 1}`,
+      questionText:  `Magyarázd el a saját szavaiddal: ${topic}`,
+      questionType:  'short_answer',
       difficulty,
-      options: [],
-      correctAnswer: 'A diák logikus válasza',
-      explanation: 'Ellenőrizd az AI-val.'
+      options:       [],
+      pairs:         [],
+      items:         [],
+      correctAnswer: 'Logikus, témába vágó válasz elfogadható.',
+      explanation:   'Nyílt végű kérdés.'
     }));
+  }
+
+  async generateCheckpointHint(subject, topic, currentQuestion, studentAnswer, correctAnswer, attemptNumber, allQuestions, previousAnswers) {
+    const progress = previousAnswers.length > 0
+      ? `${previousAnswers.filter(a => a.isCorrect).length}/${previousAnswers.length} helyes eddigi`
+      : 'Ez az első kérdés';
+
+    const contextSummary = allQuestions.slice(0, 5).map((q, i) => {
+      const ans = previousAnswers.find(a => a.questionId === q.questionId);
+      return `${i + 1}. ${q.questionText.substring(0, 60)}... → ${ans ? (ans.isCorrect ? '✓ helyes' : '✗ hibás') : 'még nem válaszolt'}`;
+    }).join('\n');
+
+    const prompt = `Te egy türelmes, szókratészi tanár-mentor vagy. A diák éppen egy "${topic}" témájú ${subject} feladatsort old meg.
+
+Jelenlegi haladás: ${progress}
+Feladatsor kontextusa (első 5 feladat):
+${contextSummary}
+
+Jelenlegi kérdés: ${currentQuestion.questionText}
+Kérdés típusa: ${currentQuestion.questionType}
+A diák válasza: ${JSON.stringify(studentAnswer)}
+Helyes válasz (NE áruld el!): ${JSON.stringify(correctAnswer)}
+Próbálkozások száma: ${attemptNumber}
+
+Utasítások:
+1. NE mondd meg a helyes választ közvetlenül!
+2. Adj rávezető kérdést, analógiát, vagy egy kis segítséget.
+3. Legyél bátorító és motiváló.
+4. Ha ez a 3. vagy több próbálkozás, adj konkrétabb, de még mindig nem közvetlen tippet.
+5. Max 3 mondat.`;
+
+    try {
+      return await this.generateResponse(prompt, [], { temperature: 0.65, max_tokens: 200 });
+    } catch (error) {
+      return this._getFallbackHint(attemptNumber);
+    }
   }
 
   async checkShortTextAnswer(subject, questionText, studentAnswer, correctAnswer) {

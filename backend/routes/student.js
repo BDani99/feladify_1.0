@@ -941,13 +941,37 @@ router.post('/checkpoint/start', authMiddleware, async (req, res) => {
     const checkpoint = subjectData.checkpoints.find(c => c.checkpointId === checkpointId);
     if (!checkpoint) return res.status(404).json({ message: 'Checkpoint nem található' });
 
-    // Kérdéssor generálása az AI-val
-    const questions = await groqService.generatePracticeQuestionSet(subject, checkpoint.topic, 3, 10);
+    // Kérdéssor generálása AI-val (6+ feladattípus)
+    const generatedQuestions = await groqService.generatePracticeQuestionSet(
+      subject, checkpoint.topic, checkpoint.difficulty, 10
+    );
+
+    // Kérdések mentése a session-be (correctAnswer-rel együtt, a backenden marad)
+    progress.checkpointSession = {
+      checkpointId,
+      subject,
+      topic: checkpoint.topic,
+      questions: generatedQuestions,
+      answers: [],
+      startedAt: new Date()
+    };
+    await progress.save();
+
+    // Frontend csak sanitizált kérdéseket kap (correctAnswer nélkül)
+    const sanitizedQuestions = generatedQuestions.map(q => ({
+      questionId:   q.questionId,
+      questionText: q.questionText,
+      questionType: q.questionType,
+      difficulty:   q.difficulty,
+      options:      q.options,
+      pairs:        q.pairs,
+      items:        q.items
+    }));
 
     res.json({
       checkpointId,
       checkpointTitle: checkpoint.topic,
-      questions: questions || [],
+      questions: sanitizedQuestions,
       difficulty: checkpoint.difficulty
     });
   } catch (error) {
@@ -956,28 +980,97 @@ router.post('/checkpoint/start', authMiddleware, async (req, res) => {
   }
 });
 
-// POST /api/student/checkpoint/answer - Válasz ellenőrzése
+// POST /api/student/checkpoint/answer - Válasz valódi ellenőrzése
 router.post('/checkpoint/answer', authMiddleware, async (req, res) => {
   try {
     const { checkpointId, questionId, answer, subject } = req.body;
-    if (!checkpointId || !questionId || !answer) {
+    if (!checkpointId || !questionId || answer === undefined || answer === null) {
       return res.status(400).json({ message: 'Hiányos adatok' });
     }
 
-    // Egyszerű logika: AI-val ellenőrizni kellene, de fallback
-    const isCorrect = Math.random() > 0.3; // Temp: 70% success rate
-    const aiMessage = isCorrect
-      ? `Helyes! Jó gondolkodás. ${subject} kérdésekben ez a megközelítés helytelen. Gondold végig, mi lehet a kapcsolat...`
-      : `Érdekes válasz. Ez nem egészen helyes. Gondolj arra, hogy milyen más lehetőségek vannak...`;
+    const progress = await StudentProgress.findOne({ studentId: req.user._id });
+    if (!progress || !progress.checkpointSession) {
+      return res.status(404).json({ message: 'Nincs aktív checkpoint session' });
+    }
+
+    const session = progress.checkpointSession;
+    if (session.checkpointId !== checkpointId) {
+      return res.status(400).json({ message: 'Checkpoint ID nem egyezik' });
+    }
+
+    const question = session.questions.find(q => q.questionId === questionId);
+    if (!question) {
+      return res.status(404).json({ message: 'Kérdés nem található' });
+    }
+
+    // Típus szerinti valódi validáció
+    let isCorrect = false;
+    const norm = s => String(s).toLowerCase().trim().replace(/[.,!?;:]/g, '');
+
+    if (question.questionType === 'mcq' || question.questionType === 'true_false') {
+      isCorrect = norm(answer) === norm(question.correctAnswer);
+    } else if (question.questionType === 'short_answer' || question.questionType === 'fill_blank') {
+      const result = await groqService.checkShortTextAnswer(
+        subject, question.questionText, answer, question.correctAnswer
+      );
+      isCorrect = result.correct;
+    } else if (question.questionType === 'matching') {
+      // answer: { "bal elem": "jobb elem", ... }
+      if (typeof answer === 'object' && !Array.isArray(answer)) {
+        const correct = question.correctAnswer || {};
+        isCorrect = Object.keys(correct).every(k => norm(answer[k]) === norm(correct[k]));
+      }
+    } else if (question.questionType === 'ordering') {
+      // answer: ["elem A", "elem B", "elem C"]
+      if (Array.isArray(answer) && Array.isArray(question.correctAnswer)) {
+        isCorrect = answer.length === question.correctAnswer.length &&
+          answer.every((item, idx) => norm(item) === norm(question.correctAnswer[idx]));
+      }
+    }
+
+    // Válasz tárolása / attempts növelése a session-ben
+    const existingAnswer = session.answers.find(a => a.questionId === questionId);
+    let attemptNumber = 1;
+    if (existingAnswer) {
+      existingAnswer.studentAnswer = answer;
+      existingAnswer.isCorrect = isCorrect;
+      existingAnswer.attempts = (existingAnswer.attempts || 1) + 1;
+      attemptNumber = existingAnswer.attempts;
+    } else {
+      session.answers.push({ questionId, studentAnswer: answer, isCorrect, attempts: 1 });
+    }
+
+    // Aktuális score kiszámítása
+    const uniqueCorrect = session.questions.filter(q => {
+      const ans = session.answers.find(a => a.questionId === q.questionId);
+      return ans?.isCorrect;
+    }).length;
+    const total = session.questions.length;
+
+    // AI visszajelzés
+    let aiMessage;
+    let hint = null;
+    if (isCorrect) {
+      aiMessage = `Helyes! Jól gondoltad át. 🎉 (${uniqueCorrect}/${total} helyes eddig)`;
+    } else {
+      hint = await groqService.generateSocraticHint(
+        subject, session.topic, question.questionText, answer, question.correctAnswer, attemptNumber
+      );
+      aiMessage = `Nem egészen... Gondold át még egyszer! 💡`;
+    }
+
+    // Mongoose mixed típus miatt markModified kell
+    progress.markModified('checkpointSession');
+    await progress.save();
 
     res.json({
       isCorrect,
       aiMessage,
-      hint: 'Gondolj a legalapvetőbb fogalmakra.',
+      hint,
       currentScore: {
-        correct: 1,
-        total: 10,
-        xpEarned: isCorrect ? 10 : 0
+        correct: uniqueCorrect,
+        total,
+        percentage: Math.round((uniqueCorrect / total) * 100)
       }
     });
   } catch (error) {
@@ -986,10 +1079,42 @@ router.post('/checkpoint/answer', authMiddleware, async (req, res) => {
   }
 });
 
-// POST /api/student/checkpoint/complete - Checkpoint lezárása
+// POST /api/student/checkpoint/hint - AI mentor tipp (correctAnswer nem kerül ki frontend felé)
+router.post('/checkpoint/hint', authMiddleware, async (req, res) => {
+  try {
+    const { checkpointId, questionId, studentAnswer, attemptNumber } = req.body;
+
+    const progress = await StudentProgress.findOne({ studentId: req.user._id });
+    if (!progress || !progress.checkpointSession) {
+      return res.status(404).json({ message: 'Nincs aktív checkpoint session' });
+    }
+
+    const session = progress.checkpointSession;
+    const question = session.questions.find(q => q.questionId === questionId);
+    if (!question) return res.status(404).json({ message: 'Kérdés nem található' });
+
+    const hint = await groqService.generateCheckpointHint(
+      session.subject,
+      session.topic,
+      question,
+      studentAnswer,
+      question.correctAnswer,
+      attemptNumber || 1,
+      session.questions,
+      session.answers
+    );
+
+    res.json({ hint });
+  } catch (error) {
+    console.error('[Student API] Error in checkpoint/hint:', error);
+    res.status(500).json({ message: 'Hiba a tipp generálása során', error: error.message });
+  }
+});
+
+// POST /api/student/checkpoint/complete - Checkpoint lezárása valódi score-ral
 router.post('/checkpoint/complete', authMiddleware, async (req, res) => {
   try {
-    const { checkpointId, subject, answers } = req.body;
+    const { checkpointId, subject } = req.body;
     if (!checkpointId || !subject) {
       return res.status(400).json({ message: 'Hiányos adatok' });
     }
@@ -1004,10 +1129,22 @@ router.post('/checkpoint/complete', authMiddleware, async (req, res) => {
     if (checkpointIndex === -1) return res.status(404).json({ message: 'Checkpoint nem található' });
 
     const checkpoint = subjectData.checkpoints[checkpointIndex];
+
+    // Valódi score számítás a tárolt session alapján
+    let score = 0;
+    const session = progress.checkpointSession;
+    if (session && session.checkpointId === checkpointId && session.questions.length > 0) {
+      const correctCount = session.questions.filter(q => {
+        const ans = session.answers.find(a => a.questionId === q.questionId);
+        return ans?.isCorrect;
+      }).length;
+      score = Math.round((correctCount / session.questions.length) * 100);
+    }
+
     checkpoint.status = 'completed';
     checkpoint.attempts = (checkpoint.attempts || 0) + 1;
     checkpoint.completedAt = new Date();
-    checkpoint.score = 85; // Temp: calculation kellene
+    checkpoint.score = score;
 
     // Következő checkpoint feloldása
     if (checkpointIndex < subjectData.checkpoints.length - 1) {
@@ -1017,16 +1154,29 @@ router.post('/checkpoint/complete', authMiddleware, async (req, res) => {
       }
     }
 
-    // XP hozzáadása
-    const xpEarned = 50 + Math.floor(checkpoint.score * 0.5);
+    // Ha az utolsó checkpoint teljesült, level_complete
+    const allDone = subjectData.checkpoints.every(c => c.status === 'completed');
+    if (allDone) {
+      subjectData.status = 'level_complete';
+    }
+
+    // XP: alap + nehézség * 8 + teljesítmény (max 50)
+    const xpEarned = 30 + (checkpoint.difficulty * 8) + Math.floor(score * 0.5);
     progress.addXP(xpEarned);
+    const newBadges = progress.checkBadges();
+
+    // Session törlése
+    progress.checkpointSession = null;
 
     await progress.save();
 
     res.json({
       message: 'Checkpoint teljesítve',
+      score,
       xpEarned,
       totalXP: progress.totalXP,
+      streak: progress.streak,
+      newBadges,
       nextUnlocked: checkpointIndex < subjectData.checkpoints.length - 1
     });
   } catch (error) {

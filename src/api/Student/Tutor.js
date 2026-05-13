@@ -86,3 +86,23 @@ export const checkAnswer = async (params) => {
     throw error;
   }
 };
+
+export const getCheckpointHint = async ({ checkpointId, questionId, studentAnswer, attemptNumber }) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/checkpoint/hint`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ checkpointId, questionId, studentAnswer, attemptNumber })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Hiba történt a tipp kérése során');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('[Tutor API] getCheckpointHint hiba:', error);
+    throw error;
+  }
+};

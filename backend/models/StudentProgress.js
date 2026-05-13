@@ -8,6 +8,33 @@ const badgeSchema = new mongoose.Schema({
   earnedAt: { type: Date, default: Date.now }
 });
 
+const checkpointQuestionSchema = new mongoose.Schema({
+  questionId:    { type: String, required: true },
+  questionText:  { type: String, required: true },
+  questionType:  { type: String, required: true },
+  correctAnswer: { type: mongoose.Schema.Types.Mixed },
+  options:       { type: [mongoose.Schema.Types.Mixed], default: [] },
+  pairs:         { type: [mongoose.Schema.Types.Mixed], default: [] },
+  items:         { type: [mongoose.Schema.Types.Mixed], default: [] },
+  difficulty:    { type: Number, default: 3 }
+}, { _id: false });
+
+const checkpointAnswerSchema = new mongoose.Schema({
+  questionId:    { type: String },
+  studentAnswer: { type: mongoose.Schema.Types.Mixed },
+  isCorrect:     { type: Boolean },
+  attempts:      { type: Number, default: 1 }
+}, { _id: false });
+
+const checkpointSessionSchema = new mongoose.Schema({
+  checkpointId: String,
+  subject:      String,
+  topic:        String,
+  questions:    [checkpointQuestionSchema],
+  answers:      [checkpointAnswerSchema],
+  startedAt:    { type: Date, default: Date.now }
+}, { _id: false });
+
 const subjectCheckpointSchema = new mongoose.Schema({
   checkpointId: { type: String, required: true },
   topic: { type: String, default: 'Gyakorlás' },
@@ -35,17 +62,18 @@ const subjectProgressSchema = new mongoose.Schema({
 });
 
 const studentProgressSchema = new mongoose.Schema({
-  studentId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true, 
-    unique: true 
+  studentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+    unique: true
   },
   totalXP: { type: Number, default: 0, min: 0 },
   streak: { type: Number, default: 0, min: 0 },
   lastActiveDate: { type: Date },
   badges: [badgeSchema],
   subjectProgress: [subjectProgressSchema],
+  checkpointSession: { type: checkpointSessionSchema, default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
