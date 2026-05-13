@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../context/UserContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { FaBook, FaStar, FaFire } from 'react-icons/fa';
+import { FaStar, FaFire, FaBolt } from 'react-icons/fa';
 import '../../styles/Student/SubjectSelectPage.css';
+
+const XP_PER_LEVEL = 50;
 
 const SubjectSelectPage = () => {
   const navigate = useNavigate();
@@ -68,19 +70,82 @@ const SubjectSelectPage = () => {
     );
   }
 
+  const xpLevel = Math.floor(stats.totalXP / XP_PER_LEVEL) + 1;
+  const xpInLevel = stats.totalXP % XP_PER_LEVEL;
+  const levelProgress = (xpInLevel / XP_PER_LEVEL) * 100;
+  const xpToNext = XP_PER_LEVEL - xpInLevel;
+
+  const streakLabel = stats.streak >= 7
+    ? 'Tűzön vagy! 🔥'
+    : stats.streak >= 3
+      ? 'Folytasd így!'
+      : stats.streak === 0
+        ? 'Ma még nem tanultál'
+        : `${stats.streak} napos sorozat`;
+
+  const activeSubjects = subjects.filter(s => s.status === 'in_progress' || s.status === 'level_complete').length;
+
   return (
     <div id="content">
     <div className="subject-select-page">
       <div className="subject-header">
-        <h1>📚 Egyéni Gyakorlás</h1>
-        <div className="stats-bar">
-          <div className="stat">
-            <FaStar className="stat-icon" />
-            <span>{stats.totalXP} XP</span>
+        <h1>Egyéni Gyakorlás</h1>
+
+        <div className="xp-stats-grid">
+          {/* XP kártya */}
+          <div className="xp-stat-card xp">
+            <div className="xp-stat-icon-wrap xp-icon-wrap">
+              <FaStar />
+            </div>
+            <div className="xp-stat-body">
+              <div className="xp-stat-value">{stats.totalXP} <span className="xp-unit">XP</span></div>
+              <div className="xp-stat-label">Tapasztalati pont</div>
+              <div className="xp-mini-bar">
+                <div className="xp-mini-fill" style={{ width: `${levelProgress}%` }} />
+              </div>
+              <div className="xp-stat-footer">
+                <span className="xp-level-badge"><FaBolt /> Szint {xpLevel}</span>
+                <span className="xp-to-next">{xpToNext} XP →</span>
+              </div>
+            </div>
           </div>
-          <div className="stat">
-            <FaFire className="stat-icon" />
-            <span>{stats.streak} nap</span>
+
+          {/* Streak kártya */}
+          <div className={`xp-stat-card streak${stats.streak >= 3 ? ' streak-hot' : ''}`}>
+            <div className={`xp-stat-icon-wrap streak-icon-wrap${stats.streak >= 3 ? ' hot' : ''}`}>
+              <FaFire />
+            </div>
+            <div className="xp-stat-body">
+              <div className="xp-stat-value">{stats.streak} <span className="xp-unit">nap</span></div>
+              <div className="xp-stat-label">Tanulási sorozat</div>
+              <div className="streak-dots">
+                {[...Array(7)].map((_, i) => (
+                  <div key={i} className={`streak-dot${i < stats.streak % 8 ? ' active' : ''}`} />
+                ))}
+              </div>
+              <div className="xp-stat-footer">
+                <span className={`streak-label${stats.streak >= 3 ? ' hot' : ''}`}>{streakLabel}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Aktív tantárgyak kártya */}
+          <div className="xp-stat-card subjects">
+            <div className="xp-stat-icon-wrap subjects-icon-wrap">
+              📚
+            </div>
+            <div className="xp-stat-body">
+              <div className="xp-stat-value">{activeSubjects} <span className="xp-unit">/{subjectList.length}</span></div>
+              <div className="xp-stat-label">Aktív tantárgy</div>
+              <div className="xp-mini-bar">
+                <div className="xp-mini-fill subjects" style={{ width: `${(activeSubjects / subjectList.length) * 100}%` }} />
+              </div>
+              <div className="xp-stat-footer">
+                <span className="subjects-hint">
+                  {activeSubjects === 0 ? 'Kezdj el egy tantárgyat!' : activeSubjects === subjectList.length ? '✓ Minden aktív' : 'Fedezz fel többet!'}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

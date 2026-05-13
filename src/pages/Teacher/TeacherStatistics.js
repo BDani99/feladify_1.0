@@ -3,6 +3,7 @@ import { fetchTeacherStatistics } from '../../api/Assignments/Teacher/Statistics
 import { fetchDetailedStatistics } from '../../api/Assignments/Teacher/DetailedStatistics';
 import { Bar, Pie, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
+import { FaExclamationCircle } from 'react-icons/fa';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Teacher/TeacherStatistics.css';
 
@@ -26,7 +27,7 @@ const TeacherStatistics = () => {
                 setStatistics(basic);
                 setDetailedStats(detailed);
             } catch (err) {
-                setError('A statisztikák betöltése sikertelen');
+                setError('A statisztikák betöltése nem sikerült. Kérjük, próbáld újra.');
             } finally {
                 setIsLoading(false);
             }
@@ -39,7 +40,7 @@ const TeacherStatistics = () => {
     }
 
     if (error) {
-        return <div id="content"><p className="error-message">{error}</p></div>;
+        return <div id="content"><p className="error-message"><FaExclamationCircle />{error}</p></div>;
     }
 
     const barChartData = {

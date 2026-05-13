@@ -5,7 +5,7 @@ import { useChat } from '../../context/ChatContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Welcome.css';
 import logo from '../../assets/logo-400.png';
-import { FaPaperPlane, FaPlus, FaHistory, FaTrash, FaPen } from 'react-icons/fa';
+import { FaPaperPlane, FaPlus, FaHistory, FaTrash, FaPen, FaExclamationCircle } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 
 const StudentWelcome = () => {
@@ -26,7 +26,9 @@ const StudentWelcome = () => {
     "Milyen dolgozataim lesznek a héten?",
     "Kérdezz ki a leggyengébb témakörömből!",
     "Magyarázd el a Pitagorasz-tételt!",
-    "Hogyan javíthatom a matek átlagomat?"
+    "Hogyan javíthatom a matek átlagomat?",
+    "Segíts megérteni a fotoszintézist!",
+    "Írj nekem egy rövid tanulási tervet!"
   ];
 
   useEffect(() => {
@@ -41,7 +43,7 @@ const StudentWelcome = () => {
           weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         }));
       } catch (err) {
-        setError('Hiba történt az adatok lekérésekor.');
+        setError('Nem sikerült betölteni az adatokat. Kérjük, próbáld újra.');
       } finally {
         setLoading(false);
       }
@@ -93,6 +95,14 @@ const StudentWelcome = () => {
       }]);
       if (response.sessionId && !currentSessionId) {
         setCurrentSessionId(response.sessionId);
+        // Add the new session to the list so it appears immediately in the panel
+        setSessions(prev => {
+          const exists = prev.some(s => s.sessionId === response.sessionId);
+          if (!exists) {
+            return [{ sessionId: response.sessionId, title: 'Jelenlegi beszélgetés', updatedAt: new Date() }, ...prev];
+          }
+          return prev;
+        });
       }
     } catch (err) {
       setMessages(prev => [...(prev || []), {
@@ -128,6 +138,8 @@ const StudentWelcome = () => {
 
   const handleLoadSession = async (sessionId) => {
     setShowSessionHistory(false);
+    // Don't reload the currently active session — preserves locally added messages
+    if (sessionId === currentSessionId) return;
     try {
       await loadSession(sessionId);
     } catch (err) {
@@ -215,48 +227,32 @@ const StudentWelcome = () => {
           </div>
         </div>
 
-        {error && <p className="error-message">{error}</p>}
+        {error && <p className="error-message"><FaExclamationCircle />{error}</p>}
 
         {/* Session History Panel */}
         {showSessionHistory && (
           <>
+            {/* Backdrop */}
             <div
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 199
-              }}
+              style={{ position: 'fixed', inset: 0, zIndex: 199 }}
               onClick={() => setShowSessionHistory(false)}
             />
             <div className="session-history-panel">
-              <h3>Előzmények</h3>
-              {sessions.length === 0 ? (
-                <p style={{ color: 'var(--color-text-dim)', fontSize: '13px' }}>Nincsenek korábbi beszélgetések</p>
-              ) : (
-                <ul>
-                  {sessions.map((session) => (
+              <div className="session-panel-header">
+                <h3>Korábbi beszélgetések</h3>
+              </div>
+              <div className="session-panel-body">
+                {sessions.length === 0 ? (
+                  <p className="session-panel-empty">Nincsenek korábbi beszélgetések</p>
+                ) : (
+                  sessions.map((session) => (
                     <li
                       key={session.sessionId}
                       onClick={() => handleLoadSession(session.sessionId)}
-                      className={session.sessionId === currentSessionId ? 'active' : ''}
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        padding: '10px 12px',
-                        marginBottom: '8px',
-                        border: session.sessionId === currentSessionId ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                        borderRadius: '8px',
-                        backgroundColor: session.sessionId === currentSessionId ? 'var(--color-bg-subtle)' : 'transparent',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
+                      className={`session-item${session.sessionId === currentSessionId ? ' active' : ''}`}
                     >
-                      {/* Top row: Title + Buttons */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="session-item-header">
+                        <div className="session-item-title-row">
                           {renamingSessionId === session.sessionId ? (
                             <input
                               type="text"
@@ -266,78 +262,43 @@ const StudentWelcome = () => {
                               onKeyDown={(e) => handleRenameKeyPress(session.sessionId, e)}
                               onClick={(e) => e.stopPropagation()}
                               autoFocus
-                              style={{
-                                width: '100%',
-                                padding: '4px 8px',
-                                border: '1px solid var(--color-primary)',
-                                borderRadius: '4px',
-                                fontSize: '13px'
-                              }}
+                              className="session-rename-input"
                             />
                           ) : (
-                            <span className="session-title" style={{
-                              fontWeight: '500',
-                              fontSize: '14px',
-                              color: 'var(--color-text)',
-                              wordBreak: 'break-word'
-                            }}>
-                              {session.title}
-                            </span>
+                            <>
+                              <span className="session-item-title">{session.title}</span>
+                              {session.sessionId === currentSessionId && (
+                                <span className="session-current-badge">Jelenlegi</span>
+                              )}
+                            </>
                           )}
                         </div>
-                        <div style={{ display: 'flex', gap: '6px', marginLeft: '8px', flexShrink: 0 }}>
+                        <div className="session-item-actions">
                           <button
                             onClick={(e) => handleStartRename(session, e)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              color: 'var(--color-primary)',
-                              padding: '4px 6px',
-                              fontSize: '12px',
-                              opacity: 0.7,
-                              transition: 'opacity 0.2s'
-                            }}
+                            className="session-action-btn"
                             title="Átnevezés"
-                            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
                           >
                             <FaPen />
                           </button>
                           <button
                             onClick={(e) => handleDeleteSession(session.sessionId, e)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              color: 'var(--color-error, #ef4444)',
-                              padding: '4px 6px',
-                              fontSize: '12px',
-                              opacity: 0.7,
-                              transition: 'opacity 0.2s'
-                            }}
+                            className="session-action-btn danger"
                             title="Törlés"
-                            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
                           >
                             <FaTrash />
                           </button>
                         </div>
                       </div>
-
-                      {/* Bottom row: Date */}
-                      <span className="session-date" style={{
-                        fontSize: '12px',
-                        color: 'var(--color-text-dim)',
-                        paddingTop: '4px',
-                        borderTop: '1px solid var(--color-border)'
-                      }}>
-                        {new Date(session.updatedAt).toLocaleDateString('hu-HU')}
+                      <span className="session-item-date">
+                        {new Date(session.updatedAt).toLocaleDateString('hu-HU', {
+                          year: 'numeric', month: 'short', day: 'numeric'
+                        })}
                       </span>
                     </li>
-                  ))}
-                </ul>
-              )}
+                  ))
+                )}
+              </div>
             </div>
           </>
         )}
@@ -350,7 +311,7 @@ const StudentWelcome = () => {
               <div className="welcome-avatar">
                 <img src={logo} alt="AI Tanár" />
               </div>
-              <h2>Üdvözöllek a Feladify AI Tanárodnál!</h2>
+              <h2>Üdvözöllek! Miben segíthetek ma?</h2>
               <p>Kérdezz bátran bármilyen tantárggyal kapcsolatban, vagy kérj segítséget a tanuláshoz!</p>
               <div className="quick-prompts">
                 <p>Gyors kérdések:</p>
@@ -380,14 +341,16 @@ const StudentWelcome = () => {
                   {chat.role === 'assistant' && (
                     <img src={logo} alt="AI" className="chat-logo" />
                   )}
-                  <div className="message-content">
-                    {chat.role === 'assistant' ? (
-                      <div className="markdown-content">
-                        <ReactMarkdown>{chat.content}</ReactMarkdown>
-                      </div>
-                    ) : (
-                      <span>{chat.content}</span>
-                    )}
+                  <div className="message-bubble-wrapper">
+                    <div className="message-content">
+                      {chat.role === 'assistant' ? (
+                        <div className="markdown-content">
+                          <ReactMarkdown>{chat.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <span>{chat.content}</span>
+                      )}
+                    </div>
                     <span className="message-time">
                       {new Date(chat.timestamp).toLocaleTimeString('hu-HU', {
                         hour: '2-digit',
@@ -400,9 +363,12 @@ const StudentWelcome = () => {
               {isBotTyping && (
                 <div className="chat-message bot">
                   <img src={logo} alt="Logo" className="chat-logo" />
-                  <div className="message-content">
-                    <div className="typing-dots">
-                      <span></span><span></span><span></span>
+                  <div className="message-bubble-wrapper">
+                    <div className="message-content thinking-bubble">
+                      <span className="thinking-label">Gondolkodom</span>
+                      <div className="typing-dots">
+                        <span></span><span></span><span></span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -418,7 +384,7 @@ const StudentWelcome = () => {
             ref={inputRef}
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
-            placeholder="Írj egy üzenetet..."
+            placeholder="Írd ide kérdésedet..."
             className="chat-input"
             disabled={isBotTyping}
             rows={1}

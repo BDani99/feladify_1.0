@@ -4,56 +4,68 @@ class GroqService {
   constructor() {
     this.apiKey = process.env.GROQ_API_KEY;
     this.apiBase = 'https://api.groq.com/openai/v1';
-    this.model = 'llama-3.3-70b-versatile';
+    this.primaryModel = 'qwen/qwen3-32b';
+    this.fallbackModel = 'llama-3.3-70b-versatile';
 
     if (!this.apiKey) {
       console.warn('[GroqService] FIGYELMEZTETÉS: GROQ_API_KEY nincs beállítva! Az AI funkciók nem fognak működni.');
     }
   }
 
+  _stripThinking(text) {
+    return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  }
+
+  async _callModel(model, messages, options) {
+    const response = await axios.post(
+      `${this.apiBase}/chat/completions`,
+      {
+        model,
+        messages,
+        temperature: options.temperature || 0.7,
+        max_tokens: options.max_tokens || 1024,
+        top_p: options.top_p || 1,
+        stream: false
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000
+      }
+    );
+    return this._stripThinking(response.data.choices[0].message.content);
+  }
+
   async generateResponse(prompt, messages = [], options = {}) {
     if (!this.apiKey) {
       console.warn('[GroqService] FIGYELMEZTETÉS: API kulcs nincs beállítva!');
-      return this._getFallbackResponse(prompt, messages);
+      return this._getFallbackResponse();
     }
 
+    const allMessages = [{ role: 'system', content: prompt }, ...messages];
+
+    // Try primary model
     try {
-      console.log('[GroqService] API hívás indítása - Modell:', this.model);
-      console.log('[GroqService] Rendszerprompt hossza:', prompt.length);
-      console.log('[GroqService] Üzenetek száma:', messages.length);
+      console.log(`[GroqService] API hívás → ${this.primaryModel}`);
+      const content = await this._callModel(this.primaryModel, allMessages, options);
+      console.log(`[GroqService] ✓ Válasz: ${this.primaryModel} (${content.length} kar.)`);
+      return content;
+    } catch (primaryError) {
+      const status = primaryError.response?.status;
+      console.warn(`[GroqService] ✗ ${this.primaryModel} sikertelen (HTTP ${status ?? 'timeout'}) → fallback: ${this.fallbackModel}`);
+    }
 
-      const response = await axios.post(
-        `${this.apiBase}/chat/completions`,
-        {
-          model: this.model,
-          messages: [
-            { role: 'system', content: prompt },
-            ...messages
-          ],
-          temperature: options.temperature || 0.7,
-          max_tokens: options.max_tokens || 1024,
-          top_p: options.top_p || 1,
-          stream: false
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
-          },
-          timeout: 30000 // 30 mp timeout
-        }
-      );
-
-      const aiResponse = response.data.choices[0].message.content;
-      console.log('[GroqService] Sikeres válasz - hossz:', aiResponse.length);
-      return aiResponse;
-    } catch (error) {
-      console.error('[GroqService] API hiba - Típus:', error.response?.status);
-      console.error('[GroqService] API hiba - Részletek:', error.response?.data || error.message);
-      if (error.code === 'ECONNABORTED') {
-        console.error('[GroqService] Timeout a Groq API-hoz (30s)');
-      }
-      return this._getFallbackResponse(prompt, messages);
+    // Try fallback model
+    try {
+      const content = await this._callModel(this.fallbackModel, allMessages, options);
+      console.log(`[GroqService] ✓ Válasz: ${this.fallbackModel} [FALLBACK] (${content.length} kar.)`);
+      return content;
+    } catch (fallbackError) {
+      const status = fallbackError.response?.status;
+      console.error(`[GroqService] ✗ ${this.fallbackModel} is sikertelen (HTTP ${status ?? 'timeout'}):`, fallbackError.response?.data || fallbackError.message);
+      return this._getFallbackResponse();
     }
   }
 
@@ -96,7 +108,6 @@ Adj JSON választ a következő szerkezetben, ahol a 'weaknesses' alapján javas
   }
 
   async generateSocraticHint(subject, topic, questionText, studentAnswer, correctAnswer, attemptNumber = 1) {
-    // Szigorú instrukciók, hogy az AI ne adja meg a megoldást
     const prompt = `Te egy türelmes, támogató Szókratészi mentor és tanár vagy. A diák hibázott egy feladatban, és a te feladatod rávezetni a jó megoldásra anélkül, hogy elárulnád azt.
 
 A diák egy ${subject} - ${topic} témában dolgozik.
@@ -179,7 +190,6 @@ Fontos: minden kérdésnél adj meg "questionId" mezőt "q1", "q2", stb. érték
       console.warn('[GroqService] generatePracticeQuestionSet parse hiba:', error.message);
     }
 
-    // Fallback
     return Array.from({ length: count }, (_, idx) => ({
       questionId:    `q${idx + 1}`,
       questionText:  `Magyarázd el a saját szavaiddal: ${topic}`,
@@ -303,7 +313,6 @@ Utasítások:
 4. Ha ez a 3. vagy több próbálkozás, adj konkrétabb, de még mindig nem közvetlen tippet.
 5. Max 3 mondat.`;
 
-    // Chat-előzmények átalakítása Groq üzenet formátumba (bot → assistant)
     const historyMessages = chatHistory
       .filter(m => m.content && m.content.trim())
       .slice(-8)
@@ -331,7 +340,7 @@ Válaszolj KIZÁRÓLAG érvényes JSON formátumban:
 }`;
 
     try {
-      const raw = await this.generateResponse(prompt, [], { temperature: 0.1, max_tokens: 150 });
+      const raw = await this.generateResponse(prompt, [], { temperature: 0.1, max_tokens: 500 });
       const match = raw.match(/\{[\s\S]*?\}/);
       if (match) {
         return JSON.parse(match[0]);
@@ -340,11 +349,10 @@ Válaszolj KIZÁRÓLAG érvényes JSON formátumban:
       console.warn('[GroqService] checkShortTextAnswer parse hiba:', error.message);
     }
 
-    // Nagyon lebutított fallback ellenőrzés
     const norm = (s) => String(s).toLowerCase().trim().replace(/[.,!?]/g, '');
-    return { 
-      correct: norm(studentAnswer) === norm(correctAnswer) || norm(studentAnswer).includes(norm(correctAnswer)), 
-      reason: 'Automatikus string egyezés.' 
+    return {
+      correct: norm(studentAnswer) === norm(correctAnswer) || norm(studentAnswer).includes(norm(correctAnswer)),
+      reason: 'Automatikus string egyezés.'
     };
   }
 

@@ -12,10 +12,7 @@
     animation: slideDown 0.3s ease-out;
 }
 
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+/* slideDown @keyframes globálisan van definiálva az App.css-ben */
 
 .tutor-chat-messages {
     max-height: 350px;
@@ -26,10 +23,6 @@
     gap: 16px;
     background: var(--bg-page);
 }
-
-.tutor-chat-messages::-webkit-scrollbar { width: 6px; }
-.tutor-chat-messages::-webkit-scrollbar-track { background: transparent; }
-.tutor-chat-messages::-webkit-scrollbar-thumb { background: var(--border-color-2); border-radius: 10px; }
 
 .tutor-msg {
     padding: 14px 18px;
@@ -128,4 +121,31 @@
     cursor: not-allowed;
     box-shadow: none;
     transform: none;
+}
+
+@media (max-width: 768px) {
+    .tutor-chat-messages {
+        max-height: 260px;
+        padding: 16px;
+    }
+
+    .tutor-chat-input-row {
+        padding: 12px 14px;
+        gap: 8px;
+    }
+
+    .tutor-chat-input-row input {
+        padding: 12px 14px;
+        font-size: 0.95rem;
+    }
+
+    .tutor-chat-send {
+        padding: 0 16px;
+        font-size: 1rem;
+    }
+
+    .tutor-msg {
+        max-width: 95%;
+        font-size: 0.9rem;
+    }
 }

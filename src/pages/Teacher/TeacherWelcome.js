@@ -3,7 +3,7 @@ import { fetchUserData } from '../../api/Auth/ProfileData';
 import { fetchTeacherClasses } from '../../api/Assignments/Teacher/GetClasses';
 import { sendChatMessage } from '../../api/Teacher/Chat';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { FaPaperPlane } from 'react-icons/fa';
+import { FaPaperPlane, FaExclamationCircle } from 'react-icons/fa';
 import '../../styles/Welcome.css';
 import logo from '../../assets/logo-400.png';
 
@@ -30,7 +30,7 @@ const TeacherWelcome = () => {
                     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                 }));
             } catch (err) {
-                setError('Hiba történt az adatok lekérésekor.');
+                setError('Nem sikerült betölteni az adatokat. Kérjük, próbáld újra.');
             } finally {
                 setLoading(false);
             }
@@ -74,7 +74,7 @@ const TeacherWelcome = () => {
             <div className="welcome-container">
                 <h1 className="title">Üdv, {userName || 'Felhasználó'}!</h1>
                 <p className="date">{currentDate}</p>
-                {error && <p className="error-message">{error}</p>}
+                {error && <p className="error-message"><FaExclamationCircle />{error}</p>}
                 <div className='chat-container'>
                     <div className="chat-history">
                         {chatHistory.map((chat, index) => (
@@ -100,7 +100,7 @@ const TeacherWelcome = () => {
                             type="text"
                             value={chatInput}
                             onChange={(e) => setChatInput(e.target.value)}
-                            placeholder="Írj egy üzenetet..."
+                            placeholder="Írd ide kérdésedet..."
                             className="chat-input"
                             disabled={isBotTyping}
                         />

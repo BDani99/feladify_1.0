@@ -6,34 +6,63 @@ const groq = new OpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
 });
 
-async function generateText(prompt) {
+const PRIMARY_MODEL  = 'qwen/qwen3-32b';
+const FALLBACK_MODEL = 'llama-3.1-8b-instant';
+
+function stripThinking(text) {
+  return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+}
+
+async function _callModel(model, messages, temperature) {
   const response = await groq.chat.completions.create({
-    model: 'llama-3.1-8b-instant',
-    messages: [{ role: 'user', content: prompt }],
-    temperature: 0.3,
+    model,
+    messages,
+    temperature,
   });
-  return response.choices[0].message.content.trim();
+  return stripThinking(response.choices[0].message.content.trim());
+}
+
+async function _withFallback(messages, temperature, callerName) {
+  try {
+    console.log(`[Groq/${callerName}] API hívás → ${PRIMARY_MODEL}`);
+    const content = await _callModel(PRIMARY_MODEL, messages, temperature);
+    console.log(`[Groq/${callerName}] ✓ Válasz: ${PRIMARY_MODEL} (${content.length} kar.)`);
+    return content;
+  } catch (primaryError) {
+    const status = primaryError.status ?? primaryError.response?.status ?? 'timeout';
+    console.warn(`[Groq/${callerName}] ✗ ${PRIMARY_MODEL} sikertelen (HTTP ${status}) → fallback: ${FALLBACK_MODEL}`);
+  }
+
+  const content = await _callModel(FALLBACK_MODEL, messages, temperature);
+  console.log(`[Groq/${callerName}] ✓ Válasz: ${FALLBACK_MODEL} [FALLBACK] (${content.length} kar.)`);
+  return content;
+}
+
+async function generateText(prompt) {
+  return _withFallback(
+    [{ role: 'user', content: prompt }],
+    0.3,
+    'generateText'
+  );
 }
 
 async function generateChat(systemPrompt, userMessage) {
-  const response = await groq.chat.completions.create({
-    model: 'llama-3.1-8b-instant',
-    messages: [
+  return _withFallback(
+    [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userMessage },
     ],
-    temperature: 0.4,
-  });
-  return response.choices[0].message.content.trim();
+    0.4,
+    'generateChat'
+  );
 }
 
 async function generateChatWithHistory(systemPrompt, messages) {
-  const response = await groq.chat.completions.create({
-    model: 'llama-3.1-8b-instant',
-    messages: [{ role: 'system', content: systemPrompt }, ...messages],
-    temperature: 0.5,
-  });
-  return response.choices[0].message.content.trim();
+  return _withFallback(
+    [{ role: 'system', content: systemPrompt }, ...messages],
+    0.5,
+    'generateChatWithHistory'
+  );
 }
 
 module.exports = { generateText, generateChat, generateChatWithHistory };

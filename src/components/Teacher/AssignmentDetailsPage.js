@@ -213,7 +213,7 @@ const AssignmentDetailsPage = () => {
                 {activeTab === 'submissions' && (
                     <div className="submissions-container">
                         {subLoading && <p style={{ color: 'var(--color-text-dim)' }}>Betöltés...</p>}
-                        {subError && <p className="error-message">{subError}</p>}
+                        {subError && <p className="error-message"><FaExclamationTriangle />{subError}</p>}
                         {!subLoading && submissions !== null && submissions.length === 0 && (
                             <p style={{ color: 'var(--color-text-dim)' }}>Még nem küldött be senki.</p>
                         )}

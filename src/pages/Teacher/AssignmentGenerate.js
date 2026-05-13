@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { previewAssignment, saveAssignment } from '../../api/Assignments/Teacher/GenerateAssignment';
 import { fetchTeacherClasses } from '../../api/Assignments/Teacher/GetClasses';
 import { fetchUserData } from '../../api/Auth/ProfileData';
+import { FaExclamationCircle, FaCheckCircle } from 'react-icons/fa';
 import PreviewModal from '../../components/Teacher/PreviewModal';
 import '../../styles/Teacher/AssignmentGenerate.css';
 
@@ -41,7 +42,7 @@ const AssignmentGenerate = ({ token }) => {
                     setSubject(subjects[0]);
                 }
             } catch (err) {
-                setError(err.message || 'Hiba történt az adatok betöltése során.');
+                setError(err.message || 'Nem sikerült betölteni az adatokat. Kérjük, próbáld újra.');
             }
         };
         loadData();
@@ -59,13 +60,13 @@ const AssignmentGenerate = ({ token }) => {
         setError('');
 
         if (!subject) {
-            setError('Kérjük, válassz tantárgyat!');
+            setError('Kérjük, válassz ki egy tantárgyat a folytatáshoz.');
             setIsLoading(false);
             return;
         }
 
         if (!nyiltChecked && !feleletChecked) {
-            setError('Legalább egy kérdéstípust ki kell jelölni!');
+            setError('Legalább egy kérdéstípust be kell jelölni.');
             setIsLoading(false);
             return;
         }
@@ -322,8 +323,8 @@ const AssignmentGenerate = ({ token }) => {
                             </div>
                         ) : (
                             <>
-                                {message && <p className="success-message">{message}</p>}
-                                {error && <p className="error-message">{error}</p>}
+                                {message && <p className="success-message"><FaCheckCircle />{message}</p>}
+                                {error && <p className="error-message"><FaExclamationCircle />{error}</p>}
                             </>
                         )}
                     </div>

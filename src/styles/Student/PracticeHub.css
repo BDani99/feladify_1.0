@@ -6,7 +6,7 @@
     padding: 0;
 }
 
-.back-btn {
+.practice-hub .back-btn {
     background: none;
     border: none;
     color: var(--color-text-dim);
@@ -17,12 +17,12 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 32px;
-    transition: all 0.2s ease;
+    transition: var(--transition-normal);
     padding: 8px 16px;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
 }
 
-.back-btn:hover {
+.practice-hub .back-btn:hover {
     color: var(--accent);
     background: var(--bg-card);
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { submitAssignment } from '../../api/Assignments/Student/SubmitAssignment';
+import { FaExclamationCircle, FaCheckCircle } from 'react-icons/fa';
 import '../../styles/Student/AssignmentSubmit.css';
 
 const AssignmentSubmitForm = () => {
@@ -52,7 +53,7 @@ const AssignmentSubmitForm = () => {
                 <h1 className="title">{assignment.title}</h1>
                 <div className="assignment-submit-form">
                     {isSubmitted ? (
-                        <p className="success-message">{message}</p>
+                        <p className="success-message"><FaCheckCircle />{message}</p>
                     ) : isSubmitting ? (
                         <div className="generate-loading-container">
                             <div className="generate-loading-text">Dolgozat Beküldése</div>
@@ -110,7 +111,7 @@ const AssignmentSubmitForm = () => {
                             </button>
                         </form>
                     )}
-                    {error && <p className="error-message">{error}</p>}
+                    {error && <p className="error-message"><FaExclamationCircle />{error}</p>}
                 </div>
             </div>
         </div>

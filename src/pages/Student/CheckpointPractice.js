@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { FaArrowLeft, FaPaperPlane, FaChevronUp, FaChevronDown } from 'react-icons/fa';
+import { FaArrowLeft, FaPaperPlane, FaChevronUp, FaChevronDown, FaExclamationTriangle } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import '../../styles/Student/CheckpointPractice.css';
 
@@ -171,8 +171,8 @@ const CheckpointPractice = () => {
         });
       } else {
         const err = await res.json();
-        setScoreError(err.message || 'Legalább 80% szükséges a teljesítéshez!');
-        addBotMessage(`⚠️ ${err.message || 'Legalább 80% szükséges!'} Jelenlegi eredmény: **${err.score ?? score.correct}/${score.total}**. Menj vissza és javítsd ki a hibás válaszokat! 💪`);
+        setScoreError(err.message || 'A fejezet teljesítéséhez minimum 80% szükséges.');
+        addBotMessage(`⚠️ ${err.message || 'A fejezet teljesítéséhez minimum 80% szükséges.'} Jelenlegi eredmény: **${err.score ?? score.correct}/${score.total}**. Menj vissza és javítsd ki a hibás válaszokat! 💪`);
       }
     } catch (err) {
       console.error('Hiba a fejezet lezárásakor:', err);
@@ -394,9 +394,9 @@ const CheckpointPractice = () => {
 
               {/* 80% hibaüzenet */}
               {scoreError && (
-                <div className="score-error-msg">
-                  ⚠️ {scoreError}
-                </div>
+                <p className="error-message">
+                  <FaExclamationTriangle />{scoreError}
+                </p>
               )}
 
               {/* Gombok */}

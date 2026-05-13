@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { login } from '../api/Auth/LoginApi';
 import '../styles/Login.css';
+import { FaExclamationCircle } from 'react-icons/fa';
 import logo from '../assets/logo-400.png';
 import name from '../assets/name.png';
 
@@ -27,7 +28,7 @@ const Login = ({ onLoginSuccess }) => {
             <form className="login-form" onSubmit={handleLogin}>
                 <div className='login-images'>
                     <img src={logo} alt='logo' className='login-logo' />
-                    <img src={name} alt='logo' className='login-name-png' />
+                    <h1 className='login-name'>FELADIFY</h1>
                 </div>
                 <h2>Bejelentkezés</h2>
                 <div>
@@ -53,7 +54,7 @@ const Login = ({ onLoginSuccess }) => {
                     />
                 </div>
                 <button type="submit" className="main-button">Bejelentkezés</button>
-                {message && <p className='error-message'>{message}</p>}
+                {message && <p className='error-message'><FaExclamationCircle />{message}</p>}
                 <p className='login-link'>
                     Még nincs fiókod?{' '}
                     <a href="/regisztracio">Regisztrálj itt</a>

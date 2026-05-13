@@ -55,7 +55,7 @@
 /* Grid elrendezés */
 .assignment-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 24px;
 }
 
@@ -155,7 +155,7 @@
     padding: 4px 10px;
     border-radius: 8px;
     display: inline-block;
-    animation: pulse-urgent 2s infinite;
+    animation: pulse-urgent 2.5s infinite;
 }
 
 @keyframes pulse-urgent {

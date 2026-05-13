@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fetchAvailableAssignments } from '../../api/Assignments/Student/Assignments';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import { FaExclamationCircle, FaClock } from 'react-icons/fa';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Teacher/GeneratedAssignments.css'
 
@@ -27,7 +28,7 @@ const AvailableAssignments = () => {
                 const data = await fetchAvailableAssignments();
                 if (isMounted) setAssignments(Array.isArray(data) ? [...data].reverse() : []);
             } catch (err) {
-                if (isMounted) setError('Hiba történt a dolgozatok lekérésekor');
+                if (isMounted) setError('Nem sikerült betölteni a dolgozatokat. Kérjük, próbáld újra.');
             } finally {
                 if (isMounted) setLoading(false);
             }
@@ -48,7 +49,7 @@ const AvailableAssignments = () => {
         <div id="content">
             <div className="assignments-container">
                 <h1 className="title">Elérhető Dolgozatok</h1>
-                {error && <p className="error-message">{error}</p>}
+                {error && <p className="error-message"><FaExclamationCircle />{error}</p>}
                 <div className="assignment-grid">
                     {assignments.length > 0 ? (
                         assignments.map((assignment) => {
@@ -70,7 +71,7 @@ const AvailableAssignments = () => {
                                                 <p>Tantárgy:</p>
                                                 <p>Nehézség:</p>
                                                 <p>Létrehozva:</p>
-                                                {dl && <p>Határidő:</p>}
+                                                {dl && <p><FaClock style={{ fontSize: '0.75em', marginRight: 4 }} />Határidő:</p>}
                                                 <p>Becsült idő:</p>
                                             </div>
                                             <div>

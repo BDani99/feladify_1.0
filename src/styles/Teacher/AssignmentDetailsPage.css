@@ -55,9 +55,9 @@
     padding-right: 8px;
 }
 
-.question-card {
+.assignment-details-container .question-card {
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     padding: 18px 20px;
     margin-bottom: 16px;
     background-color: var(--bg-card);
@@ -84,9 +84,9 @@
     gap: 6px;
 }
 
-.option {
+.assignment-details-container .option {
     padding: 8px 14px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     background-color: var(--bg-form-group);
     color: var(--color-text);
     font-size: 0.9rem;

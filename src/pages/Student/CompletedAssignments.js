@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fetchCompletedAssignments } from '../../api/Assignments/Student/Assignments';
+import { FaExclamationCircle } from 'react-icons/fa';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Teacher/GeneratedAssignments.css'
 
@@ -24,7 +25,7 @@ const CompletedAssignments = () => {
                 const data = await fetchCompletedAssignments();
                 setAssignments(Array.isArray(data) ? data : (data.assignments || []));
             } catch (error) {
-                setError('A megoldott dolgozatok betöltése sikertelen.');
+                setError('A megoldott dolgozatok betöltése nem sikerült. Kérjük, próbáld újra.');
             } finally {
                 setLoading(false);
             }
@@ -42,7 +43,7 @@ const CompletedAssignments = () => {
     }
 
     if (error) {
-        return <div id="content"><p className="error-message">{error}</p></div>;
+        return <div id="content"><p className="error-message"><FaExclamationCircle />{error}</p></div>;
     }
 
     // Függőben: ahol minden pontszám 0, VAGY nyílt végű kérdések vannak

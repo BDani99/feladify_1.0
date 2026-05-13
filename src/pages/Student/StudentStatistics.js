@@ -11,7 +11,7 @@ import {
   RadialLinearScale
 } from 'chart.js';
 import { Line, Radar } from 'react-chartjs-2';
-import { FaStar, FaFire, FaTrophy, FaChartLine, FaBrain } from 'react-icons/fa';
+import { FaStar, FaFire, FaTrophy, FaChartLine, FaBrain, FaExclamationCircle } from 'react-icons/fa';
 import '../../styles/Student/StudentStatistics.css';
 
 ChartJS.register(
@@ -34,7 +34,7 @@ const StudentStatistics = () => {
       setStatistics(data);
     } catch (error) {
       console.error('[StudentStatistics] Error loading statistics:', error);
-      setError(error.message || 'A statisztikák betöltése sikertelen');
+      setError(error.message || 'A statisztikák betöltése nem sikerült. Kérjük, próbáld újra.');
     } finally {
       setIsLoading(false);
     }
@@ -55,16 +55,9 @@ const StudentStatistics = () => {
   if (error) {
     return (
       <div id="content">
-        <div className="error-message">
-          <h2>⚠️ Hiba történt</h2>
-          <p>{error}</p>
-          <p className="error-details">
-            Kérjük, ellenőrizd, hogy a backend szerver fut, és be vagy jelentkezve.
-          </p>
-          <button onClick={() => { setIsLoading(true); loadStatistics(); }} className="retry-button">
-            Újrapróbálkozás
-          </button>
-        </div>
+        <p className="error-message">
+          <FaExclamationCircle />{error}
+        </p>
       </div>
     );
   }
@@ -186,7 +179,7 @@ const StudentStatistics = () => {
                   }
                 }} />
               ) : (
-                <div className="no-data">Még nincs elég adat a megjelenítéshez</div>
+                <div className="no-data">Még nincs elegendő adat. Oldj meg néhány feladatot!</div>
               )}
             </div>
           </div>
@@ -207,7 +200,7 @@ const StudentStatistics = () => {
                   }
                 }} />
               ) : (
-                <div className="no-data">Még nincs elég adat a megjelenítéshez</div>
+                <div className="no-data">Még nincs elegendő adat. Oldj meg néhány feladatot!</div>
               )}
             </div>
           </div>

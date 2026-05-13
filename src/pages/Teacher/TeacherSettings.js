@@ -4,6 +4,7 @@ import { fetchUserData } from '../../api/Auth/ProfileData';
 import { fetchTeacherClasses } from '../../api/Assignments/Teacher/GetClasses';
 import { updateProfile } from '../../api/Auth/UpdateProfile';
 import { fetchAllClasses, createClass, updateTeacherClasses } from '../../api/Classes/ClassApi';
+import { FaExclamationCircle, FaCheckCircle } from 'react-icons/fa';
 import { useUser } from '../../context/UserContext';
 import '../../styles/Settings.css';
 
@@ -39,7 +40,7 @@ const TeacherSettings = () => {
                 setMyClassIds((myCls || []).map(c => c._id));
             } catch (error) {
                 console.error('Hiba az adatok betöltése során:', error);
-                setSaveError('Hiba történt az adatok betöltése során.');
+                setSaveError('Nem sikerült betölteni az adatokat. Kérjük, próbáld újra.');
             } finally {
                 setIsLoading(false);
             }
@@ -200,7 +201,7 @@ const TeacherSettings = () => {
                                                 {isCreatingClass ? '...' : 'Létrehozás'}
                                             </button>
                                         </div>
-                                        {classError && <p className="settings-error">{classError}</p>}
+                                        {classError && <p className="error-message"><FaExclamationCircle />{classError}</p>}
                                     </div>
                                 </div>
                             </div>
@@ -209,7 +210,7 @@ const TeacherSettings = () => {
                                 {isSaving ? 'Mentés...' : 'Mentés'}
                             </button>
 
-                            {saveMessage && <p className="settings-success">{saveMessage}</p>}
+                            {saveMessage && <p className="success-message"><FaCheckCircle />{saveMessage}</p>}
                             {saveError && <p className="settings-error">{saveError}</p>}
                         </form>
                     </div>

@@ -6,22 +6,22 @@
     margin: 0 auto;
 }
 
-.back-btn {
+.checkpoint-practice .back-btn {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     background: none;
     border: 1px solid var(--border-color);
-    color: var(--color-text-muted);
+    color: var(--color-text-dim);
     padding: 8px 16px;
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     cursor: pointer;
     font-size: 0.9rem;
     font-weight: 600;
     margin-bottom: 20px;
-    transition: all 0.2s ease;
+    transition: var(--transition-normal);
 }
-.back-btn:hover {
+.checkpoint-practice .back-btn:hover {
     border-color: var(--accent);
     color: var(--accent);
     background: rgba(59, 130, 246, 0.06);
@@ -74,24 +74,24 @@
     border-radius: 20px;
 }
 
-.progress-bar {
+.checkpoint-practice .progress-bar {
     width: 100%;
     height: 8px;
     background: var(--bg-input);
-    border-radius: 100px;
+    border-radius: var(--radius-pill);
     overflow: hidden;
 }
 
-.progress-fill {
+.checkpoint-practice .progress-fill {
     height: 100%;
     background: linear-gradient(90deg, var(--accent), #6366f1);
-    border-radius: 100px;
+    border-radius: var(--radius-pill);
     transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ─── Question Navigator ─── */
 
-.question-navigator {
+.checkpoint-practice .question-navigator {
     display: flex;
     justify-content: center;
     gap: 7px;
@@ -99,34 +99,34 @@
     margin-top: 12px;
 }
 
-.question-dot {
+.checkpoint-practice .question-dot {
     width: 32px;
     height: 32px;
     border-radius: 50%;
     border: 2px solid var(--border-color);
     background: var(--bg-input);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: var(--transition-fast);
     font-size: 0;
     padding: 0;
 }
 
-.question-dot:hover {
+.checkpoint-practice .question-dot:hover {
     border-color: var(--accent);
     transform: scale(1.1);
 }
 
-.question-dot.active {
+.checkpoint-practice .question-dot.active {
     border-color: var(--accent);
     background: var(--accent);
 }
 
-.question-dot.correct {
+.checkpoint-practice .question-dot.correct {
     border-color: #10b981;
     background: rgba(16, 185, 129, 0.2);
 }
 
-.question-dot.incorrect {
+.checkpoint-practice .question-dot.incorrect {
     border-color: #ef4444;
     background: rgba(239, 68, 68, 0.15);
 }
@@ -221,32 +221,32 @@
 
 /* ─── True/False ─── */
 
-.true-false-btns {
+.checkpoint-practice .true-false-btns {
     display: flex;
     gap: 16px;
     flex-wrap: wrap;
 }
 
-.tf-btn {
+.checkpoint-practice .tf-btn {
     flex: 1;
     min-width: 120px;
     padding: 16px 24px;
     border: 2px solid var(--border-color);
-    border-radius: 14px;
+    border-radius: var(--radius-lg);
     background: var(--bg-input);
     color: var(--color-text);
     font-size: 1.05rem;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: var(--transition-normal);
 }
 
-.tf-btn:hover:not(:disabled) {
+.checkpoint-practice .tf-btn:hover:not(:disabled) {
     border-color: var(--accent);
     background: rgba(59, 130, 246, 0.06);
 }
 
-.tf-btn.selected {
+.checkpoint-practice .tf-btn.selected {
     border-color: var(--accent);
     background: rgba(59, 130, 246, 0.12);
     color: var(--accent);
@@ -304,89 +304,90 @@
     border: 1px solid var(--border-color);
 }
 
-.match-select {
+.checkpoint-practice .match-select {
     flex: 1;
     padding: 10px 14px;
     background: var(--bg-input);
     border: 2px solid var(--border-color);
-    border-radius: 10px;
+    border-radius: var(--radius-md);
     color: var(--color-text);
     font-size: 0.95rem;
     font-family: inherit;
     cursor: pointer;
-    transition: border-color 0.2s ease;
+    transition: var(--transition-fast);
 }
 
-.match-select:focus {
+.checkpoint-practice .match-select:focus {
     outline: none;
     border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
-.match-select:disabled {
+.checkpoint-practice .match-select:disabled {
     opacity: 0.7;
     cursor: not-allowed;
 }
 
 /* ─── Ordering ─── */
 
-.ordering {
+.checkpoint-practice .ordering {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
-.ordering-hint {
+.checkpoint-practice .ordering-hint {
     font-size: 0.9rem;
-    color: var(--color-text-muted);
+    color: var(--color-text-dim);
     margin: 0 0 8px 0;
     font-style: italic;
 }
 
-.order-item {
+.checkpoint-practice .order-item {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
     background: var(--bg-input);
     border: 2px solid var(--border-color);
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     cursor: grab;
     user-select: none;
-    transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    transition: opacity var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
 }
 
-.order-item:hover {
+.checkpoint-practice .order-item:hover {
     border-color: var(--accent);
     background: rgba(59, 130, 246, 0.04);
 }
 
-.order-item:active { cursor: grabbing; }
+.checkpoint-practice .order-item:active { cursor: grabbing; }
 
-.order-item.dragging {
+.checkpoint-practice .order-item.dragging {
     opacity: 0.45;
     border-color: var(--accent);
 }
 
-.order-item.drag-over {
+.checkpoint-practice .order-item.drag-over {
     border: 2px dashed var(--accent);
     background: rgba(59, 130, 246, 0.1);
 }
 
-.drag-handle {
+.checkpoint-practice .drag-handle {
     color: var(--border-color-2);
     font-size: 1.1rem;
     line-height: 1;
     flex-shrink: 0;
 }
 
-.order-num {
+.checkpoint-practice .order-num {
     font-weight: 800;
     color: var(--accent);
     font-size: 1rem;
     min-width: 24px;
 }
 
-.order-text {
+.checkpoint-practice .order-text {
     flex: 1;
     font-weight: 600;
     color: var(--color-text);
@@ -450,16 +451,6 @@
 
 /* ─── Score Error ─── */
 
-.score-error-msg {
-    margin-top: 16px;
-    padding: 12px 16px;
-    background: rgba(239, 68, 68, 0.08);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    border-radius: 10px;
-    color: #dc2626;
-    font-size: 0.9rem;
-    font-weight: 600;
-}
 
 /* ─── Action Buttons ─── */
 
@@ -544,11 +535,11 @@
     height: auto;
 }
 
-.chat-header {
+.practice-right .chat-header {
     background: var(--bg-form-group, var(--bg-input));
     padding: 18px 20px;
     border-bottom: 1px solid var(--border-color);
-    border-radius: 20px 20px 0 0;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -556,11 +547,11 @@
 }
 
 .practice-right.closed .chat-header {
-    border-radius: 20px;
+    border-radius: var(--radius-xl);
     border-bottom: none;
 }
 
-.chat-header h4 {
+.practice-right .chat-header h4 {
     margin: 0;
     font-size: 1rem;
     font-weight: 800;
@@ -637,16 +628,16 @@
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--color-text-muted);
-    animation: typing-bounce 1.2s infinite ease-in-out;
+    background: var(--color-text-dim);
+    animation: mentor-typing 1.2s infinite ease-in-out;
 }
 
 .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
 .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 
-@keyframes typing-bounce {
+@keyframes mentor-typing {
     0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
-    40% { transform: translateY(-6px); opacity: 1; }
+    40%            { transform: translateY(-6px); opacity: 1; }
 }
 
 /* Chat form */

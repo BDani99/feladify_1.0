@@ -19,10 +19,6 @@
     overflow-y: auto;
 }
 
-.generate-scroll-container::-webkit-scrollbar { width: 6px; }
-.generate-scroll-container::-webkit-scrollbar-track { background: transparent; }
-.generate-scroll-container::-webkit-scrollbar-thumb { background: var(--border-color-2); border-radius: 10px; }
-.generate-scroll-container::-webkit-scrollbar-thumb:hover { background: var(--color-text-dim); }
 
 .generate-container h1 {
     text-align: center;

@@ -58,22 +58,6 @@
     gap: 14px;
 }
 
-.preview-questions-list::-webkit-scrollbar {
-    width: 7px;
-}
-
-.preview-questions-list::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.preview-questions-list::-webkit-scrollbar-thumb {
-    background: var(--border-color-2);
-    border-radius: 10px;
-}
-
-.preview-questions-list::-webkit-scrollbar-thumb:hover {
-    background: var(--color-text-dim);
-}
 
 .preview-question-item {
     background: var(--bg-form-group);

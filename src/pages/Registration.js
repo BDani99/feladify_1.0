@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { registerUser } from '../api/Auth/RegisterApi';
 import { fetchAllClasses } from '../api/Classes/ClassApi';
+import { FaExclamationCircle, FaCheckCircle } from 'react-icons/fa';
 import '../styles/Login.css';
 import logo from '../assets/logo-400.png';
 
@@ -148,8 +149,8 @@ const RegistrationForm = () => {
                     {isSubmitting ? 'Regisztráció...' : 'Regisztráció'}
                 </button>
 
-                {message && <p className="success-message">{message}</p>}
-                {error && <p className="error-message">{error}</p>}
+                {message && <p className="success-message"><FaCheckCircle />{message}</p>}
+                {error && <p className="error-message"><FaExclamationCircle />{error}</p>}
 
                 <div className="login-link">
                     Már van fiókod?{' '}

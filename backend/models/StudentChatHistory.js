@@ -68,8 +68,8 @@ studentChatHistorySchema.methods.getCurrentSession = function() {
       messages: []
     };
     this.sessions.push(newSession);
-    this.currentSessionId = newSession.sessionId;
-    session = newSession;
+    session = this.sessions[this.sessions.length - 1]; // use the Mongoose subdocument, not the plain object
+    this.currentSessionId = session.sessionId;
   }
 
   return session;

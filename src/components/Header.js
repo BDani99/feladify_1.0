@@ -6,6 +6,7 @@ import name from '../assets/name.png';
 import { logoutUser } from '../api/Auth/LogoutApi';
 import { fetchUserData } from '../api/Auth/ProfileData';
 import { useUser } from '../context/UserContext';
+import { FaSignOutAlt } from 'react-icons/fa';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -49,6 +50,7 @@ const Header = () => {
                 <div className='header-right'>
                     {userName && <span className='header-username'>{userName}</span>}
                     <button className='logout-button' onClick={handleLogout}>
+                        <FaSignOutAlt />
                         <span>Kijelentkezés</span>
                     </button>
                 </div>
