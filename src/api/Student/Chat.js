@@ -88,3 +88,56 @@ export const loadChatSession = async (sessionId) => {
     throw error;
   }
 };
+
+export const deleteSession = async (sessionId) => {
+  try {
+    const response = await fetch(`/api/student/chat/session/${sessionId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+
+    if (response.status === 401) {
+      handleUnauthorized();
+      return;
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[Chat API] Error response:', errorData);
+      throw new Error(errorData.message || `HTTP ${response.status}: Hiba történt a session törlése során`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('[Chat API] deleteSession error:', error);
+    throw error;
+  }
+};
+
+export const renameSession = async (sessionId, title) => {
+  try {
+    const response = await fetch(`/api/student/chat/session/${sessionId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ title })
+    });
+
+    if (response.status === 401) {
+      handleUnauthorized();
+      return;
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('[Chat API] Error response:', errorData);
+      throw new Error(errorData.message || `HTTP ${response.status}: Hiba történt a session név módosítása során`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('[Chat API] renameSession error:', error);
+    throw error;
+  }
+};

@@ -599,19 +599,25 @@ router.get('/chat/history', authMiddleware, async (req, res) => {
       return res.json({ messages: [], sessions: [], currentSessionId: null });
     }
     const session = chatDoc.getCurrentSession();
-    const sessions = chatDoc.sessions.map(s => ({
-      sessionId: s.sessionId,
-      title: s.title,
-      updatedAt: s.updatedAt
-    }));
+    const sessions = chatDoc.sessions
+      .map(s => ({
+        sessionId: s.sessionId,
+        title: s.title,
+        updatedAt: s.updatedAt
+      }))
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
     // Érvényesítés: csak az adott diák üzenetei jelenjenek meg
     const validatedMessages = session ? session.messages.map(msg => {
+      // Szűrés: ha user üzenet és userId megadott, akkor csak az aktuális diák üzenete
       if (msg.role === 'user' && msg.userId && msg.userId.toString() !== req.user._id.toString()) {
+        console.log('[Student API] Message filtered out:', msg.content.substring(0, 20), 'userId:', msg.userId, 'currentUser:', req.user._id);
         return null;
       }
       return msg;
     }).filter(msg => msg !== null) : [];
+
+    console.log('[Student API] Loaded session messages:', validatedMessages.length, 'out of', session?.messages.length);
 
     res.json({
       messages: validatedMessages,
@@ -808,11 +814,13 @@ router.post('/chat/load-session', authMiddleware, async (req, res) => {
     chatDoc.currentSessionId = sessionId;
     await chatDoc.save();
 
-    const sessions = chatDoc.sessions.map(s => ({
-      sessionId: s.sessionId,
-      title: s.title,
-      updatedAt: s.updatedAt
-    }));
+    const sessions = chatDoc.sessions
+      .map(s => ({
+        sessionId: s.sessionId,
+        title: s.title,
+        updatedAt: s.updatedAt
+      }))
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
     res.json({
       messages: validatedMessages,
@@ -821,6 +829,96 @@ router.post('/chat/load-session', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('[Student API] Load session error:', err.message);
     res.status(500).json({ message: 'Hiba a session betöltésekor', error: err.message });
+  }
+});
+
+// DELETE /api/student/chat/session/:sessionId
+router.delete('/chat/session/:sessionId', authMiddleware, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    if (!sessionId) {
+      return res.status(400).json({ message: 'Session ID megadása kötelező' });
+    }
+
+    let chatDoc = await StudentChatHistory.findOne({ studentId: req.user._id });
+    if (!chatDoc) {
+      return res.status(404).json({ message: 'Chat előzmények nem találhatók' });
+    }
+
+    const sessionIndex = chatDoc.sessions.findIndex(s => s.sessionId === sessionId);
+    if (sessionIndex === -1) {
+      return res.status(404).json({ message: 'Session nem található' });
+    }
+
+    chatDoc.sessions.splice(sessionIndex, 1);
+
+    // Ha az éppen aktív sessiont töröljük, nullázd a currentSessionId-t
+    if (chatDoc.currentSessionId === sessionId) {
+      chatDoc.currentSessionId = null;
+    }
+
+    await chatDoc.save();
+
+    const sessions = chatDoc.sessions
+      .map(s => ({
+        sessionId: s.sessionId,
+        title: s.title,
+        updatedAt: s.updatedAt
+      }))
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+    res.json({
+      message: 'Session sikeresen törölve',
+      sessions
+    });
+  } catch (err) {
+    console.error('[Student API] Delete session error:', err.message);
+    res.status(500).json({ message: 'Hiba a session törlése során', error: err.message });
+  }
+});
+
+// PUT /api/student/chat/session/:sessionId
+router.put('/chat/session/:sessionId', authMiddleware, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { title } = req.body;
+
+    if (!sessionId) {
+      return res.status(400).json({ message: 'Session ID megadása kötelező' });
+    }
+
+    if (!title || title.trim() === '') {
+      return res.status(400).json({ message: 'Session név megadása kötelező' });
+    }
+
+    let chatDoc = await StudentChatHistory.findOne({ studentId: req.user._id });
+    if (!chatDoc) {
+      return res.status(404).json({ message: 'Chat előzmények nem találhatók' });
+    }
+
+    const session = chatDoc.sessions.find(s => s.sessionId === sessionId);
+    if (!session) {
+      return res.status(404).json({ message: 'Session nem található' });
+    }
+
+    session.title = title.substring(0, 100);
+    await chatDoc.save();
+
+    const sessions = chatDoc.sessions
+      .map(s => ({
+        sessionId: s.sessionId,
+        title: s.title,
+        updatedAt: s.updatedAt
+      }))
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+    res.json({
+      message: 'Session neve sikeresen megváltoztatva',
+      sessions
+    });
+  } catch (err) {
+    console.error('[Student API] Update session error:', err.message);
+    res.status(500).json({ message: 'Hiba a session név módosítása során', error: err.message });
   }
 });
 

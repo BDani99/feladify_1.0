@@ -5,11 +5,11 @@ import { useChat } from '../../context/ChatContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Welcome.css';
 import logo from '../../assets/logo-400.png';
-import { FaPaperPlane, FaPlus, FaHistory } from 'react-icons/fa';
+import { FaPaperPlane, FaPlus, FaHistory, FaTrash, FaPen } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 
 const StudentWelcome = () => {
-  const { messages, setMessages, sessions, setSessions, currentSessionId, setCurrentSessionId, chatLoaded, setChatLoaded, loadSession } = useChat();
+  const { messages, setMessages, sessions, setSessions, currentSessionId, setCurrentSessionId, chatLoaded, setChatLoaded, loadSession, deleteSession, renameSession } = useChat();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('');
@@ -17,6 +17,8 @@ const StudentWelcome = () => {
   const [chatInput, setChatInput] = useState('');
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [showSessionHistory, setShowSessionHistory] = useState(false);
+  const [renamingSessionId, setRenamingSessionId] = useState(null);
+  const [renamingTitle, setRenamingTitle] = useState('');
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -133,6 +135,50 @@ const StudentWelcome = () => {
     }
   };
 
+  const handleDeleteSession = async (sessionId, e) => {
+    e.stopPropagation();
+    if (!window.confirm('Biztosan törölni szeretnéd ezt a beszélgetést?')) {
+      return;
+    }
+    try {
+      await deleteSession(sessionId);
+      if (currentSessionId === sessionId) {
+        setMessages([]);
+        setCurrentSessionId(null);
+      }
+    } catch (err) {
+      setError('Hiba a session törlése során.');
+    }
+  };
+
+  const handleStartRename = (session, e) => {
+    e.stopPropagation();
+    setRenamingSessionId(session.sessionId);
+    setRenamingTitle(session.title);
+  };
+
+  const handleRenameSession = async (sessionId, e) => {
+    e.stopPropagation();
+    if (!renamingTitle.trim()) {
+      setRenamingSessionId(null);
+      return;
+    }
+    try {
+      await renameSession(sessionId, renamingTitle);
+      setRenamingSessionId(null);
+    } catch (err) {
+      setError('Hiba a session név módosítása során.');
+    }
+  };
+
+  const handleRenameKeyPress = (sessionId, e) => {
+    if (e.key === 'Enter') {
+      handleRenameSession(sessionId, e);
+    } else if (e.key === 'Escape') {
+      setRenamingSessionId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div id="content">
@@ -196,11 +242,65 @@ const StudentWelcome = () => {
                       key={session.sessionId}
                       onClick={() => handleLoadSession(session.sessionId)}
                       className={session.sessionId === currentSessionId ? 'active' : ''}
+                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                     >
-                      <span className="session-title">{session.title}</span>
-                      <span className="session-date">
-                        {new Date(session.updatedAt).toLocaleDateString('hu-HU')}
-                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {renamingSessionId === session.sessionId ? (
+                          <input
+                            type="text"
+                            value={renamingTitle}
+                            onChange={(e) => setRenamingTitle(e.target.value)}
+                            onBlur={(e) => handleRenameSession(session.sessionId, e)}
+                            onKeyDown={(e) => handleRenameKeyPress(session.sessionId, e)}
+                            onClick={(e) => e.stopPropagation()}
+                            autoFocus
+                            style={{
+                              width: '100%',
+                              padding: '4px 8px',
+                              border: '1px solid var(--color-primary)',
+                              borderRadius: '4px',
+                              fontSize: '13px'
+                            }}
+                          />
+                        ) : (
+                          <>
+                            <span className="session-title">{session.title}</span>
+                            <span className="session-date" style={{ marginLeft: '8px' }}>
+                              {new Date(session.updatedAt).toLocaleDateString('hu-HU')}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px', marginLeft: '8px' }}>
+                        <button
+                          onClick={(e) => handleStartRename(session, e)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: 'var(--color-primary)',
+                            padding: '4px',
+                            fontSize: '12px'
+                          }}
+                          title="Átnevezés"
+                        >
+                          <FaPen />
+                        </button>
+                        <button
+                          onClick={(e) => handleDeleteSession(session.sessionId, e)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: 'var(--color-error, #ef4444)',
+                            padding: '4px',
+                            fontSize: '12px'
+                          }}
+                          title="Törlés"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
                     </li>
                   ))}
                 </ul>

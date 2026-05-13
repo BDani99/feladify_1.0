@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { loadChatSession } from '../api/Student/Chat';
+import { loadChatSession, deleteSession as deleteSessionAPI, renameSession as renameSessionAPI } from '../api/Student/Chat';
 
 const ChatContext = createContext(null);
 
@@ -16,6 +16,20 @@ export const ChatProvider = ({ children }) => {
     setSessions(data.sessions);
   };
 
+  const deleteSession = async (sessionId) => {
+    const data = await deleteSessionAPI(sessionId);
+    setSessions(data.sessions);
+    if (currentSessionId === sessionId) {
+      setCurrentSessionId(null);
+      setMessages([]);
+    }
+  };
+
+  const renameSession = async (sessionId, title) => {
+    const data = await renameSessionAPI(sessionId, title);
+    setSessions(data.sessions);
+  };
+
   return (
     <ChatContext.Provider value={{
       messages,
@@ -26,7 +40,9 @@ export const ChatProvider = ({ children }) => {
       setCurrentSessionId,
       chatLoaded,
       setChatLoaded,
-      loadSession
+      loadSession,
+      deleteSession,
+      renameSession
     }}>
       {children}
     </ChatContext.Provider>
