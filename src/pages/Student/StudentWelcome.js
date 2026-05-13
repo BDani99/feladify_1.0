@@ -242,65 +242,98 @@ const StudentWelcome = () => {
                       key={session.sessionId}
                       onClick={() => handleLoadSession(session.sessionId)}
                       className={session.sessionId === currentSessionId ? 'active' : ''}
-                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        padding: '10px 12px',
+                        marginBottom: '8px',
+                        border: session.sessionId === currentSessionId ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                        borderRadius: '8px',
+                        backgroundColor: session.sessionId === currentSessionId ? 'var(--color-bg-subtle)' : 'transparent',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
                     >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        {renamingSessionId === session.sessionId ? (
-                          <input
-                            type="text"
-                            value={renamingTitle}
-                            onChange={(e) => setRenamingTitle(e.target.value)}
-                            onBlur={(e) => handleRenameSession(session.sessionId, e)}
-                            onKeyDown={(e) => handleRenameKeyPress(session.sessionId, e)}
-                            onClick={(e) => e.stopPropagation()}
-                            autoFocus
-                            style={{
-                              width: '100%',
-                              padding: '4px 8px',
-                              border: '1px solid var(--color-primary)',
-                              borderRadius: '4px',
-                              fontSize: '13px'
-                            }}
-                          />
-                        ) : (
-                          <>
-                            <span className="session-title">{session.title}</span>
-                            <span className="session-date" style={{ marginLeft: '8px' }}>
-                              {new Date(session.updatedAt).toLocaleDateString('hu-HU')}
+                      {/* Top row: Title + Buttons */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          {renamingSessionId === session.sessionId ? (
+                            <input
+                              type="text"
+                              value={renamingTitle}
+                              onChange={(e) => setRenamingTitle(e.target.value)}
+                              onBlur={(e) => handleRenameSession(session.sessionId, e)}
+                              onKeyDown={(e) => handleRenameKeyPress(session.sessionId, e)}
+                              onClick={(e) => e.stopPropagation()}
+                              autoFocus
+                              style={{
+                                width: '100%',
+                                padding: '4px 8px',
+                                border: '1px solid var(--color-primary)',
+                                borderRadius: '4px',
+                                fontSize: '13px'
+                              }}
+                            />
+                          ) : (
+                            <span className="session-title" style={{
+                              fontWeight: '500',
+                              fontSize: '14px',
+                              color: 'var(--color-text)',
+                              wordBreak: 'break-word'
+                            }}>
+                              {session.title}
                             </span>
-                          </>
-                        )}
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px', marginLeft: '8px', flexShrink: 0 }}>
+                          <button
+                            onClick={(e) => handleStartRename(session, e)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: 'var(--color-primary)',
+                              padding: '4px 6px',
+                              fontSize: '12px',
+                              opacity: 0.7,
+                              transition: 'opacity 0.2s'
+                            }}
+                            title="Átnevezés"
+                            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
+                          >
+                            <FaPen />
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteSession(session.sessionId, e)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: 'var(--color-error, #ef4444)',
+                              padding: '4px 6px',
+                              fontSize: '12px',
+                              opacity: 0.7,
+                              transition: 'opacity 0.2s'
+                            }}
+                            title="Törlés"
+                            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', gap: '6px', marginLeft: '8px' }}>
-                        <button
-                          onClick={(e) => handleStartRename(session, e)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: 'var(--color-primary)',
-                            padding: '4px',
-                            fontSize: '12px'
-                          }}
-                          title="Átnevezés"
-                        >
-                          <FaPen />
-                        </button>
-                        <button
-                          onClick={(e) => handleDeleteSession(session.sessionId, e)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: 'var(--color-error, #ef4444)',
-                            padding: '4px',
-                            fontSize: '12px'
-                          }}
-                          title="Törlés"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
+
+                      {/* Bottom row: Date */}
+                      <span className="session-date" style={{
+                        fontSize: '12px',
+                        color: 'var(--color-text-dim)',
+                        paddingTop: '4px',
+                        borderTop: '1px solid var(--color-border)'
+                      }}>
+                        {new Date(session.updatedAt).toLocaleDateString('hu-HU')}
+                      </span>
                     </li>
                   ))}
                 </ul>
