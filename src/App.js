@@ -4,7 +4,6 @@ import { BrowserRouter } from 'react-router-dom';
 import Layout from './components/Layout';
 import { UserProvider } from './context/UserContext';
 import { ChatProvider } from './context/ChatContext';
-import initApiConfigHelper from './components/ApiConfigHelper';
 import './App.css';
 
 function App() {
@@ -13,9 +12,6 @@ function App() {
     useEffect(() => {
         const token = sessionStorage.getItem('AccessToken');
         setIsLoggedIn(!!token);
-
-        // Initialize API config helper for development
-        initApiConfigHelper();
     }, []);
 
     const handleLoginSuccess = (token) => {
