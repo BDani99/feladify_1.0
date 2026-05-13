@@ -9,7 +9,7 @@ import { FaPaperPlane, FaPlus, FaHistory } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 
 const StudentWelcome = () => {
-  const { messages, setMessages, sessions, setSessions, currentSessionId, setCurrentSessionId, chatLoaded, setChatLoaded } = useChat();
+  const { messages, setMessages, sessions, setSessions, currentSessionId, setCurrentSessionId, chatLoaded, setChatLoaded, loadSession } = useChat();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('');
@@ -124,8 +124,13 @@ const StudentWelcome = () => {
     }
   };
 
-  const handleLoadSession = (sessionId) => {
+  const handleLoadSession = async (sessionId) => {
     setShowSessionHistory(false);
+    try {
+      await loadSession(sessionId);
+    } catch (err) {
+      setError('Hiba az előzmény betöltésekor.');
+    }
   };
 
   if (loading) {

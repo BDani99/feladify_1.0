@@ -769,6 +769,43 @@ router.post('/chat/new-session', authMiddleware, async (req, res) => {
   }
 });
 
+// POST /api/student/chat/load-session
+router.post('/chat/load-session', authMiddleware, async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    if (!sessionId) {
+      return res.status(400).json({ message: 'Session ID megadása kötelező' });
+    }
+
+    let chatDoc = await StudentChatHistory.findOne({ studentId: req.user._id });
+    if (!chatDoc) {
+      return res.status(404).json({ message: 'Chat előzmények nem találhatók' });
+    }
+
+    const session = chatDoc.sessions.find(s => s.sessionId === sessionId);
+    if (!session) {
+      return res.status(404).json({ message: 'Session nem található' });
+    }
+
+    chatDoc.currentSessionId = sessionId;
+    await chatDoc.save();
+
+    const sessions = chatDoc.sessions.map(s => ({
+      sessionId: s.sessionId,
+      title: s.title,
+      updatedAt: s.updatedAt
+    }));
+
+    res.json({
+      messages: session.messages,
+      sessions
+    });
+  } catch (err) {
+    console.error('[Student API] Load session error:', err.message);
+    res.status(500).json({ message: 'Hiba a session betöltésekor', error: err.message });
+  }
+});
+
 // ==================== CHECKPOINT ROUTE-OK ====================
 
 // POST /api/student/checkpoint/start - Checkpoint megkezdése

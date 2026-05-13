@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { loadChatSession } from '../api/Student/Chat';
 
 const ChatContext = createContext(null);
 
@@ -7,6 +8,13 @@ export const ChatProvider = ({ children }) => {
   const [sessions, setSessions] = useState([]);
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [chatLoaded, setChatLoaded] = useState(false);
+
+  const loadSession = async (sessionId) => {
+    const data = await loadChatSession(sessionId);
+    setMessages(data.messages);
+    setCurrentSessionId(sessionId);
+    setSessions(data.sessions);
+  };
 
   return (
     <ChatContext.Provider value={{
@@ -17,7 +25,8 @@ export const ChatProvider = ({ children }) => {
       currentSessionId,
       setCurrentSessionId,
       chatLoaded,
-      setChatLoaded
+      setChatLoaded,
+      loadSession
     }}>
       {children}
     </ChatContext.Provider>

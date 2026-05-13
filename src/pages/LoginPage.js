@@ -15,6 +15,15 @@ const Login = ({ onLoginSuccess }) => {
             const data = await login(email, password);
             sessionStorage.setItem('AccessToken', data.token);
             onLoginSuccess(data.token);
+
+            // Diákok esetén új session indítása (üres chat)
+            try {
+                await fetch('/api/student/chat/new-session', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${data.token}` }
+                });
+            } catch (_) {}
+
             window.location.reload();
         } catch (error) {
             setMessage(error.message);
