@@ -331,19 +331,19 @@
 
 .order-controls {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .order-controls button {
-  background: var(--bg-form-group);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
-  color: var(--color-text-muted, var(--color-text-dim));
-  width: 28px;
-  height: 24px;
-  border-radius: 5px;
+  color: var(--accent);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -355,10 +355,11 @@
   background: var(--accent);
   color: #fff;
   border-color: var(--accent);
+  transform: scale(1.05);
 }
 
 .order-controls button:disabled {
-  opacity: 0.3;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
