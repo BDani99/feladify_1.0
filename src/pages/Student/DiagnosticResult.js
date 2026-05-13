@@ -61,10 +61,10 @@ const DiagnosticResult = () => {
             <h2>Hiba történt</h2>
             <p>{error || 'Nem található eredmény adat.'}</p>
             <div className="error-actions">
-              <button className="btn btn-primary" onClick={() => navigate('/adaptiv-terkep')}>
-                <FaHome /> Vissza a térképre
+              <button className="btn btn-primary" onClick={() => navigate('/egyeni-gyakorlas')}>
+                <FaHome /> Vissza
               </button>
-              <button className="btn btn-secondary" onClick={() => navigate(`/diagnosztika/${subject}`)}>
+              <button className="btn btn-secondary" onClick={() => navigate(`/egyeni-gyakorlas/${subject}`)}>
                 <FaRedo /> Újra tesztel
               </button>
             </div>
@@ -236,19 +236,19 @@ const DiagnosticResult = () => {
 
         {/* Actions */}
         <div className="result-actions">
-          <button 
+          <button
             className="btn btn-primary"
-            onClick={() => navigate('/adaptiv-terkep')}
+            onClick={() => navigate(`/egyeni-gyakorlas/${subject}/roadmap`)}
             style={{ backgroundColor: subjectColor }}
           >
-            <FaHome /> Ugrás a személyre szabott útvonalamra
+            <FaHome /> Tanulási térkép megtekintése
           </button>
-          
-          <button 
+
+          <button
             className="btn btn-secondary"
-            onClick={() => navigate(`/diagnosztika/${subject}`)}
+            onClick={() => navigate('/egyeni-gyakorlas')}
           >
-            <FaRedo /> Másik tantárgy tesztelése
+            <FaRedo /> Másik tantárgy
           </button>
         </div>
       </div>

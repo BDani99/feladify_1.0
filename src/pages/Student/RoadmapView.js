@@ -10,7 +10,6 @@ const RoadmapView = () => {
   const [checkpoints, setCheckpoints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalXP: 0, progress: 0 });
-  const [selectedCheckpoint, setSelectedCheckpoint] = useState(null);
 
   useEffect(() => {
     fetchRoadmap();
@@ -49,10 +48,13 @@ const RoadmapView = () => {
   }
 
   return (
-    <div id="content" className="roadmap-view">
-      <button className="back-btn" onClick={() => navigate(`/egyeni-gyakorlas/${subject}`)}>
-        <FaArrowLeft /> Vissza
-      </button>
+    <div id="content">
+    <div className="roadmap-view">
+      <div className="page-top-bar">
+        <button className="back-btn" onClick={() => navigate('/egyeni-gyakorlas')}>
+          <FaArrowLeft /> Vissza
+        </button>
+      </div>
 
       <div className="roadmap-header">
         <h1>{subject} Tanulási Út</h1>
@@ -75,7 +77,7 @@ const RoadmapView = () => {
           <div
             key={checkpoint.checkpointId}
             className={`checkpoint-card ${checkpoint.status}`}
-            onClick={() => setSelectedCheckpoint(index)}
+            onClick={() => checkpoint.status === 'unlocked' && handleStartCheckpoint(checkpoint.checkpointId)}
           >
             <div className="checkpoint-icon">
               {checkpoint.status === 'completed' && <FaCheck />}
@@ -102,13 +104,7 @@ const RoadmapView = () => {
             </div>
 
             {checkpoint.status === 'unlocked' && (
-              <button
-                className="start-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleStartCheckpoint(checkpoint.checkpointId);
-                }}
-              >
+              <button className="start-btn" onClick={(e) => { e.stopPropagation(); handleStartCheckpoint(checkpoint.checkpointId); }}>
                 Megkezdés
               </button>
             )}
@@ -122,22 +118,7 @@ const RoadmapView = () => {
         ))}
       </div>
 
-      {selectedCheckpoint !== null && (
-        <div className="checkpoint-detail-panel">
-          <div className="detail-content">
-            <h3>{checkpoints[selectedCheckpoint].topic}</h3>
-            <p>Nehézség: {checkpoints[selectedCheckpoint].difficulty}/5</p>
-            <p>Állapot: {
-              {
-                'completed': 'Teljesítve',
-                'unlocked': 'Indításra kész',
-                'locked': 'Zárolva'
-              }[checkpoints[selectedCheckpoint].status]
-            }</p>
-          </div>
-          <button className="close-btn" onClick={() => setSelectedCheckpoint(null)}>✕</button>
-        </div>
-      )}
+    </div>
     </div>
   );
 };

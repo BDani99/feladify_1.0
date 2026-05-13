@@ -125,12 +125,18 @@ Utasítások:
 Nehézség: ${difficulty} (1-5 skálán, ahol az 1 nagyon alapozó, az 5 pedig összetett gondolkodást igényel).
 
 KÖTELEZŐ: legalább 6 különböző feladattípust használj, ezeket a típusokat:
-- "mcq": feleletválasztós, 4 lehetőség, egy helyes. options: ["A","B","C","D"], correctAnswer: "A"
+- "mcq": feleletválasztós, 4 valós szöveges lehetőség (NEM betűjelölők!). options: ["Első válasz szövege","Második válasz szövege","Harmadik válasz szövege","Negyedik válasz szövege"], correctAnswer: "Első válasz szövege"
 - "true_false": igaz/hamis. options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"
 - "short_answer": rövid szöveges válasz. options: [], correctAnswer: "szöveges válasz"
 - "fill_blank": szövegkiegészítős, az üres helyet ___ jelöli. options: [], correctAnswer: "hiányzó szó"
-- "matching": párosítás. pairs: [{"left":"fogalom","right":"magyarázat"},...], options: ["jobb oldali értékek keverve",...], correctAnswer: {"fogalom":"magyarázat",...}
-- "ordering": sorba rendezés. items: ["elem C","elem A","elem B"], correctAnswer: ["elem A","elem B","elem C"] (helyes sorrendben)
+- "matching": párosítás. A bal és jobb oldali értékek MINDIG KÜLÖNBÖZZENEK egymástól! pairs: [{"left":"fogalom","right":"magyarázata"},...], options: ["jobb oldali értékek keverve",...], correctAnswer: {"fogalom":"magyarázata",...}
+- "ordering": sorba rendezés. items: ["elem C","elem A","elem B"] (keverve!), correctAnswer: ["elem A","elem B","elem C"] (helyes sorrendben)
+
+FONTOS SZABÁLYOK:
+1. Az MCQ options tömbben SOHA ne szerepeljenek puszta betűk ("A","B","C","D") – mindig valódi szöveges válaszok kellenek!
+2. A párosítás (matching) bal és jobb oldali értékei kötelezően különbözők – ne szerepeljen ugyanaz mindkét oldalon!
+3. Minden kérdés EGYEDI legyen – ne ismételj meg fogalmakat vagy kérdéstípusokat feleslegesen!
+4. Az "ordering" items tömbje legyen összekeverve (ne helyes sorrendben), a correctAnswer viszont helyes sorrendben!
 
 Válaszolj KIZÁRÓLAG érvényes JSON formátumban, kommentek nélkül:
 {
@@ -140,10 +146,10 @@ Válaszolj KIZÁRÓLAG érvényes JSON formátumban, kommentek nélkül:
       "questionText": "A kérdés szövege",
       "questionType": "mcq",
       "difficulty": ${difficulty},
-      "options": ["A lehetőség","B lehetőség","C lehetőség","D lehetőség"],
+      "options": ["Valódi szöveges 1. válasz","Valódi szöveges 2. válasz","Valódi szöveges 3. válasz","Valódi szöveges 4. válasz"],
       "pairs": [],
       "items": [],
-      "correctAnswer": "A lehetőség",
+      "correctAnswer": "Valódi szöveges 1. válasz",
       "explanation": "Rövid magyarázat"
     }
   ]
@@ -200,12 +206,18 @@ Fontos: minden kérdésnél adj meg "questionId" mezőt "q1", "q2", stb. érték
 A kérdések osszák el magukat a következő témakörök között (körülbelül egyenlően): ${categories.join(', ')}.
 
 Legalább 4 különböző feladattípust használj:
-- "mcq": 4 lehetőség (A, B, C, D), egy helyes. options: ["A","B","C","D"], correctAnswer: "A"
+- "mcq": 4 valós szöveges lehetőség (NEM betűjelölők!), egy helyes. options: ["Első válasz szövege","Második válasz szövege","Harmadik válasz szövege","Negyedik válasz szövege"], correctAnswer: "Első válasz szövege"
 - "true_false": igaz/hamis. options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"
 - "short_answer": rövid szöveges válasz. options: [], correctAnswer: "szöveges válasz"
 - "fill_blank": szövegkiegészítős (az üres helyet ___ jelöli). options: [], correctAnswer: "hiányzó szó"
-- "matching": párosítás. pairs: [{"left":"fogalom","right":"magyarázat"},...], options: ["jobb oldali értékek keverve"], correctAnswer: {"fogalom":"magyarázat",...}
-- "ordering": sorba rendezés. items: ["keveredett","elemek","listája"], correctAnswer: ["helyes","sorrendben","elemek"]
+- "matching": párosítás. A bal és jobb értékek MINDIG KÜLÖNBÖZZENEK! pairs: [{"left":"fogalom","right":"magyarázata"},...], options: ["jobb oldali értékek keverve"], correctAnswer: {"fogalom":"magyarázata",...}
+- "ordering": sorba rendezés. items: ["keveredett","elemek","listája"] (keverve!), correctAnswer: ["helyes","sorrendben","elemek"]
+
+FONTOS SZABÁLYOK:
+1. Az MCQ options tömbben SOHA ne szerepeljenek puszta betűk ("A","B","C","D") – mindig valódi szöveges válaszok kellenek!
+2. A párosítás (matching) bal és jobb oldali értékei kötelezően különbözők – ne szerepeljen ugyanaz mindkét oldalon!
+3. Minden kérdés EGYEDI legyen – ne ismételj meg fogalmakat!
+4. Az "ordering" items tömbje legyen összekeverve, a correctAnswer viszont helyes sorrendben!
 
 Válaszolj KIZÁRÓLAG érvényes JSON formátumban, kommentek nélkül:
 {
@@ -216,10 +228,10 @@ Válaszolj KIZÁRÓLAG érvényes JSON formátumban, kommentek nélkül:
       "questionType": "mcq",
       "category": "Algebra",
       "difficulty": 2,
-      "options": ["A lehetőség","B lehetőség","C lehetőség","D lehetőség"],
+      "options": ["Valódi szöveges 1. válasz","Valódi szöveges 2. válasz","Valódi szöveges 3. válasz","Valódi szöveges 4. válasz"],
       "pairs": [],
       "items": [],
-      "correctAnswer": "A lehetőség",
+      "correctAnswer": "Valódi szöveges 1. válasz",
       "explanation": "Rövid magyarázat"
     }
   ]
@@ -262,7 +274,7 @@ Fontos: minden kérdésnél add meg a "category" mezőt (az adott témakör nev�
     }));
   }
 
-  async generateCheckpointHint(subject, topic, currentQuestion, studentAnswer, correctAnswer, attemptNumber, allQuestions, previousAnswers) {
+  async generateCheckpointHint(subject, topic, currentQuestion, studentAnswer, correctAnswer, attemptNumber, allQuestions, previousAnswers, chatHistory = []) {
     const progress = previousAnswers.length > 0
       ? `${previousAnswers.filter(a => a.isCorrect).length}/${previousAnswers.length} helyes eddigi`
       : 'Ez az első kérdés';
@@ -280,19 +292,25 @@ ${contextSummary}
 
 Jelenlegi kérdés: ${currentQuestion.questionText}
 Kérdés típusa: ${currentQuestion.questionType}
-A diák válasza: ${JSON.stringify(studentAnswer)}
+A diák jelenlegi válasza: ${JSON.stringify(studentAnswer)}
 Helyes válasz (NE áruld el!): ${JSON.stringify(correctAnswer)}
 Próbálkozások száma: ${attemptNumber}
 
 Utasítások:
 1. NE mondd meg a helyes választ közvetlenül!
-2. Adj rávezető kérdést, analógiát, vagy egy kis segítséget.
+2. Adj rávezető kérdést, analógiát, vagy egy kis segítséget – figyelembe véve a korábbi chat-előzményeket, nehogy ugyanazt ismételd!
 3. Legyél bátorító és motiváló.
 4. Ha ez a 3. vagy több próbálkozás, adj konkrétabb, de még mindig nem közvetlen tippet.
 5. Max 3 mondat.`;
 
+    // Chat-előzmények átalakítása Groq üzenet formátumba (bot → assistant)
+    const historyMessages = chatHistory
+      .filter(m => m.content && m.content.trim())
+      .slice(-8)
+      .map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content }));
+
     try {
-      return await this.generateResponse(prompt, [], { temperature: 0.65, max_tokens: 200 });
+      return await this.generateResponse(prompt, historyMessages, { temperature: 0.65, max_tokens: 200 });
     } catch (error) {
       return this._getFallbackHint(attemptNumber);
     }

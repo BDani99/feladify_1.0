@@ -1125,7 +1125,7 @@ router.post('/checkpoint/answer', authMiddleware, async (req, res) => {
 // POST /api/student/checkpoint/hint - AI mentor tipp (correctAnswer nem kerül ki frontend felé)
 router.post('/checkpoint/hint', authMiddleware, async (req, res) => {
   try {
-    const { checkpointId, questionId, studentAnswer, attemptNumber } = req.body;
+    const { checkpointId, questionId, studentAnswer, attemptNumber, chatHistory } = req.body;
 
     const progress = await StudentProgress.findOne({ studentId: req.user._id });
     if (!progress || !progress.checkpointSession) {
@@ -1144,7 +1144,8 @@ router.post('/checkpoint/hint', authMiddleware, async (req, res) => {
       question.correctAnswer,
       attemptNumber || 1,
       session.questions,
-      session.answers
+      session.answers,
+      chatHistory || []
     );
 
     res.json({ hint });
@@ -1182,6 +1183,14 @@ router.post('/checkpoint/complete', authMiddleware, async (req, res) => {
         return ans?.isCorrect;
       }).length;
       score = Math.round((correctCount / session.questions.length) * 100);
+    }
+
+    if (score < 80) {
+      return res.status(400).json({
+        message: 'A fejezet teljesítéséhez legalább 80% szükséges. Javítsd ki a hibás válaszokat!',
+        score,
+        canComplete: false
+      });
     }
 
     checkpoint.status = 'completed';

@@ -69,7 +69,8 @@ const SubjectSelectPage = () => {
   }
 
   return (
-    <div id="content" className="subject-select-page">
+    <div id="content">
+    <div className="subject-select-page">
       <div className="subject-header">
         <h1>📚 Egyéni Gyakorlás</h1>
         <div className="stats-bar">
@@ -115,6 +116,7 @@ const SubjectSelectPage = () => {
           );
         })}
       </div>
+    </div>
     </div>
   );
 };

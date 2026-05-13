@@ -83,10 +83,13 @@ const PracticeHub = () => {
   const needsDiagnostic = status === 'not_started' || status === 'requires_diagnostic';
 
   return (
-    <div id="content" className="practice-hub">
-      <button className="back-btn" onClick={() => navigate('/egyeni-gyakorlas')}>
-        <FaArrowLeft /> Vissza
-      </button>
+    <div id="content">
+    <div className="practice-hub">
+      <div className="page-top-bar">
+        <button className="back-btn" onClick={() => navigate('/egyeni-gyakorlas')}>
+          <FaArrowLeft /> Vissza
+        </button>
+      </div>
 
       <div className="hub-container">
         {needsDiagnostic ? (
@@ -150,6 +153,7 @@ const PracticeHub = () => {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 };

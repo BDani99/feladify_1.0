@@ -7,7 +7,7 @@
 }
 
 .subject-header {
-    text-align: center;
+    text-align: left;
     margin-bottom: 48px;
 }
 
@@ -20,7 +20,7 @@
 }
 
 .stats-bar {
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     gap: 40px;
     margin-top: 24px;
@@ -29,8 +29,6 @@
     border-radius: 50px;
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-soft);
-    width: fit-content;
-    margin-inline: auto;
 }
 
 .stat {
