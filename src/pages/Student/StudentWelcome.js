@@ -55,6 +55,7 @@ const StudentWelcome = () => {
     if (!chatLoaded) {
       loadChatHistory();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatLoaded]);
 
   useEffect(() => {
@@ -351,12 +352,14 @@ const StudentWelcome = () => {
                         <span>{chat.content}</span>
                       )}
                     </div>
-                    <span className="message-time">
-                      {new Date(chat.timestamp).toLocaleTimeString('hu-HU', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </span>
+                    {chat.role === 'user' && (
+                      <span className="message-time">
+                        {new Date(chat.timestamp).toLocaleTimeString('hu-HU', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

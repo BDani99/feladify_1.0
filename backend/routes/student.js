@@ -290,7 +290,10 @@ router.post('/tutor/question-set', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: 'Hiányos adatok' });
     }
 
-    const questions = await groqService.generatePracticeQuestionSet(subject, topic, difficulty || 3, count || 3);
+    const student = await User.findById(req.user._id);
+    const grade = student ? student.className : 'általános iskola';
+
+    const questions = await groqService.generatePracticeQuestionSet(subject, topic, difficulty || 3, count || 3, grade);
     res.json({ questions });
   } catch (error) {
     console.error('[Student API] Error in /tutor/question-set:', error);
@@ -524,7 +527,9 @@ router.post('/tutor/hint', authMiddleware, async (req, res) => {
 router.post('/tutor/question', authMiddleware, async (req, res) => {
   try {
     const { subject, topic } = req.body;
-    const questionsSet = await groqService.generatePracticeQuestionSet(subject, topic, 3, 1);
+    const student = await User.findById(req.user._id);
+    const grade = student ? student.className : 'általános iskola';
+    const questionsSet = await groqService.generatePracticeQuestionSet(subject, topic, 3, 1, grade);
     res.json(questionsSet[0] || {});
   } catch (error) {
     res.status(500).json({ message: 'Hiba történt a kérdés generálásakor', error: error.message });
@@ -797,7 +802,7 @@ FONTOS SZABÁLYOK:
     }
 
     console.log('[Student API] Chat send - Groq API hívása előtt');
-    const aiResponse = await groqService.generateResponse(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 512 });
+    const aiResponse = await groqService.generateResponse(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 });
     console.log('[Student API] Chat send - AI válasz hossza:', aiResponse.length, 'Első 100 char:', aiResponse.substring(0, 100));
 
     chatDoc.addMessage('assistant', aiResponse);
@@ -1096,8 +1101,9 @@ router.post('/checkpoint/answer', authMiddleware, async (req, res) => {
     if (isCorrect) {
       aiMessage = `Helyes! Jól gondoltad át. 🎉 (${uniqueCorrect}/${total} helyes eddig)`;
     } else {
-      hint = await groqService.generateSocraticHint(
-        subject, session.topic, question.questionText, answer, question.correctAnswer, attemptNumber
+      const chatHistory = req.body.chatHistory || [];
+      hint = await groqService.generateCheckpointHint(
+        subject, session.topic, question, answer, question.correctAnswer, attemptNumber, session.questions, session.answers, chatHistory
       );
       aiMessage = `Nem egészen... Gondold át még egyszer! 💡`;
     }

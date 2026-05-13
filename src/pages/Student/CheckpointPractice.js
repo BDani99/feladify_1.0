@@ -49,7 +49,7 @@ const CheckpointPractice = () => {
         setQuestions(data.questions || []);
         setCheckpointTitle(data.checkpointTitle || '');
         setScore({ correct: 0, total: data.questions?.length || 0 });
-        addBotMessage(`Üdvözöllek a **"${data.checkpointTitle}"** fejezetben! ${data.questions?.length || 0} feladat vár rád. Legalább 80% kell a teljesítéshez. Sok sikert! 🎯`);
+        setChatMessages([{ role: 'bot', content: `Üdvözöllek a **"${data.checkpointTitle}"** fejezetben! ${data.questions?.length || 0} feladat vár rád. Legalább 80% kell a teljesítéshez. Sok sikert! 🎯`, timestamp: new Date() }]);
       } else {
         addBotMessage('Hiba a checkpoint betöltésekor. Kérlek, próbálj vissza navigálni.');
       }
@@ -117,7 +117,7 @@ const CheckpointPractice = () => {
       const res = await fetch(`${API_BASE}/answer`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ checkpointId, questionId: question.questionId, answer, subject })
+        body: JSON.stringify({ checkpointId, questionId: question.questionId, answer, subject, chatHistory: chatMessages })
       });
       if (res.ok) {
         const data = await res.json();
@@ -445,6 +445,11 @@ const CheckpointPractice = () => {
                       </div>
                     </div>
                   ))}
+                  {isChecking && (
+                    <div className="chat-msg bot">
+                      <div className="typing-dots"><span /><span /><span /></div>
+                    </div>
+                  )}
                   {mentorLoading && (
                     <div className="chat-msg bot">
                       <div className="typing-dots"><span /><span /><span /></div>

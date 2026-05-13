@@ -4,7 +4,8 @@ class GroqService {
   constructor() {
     this.apiKey = process.env.GROQ_API_KEY;
     this.apiBase = 'https://api.groq.com/openai/v1';
-    this.primaryModel = 'qwen/qwen3-32b';
+    this.reasoningModel = 'qwen/qwen3-32b'; // Használja a <think> blokkot
+    this.fastModel = 'llama-3.3-70b-versatile'; // Gyors, token-takarékos, JSON generálásra
     this.fallbackModel = 'llama-3.3-70b-versatile';
 
     if (!this.apiKey) {
@@ -13,7 +14,21 @@ class GroqService {
   }
 
   _stripThinking(text) {
-    return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    let clean = text.replace(/(?:\*)?<think>[\s\S]*?(?:<\/think>(?:\*)?|$)/gi, '').trim();
+    if (clean.startsWith('*')) clean = clean.substring(1).trim();
+    return clean;
+  }
+
+  _extractJSON(raw) {
+    try {
+      const mdMatch = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+      if (mdMatch) return JSON.parse(mdMatch[1]);
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) return JSON.parse(match[0]);
+    } catch (e) {
+      throw new Error('Hiba a JSON feldolgozásakor: ' + e.message);
+    }
+    throw new Error('Nem található érvényes JSON struktúra a válaszban.');
   }
 
   async _callModel(model, messages, options) {
@@ -38,35 +53,40 @@ class GroqService {
     return this._stripThinking(response.data.choices[0].message.content);
   }
 
-  async generateResponse(prompt, messages = [], options = {}) {
+  async generateResponse(prompt, messages = [], options = {}, useReasoning = false) {
     if (!this.apiKey) {
       console.warn('[GroqService] FIGYELMEZTETÉS: API kulcs nincs beállítva!');
       return this._getFallbackResponse();
     }
 
     const allMessages = [{ role: 'system', content: prompt }, ...messages];
+    const targetModel = useReasoning ? this.reasoningModel : this.fastModel;
 
-    // Try primary model
+    // Try primary target model
     try {
-      console.log(`[GroqService] API hívás → ${this.primaryModel}`);
-      const content = await this._callModel(this.primaryModel, allMessages, options);
-      console.log(`[GroqService] ✓ Válasz: ${this.primaryModel} (${content.length} kar.)`);
+      console.log(`[GroqService] API hívás → ${targetModel}`);
+      const content = await this._callModel(targetModel, allMessages, options);
+      console.log(`[GroqService] ✓ Válasz: ${targetModel} (${content.length} kar.)`);
       return content;
     } catch (primaryError) {
       const status = primaryError.response?.status;
-      console.warn(`[GroqService] ✗ ${this.primaryModel} sikertelen (HTTP ${status ?? 'timeout'}) → fallback: ${this.fallbackModel}`);
+      console.warn(`[GroqService] ✗ ${targetModel} sikertelen (HTTP ${status ?? 'timeout'}) → fallback: ${this.fallbackModel}`);
     }
 
     // Try fallback model
-    try {
-      const content = await this._callModel(this.fallbackModel, allMessages, options);
-      console.log(`[GroqService] ✓ Válasz: ${this.fallbackModel} [FALLBACK] (${content.length} kar.)`);
-      return content;
-    } catch (fallbackError) {
-      const status = fallbackError.response?.status;
-      console.error(`[GroqService] ✗ ${this.fallbackModel} is sikertelen (HTTP ${status ?? 'timeout'}):`, fallbackError.response?.data || fallbackError.message);
-      return this._getFallbackResponse();
+    if (targetModel !== this.fallbackModel) {
+      try {
+        const content = await this._callModel(this.fallbackModel, allMessages, options);
+        console.log(`[GroqService] ✓ Válasz: ${this.fallbackModel} [FALLBACK] (${content.length} kar.)`);
+        return content;
+      } catch (fallbackError) {
+        const status = fallbackError.response?.status;
+        console.error(`[GroqService] ✗ ${this.fallbackModel} is sikertelen (HTTP ${status ?? 'timeout'}):`, fallbackError.response?.data || fallbackError.message);
+        return this._getFallbackResponse();
+      }
     }
+    
+    return this._getFallbackResponse();
   }
 
   async analyzeDiagnosticTest(testResult, questions) {
@@ -82,7 +102,8 @@ ${questions.map((q, i) => {
   return `- ${q.category}: ${q.questionText.substring(0, 80)}... [Helyes: ${answer?.isCorrect ? 'Igen' : 'Nem'}]`;
 }).join('\n')}
 
-Adj JSON választ a következő szerkezetben, ahol a 'weaknesses' alapján javasolsz gyakorló checkpointokat:
+SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\`\`json ... \`\`\`), semmilyen egyéb bevezető vagy magyarázó szöveget ne írj!
+Adj nyers JSON választ a következő szerkezetben. A javasolt checkpointokat a diák hibái és hiányosságai alapján határozd meg:
 {
   "overallPerformance": "excellent|good|average|needs_improvement",
   "personalizedFeedback": "Rövid, motiváló, személyre szabott visszajelzés a diáknak.",
@@ -96,10 +117,7 @@ Adj JSON választ a következő szerkezetben, ahol a 'weaknesses' alapján javas
 
     try {
       const raw = await this.generateResponse(prompt, [], { temperature: 0.3, max_tokens: 800 });
-      const match = raw.match(/\{[\s\S]*\}/);
-      if (match) {
-        return JSON.parse(match[0]);
-      }
+      return this._extractJSON(raw);
     } catch (error) {
       console.warn('[GroqService] analyzeDiagnosticTest parse hiba:', error.message);
     }
@@ -118,22 +136,26 @@ PRÓBÁLKOZÁSOK SZÁMA: ${attemptNumber}
 
 Utasítások:
 1. Ne mondd meg direktben a helyes választ!
-2. Tedd fel a megfelelő rávezető kérdést, vagy adj egy apró mankót/analógiát.
-3. Legyél bátorító és barátságos.
-4. Ha ez már a 3. vagy többedik próbálkozása, adj erősebb, konkrétabb tippet (de még mindig ne magát a választ).
-5. Válaszod legyen nagyon rövid (maximum 2-3 mondat).`;
+2. Közvetlenül a diákhoz szólj (tegeződve), mintha egy chaten beszélgetnétek. Semmilyen bevezetőt vagy zárást ne írj, csak a te tanári reakciódat/kérdésedet.
+3. Tedd fel a megfelelő rávezető kérdést, vagy adj egy apró mankót/analógiát.
+4. Legyél bátorító és barátságos.
+5. Ha ez már a 3. vagy többedik próbálkozása, adj erősebb, konkrétabb tippet (de még mindig ne magát a választ).
+6. Válaszod legyen nagyon rövid (maximum 2-3 mondat).`;
 
     try {
-      return await this.generateResponse(prompt, [], { temperature: 0.6, max_tokens: 150 });
+      // Itt engedjük a reasoning (gondolkodó) modellt
+      return await this.generateResponse(prompt, [], { temperature: 0.6, max_tokens: 1024 }, true);
     } catch (error) {
       console.error('[GroqService] Szókratészi tipp hiba:', error.message);
       return this._getFallbackHint(attemptNumber);
     }
   }
 
-  async generatePracticeQuestionSet(subject, topic, difficulty = 3, count = 10) {
-    const prompt = `Te egy általános iskolai feladatgenerátor AI vagy. Generálj pontosan ${count} darab gyakorló kérdést ${subject} tantárgyból, a "${topic}" témakörhöz.
+  async generatePracticeQuestionSet(subject, topic, difficulty = 3, count = 10, grade = 'általános iskola') {
+    const prompt = `Te egy kreatív és tapasztalt pedagógus AI vagy. Készíts pontosan ${count} darab KIVÁLÓ MINŐSÉGŰ, érdekes és gondolkodtató gyakorló kérdést ${subject} tantárgyból, a "${topic}" témakörhöz egy ${grade} osztályos tanulónak.
 Nehézség: ${difficulty} (1-5 skálán, ahol az 1 nagyon alapozó, az 5 pedig összetett gondolkodást igényel).
+
+Kerüld a túl száraz, bemagolható definíciókat! Használj valós életből vett, kreatív példákat és szituációkat, amik felkeltik a diák érdeklődését és a tényleges megértést tesztelik.
 
 KÖTELEZŐ: legalább 6 különböző feladattípust használj, ezeket a típusokat:
 - "mcq": feleletválasztós, 4 valós szöveges lehetőség (NEM betűjelölők!). options: ["Első válasz szövege","Második válasz szövege","Harmadik válasz szövege","Negyedik válasz szövege"], correctAnswer: "Első válasz szövege"
@@ -141,15 +163,16 @@ KÖTELEZŐ: legalább 6 különböző feladattípust használj, ezeket a típuso
 - "short_answer": rövid szöveges válasz. options: [], correctAnswer: "szöveges válasz"
 - "fill_blank": szövegkiegészítős, az üres helyet ___ jelöli. options: [], correctAnswer: "hiányzó szó"
 - "matching": párosítás. A bal és jobb oldali értékek MINDIG KÜLÖNBÖZZENEK egymástól! pairs: [{"left":"fogalom","right":"magyarázata"},...], options: ["jobb oldali értékek keverve",...], correctAnswer: {"fogalom":"magyarázata",...}
-- "ordering": sorba rendezés. items: ["elem C","elem A","elem B"] (keverve!), correctAnswer: ["elem A","elem B","elem C"] (helyes sorrendben)
+- "ordering": sorba rendezés (szavak, fogalmak, események vagy logikai lépések). items: ["elem C","elem A","elem B"] (keverve!), correctAnswer: ["elem A","elem B","elem C"] (helyes sorrendben)
 
 FONTOS SZABÁLYOK:
 1. Az MCQ options tömbben SOHA ne szerepeljenek puszta betűk ("A","B","C","D") – mindig valódi szöveges válaszok kellenek!
-2. A párosítás (matching) bal és jobb oldali értékei kötelezően különbözők – ne szerepeljen ugyanaz mindkét oldalon!
+2. A párosítás (matching) bal és jobb oldali értékei kötelezően különbözők – ne szerepeljen ugyanaz mindkét oldalon! Érvényes kulcs-érték (key-value) párokat adj a correctAnswer mezőben is!
 3. Minden kérdés EGYEDI legyen – ne ismételj meg fogalmakat vagy kérdéstípusokat feleslegesen!
 4. Az "ordering" items tömbje legyen összekeverve (ne helyes sorrendben), a correctAnswer viszont helyes sorrendben!
+5. SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\`\`json ... \`\`\`), semmilyen egyéb bevezető vagy magyarázó szöveget ne írj!
 
-Válaszolj KIZÁRÓLAG érvényes JSON formátumban, kommentek nélkül:
+Válaszolj az alábbi JSON formátumban:
 {
   "questions": [
     {
@@ -167,27 +190,26 @@ Válaszolj KIZÁRÓLAG érvényes JSON formátumban, kommentek nélkül:
 }
 Fontos: minden kérdésnél adj meg "questionId" mezőt "q1", "q2", stb. értékekkel. A pairs és items mindig szerepeljen (üres tömbként, ha nem releváns).`;
 
+    let raw = '';
     try {
-      const raw = await this.generateResponse(prompt, [], { temperature: 0.7, max_tokens: 2500 });
-      const match = raw.match(/\{[\s\S]*\}/);
-      if (match) {
-        const parsed = JSON.parse(match[0]);
-        if (Array.isArray(parsed.questions)) {
-          return parsed.questions.map((q, idx) => ({
-            questionId:   q.questionId || `q${idx + 1}`,
-            questionText: q.questionText || 'Hiányzó kérdés',
-            questionType: ['mcq','true_false','short_answer','fill_blank','matching','ordering'].includes(q.questionType) ? q.questionType : 'short_answer',
-            difficulty:   q.difficulty || difficulty,
-            options:      Array.isArray(q.options) ? q.options : [],
-            pairs:        Array.isArray(q.pairs) ? q.pairs : [],
-            items:        Array.isArray(q.items) ? q.items : [],
-            correctAnswer: q.correctAnswer !== undefined ? q.correctAnswer : '',
-            explanation:  q.explanation || ''
-          }));
-        }
+      raw = await this.generateResponse(prompt, [], { temperature: 0.7, max_tokens: 3000 });
+      const parsed = this._extractJSON(raw);
+      if (Array.isArray(parsed.questions)) {
+        return parsed.questions.map((q, idx) => ({
+          questionId:   q.questionId || `q${idx + 1}`,
+          questionText: q.questionText || 'Hiányzó kérdés',
+          questionType: ['mcq','true_false','short_answer','fill_blank','matching','ordering'].includes(q.questionType) ? q.questionType : 'short_answer',
+          difficulty:   q.difficulty || difficulty,
+          options:      Array.isArray(q.options) ? q.options : [],
+          pairs:        Array.isArray(q.pairs) ? q.pairs : [],
+          items:        Array.isArray(q.items) ? q.items : [],
+          correctAnswer: q.correctAnswer !== undefined ? q.correctAnswer : '',
+          explanation:  q.explanation || ''
+        }));
       }
     } catch (error) {
       console.warn('[GroqService] generatePracticeQuestionSet parse hiba:', error.message);
+      if (raw) console.warn('[GroqService] Nyers AI válasz:', raw);
     }
 
     return Array.from({ length: count }, (_, idx) => ({
@@ -221,15 +243,16 @@ Legalább 4 különböző feladattípust használj:
 - "short_answer": rövid szöveges válasz. options: [], correctAnswer: "szöveges válasz"
 - "fill_blank": szövegkiegészítős (az üres helyet ___ jelöli). options: [], correctAnswer: "hiányzó szó"
 - "matching": párosítás. A bal és jobb értékek MINDIG KÜLÖNBÖZZENEK! pairs: [{"left":"fogalom","right":"magyarázata"},...], options: ["jobb oldali értékek keverve"], correctAnswer: {"fogalom":"magyarázata",...}
-- "ordering": sorba rendezés. items: ["keveredett","elemek","listája"] (keverve!), correctAnswer: ["helyes","sorrendben","elemek"]
+- "ordering": sorba rendezés (szavak, fogalmak, események vagy logikai lépések). items: ["keveredett","elemek","listája"] (keverve!), correctAnswer: ["helyes","sorrendben","elemek"]
 
 FONTOS SZABÁLYOK:
 1. Az MCQ options tömbben SOHA ne szerepeljenek puszta betűk ("A","B","C","D") – mindig valódi szöveges válaszok kellenek!
 2. A párosítás (matching) bal és jobb oldali értékei kötelezően különbözők – ne szerepeljen ugyanaz mindkét oldalon!
 3. Minden kérdés EGYEDI legyen – ne ismételj meg fogalmakat!
 4. Az "ordering" items tömbje legyen összekeverve, a correctAnswer viszont helyes sorrendben!
+5. SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\`\`json ... \`\`\`), semmilyen egyéb bevezető vagy magyarázó szöveget ne írj!
 
-Válaszolj KIZÁRÓLAG érvényes JSON formátumban, kommentek nélkül:
+Válaszolj az alábbi JSON formátumban:
 {
   "questions": [
     {
@@ -250,23 +273,20 @@ Fontos: minden kérdésnél add meg a "category" mezőt (az adott témakör nev�
 
     try {
       const raw = await this.generateResponse(prompt, [], { temperature: 0.6, max_tokens: 4500 });
-      const match = raw.match(/\{[\s\S]*\}/);
-      if (match) {
-        const parsed = JSON.parse(match[0]);
-        if (Array.isArray(parsed.questions)) {
-          return parsed.questions.map((q, idx) => ({
-            questionId:    q.questionId || `d${idx + 1}`,
-            questionText:  q.questionText || 'Hiányzó kérdés',
-            questionType:  ['mcq','true_false','short_answer','fill_blank','matching','ordering'].includes(q.questionType) ? q.questionType : 'short_answer',
-            category:      q.category || categories[idx % categories.length],
-            difficulty:    q.difficulty || 3,
-            options:       Array.isArray(q.options) ? q.options : [],
-            pairs:         Array.isArray(q.pairs) ? q.pairs : [],
-            items:         Array.isArray(q.items) ? q.items : [],
-            correctAnswer: q.correctAnswer !== undefined ? q.correctAnswer : '',
-            explanation:   q.explanation || ''
-          }));
-        }
+      const parsed = this._extractJSON(raw);
+      if (Array.isArray(parsed.questions)) {
+        return parsed.questions.map((q, idx) => ({
+          questionId:    q.questionId || `d${idx + 1}`,
+          questionText:  q.questionText || 'Hiányzó kérdés',
+          questionType:  ['mcq','true_false','short_answer','fill_blank','matching','ordering'].includes(q.questionType) ? q.questionType : 'short_answer',
+          category:      q.category || categories[idx % categories.length],
+          difficulty:    q.difficulty || 3,
+          options:       Array.isArray(q.options) ? q.options : [],
+          pairs:         Array.isArray(q.pairs) ? q.pairs : [],
+          items:         Array.isArray(q.items) ? q.items : [],
+          correctAnswer: q.correctAnswer !== undefined ? q.correctAnswer : '',
+          explanation:   q.explanation || ''
+        }));
       }
     } catch (error) {
       console.warn('[GroqService] generateDiagnosticTest parse hiba:', error.message);
@@ -308,18 +328,21 @@ Próbálkozások száma: ${attemptNumber}
 
 Utasítások:
 1. NE mondd meg a helyes választ közvetlenül!
-2. Adj rávezető kérdést, analógiát, vagy egy kis segítséget – figyelembe véve a korábbi chat-előzményeket, nehogy ugyanazt ismételd!
-3. Legyél bátorító és motiváló.
-4. Ha ez a 3. vagy több próbálkozás, adj konkrétabb, de még mindig nem közvetlen tippet.
-5. Max 3 mondat.`;
+2. Közvetlenül a diáknak válaszolj tegeződve, mintha chaten beszélgetnétek. Semmilyen bevezető szöveget vagy köszönést ne használj!
+3. Adj rávezető kérdést, analógiát, vagy egy kis segítséget – figyelembe véve a korábbi chat-előzményeket, nehogy ugyanazt ismételd!
+4. Legyél bátorító és motiváló.
+5. Ha ez a 3. vagy több próbálkozás, adj konkrétabb, de még mindig nem közvetlen tippet.
+6. Max 3 mondat.
+7. KÖTELEZŐ SZABÁLY: Bármi történik, mindenképp adj szöveges, segítő visszajelzést! SOHA ne adj vissza üres választ!`;
 
     const historyMessages = chatHistory
       .filter(m => m.content && m.content.trim())
-      .slice(-8)
+      .slice(-4)
       .map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content }));
 
     try {
-      return await this.generateResponse(prompt, historyMessages, { temperature: 0.65, max_tokens: 200 });
+      // Itt engedjük a reasoning (gondolkodó) modellt
+      return await this.generateResponse(prompt, historyMessages, { temperature: 0.65, max_tokens: 2048 }, true);
     } catch (error) {
       return this._getFallbackHint(attemptNumber);
     }
@@ -333,18 +356,17 @@ Kérdés: ${questionText}
 Elvárt helyes válasz: ${correctAnswer}
 Diák tényleges válasza: ${studentAnswer}
 
-Válaszolj KIZÁRÓLAG érvényes JSON formátumban:
+SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\`\`json ... \`\`\`), semmilyen egyéb bevezető vagy magyarázó szöveget ne írj!
+
+Válaszolj az alábbi JSON formátumban:
 {
   "correct": true/false,
   "reason": "Rövid indoklás, hogy miért jó vagy rossz"
 }`;
 
     try {
-      const raw = await this.generateResponse(prompt, [], { temperature: 0.1, max_tokens: 500 });
-      const match = raw.match(/\{[\s\S]*?\}/);
-      if (match) {
-        return JSON.parse(match[0]);
-      }
+      const raw = await this.generateResponse(prompt, [], { temperature: 0.1, max_tokens: 1024 });
+      return this._extractJSON(raw);
     } catch (error) {
       console.warn('[GroqService] checkShortTextAnswer parse hiba:', error.message);
     }
