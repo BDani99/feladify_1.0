@@ -118,7 +118,9 @@ const PracticeTest = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        navigate(`/egyeni-gyakorlas/${subject}/eredmeny`, { state: { resultId: data.resultId } });
+        navigate(`/egyeni-gyakorlas/${subject}/roadmap`, {
+          state: { justCompleted: true, score: data.score, categoryAnalysis: data.categoryAnalysis }
+        });
       } else {
         const err = await response.json();
         alert(`Hiba a beküldéskor: ${err.message}`);
@@ -166,7 +168,7 @@ const PracticeTest = () => {
         {questions.map((q, idx) => (
           <button
             key={q.questionId}
-            className={`dot ${idx === currentIndex ? 'active' : ''} ${isAnswered(q) ? 'answered' : ''}`}
+            className={`question-dot ${idx === currentIndex ? 'active' : ''} ${isAnswered(q) ? 'answered' : ''}`}
             onClick={() => setCurrentIndex(idx)}
             title={`Kérdés ${idx + 1}`}
           />

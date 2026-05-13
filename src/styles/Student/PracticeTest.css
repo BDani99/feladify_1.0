@@ -1,22 +1,7 @@
-#content.practice-test {
-  padding: 0;
-  overflow-y: auto;
-  display: flex;
-  position: fixed;
-  top: 70px;
-  left: 280px;
-  right: 0;
-  bottom: 0;
-  margin-left: 0;
-}
-
 .practice-test {
   max-width: 900px;
   margin: 0 auto;
-  padding: 24px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
+  padding: 0;
 }
 
 .test-header {
@@ -86,7 +71,7 @@
   flex-wrap: wrap;
 }
 
-.dot {
+.question-dot {
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -102,18 +87,18 @@
   justify-content: center;
 }
 
-.dot:hover {
+.question-dot:hover {
   border-color: var(--accent);
   color: var(--accent);
 }
 
-.dot.active {
+.question-dot.active {
   border-color: var(--accent);
   background: var(--accent);
   color: white;
 }
 
-.dot.answered {
+.question-dot.answered {
   border-color: #10b981;
   background: rgba(16, 185, 129, 0.12);
   color: #10b981;

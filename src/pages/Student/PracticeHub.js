@@ -26,8 +26,15 @@ const PracticeHub = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        setStatus(data.status || 'not_started');
-        setRoadmapExists(data.checkpoints && data.checkpoints.length > 0);
+        const currentStatus = data.status || 'not_started';
+        const hasRoadmap = data.checkpoints && data.checkpoints.length > 0;
+        setStatus(currentStatus);
+        setRoadmapExists(hasRoadmap);
+        // Ha már van roadmap, rögtön oda navigálunk
+        if (hasRoadmap) {
+          navigate(`/egyeni-gyakorlas/${subject}/roadmap`);
+          return;
+        }
       }
     } catch (err) {
       console.error('Hiba a status lekéréskor:', err);
