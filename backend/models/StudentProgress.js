@@ -35,6 +35,26 @@ const checkpointSessionSchema = new mongoose.Schema({
   startedAt:    { type: Date, default: Date.now }
 }, { _id: false });
 
+const diagnosticQuestionSchema = new mongoose.Schema({
+  questionId:    { type: String, required: true },
+  questionText:  { type: String, required: true },
+  questionType:  { type: String, required: true },
+  category:      { type: String, default: 'Általános' },
+  correctAnswer: { type: mongoose.Schema.Types.Mixed },
+  options:       { type: [mongoose.Schema.Types.Mixed], default: [] },
+  pairs:         { type: [mongoose.Schema.Types.Mixed], default: [] },
+  items:         { type: [mongoose.Schema.Types.Mixed], default: [] },
+  difficulty:    { type: Number, default: 3 },
+  explanation:   { type: String, default: '' }
+}, { _id: false });
+
+const diagnosticSessionSchema = new mongoose.Schema({
+  subject:    String,
+  grade:      String,
+  questions:  [diagnosticQuestionSchema],
+  startedAt:  { type: Date, default: Date.now }
+}, { _id: false });
+
 const subjectCheckpointSchema = new mongoose.Schema({
   checkpointId: { type: String, required: true },
   topic: { type: String, default: 'Gyakorlás' },
@@ -74,6 +94,7 @@ const studentProgressSchema = new mongoose.Schema({
   badges: [badgeSchema],
   subjectProgress: [subjectProgressSchema],
   checkpointSession: { type: checkpointSessionSchema, default: null },
+  diagnosticSession: { type: diagnosticSessionSchema, default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

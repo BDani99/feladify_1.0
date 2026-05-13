@@ -300,161 +300,204 @@ router.post('/tutor/question-set', authMiddleware, async (req, res) => {
 
 // ==================== DIAGNOSZTIKAI TESZT VÉGPONTOK ====================
 
-// POST /api/student/diagnostic/start - Diagnosztikai teszt indítása (új route)
+// POST /api/student/diagnostic/start - Diagnosztikai teszt indítása (AI-generált)
 router.post('/diagnostic/start', authMiddleware, async (req, res) => {
   try {
-    const { subject } = req.body;
+    const { subject, grade } = req.body;
     const validSubjects = ['Matematika', 'Magyar', 'Angol', 'Környezetismeret'];
     if (!subject || !validSubjects.includes(subject)) {
       return res.status(400).json({ message: 'Érvénytelen vagy hiányzó tantárgy' });
     }
 
-    const inProgressTest = await DiagnosticResult.findOne({
+    let progress = await StudentProgress.findOne({ studentId: req.user._id });
+    if (!progress) {
+      progress = new StudentProgress({ studentId: req.user._id });
+    }
+
+    // Ha van folyamatban lévő teszt ugyanarra a tantárgyra, adjuk vissza azt
+    const existingResult = await DiagnosticResult.findOne({
       studentId: req.user._id,
       subject,
       status: 'in_progress'
     });
 
-    if (inProgressTest) {
-      const questions = await DiagnosticTest.find({ _id: { $in: inProgressTest.answers.map(a => a.questionId) } });
-      return res.json({ testId: inProgressTest._id, questions, resumed: true, totalQuestions: 20 });
+    if (existingResult && progress.diagnosticSession?.subject === subject) {
+      const sanitized = progress.diagnosticSession.questions.map(q => ({
+        questionId:   q.questionId,
+        questionText: q.questionText,
+        questionType: q.questionType,
+        category:     q.category,
+        difficulty:   q.difficulty,
+        options:      q.options,
+        pairs:        q.pairs,
+        items:        q.items
+      }));
+      return res.json({ testId: existingResult._id, questions: sanitized, totalQuestions: sanitized.length, subject, resumed: true });
     }
 
-    const questions = await DiagnosticTest.generateDiagnosticTest(subject, 20);
+    // AI-val generálunk 20 kérdést
+    console.log(`[Diagnostic] Generating questions for ${subject} / ${grade || '4. osztály'}`);
+    const generatedQuestions = await groqService.generateDiagnosticTest(subject, grade || '4. osztály', 20);
 
-    if (questions.length < 20) {
-      const additionalQuestions = await DiagnosticTest.find({ subject }).sort({ difficulty: 1 }).limit(20 - questions.length);
-      const existingIds = questions.map(q => q._id.toString());
-      const newQuestions = additionalQuestions.filter(q => !existingIds.includes(q._id.toString()));
-      questions.push(...newQuestions);
-    }
+    // Teljes kérdéssort (correctAnswer-rel) elmentjük a session-be
+    progress.diagnosticSession = {
+      subject,
+      grade: grade || '4. osztály',
+      questions: generatedQuestions,
+      startedAt: new Date()
+    };
+    progress.markModified('diagnosticSession');
+    await progress.save();
 
-    if (questions.length === 0) {
-       return res.status(404).json({ message: 'Nincsenek kérdések ehhez a tantárgyhoz.' });
-    }
-
-    const result = await DiagnosticResult.startDiagnosticTest(req.user._id, subject, questions[0]._id);
-    result.testId = questions[0]._id;
+    // DiagnosticResult rekord létrehozása
+    const result = new DiagnosticResult({
+      studentId:     req.user._id,
+      subject,
+      status:        'in_progress',
+      totalQuestions: generatedQuestions.length,
+      scorePercentage: 0,
+      answers:       []
+    });
     await result.save();
 
-    const shuffledQuestions = questions.sort(() => Math.random() - 0.5).slice(0, 20);
+    // Sanitizált kérdések (correctAnswer nélkül) a frontendnek
+    const sanitizedQuestions = generatedQuestions.map(q => ({
+      questionId:   q.questionId,
+      questionText: q.questionText,
+      questionType: q.questionType,
+      category:     q.category,
+      difficulty:   q.difficulty,
+      options:      q.options,
+      pairs:        q.pairs,
+      items:        q.items
+    }));
 
-    res.json({ testId: result._id, questions: shuffledQuestions, totalQuestions: 20, subject });
+    res.json({ testId: result._id, questions: sanitizedQuestions, totalQuestions: sanitizedQuestions.length, subject });
   } catch (error) {
     console.error('[Student API] Error in POST /diagnostic/start:', error);
     res.status(500).json({ message: 'Hiba történt a teszt indításakor', error: error.message });
   }
 });
 
-// GET /api/student/diagnostic/start/:subject - Diagnosztikai teszt indítása (legacy route)
-router.get('/diagnostic/start/:subject', authMiddleware, async (req, res) => {
-  try {
-    const { subject } = req.params;
-    const validSubjects = ['Matematika', 'Magyar', 'Angol', 'Környezetismeret'];
-    if (!validSubjects.includes(subject)) return res.status(400).json({ message: 'Érvénytelen tantárgy' });
-
-    const inProgressTest = await DiagnosticResult.findOne({
-      studentId: req.user._id,
-      subject,
-      status: 'in_progress'
-    });
-
-    if (inProgressTest) {
-      const questions = await DiagnosticTest.find({ _id: { $in: inProgressTest.answers.map(a => a.questionId) } });
-      return res.json({ testId: inProgressTest._id, questions, resumed: true, totalQuestions: 20 });
-    }
-
-    const questions = await DiagnosticTest.generateDiagnosticTest(subject, 20);
-
-    if (questions.length < 20) {
-      const additionalQuestions = await DiagnosticTest.find({ subject }).sort({ difficulty: 1 }).limit(20 - questions.length);
-      const existingIds = questions.map(q => q._id.toString());
-      const newQuestions = additionalQuestions.filter(q => !existingIds.includes(q._id.toString()));
-      questions.push(...newQuestions);
-    }
-
-    if (questions.length === 0) {
-       return res.status(404).json({ message: 'Nincsenek kérdések ehhez a tantárgyhoz.' });
-    }
-
-    const result = await DiagnosticResult.startDiagnosticTest(req.user._id, subject, questions[0]._id);
-    result.testId = questions[0]._id;
-    await result.save();
-
-    const shuffledQuestions = questions.sort(() => Math.random() - 0.5).slice(0, 20);
-
-    res.json({ testId: result._id, questions: shuffledQuestions, totalQuestions: 20, subject });
-  } catch (error) {
-    console.error('[Student API] Error in /diagnostic/start:', error);
-    res.status(500).json({ message: 'Hiba történt a teszt indításakor', error: error.message });
-  }
+// GET /api/student/diagnostic/start/:subject - legacy redirect to POST
+router.get('/diagnostic/start/:subject', authMiddleware, (req, res) => {
+  res.status(405).json({ message: 'Kérlek POST /diagnostic/start végpontot használj' });
 });
 
-// POST /api/student/diagnostic/submit - Diagnosztikai teszt válaszainak beküldése
+// POST /api/student/diagnostic/submit - Diagnosztikai teszt beküldése (session-alapú validáció)
 router.post('/diagnostic/submit', authMiddleware, async (req, res) => {
   try {
-    const { testId, answers } = req.body;
-    if (!testId || !answers || !Array.isArray(answers)) return res.status(400).json({ message: 'Hiányos adatok' });
+    const { testId, subject, answers } = req.body;
+    if (!testId || !answers || typeof answers !== 'object') {
+      return res.status(400).json({ message: 'Hiányos adatok' });
+    }
 
     const result = await DiagnosticResult.findById(testId);
     if (!result) return res.status(404).json({ message: 'Teszt nem található' });
     if (result.studentId.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Nincs jogosultság' });
     if (result.status !== 'in_progress') return res.status(400).json({ message: 'A teszt már be lett küldve' });
 
-    const questionIds = answers.map(a => a.questionId);
-    const questions = await DiagnosticTest.find({ _id: { $in: questionIds } });
+    const progress = await StudentProgress.findOne({ studentId: req.user._id });
+    if (!progress?.diagnosticSession) {
+      return res.status(404).json({ message: 'Teszt session nem található – kérlek kezdj új tesztet' });
+    }
 
-    const evaluatedAnswers = answers.map(answer => {
-      const question = questions.find(q => q._id.toString() === answer.questionId);
-      if (!question) return null;
+    const session = progress.diagnosticSession;
+    const norm = s => String(s).toLowerCase().trim().replace(/[.,!?;:]/g, '');
+
+    // Kiértékelés és kategória-statisztikák gyűjtése
+    const categoryResults = {};
+    const perQuestionResults = [];
+
+    for (const question of session.questions) {
+      const qid = question.questionId;
+      const studentAnswer = answers[qid];
+      const cat = question.category || 'Általános';
+
+      if (!categoryResults[cat]) {
+        categoryResults[cat] = { total: 0, correct: 0 };
+      }
+      categoryResults[cat].total++;
 
       let isCorrect = false;
-      let points = 0;
 
-      switch (question.questionType) {
-        case 'multiple_choice':
-        case 'true_false':
-          isCorrect = answer.answer === question.correctAnswer;
-          points = isCorrect ? question.points : 0;
-          break;
-        case 'short_answer':
-          const studentAnswer = answer.answer.toLowerCase().trim();
-          const correctAnswer = question.correctAnswer.toLowerCase().trim();
-          isCorrect = studentAnswer === correctAnswer || studentAnswer.includes(correctAnswer);
-          points = isCorrect ? question.points : 0;
-          break;
-        case 'matching':
-          const studentPairs = answer.answer;
-          const correctPairs = question.correctAnswer;
-          const correctMatches = studentPairs.filter(pair => {
-            return correctPairs.some(cp => cp.left === pair.left && cp.right === pair.right);
-          });
-          isCorrect = correctMatches.length === correctPairs.length;
-          points = (correctMatches.length / correctPairs.length) * question.points;
-          break;
+      if (studentAnswer !== undefined && studentAnswer !== null && studentAnswer !== '') {
+        if (question.questionType === 'mcq' || question.questionType === 'true_false') {
+          isCorrect = norm(studentAnswer) === norm(question.correctAnswer);
+        } else if (question.questionType === 'short_answer' || question.questionType === 'fill_blank') {
+          const aiResult = await groqService.checkShortTextAnswer(
+            session.subject, question.questionText, studentAnswer, question.correctAnswer
+          );
+          isCorrect = aiResult.correct;
+        } else if (question.questionType === 'matching') {
+          if (typeof studentAnswer === 'object' && !Array.isArray(studentAnswer)) {
+            const correct = question.correctAnswer || {};
+            isCorrect = Object.keys(correct).length > 0 &&
+              Object.keys(correct).every(k => norm(studentAnswer[k]) === norm(correct[k]));
+          }
+        } else if (question.questionType === 'ordering') {
+          if (Array.isArray(studentAnswer) && Array.isArray(question.correctAnswer)) {
+            isCorrect = studentAnswer.length === question.correctAnswer.length &&
+              studentAnswer.every((item, idx) => norm(item) === norm(question.correctAnswer[idx]));
+          }
+        }
       }
 
-      return { questionId: question._id, studentAnswer: answer.answer, isCorrect, points, timeSpent: answer.timeSpent || 0 };
-    }).filter(a => a !== null);
+      if (isCorrect) categoryResults[cat].correct++;
+      perQuestionResults.push({ questionId: qid, isCorrect, category: cat });
+    }
 
-    evaluatedAnswers.forEach(answer => {
-      result.addAnswer(answer.questionId, answer.studentAnswer, answer.isCorrect, answer.points, answer.timeSpent);
-    });
+    const totalCount = session.questions.length;
+    const correctCount = perQuestionResults.filter(r => r.isCorrect).length;
+    const scorePercentage = totalCount > 0 ? (correctCount / totalCount) * 100 : 0;
 
-    result.completeTest();
-    
-    // AI Elemzés (itt generálja le a GroqService a gyengeségeket/erősségeket)
-    const analyzedResult = await DiagnosticResult.analyzeResults(result._id);
+    // Kategória-elemzés összeállítása
+    const categoryAnalysis = Object.entries(categoryResults).map(([category, data]) => ({
+      category,
+      totalQuestions: data.total,
+      correctAnswers: data.correct,
+      score: data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0,
+      weaknesses: (data.correct / data.total) < 0.5 ? ['Fejlesztésre szorul'] : [],
+      strengths:  (data.correct / data.total) >= 0.7 ? ['Jó alapok'] : []
+    }));
 
-    // Készítsük el / Frissítsük a gyakorlóutat az AI elemzés alapján!
-    await createOrUpdatePracticePath(req.user._id, analyzedResult, result.subject);
+    // AI elemzés (checkpoint-ajánlatok)
+    const aiAnalysisResult = await groqService.analyzeDiagnosticTest(
+      { subject: session.subject, scorePercentage, totalQuestions: totalCount, answers: perQuestionResults },
+      session.questions.map((q, i) => ({ category: q.category, questionText: q.questionText }))
+    );
+
+    // Eredmény mentése
+    result.totalQuestions = totalCount;
+    result.correctAnswers = correctCount;
+    result.scorePercentage = scorePercentage;
+    result.categoryAnalysis = categoryAnalysis;
+    result.completedAt = new Date();
+    result.status = 'analyzed';
+    result.aiAnalysis = {
+      overallPerformance: aiAnalysisResult.overallPerformance || 'average',
+      personalizedFeedback: aiAnalysisResult.personalizedFeedback || '',
+      strengths: (aiAnalysisResult.strengths || []).map(s => ({ category: s.category, description: s.description, confidence: 0.8 })),
+      weaknesses: [],
+      learningPath: { recommendedOrder: [], estimatedTime: 0, focusAreas: [] },
+      recommendedCheckpoints: aiAnalysisResult.recommendedCheckpoints || []
+    };
+    await result.save();
+
+    // Gyakorlóút létrehozása/frissítése – az AI raw eredményt adjuk át (recommendedCheckpoints megmarad)
+    await createOrUpdatePracticePath(req.user._id, { aiAnalysis: aiAnalysisResult }, session.subject);
+
+    // Session törlése
+    progress.diagnosticSession = null;
+    progress.markModified('diagnosticSession');
+    await progress.save();
 
     res.json({
       message: 'Sikeresen beküldve',
       resultId: result._id,
-      score: result.scorePercentage,
-      categoryAnalysis: analyzedResult.categoryAnalysis,
-      aiAnalysis: analyzedResult.aiAnalysis
+      score: scorePercentage,
+      categoryAnalysis,
+      aiAnalysis: result.aiAnalysis
     });
   } catch (error) {
     console.error('[Student API] Error in /diagnostic/submit:', error);

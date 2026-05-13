@@ -74,15 +74,14 @@ const diagnosticResultSchema = new mongoose.Schema({
   },
   testId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'DiagnosticTest',
-    required: true
+    ref: 'DiagnosticTest'
   },
   answers: [answerSchema],
-  
+
   // Eredmények
   totalQuestions: {
     type: Number,
-    required: true
+    default: 0
   },
   correctAnswers: {
     type: Number,
@@ -98,7 +97,7 @@ const diagnosticResultSchema = new mongoose.Schema({
   },
   scorePercentage: {
     type: Number,
-    required: true // százalékban (0-100)
+    default: 0
   },
   
   // Részletes elemzés kategóriák szerint

@@ -187,6 +187,81 @@ Fontos: minden kérdésnél adj meg "questionId" mezőt "q1", "q2", stb. érték
     }));
   }
 
+  async generateDiagnosticTest(subject, grade, count = 20) {
+    const subjectCategories = {
+      'Matematika': ['Algebra', 'Geometria', 'Statisztika', 'Függvények', 'Számelmélet', 'Mértékegységek'],
+      'Magyar': ['Nyelvtan', 'Irodalom', 'Fogalmazás', 'Helyesírás', 'Szövegértés', 'Nyelvhelyesség'],
+      'Angol': ['Grammar', 'Vocabulary', 'Reading', 'Writing', 'Listening', 'Speaking'],
+      'Környezetismeret': ['Földrajz', 'Biológia', 'Fizika', 'Kémia', 'Társadalomismeret', 'Környezetvédelem']
+    };
+    const categories = subjectCategories[subject] || ['Általános'];
+
+    const prompt = `Te egy általános iskolai szintfelmérő AI vagy. Generálj pontosan ${count} darab diagnosztikai kérdést ${subject} tantárgyból, ${grade} szintű tanulónak.
+A kérdések osszák el magukat a következő témakörök között (körülbelül egyenlően): ${categories.join(', ')}.
+
+Legalább 4 különböző feladattípust használj:
+- "mcq": 4 lehetőség (A, B, C, D), egy helyes. options: ["A","B","C","D"], correctAnswer: "A"
+- "true_false": igaz/hamis. options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"
+- "short_answer": rövid szöveges válasz. options: [], correctAnswer: "szöveges válasz"
+- "fill_blank": szövegkiegészítős (az üres helyet ___ jelöli). options: [], correctAnswer: "hiányzó szó"
+- "matching": párosítás. pairs: [{"left":"fogalom","right":"magyarázat"},...], options: ["jobb oldali értékek keverve"], correctAnswer: {"fogalom":"magyarázat",...}
+- "ordering": sorba rendezés. items: ["keveredett","elemek","listája"], correctAnswer: ["helyes","sorrendben","elemek"]
+
+Válaszolj KIZÁRÓLAG érvényes JSON formátumban, kommentek nélkül:
+{
+  "questions": [
+    {
+      "questionId": "d1",
+      "questionText": "A kérdés szövege",
+      "questionType": "mcq",
+      "category": "Algebra",
+      "difficulty": 2,
+      "options": ["A lehetőség","B lehetőség","C lehetőség","D lehetőség"],
+      "pairs": [],
+      "items": [],
+      "correctAnswer": "A lehetőség",
+      "explanation": "Rövid magyarázat"
+    }
+  ]
+}
+Fontos: minden kérdésnél add meg a "category" mezőt (az adott témakör nevét), és a "questionId" legyen "d1", "d2", stb.`;
+
+    try {
+      const raw = await this.generateResponse(prompt, [], { temperature: 0.6, max_tokens: 4500 });
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (match) {
+        const parsed = JSON.parse(match[0]);
+        if (Array.isArray(parsed.questions)) {
+          return parsed.questions.map((q, idx) => ({
+            questionId:    q.questionId || `d${idx + 1}`,
+            questionText:  q.questionText || 'Hiányzó kérdés',
+            questionType:  ['mcq','true_false','short_answer','fill_blank','matching','ordering'].includes(q.questionType) ? q.questionType : 'short_answer',
+            category:      q.category || categories[idx % categories.length],
+            difficulty:    q.difficulty || 3,
+            options:       Array.isArray(q.options) ? q.options : [],
+            pairs:         Array.isArray(q.pairs) ? q.pairs : [],
+            items:         Array.isArray(q.items) ? q.items : [],
+            correctAnswer: q.correctAnswer !== undefined ? q.correctAnswer : '',
+            explanation:   q.explanation || ''
+          }));
+        }
+      }
+    } catch (error) {
+      console.warn('[GroqService] generateDiagnosticTest parse hiba:', error.message);
+    }
+
+    return Array.from({ length: count }, (_, idx) => ({
+      questionId:    `d${idx + 1}`,
+      questionText:  `Magyarázd el a saját szavaiddal: ${subject} – ${categories[idx % categories.length]}`,
+      questionType:  'short_answer',
+      category:      categories[idx % categories.length],
+      difficulty:    3,
+      options: [], pairs: [], items: [],
+      correctAnswer: 'Logikus, témába vágó válasz elfogadható.',
+      explanation:   'Nyílt végű kérdés.'
+    }));
+  }
+
   async generateCheckpointHint(subject, topic, currentQuestion, studentAnswer, correctAnswer, attemptNumber, allQuestions, previousAnswers) {
     const progress = previousAnswers.length > 0
       ? `${previousAnswers.filter(a => a.isCorrect).length}/${previousAnswers.length} helyes eddigi`
