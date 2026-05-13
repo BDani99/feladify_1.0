@@ -335,9 +335,9 @@ router.post('/diagnostic/start', authMiddleware, async (req, res) => {
       return res.json({ testId: existingResult._id, questions: sanitized, totalQuestions: sanitized.length, subject, resumed: true });
     }
 
-    // AI-val generálunk 20 kérdést
+    // AI-val generálunk 10 kérdést (gyorsabb teszt)
     console.log(`[Diagnostic] Generating questions for ${subject} / ${grade || '4. osztály'}`);
-    const generatedQuestions = await groqService.generateDiagnosticTest(subject, grade || '4. osztály', 20);
+    const generatedQuestions = await groqService.generateDiagnosticTest(subject, grade || '4. osztály', 10);
 
     // Teljes kérdéssort (correctAnswer-rel) elmentjük a session-be
     progress.diagnosticSession = {

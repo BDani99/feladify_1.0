@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { FaCheckCircle, FaExclamationTriangle, FaChartLine, FaBrain, FaRedo, FaHome } from 'react-icons/fa';
-import { getDiagnosticResult } from '../../api/Student/Diagnostic';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Student/DiagnosticResult.css';
 
@@ -16,41 +15,31 @@ const DiagnosticResult = () => {
   const { subject } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
-  
+
   // Location state-ből származó adatok
-  const { resultId, score: initialScore, categoryAnalysis: initialCategoryAnalysis, aiAnalysis: initialAiAnalysis } = location.state || {};
+  const { resultId, score, categoryAnalysis, aiAnalysis } = location.state || {};
 
   useEffect(() => {
-    const loadResult = async () => {
-      try {
-        if (resultId) {
-          const data = await getDiagnosticResult(resultId);
-          setResult(data);
-        } else if (initialScore !== undefined) {
-          // Használjuk a location state-ből származó adatokat
-          setResult({
-            subject,
-            score: initialScore,
-            categoryAnalysis: initialCategoryAnalysis,
-            aiAnalysis: initialAiAnalysis
-          });
-        } else {
-          setError('Nem található eredmény adat.');
-        }
-      } catch (err) {
-        console.error('[DiagnosticResult] Error loading result:', err);
-        setError(err.message || 'Hiba történt az eredmény betöltésekor');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadResult();
-  }, [resultId, subject, initialScore, initialCategoryAnalysis, initialAiAnalysis]);
+    // Az összes szükséges adat már megvan a location.state-ből (submit válaszból)
+    if (score !== undefined && categoryAnalysis && aiAnalysis) {
+      setResult({
+        subject,
+        score,
+        categoryAnalysis,
+        aiAnalysis,
+        totalQuestions: categoryAnalysis.reduce((sum, cat) => sum + cat.totalQuestions, 0),
+        correctAnswers: categoryAnalysis.reduce((sum, cat) => sum + cat.correctAnswers, 0)
+      });
+      setLoading(false);
+    } else {
+      setError('Nem található eredmény adat. Kérlek, végezz el egy szintfelmérőt.');
+      setLoading(false);
+    }
+  }, [subject, score, categoryAnalysis, aiAnalysis]);
 
   if (loading) {
     return (
