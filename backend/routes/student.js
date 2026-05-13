@@ -604,8 +604,17 @@ router.get('/chat/history', authMiddleware, async (req, res) => {
       title: s.title,
       updatedAt: s.updatedAt
     }));
+
+    // Érvényesítés: csak az adott diák üzenetei jelenjenek meg
+    const validatedMessages = session ? session.messages.map(msg => {
+      if (msg.role === 'user' && msg.userId && msg.userId.toString() !== req.user._id.toString()) {
+        return null;
+      }
+      return msg;
+    }).filter(msg => msg !== null) : [];
+
     res.json({
-      messages: session ? session.messages : [],
+      messages: validatedMessages,
       sessions,
       currentSessionId: chatDoc.currentSessionId
     });
@@ -649,7 +658,7 @@ router.post('/chat/send', authMiddleware, async (req, res) => {
     }
 
     console.log('[Student API] Chat send - Jelenlegi session ID:', chatDoc.currentSessionId);
-    chatDoc.addMessage('user', message);
+    chatDoc.addMessage('user', message, req.user._id);
     console.log('[Student API] Chat send - Session ID után:', chatDoc.currentSessionId);
 
     const student = await User.findById(req.user._id).select('-password');
@@ -787,6 +796,15 @@ router.post('/chat/load-session', authMiddleware, async (req, res) => {
       return res.status(404).json({ message: 'Session nem található' });
     }
 
+    // Érvényesítés: csak az adott diák üzenetei jelenjenek meg
+    const validatedMessages = session.messages.map(msg => {
+      // User üzenetek: userId-nak az aktuális diáknak kell lennie vagy üresen is hagyható (legacy)
+      if (msg.role === 'user' && msg.userId && msg.userId.toString() !== req.user._id.toString()) {
+        return null;
+      }
+      return msg;
+    }).filter(msg => msg !== null);
+
     chatDoc.currentSessionId = sessionId;
     await chatDoc.save();
 
@@ -797,7 +815,7 @@ router.post('/chat/load-session', authMiddleware, async (req, res) => {
     }));
 
     res.json({
-      messages: session.messages,
+      messages: validatedMessages,
       sessions
     });
   } catch (err) {

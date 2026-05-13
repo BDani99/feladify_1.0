@@ -1,12 +1,16 @@
 const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
-  role: { 
-    type: String, 
-    enum: ['user', 'assistant', 'system'], 
-    required: true 
+  role: {
+    type: String,
+    enum: ['user', 'assistant', 'system'],
+    required: true
   },
   content: { type: String, required: true },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   timestamp: { type: Date, default: Date.now }
 });
 
@@ -72,9 +76,9 @@ studentChatHistorySchema.methods.getCurrentSession = function() {
 };
 
 // Method to add message to current session
-studentChatHistorySchema.methods.addMessage = function(role, content) {
+studentChatHistorySchema.methods.addMessage = function(role, content, userId) {
   const session = this.getCurrentSession();
-  
+
   if (!session) {
     // Fallback: create a new session if getCurrentSession failed
     const newSession = {
@@ -86,18 +90,24 @@ studentChatHistorySchema.methods.addMessage = function(role, content) {
     this.currentSessionId = newSession.sessionId;
     return newSession;
   }
-  
-  session.messages.push({
+
+  const messageObj = {
     role,
     content,
     timestamp: new Date()
-  });
-  
+  };
+
+  if (userId) {
+    messageObj.userId = userId;
+  }
+
+  session.messages.push(messageObj);
+
   // Auto-generate title from first user message
   if (session.messages.length === 1 && role === 'user') {
     session.title = content.substring(0, 50) + (content.length > 50 ? '...' : '');
   }
-  
+
   return session;
 };
 
