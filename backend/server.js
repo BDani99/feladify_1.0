@@ -14,13 +14,16 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 5000;
 
-// Vercel serverless-kompatibilis MongoDB kapcsolat (cachelve, hogy ne nyisson új kapcsolatot minden requestnél)
-let isConnected = false;
+// Vercel serverless-kompatibilis MongoDB kapcsolat
+let connectionPromise = null;
 const connectDB = async () => {
-  if (isConnected) return;
-  await mongoose.connect(process.env.MONGO_URI);
-  isConnected = true;
-  console.log('Connected to MongoDB');
+  if (mongoose.connection.readyState === 1) return;
+  if (!connectionPromise) {
+    connectionPromise = mongoose.connect(process.env.MONGO_URI)
+      .then(() => { console.log('Connected to MongoDB'); })
+      .catch(err => { connectionPromise = null; throw err; });
+  }
+  await connectionPromise;
 };
 
 app.use(async (req, res, next) => {
