@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../api/config';
 import { useUser } from '../../context/UserContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { FaStar, FaFire, FaBolt } from 'react-icons/fa';
@@ -29,7 +30,7 @@ const SubjectSelectPage = () => {
     try {
       const token = sessionStorage.getItem('AccessToken');
       // Fetch student progress for all subjects
-      const response = await fetch('/api/student/progress', {
+      const response = await fetch(`${API_BASE_URL}/student/progress`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {

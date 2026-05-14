@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { API_BASE_URL } from '../../api/config';
 import { fetchUserData } from '../../api/Auth/ProfileData';
 import { fetchChatHistory, sendChatMessage } from '../../api/Student/Chat';
 import { useChat } from '../../context/ChatContext';
@@ -126,7 +127,7 @@ const StudentWelcome = () => {
     setCurrentSessionId(null);
     setShowSessionHistory(false);
     try {
-      await fetch('/api/student/chat/new-session', {
+      await fetch(`${API_BASE_URL}/student/chat/new-session`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`

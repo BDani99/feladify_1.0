@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../api/config';
 import { useUser } from '../../context/UserContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { FaArrowLeft, FaBook } from 'react-icons/fa';
@@ -21,7 +22,7 @@ const PracticeHub = () => {
   const fetchSubjectStatus = async () => {
     try {
       const token = sessionStorage.getItem('AccessToken');
-      const response = await fetch(`/api/student/progress/${subject}`, {
+      const response = await fetch(`${API_BASE_URL}/student/progress/${subject}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -46,7 +47,7 @@ const PracticeHub = () => {
   const handleStartDiagnostic = async () => {
     try {
       const token = sessionStorage.getItem('AccessToken');
-      const response = await fetch('/api/student/diagnostic/start', {
+      const response = await fetch(`${API_BASE_URL}/student/diagnostic/start`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

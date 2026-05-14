@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { API_BASE_URL } from '../../api/config';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { FaArrowLeft, FaLock, FaPlay, FaCheck, FaTrophy, FaStar, FaFire } from 'react-icons/fa';
 import '../../styles/Student/RoadmapView.css';
@@ -30,7 +31,7 @@ const RoadmapView = () => {
   const fetchRoadmap = async () => {
     try {
       const token = sessionStorage.getItem('AccessToken');
-      const response = await fetch(`/api/student/roadmap/${subject}`, {
+      const response = await fetch(`${API_BASE_URL}/student/roadmap/${subject}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../api/config';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { FaArrowLeft, FaPaperPlane, FaChevronUp, FaChevronDown, FaExclamationTriangle } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import '../../styles/Student/CheckpointPractice.css';
 
-const API_BASE = '/api/student/checkpoint';
+const API_BASE = `${API_BASE_URL}/student/checkpoint`;
 const getAuthHeaders = () => ({
   'Content-Type': 'application/json',
   'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`

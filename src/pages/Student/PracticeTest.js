@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { API_BASE_URL } from '../../api/config';
 import { useUser } from '../../context/UserContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { FaArrowLeft, FaArrowRight, FaCheck } from 'react-icons/fa';
@@ -37,7 +38,7 @@ const PracticeTest = () => {
   const startNewTest = async () => {
     try {
       const token = sessionStorage.getItem('AccessToken');
-      const response = await fetch('/api/student/diagnostic/start', {
+      const response = await fetch(`${API_BASE_URL}/student/diagnostic/start`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ subject, grade: user?.className || '4. osztály' })
@@ -108,7 +109,7 @@ const PracticeTest = () => {
       });
 
       const token = sessionStorage.getItem('AccessToken');
-      const response = await fetch('/api/student/diagnostic/submit', {
+      const response = await fetch(`${API_BASE_URL}/student/diagnostic/submit`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ testId, subject, answers: finalAnswers })
