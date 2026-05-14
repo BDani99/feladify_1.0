@@ -1,3 +1,5 @@
+import { API_BASE_URL } from '../config';
+
 const getAuthHeaders = () => ({
   'Content-Type': 'application/json',
   'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`
@@ -11,7 +13,7 @@ const handleUnauthorized = () => {
 
 export const fetchChatHistory = async () => {
   try {
-    const response = await fetch(`/api/student/chat/history`, {
+    const response = await fetch(`${API_BASE_URL}/student/chat/history`, {
       method: 'GET',
       headers: getAuthHeaders()
     });
@@ -37,7 +39,7 @@ export const fetchChatHistory = async () => {
 
 export const sendChatMessage = async (message) => {
   try {
-    const response = await fetch(`/api/student/chat/send`, {
+    const response = await fetch(`${API_BASE_URL}/student/chat/send`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ message })
@@ -64,7 +66,7 @@ export const sendChatMessage = async (message) => {
 
 export const loadChatSession = async (sessionId) => {
   try {
-    const response = await fetch(`/api/student/chat/load-session`, {
+    const response = await fetch(`${API_BASE_URL}/student/chat/load-session`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ sessionId })
@@ -91,7 +93,7 @@ export const loadChatSession = async (sessionId) => {
 
 export const deleteSession = async (sessionId) => {
   try {
-    const response = await fetch(`/api/student/chat/session/${sessionId}`, {
+    const response = await fetch(`${API_BASE_URL}/student/chat/session/${sessionId}`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
@@ -117,7 +119,7 @@ export const deleteSession = async (sessionId) => {
 
 export const renameSession = async (sessionId, title) => {
   try {
-    const response = await fetch(`/api/student/chat/session/${sessionId}`, {
+    const response = await fetch(`${API_BASE_URL}/student/chat/session/${sessionId}`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify({ title })

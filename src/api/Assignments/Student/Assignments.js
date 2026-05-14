@@ -1,6 +1,8 @@
+import { API_BASE_URL } from '../../config';
+
 export const fetchAvailableAssignments = async () => {
   try {
-    const response = await fetch('/api/assignments/student/available-assignments', {
+    const response = await fetch(`${API_BASE_URL}/assignments/student/available-assignments`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -22,7 +24,7 @@ export const fetchAvailableAssignments = async () => {
 
 export const fetchCompletedAssignments = async () => {
   try {
-    const response = await fetch('/api/assignments/student/completed-assignments', {
+    const response = await fetch(`${API_BASE_URL}/assignments/student/completed-assignments`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

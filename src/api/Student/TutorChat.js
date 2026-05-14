@@ -1,5 +1,7 @@
+import { API_BASE_URL } from '../config';
+
 export const sendTutorMessage = async (questionText, correctAnswer, studentAnswer, chatHistory) => {
-    const response = await fetch('/api/assignments/student/tutor', {
+    const response = await fetch(`${API_BASE_URL}/assignments/student/tutor`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

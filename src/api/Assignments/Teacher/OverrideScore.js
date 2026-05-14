@@ -1,5 +1,7 @@
+import { API_BASE_URL } from '../../config';
+
 export const overrideScore = async (studentId, assignmentId, questionId, score) => {
-    const response = await fetch('/api/assignments/teacher/override-score', {
+    const response = await fetch(`${API_BASE_URL}/assignments/teacher/override-score`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',

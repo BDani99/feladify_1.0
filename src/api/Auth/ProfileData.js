@@ -1,6 +1,8 @@
+import { API_BASE_URL } from '../config';
+
 export const fetchUserData = async () => {
     try {
-        const response = await fetch('api/auth/data', {
+        const response = await fetch(`${API_BASE_URL}/auth/data`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

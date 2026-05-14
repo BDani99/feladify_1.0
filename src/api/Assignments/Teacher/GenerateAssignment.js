@@ -1,5 +1,7 @@
+import { API_BASE_URL } from '../../config';
+
 export const previewAssignment = async (title, subject, difficulty, className, questionTypes) => {
-    const response = await fetch('/api/assignments/teacher/preview', {
+    const response = await fetch(`${API_BASE_URL}/assignments/teacher/preview`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -13,7 +15,7 @@ export const previewAssignment = async (title, subject, difficulty, className, q
 };
 
 export const saveAssignment = async (title, subject, difficulty, className, questions, timeLimit, startDate, dueDate) => {
-    const response = await fetch('/api/assignments/teacher/save', {
+    const response = await fetch(`${API_BASE_URL}/assignments/teacher/save`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

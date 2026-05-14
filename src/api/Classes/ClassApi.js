@@ -1,10 +1,12 @@
+import { API_BASE_URL } from '../config';
+
 const getAuthHeaders = () => ({
   'Content-Type': 'application/json',
   'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`,
 });
 
 export const fetchAllClasses = async () => {
-  const response = await fetch('/api/classes', {
+  const response = await fetch(`${API_BASE_URL}/classes`, {
     headers: getAuthHeaders(),
   });
   if (!response.ok) {
@@ -16,7 +18,7 @@ export const fetchAllClasses = async () => {
 };
 
 export const createClass = async (name) => {
-  const response = await fetch('/api/classes', {
+  const response = await fetch(`${API_BASE_URL}/classes`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify({ name }),
@@ -30,7 +32,7 @@ export const createClass = async (name) => {
 };
 
 export const updateTeacherClasses = async (classIds) => {
-  const response = await fetch('/api/teacher/update-classes', {
+  const response = await fetch(`${API_BASE_URL}/teacher/update-classes`, {
     method: 'PUT',
     headers: getAuthHeaders(),
     body: JSON.stringify({ classIds }),

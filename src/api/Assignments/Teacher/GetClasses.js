@@ -1,6 +1,8 @@
+import { API_BASE_URL } from '../../config';
+
 export const fetchTeacherClasses = async () => {
     try {
-        const response = await fetch('/api/teacher/classes', {
+        const response = await fetch(`${API_BASE_URL}/teacher/classes`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

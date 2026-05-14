@@ -1,5 +1,7 @@
+import { API_BASE_URL } from '../config';
+
 export const flagAnswer = async (assignmentId, questionId) => {
-    const response = await fetch('/api/assignments/student/flag-answer', {
+    const response = await fetch(`${API_BASE_URL}/assignments/student/flag-answer`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',

@@ -1,6 +1,8 @@
+import { API_BASE_URL } from '../../config';
+
 export const submitAssignment = async (assignmentId, answers) => {
     try {
-        const response = await fetch(`/api/assignments/student/submit/${assignmentId}`, {
+        const response = await fetch(`${API_BASE_URL}/assignments/student/submit/${assignmentId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

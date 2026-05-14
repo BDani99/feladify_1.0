@@ -1,6 +1,8 @@
+import { API_BASE_URL } from '../../config';
+
 export const fetchAssignments = async () => {
     try {
-        const response = await fetch('/api/assignments/teacher/list', {
+        const response = await fetch(`${API_BASE_URL}/assignments/teacher/list`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`,
