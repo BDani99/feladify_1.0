@@ -10,6 +10,7 @@
   right: 0;
   bottom: 0;
   margin-left: 0;
+  border-top: 20px solid transparent;
 }
 
 .welcome-container {

@@ -1,13 +1,27 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FaCheck, FaTimes, FaChevronDown, FaChevronUp, FaExclamationTriangle } from 'react-icons/fa';
+import { 
+    FaCheck, 
+    FaTimes, 
+    FaChevronDown, 
+    FaChevronUp, 
+    FaExclamationTriangle, 
+    FaUserGraduate, 
+    FaQuestionCircle, 
+    FaEdit, 
+    FaCheckCircle,
+    FaBrain,
+    FaArrowRight,
+    FaBookOpen
+} from 'react-icons/fa';
 import { fetchAssignmentSubmissions } from '../../api/Assignments/Teacher/GetSubmissions';
 import { overrideScore } from '../../api/Assignments/Teacher/OverrideScore';
+import { finalizeGrade } from '../../api/Assignments/Teacher/FinalizeGrade';
 import '../../styles/Teacher/AssignmentDetailsPage.css';
 
 const SubmissionAnswerRow = ({ answer, studentId, assignmentId, onScoreUpdate }) => {
-    const isMC = answer.confidence === 1.0;
-    const isLowConfidence = !isMC && answer.confidence !== null && answer.confidence < 0.7;
+    const isManual = answer.questionType === 'short_answer';
+    const isLowConfidence = answer.confidence !== null && answer.confidence < 0.7;
     const [overrideVal, setOverrideVal] = useState(answer.score);
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
@@ -26,63 +40,69 @@ const SubmissionAnswerRow = ({ answer, studentId, assignmentId, onScoreUpdate })
         }
     };
 
-    const rowClass = [
-        'answer-row',
-        isLowConfidence ? 'confidence-low' : '',
-        answer.flagged ? 'answer-flagged' : '',
-    ].filter(Boolean).join(' ');
+    const renderAnswer = (ans, type) => {
+        if (!ans) return '—';
+        if (type === 'matching') {
+            return Object.entries(ans).map(([key, val]) => `${key} → ${val}`).join(', ');
+        }
+        if (type === 'ordering') {
+            return ans.join(' → ');
+        }
+        return String(ans);
+    };
 
     return (
-        <div className={rowClass}>
-            <div className="answer-row-top">
-                <span className="answer-q-text">{answer.questionText}</span>
-                {!isMC && (
-                    <span className={`confidence-badge ${isLowConfidence ? 'low' : 'high'}`}>
-                        {isLowConfidence ? (
-                            <><FaExclamationTriangle style={{ marginRight: 3 }} />Alacsony konfidencia</>
-                        ) : (
-                            'AI magabiztos'
-                        )}
-                    </span>
-                )}
-                {answer.flagged && (
-                    <span className="flagged-badge">Segítséget kér</span>
+        <div className={`answer-row ${isLowConfidence ? 'low-conf' : ''}`}>
+            <div className="answer-row-header">
+                <div className="q-text">{answer.questionText}</div>
+                {answer.aiFeedback && (
+                    <div className="ai-feedback-pill">
+                        <FaBrain /> AI: {answer.aiFeedback}
+                    </div>
                 )}
             </div>
-            <p className="answer-detail">Diák válasza: <span>{answer.studentAnswer || '—'}</span></p>
-            <p className="answer-detail">Helyes válasz: <span>{answer.correctAnswer}</span></p>
-            <p className="answer-detail">
-                Pont: <span>{answer.score} / {answer.maxPoints}</span>
-                {isMC && (
-                    answer.score > 0
-                        ? <FaCheck style={{ color: '#10b981', marginLeft: 6 }} />
-                        : <FaTimes style={{ color: '#ef4444', marginLeft: 6 }} />
-                )}
-            </p>
-            {!isMC && (
-                <div className="override-row">
-                    <label>Pontszám felülírása:</label>
-                    <input
-                        type="number"
-                        className="override-input"
-                        min="0"
-                        max={answer.maxPoints}
-                        value={overrideVal}
-                        onChange={e => setOverrideVal(e.target.value)}
-                    />
-                    <button className="override-btn" onClick={handleOverride} disabled={saving}>
-                        {saving ? '...' : 'Mentés'}
-                    </button>
-                    {saved && <span className="override-saved">Elmentve!</span>}
+
+            <div className="answer-comparison">
+                <div className="answer-box student">
+                    <label>Diák válasza</label>
+                    <div className="ans-val">{renderAnswer(answer.studentAnswer, answer.questionType)}</div>
                 </div>
-            )}
+                <div className="answer-box correct">
+                    <label>Helyes válasz</label>
+                    <div className="ans-val">{renderAnswer(answer.correctAnswer, answer.questionType)}</div>
+                </div>
+            </div>
+
+            <div className="answer-footer">
+                <div className="score-status">
+                    Pontszám: <strong>{answer.score} / {answer.maxPoints}</strong>
+                    {answer.score === answer.maxPoints ? <FaCheckCircle className="icon-success" /> : <FaTimes className="icon-error" />}
+                </div>
+
+                <div className="override-controls">
+                    <input 
+                        type="number" 
+                        min="0" 
+                        max={answer.maxPoints} 
+                        value={overrideVal} 
+                        onChange={e => setOverrideVal(e.target.value)} 
+                    />
+                    <button onClick={handleOverride} disabled={saving}>
+                        {saving ? '...' : <FaEdit />}
+                    </button>
+                    {saved && <span className="saved-msg">✓</span>}
+                </div>
+            </div>
         </div>
     );
 };
 
-const StudentSubmissionCard = ({ submission, assignmentId }) => {
+const StudentSubmissionCard = ({ submission, assignmentId, onGradeFinalized }) => {
     const [open, setOpen] = useState(false);
     const [localPoints, setLocalPoints] = useState(submission.achievedPoints);
+    const [grade, setGrade] = useState(submission.grade || '');
+    const [gradeSaving, setGradeSaving] = useState(false);
+    const [gradeSaved, setGradeSaved] = useState(false);
 
     const handleScoreUpdate = (questionId, newScore) => {
         const updated = submission.answers.map(a =>
@@ -92,17 +112,80 @@ const StudentSubmissionCard = ({ submission, assignmentId }) => {
         setLocalPoints(total);
     };
 
+    const handleGradeSave = async () => {
+        if (!grade) return;
+        setGradeSaving(true);
+        try {
+            await finalizeGrade(submission.studentId, assignmentId, grade);
+            setGradeSaved(true);
+            onGradeFinalized(Number(grade));
+            setTimeout(() => setGradeSaved(false), 3000);
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setGradeSaving(false);
+        }
+    };
+
+    const percentage = Math.round((localPoints / submission.totalPoints) * 100);
+
     return (
-        <div className="student-submission-card">
-            <div className="submission-card-header" onClick={() => setOpen(o => !o)}>
-                <span className="submission-student-name">{submission.studentName}</span>
-                <span className="submission-points">
-                    {localPoints} / {submission.totalPoints} pont
-                    {open ? <FaChevronUp style={{ marginLeft: 8 }} /> : <FaChevronDown style={{ marginLeft: 8 }} />}
-                </span>
+        <div className={`submission-card ${open ? 'open' : ''}`}>
+            <div className="card-summary" onClick={() => setOpen(!open)}>
+                <div className="student-info">
+                    <div className="avatar">{submission.studentName.charAt(0)}</div>
+                    <div>
+                        <div className="name">{submission.studentName}</div>
+                        <div className="date">{new Date(submission.completedAt).toLocaleString('hu-HU')}</div>
+                    </div>
+                </div>
+
+                <div className="submission-stats">
+                    <div className="stat-item">
+                        <span className="label">Eredmény</span>
+                        <span className="val">{localPoints} / {submission.totalPoints}</span>
+                    </div>
+                    <div className="stat-item">
+                        <span className="label">Százalék</span>
+                        <span className="val">{percentage}%</span>
+                    </div>
+                    <div className="stat-item">
+                        <span className="label">Javasolt jegy</span>
+                        <span className="val suggested">{submission.suggestedGrade}</span>
+                    </div>
+                </div>
+
+                <div className="grade-selector-premium" onClick={e => e.stopPropagation()}>
+                    <div className="select-wrapper">
+                        <select 
+                            value={grade} 
+                            onChange={e => setGrade(e.target.value)}
+                            className={grade ? `has-val grade-${grade}` : ''}
+                        >
+                            <option value="">Jegy...</option>
+                            <option value="5">5 - Jeles</option>
+                            <option value="4">4 - Jó</option>
+                            <option value="3">3 - Közepes</option>
+                            <option value="2">2 - Elégséges</option>
+                            <option value="1">1 - Elégtelen</option>
+                        </select>
+                    </div>
+                    <button 
+                        className={`save-grade-btn ${gradeSaved ? 'saved' : ''}`} 
+                        onClick={handleGradeSave} 
+                        disabled={gradeSaving || !grade}
+                    >
+                        {gradeSaving ? '...' : (gradeSaved ? <FaCheckCircle /> : <FaCheck />)}
+                    </button>
+                </div>
+
+                <div className="expand-icon">
+                    {open ? <FaChevronUp /> : <FaChevronDown />}
+                </div>
             </div>
+
             {open && (
-                <div className="submission-answers">
+                <div className="card-details-expanded">
                     {submission.answers.map(answer => (
                         <SubmissionAnswerRow
                             key={String(answer.questionId)}
@@ -125,20 +208,18 @@ const AssignmentDetailsPage = () => {
     const [submissions, setSubmissions] = useState(null);
     const [subLoading, setSubLoading] = useState(false);
     const [subError, setSubError] = useState('');
+    const [showGraded, setShowGraded] = useState(false);
 
-    if (!assignment) {
-        return <div>Nem található dolgozat.</div>;
-    }
+    if (!assignment) return <div className="error-state">Dolgozat nem található.</div>;
 
     const loadSubmissions = async () => {
         if (submissions !== null) return;
         setSubLoading(true);
-        setSubError('');
         try {
             const data = await fetchAssignmentSubmissions(assignment._id);
             setSubmissions(data.submissions || []);
         } catch (err) {
-            setSubError(err.message || 'Hiba a beküldések lekérésekor.');
+            setSubError(err.message || 'Hiba a lekérés során.');
         } finally {
             setSubLoading(false);
         }
@@ -151,81 +232,103 @@ const AssignmentDetailsPage = () => {
 
     return (
         <div id="content">
-            <div className="assignment-details-container">
-                <div className="assignment-details-header">
-                    <h1 className='title'>{assignment.title}</h1>
-                    <div className="assignment-meta">
-                        <span className="meta-badge">{assignment.subject}</span>
-                        <span className="meta-badge">{assignment.difficulty}</span>
-                        <span className="meta-badge">{assignment.questions?.length || 0} kérdés</span>
-                        {assignment.completedCount > 0 && (
-                            <span className="meta-badge">{assignment.completedCount} beküldés</span>
-                        )}
+            <div className="assignment-details-premium">
+                <header className="details-header">
+                    <div className="header-top">
+                        <h1 className="title">{assignment.title}</h1>
+                        <div className={`status-pill ${assignment.completedCount > 0 ? 'active' : ''}`}>
+                            {assignment.completedCount > 0 ? 'Kitöltve' : 'Folyamatban'}
+                        </div>
                     </div>
-                </div>
+                    <div className="meta-row">
+                        <span className="meta-item"><FaBookOpen /> {assignment.subject}</span>
+                        <span className="meta-item"><FaBrain /> {assignment.difficulty}</span>
+                        <span className="meta-item"><FaQuestionCircle /> {assignment.questions?.length || 0} kérdés</span>
+                        <span className="meta-item"><FaUserGraduate /> {assignment.completedCount} beküldés</span>
+                    </div>
+                </header>
 
-                <div className="details-tabs">
-                    <button
-                        className={`details-tab-btn ${activeTab === 'questions' ? 'active' : ''}`}
+                <div className="tabs-navigation">
+                    <button 
+                        className={activeTab === 'questions' ? 'active' : ''} 
                         onClick={() => handleTabChange('questions')}
                     >
-                        Kérdések
+                        <FaQuestionCircle /> Kérdéssor
                     </button>
-                    <button
-                        className={`details-tab-btn ${activeTab === 'submissions' ? 'active' : ''}`}
+                    <button 
+                        className={activeTab === 'submissions' ? 'active' : ''} 
                         onClick={() => handleTabChange('submissions')}
                     >
-                        Diákok válaszai{assignment.completedCount > 0 ? ` (${assignment.completedCount})` : ''}
+                        <FaUserGraduate /> Beküldések
                     </button>
                 </div>
 
-                {activeTab === 'questions' && (
-                    <div className="questions-container">
-                        {assignment.questions?.map((question, index) => (
-                            <div key={index} className="question-card">
-                                <p className="question-text">
-                                    <strong>{index + 1}.</strong> {question.questionText}
-                                </p>
-                                {question.options && question.options.length > 0 ? (
-                                    <ul className="question-options">
-                                        {question.options.map((opt, i) => (
-                                            <li
-                                                key={i}
-                                                className={opt === question.correctAnswer ? 'option correct-option' : 'option'}
-                                            >
-                                                {opt}
-                                                {opt === question.correctAnswer && (
-                                                    <span className="correct-badge"> ✓</span>
-                                                )}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="correct-answer">
-                                        <strong>Helyes válasz:</strong> {question.correctAnswer}
-                                    </p>
+                <div className="tab-content">
+                    {activeTab === 'questions' && (
+                        <div className="questions-grid">
+                            {assignment.questions?.map((q, idx) => (
+                                <div key={idx} className="question-item-card">
+                                    <div className="q-header">
+                                        <span className="q-num">{idx + 1}</span>
+                                        <span className="q-type">{q.questionType}</span>
+                                        <span className="q-pts">{q.points} pont</span>
+                                    </div>
+                                    <div className="q-text">{q.questionText}</div>
+                                    <div className="q-correct-box">
+                                        <label>Helyes megoldás:</label>
+                                        <div className="val">
+                                            {Array.isArray(q.correctAnswer) ? q.correctAnswer.join(', ') : String(q.correctAnswer)}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {activeTab === 'submissions' && (
+                        <div className="submissions-view">
+                            <div className="sub-tabs">
+                                <button 
+                                    className={!showGraded ? 'active' : ''} 
+                                    onClick={() => setShowGraded(false)}
+                                >
+                                    Javítandó ({submissions?.filter(s => !s.grade).length || 0})
+                                </button>
+                                <button 
+                                    className={showGraded ? 'active' : ''} 
+                                    onClick={() => setShowGraded(true)}
+                                >
+                                    Értékelt ({submissions?.filter(s => s.grade).length || 0})
+                                </button>
+                            </div>
+
+                            <div className="submissions-list">
+                                {subLoading && <div className="loading-box">Beküldések betöltése...</div>}
+                                {subError && <div className="error-box">{subError}</div>}
+                                {!subLoading && (
+                                    (showGraded 
+                                        ? submissions?.filter(s => s.grade) 
+                                        : submissions?.filter(s => !s.grade)
+                                    )?.map(sub => (
+                                        <StudentSubmissionCard 
+                                            key={sub.studentId} 
+                                            submission={sub} 
+                                            assignmentId={assignment._id} 
+                                            onGradeFinalized={(newGrade) => {
+                                                setSubmissions(prev => prev.map(s => 
+                                                    s.studentId === sub.studentId ? { ...s, grade: newGrade } : s
+                                                ));
+                                            }}
+                                        />
+                                    ))
+                                )}
+                                {!subLoading && (showGraded ? submissions?.filter(s => s.grade) : submissions?.filter(s => !s.grade))?.length === 0 && (
+                                    <div className="empty-box">Nincs megjeleníthető beküldés ebben a kategóriában.</div>
                                 )}
                             </div>
-                        ))}
-                    </div>
-                )}
-
-                {activeTab === 'submissions' && (
-                    <div className="submissions-container">
-                        {subLoading && <p style={{ color: 'var(--color-text-dim)' }}>Betöltés...</p>}
-                        {subError && <p className="error-message"><FaExclamationTriangle />{subError}</p>}
-                        {!subLoading && submissions !== null && submissions.length === 0 && (
-                            <p style={{ color: 'var(--color-text-dim)' }}>Még nem küldött be senki.</p>
-                        )}
-                        {!subLoading && submissions?.map(sub => (
-                            <StudentSubmissionCard
-                                key={String(sub.studentId)}
-                                submission={sub}
-                                assignmentId={assignment._id}
-                            />
-                        ))}
-                    </div>
-                )}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

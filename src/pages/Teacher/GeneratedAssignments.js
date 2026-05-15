@@ -2,6 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { fetchAssignments } from '../../api/Assignments/Teacher/Assignments';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import { 
+    FaClipboardList, 
+    FaCheckCircle, 
+    FaHourglassHalf, 
+    FaUsers, 
+    FaBookOpen, 
+    FaChartLine,
+    FaArrowRight,
+    FaExclamationTriangle
+} from 'react-icons/fa';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Teacher/GeneratedAssignments.css';
 
@@ -9,7 +19,7 @@ const GeneratedAssignments = () => {
     const [assignments, setAssignments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [activeTab, setActiveTab] = useState('pending');
+    const [activeTab, setActiveTab] = useState('all');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -26,88 +36,118 @@ const GeneratedAssignments = () => {
         fetchData();
     }, []);
 
-    if (loading) {
-        return (
-            <div id="content">
-                <LoadingSpinner />
-            </div>
-        );
-    }
+    if (loading) return <div id="content"><LoadingSpinner /></div>;
+    if (error) return <div id="content" className="error-container"><FaExclamationTriangle /> {error}</div>;
 
-    if (error) {
-        return <div>{error}</div>;
-    }
-
-    const pendingAssignments = assignments.filter(a => {
-        const total = a.studentIds?.length || 1;
-        return (a.completedCount || 0) / total < 0.5;
+    const filteredAssignments = assignments.filter(a => {
+        if (activeTab === 'all') return true;
+        const total = a.studentIds?.length || 0;
+        const completed = a.completedCount || 0;
+        if (activeTab === 'review') return completed > 0;
+        if (activeTab === 'pending') return completed === 0;
+        return true;
     });
-
-    const reviewAssignments = assignments.filter(a => (a.completedCount || 0) > 0);
-
-    const displayList = activeTab === 'pending' ? pendingAssignments : reviewAssignments;
 
     return (
         <div id="content">
-            <div className="assignments-container">
-                <h1 className="title">Dolgozat Kiértékelés</h1>
+            <div className="generated-assignments-wrapper">
+                <header className="page-header-simple">
+                    <div className="header-icon-box"><FaClipboardList /></div>
+                    <div className="header-info">
+                        <h1 className="title">Létrehozott Dolgozatok</h1>
+                        <p className="subtitle">Kövessd nyomon a diákok haladását és javítsd ki a beérkezett válaszokat.</p>
+                    </div>
+                </header>
 
-                <ul className="completed-tabs">
-                    <li className="nav-item">
-                        <button
-                            className={`nav-link ${activeTab === 'pending' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('pending')}
-                        >
-                            Függőben ({pendingAssignments.length})
-                        </button>
-                    </li>
-                    <li className="nav-item">
-                        <button
-                            className={`nav-link ${activeTab === 'review' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('review')}
-                        >
-                            Javításra váró ({reviewAssignments.length})
-                        </button>
-                    </li>
-                </ul>
+                <div className="stats-overview">
+                    <div className="stat-card">
+                        <div className="stat-icon blue"><FaClipboardList /></div>
+                        <div className="stat-data">
+                            <div className="stat-value">{assignments.length}</div>
+                            <div className="stat-label">Összes dolgozat</div>
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon green"><FaCheckCircle /></div>
+                        <div className="stat-data">
+                            <div className="stat-value">{assignments.reduce((sum, a) => sum + (a.completedCount || 0), 0)}</div>
+                            <div className="stat-label">Összes kitöltés</div>
+                        </div>
+                    </div>
+                    <div className="stat-card">
+                        <div className="stat-icon orange"><FaHourglassHalf /></div>
+                        <div className="stat-data">
+                            <div className="stat-value">{assignments.filter(a => (a.completedCount || 0) > 0).length}</div>
+                            <div className="stat-label">Javítás alatt</div>
+                        </div>
+                    </div>
+                </div>
 
-                <div className="assignment-grid">
-                    {displayList.length === 0 ? (
-                        <p>Nincsenek dolgozatok ebben a kategóriában.</p>
+                <div className="filter-tabs">
+                    <button className={activeTab === 'all' ? 'active' : ''} onClick={() => setActiveTab('all')}>
+                        Összes ({assignments.length})
+                    </button>
+                    <button className={activeTab === 'review' ? 'active' : ''} onClick={() => setActiveTab('review')}>
+                        Javításra vár ({assignments.filter(a => (a.completedCount || 0) > 0).length})
+                    </button>
+                    <button className={activeTab === 'pending' ? 'active' : ''} onClick={() => setActiveTab('pending')}>
+                        Függőben ({assignments.filter(a => (a.completedCount || 0) === 0).length})
+                    </button>
+                </div>
+
+                <div className="assignments-grid">
+                    {filteredAssignments.length === 0 ? (
+                        <div className="empty-state">
+                            <FaBookOpen />
+                            <p>Nincsenek dolgozatok ebben a kategóriában.</p>
+                            <Link to="/dolgozat-generalas" className="create-btn">Új dolgozat létrehozása</Link>
+                        </div>
                     ) : (
-                        displayList.slice().reverse().map((assignment) => {
-                            const total = assignment.studentIds?.length || 0;
-                            const completed = assignment.completedCount || 0;
-                            const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+                        filteredAssignments.slice().reverse().map((a) => {
+                            const total = a.studentIds?.length || 0;
+                            const completed = a.completedCount || 0;
+                            const pct = total > 0 ? (completed / total) * 100 : 0;
+                            
                             return (
-                                <Link
-                                    key={assignment._id}
-                                    to={`/generalt-dolgozatok/${assignment._id}`}
-                                    state={{ assignment }}
-                                    className="assignment-card-link"
-                                >
-                                    <div className="assignment-card">
-                                        <div className="title-container">
-                                            <h3>{assignment.title}</h3>
+                                <div key={a._id} className="assignment-card-premium">
+                                    <div className="card-header">
+                                        <div className="subject-tag">{a.subject}</div>
+                                        <div className={`difficulty-tag ${a.difficulty}`}>{a.difficulty}</div>
+                                    </div>
+                                    <h3 className="assignment-title">{a.title}</h3>
+                                    
+                                    <div className="card-details">
+                                        <div className="detail-item">
+                                            <FaUsers /> <span>{total} diák hozzárendelve</span>
                                         </div>
-                                        <div className="assignment-card-text">
-                                            <div>
-                                                <p>Tantárgy:</p>
-                                                <p>Nehézség:</p>
-                                                <p>Létrehozva:</p>
-                                                <p>Kitöltöttség:</p>
-                                            </div>
-                                            <div>
-                                                <p>{assignment.subject}</p>
-                                                <p>{assignment.difficulty}</p>
-                                                <p className="created">
-                                                    {format(new Date(assignment.createdAt), 'yyyy.MM.dd HH:mm')}
-                                                </p>
-                                                <p>{completed} / {total} ({pct}%)</p>
-                                            </div>
+                                        <div className="detail-item">
+                                            <FaChartLine /> <span>{completed} / {total} kitöltve</span>
+                                        </div>
+                                        <div className="detail-item">
+                                            <FaHourglassHalf /> <span>{format(new Date(a.createdAt), 'yyyy.MM.dd')}</span>
                                         </div>
                                     </div>
-                                </Link>
+
+                                    <div className="progress-container">
+                                        <div className="progress-label">
+                                            <span>Haladás</span>
+                                            <span>{Math.round(pct)}%</span>
+                                        </div>
+                                        <div className="progress-bar-bg">
+                                            <div className="progress-bar-fill" style={{ width: `${pct}%` }}></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="card-actions">
+                                        <Link 
+                                            to={`/generalt-dolgozatok/${a._id}`} 
+                                            state={{ assignment: a }}
+                                            className="view-btn"
+                                        >
+                                            Kezelés <FaArrowRight />
+                                        </Link>
+                                    </div>
+                                </div>
                             );
                         })
                     )}

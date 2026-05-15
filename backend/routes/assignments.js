@@ -4,6 +4,7 @@ const Assignment = require('../models/Assignment');
 const User = require('../models/User');
 const Class = require('../models/Class');
 const { generateText, generateChat, generateChatWithHistory } = require('../services/groq');
+const groqService = require('../services/groqService');
 const router = express.Router();
 const authenticateTeacher = require('../middleware/authenticateTeacher');
 const authenticateStudent = require('../middleware/authenticateStudent');
@@ -47,39 +48,47 @@ function parseJsonQuestions(text) {
   return null;
 }
 
-// Közös AI generálás helper (nem ment DB-be)
+// AI generálás GroqService használatával
 async function generateQuestions(subject, title, diffDesc, resolvedTypes) {
   const allQuestions = [];
+  
   for (const { type, count } of resolvedTypes) {
-    let prompt;
-    if (type === 'feleletvalasztos') {
-      prompt = `Készíts pontosan ${count} db feleletválasztós ${subject} kérdést a(z) "${title}" témakörből.
-Nehézség: ${diffDesc}.
-Minden kérdésnek legyen 4 válaszlehetősége (A, B, C, D), amelyek közül pontosan egy helyes.
-A kérdések és válaszok legyenek általános iskolás szintűek, rövidek és egyértelműek.
+    const typeMapping = {
+      'nyilt': 'short_answer',
+      'feleletvalasztos': 'mcq',
+      'igaz_hamis': 'true_false',
+      'parositas': 'matching',
+      'sorbarendezes': 'ordering',
+      'hianyos_szoveg': 'fill_blank'
+    };
 
-Kizárólag ezt a JSON formátumot add vissza, semmi mást, semmi magyarázat:
-{"questions":[{"questionText":"Kérdés szövege","options":["A: első lehetőség","B: második lehetőség","C: harmadik lehetőség","D: negyedik lehetőség"],"correctAnswer":"A: első lehetőség"}]}`;
-    } else {
-      prompt = `Készíts pontosan ${count} db nyílt végű ${subject} kérdést a(z) "${title}" témakörből.
+    const groqType = typeMapping[type] || 'short_answer';
+    
+    // We'll generate questions specifically of this type
+    const prompt = `Készíts pontosan ${count} darab ${groqType} típusú kérdést ${subject} tantárgyból, a "${title}" témakörhöz.
 Nehézség: ${diffDesc}.
-Minden kérdésre adj rövid, pontos helyes választ (1-2 mondat).
-A kérdések és válaszok legyenek általános iskolás szintűek és egyértelműek.
+Válaszolj KIZÁRÓLAG egy érvényes JSON blokkal a megadott formátumban.`;
 
-Kizárólag ezt a JSON formátumot add vissza, semmi mást, semmi magyarázat:
-{"questions":[{"questionText":"Kérdés szövege","correctAnswer":"Helyes válasz szövege"}]}`;
-    }
-    const responseText = await generateText(prompt);
-    const parsed = parseJsonQuestions(responseText);
-    if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
-      throw new Error('A kérdések generálása sikertelen. Kérjük, próbálja újra.');
-    }
-    const mapped = parsed.questions.slice(0, count).map(q => ({
-      questionText: (q.questionText || '').trim(),
-      options: Array.isArray(q.options) ? q.options : [],
-      correctAnswer: (q.correctAnswer || '').trim() || null,
+    const questions = await groqService.generatePracticeQuestionSet(
+      subject, 
+      title, 
+      3, 
+      count, 
+      diffDesc, 
+      [],
+      allQuestions
+    );
+
+    const mapped = questions.map(q => ({
+      questionText: q.questionText,
+      questionType: q.questionType,
+      options: q.options,
+      pairs: q.pairs,
+      items: q.items,
+      correctAnswer: q.correctAnswer,
       points: 1,
     }));
+    
     allQuestions.push(...mapped);
   }
   return shuffleArray(allQuestions);
@@ -131,8 +140,11 @@ router.post('/teacher/save', authenticateTeacher, async (req, res) => {
 
     const cleanQuestions = questions.map(q => ({
       questionText: (q.questionText || '').trim(),
+      questionType: q.questionType || 'short_answer',
       options: Array.isArray(q.options) ? q.options : [],
-      correctAnswer: (q.correctAnswer || '').trim() || null,
+      pairs: Array.isArray(q.pairs) ? q.pairs : [],
+      items: Array.isArray(q.items) ? q.items : [],
+      correctAnswer: q.correctAnswer,
       points: Number(q.points) || 1,
     }));
 
@@ -386,6 +398,7 @@ router.get('/student/completed-assignments', authenticateStudent, async (req, re
       achievedPoints: assignment.achievedPoints,
       totalPoints: assignment.assignmentId.totalPoints,
       completedAt: assignment.completedAt,
+      grade: assignment.grade,
       answers: assignment.answers.map(answer => {
         // Megkeresi a kérdés szövegét az eredeti kérdések között
         const question = assignment.assignmentId.questions.find(q => q._id.equals(answer.questionId));
@@ -462,43 +475,78 @@ router.post('/student/submit/:assignmentId', authenticateStudent, async (req, re
     for (const question of assignment.questions) {
       const studentAnswer = answers[question._id];
       let score = 0;
-      let confidence = null;
+      let confidence = 1.0;
+      let aiFeedback = '';
 
-      if (studentAnswer) {
-        const isMC = Array.isArray(question.options) && question.options.length > 0;
-        if (isMC) {
-          // Feleletválasztós: pontos string összehasonlítás
-          if (studentAnswer.trim() === (question.correctAnswer || '').trim()) {
+      if (studentAnswer !== undefined && studentAnswer !== null) {
+        const type = question.questionType || 'short_answer';
+
+        if (type === 'mcq' || type === 'true_false' || type === 'fill_blank') {
+          // Egyszerű szöveges egyezés
+          const norm = (s) => String(s || '').toLowerCase().trim();
+          if (norm(studentAnswer) === norm(question.correctAnswer)) {
             score = question.points;
-            achievedPoints += question.points;
           }
-          confidence = 1.0;
-        } else {
-          // Nyílt végű: AI értékelés konfidenciaszinttel
-          const evalPrompt = `Értékeld a diák válaszát az alábbi kérdésre. Válaszolj KIZÁRÓLAG ebben a JSON formátumban, semmi más szöveg:
-{"isCorrect": true, "confidence": 0.9}
-
-Kérdés: ${question.questionText}
-Helyes válasz: ${question.correctAnswer}
-Diák válasza: ${studentAnswer}
-
-- isCorrect: igaz, ha a diák válasza lényegében helyes (lehet más szavakkal megfogalmazva)
-- confidence: mennyire biztos az értékelés (0.0–1.0; alacsony ha a kérdés szubjektív vagy a válasz részleges)`;
-
-          const evalResponse = await generateText(evalPrompt);
-          const parsed = parseJsonQuestions(evalResponse);
-          if (parsed && parsed.isCorrect === true) {
-            score = question.points;
-            achievedPoints += question.points;
+        } else if (type === 'ordering') {
+          // Sorrend egyezés (tömbök)
+          if (Array.isArray(studentAnswer) && Array.isArray(question.correctAnswer)) {
+            const isCorrect = studentAnswer.length === question.correctAnswer.length &&
+              studentAnswer.every((val, index) => val === question.correctAnswer[index]);
+            if (isCorrect) score = question.points;
           }
-          confidence = (parsed && typeof parsed.confidence === 'number') ? parsed.confidence : 0.5;
+        } else if (type === 'matching') {
+          // Párosítás egyezés (objektum)
+          if (typeof studentAnswer === 'object' && typeof question.correctAnswer === 'object') {
+            let correctCount = 0;
+            const keys = Object.keys(question.correctAnswer);
+            keys.forEach(key => {
+              if (studentAnswer[key] === question.correctAnswer[key]) correctCount++;
+            });
+            // Részpontszám vagy mindent-vagy-semmit? Legyen mindent-vagy-semmit az egyszerűség kedvéért most
+            if (correctCount === keys.length) score = question.points;
+          }
+        } else if (type === 'short_answer') {
+          // Nyílt végű: AI értékelés
+          try {
+            const evaluation = await groqService.checkShortTextAnswer(
+              assignment.subject,
+              question.questionText,
+              studentAnswer,
+              question.correctAnswer
+            );
+            if (evaluation.correct) score = question.points;
+            aiFeedback = evaluation.reason;
+            confidence = 0.8; // AI alapú
+          } catch (err) {
+            console.error('AI grading error:', err);
+            // Fallback: egyszerű tartalmazás vizsgálat
+            if (String(studentAnswer).toLowerCase().includes(String(question.correctAnswer).toLowerCase())) {
+              score = question.points;
+            }
+          }
         }
-
-        answerData.push({ questionId: question._id, studentAnswer, score, confidence });
+        
+        achievedPoints += score;
+        answerData.push({ 
+          questionId: question._id, 
+          studentAnswer, 
+          score, 
+          confidence,
+          aiFeedback 
+        });
       } else {
-        answerData.push({ questionId: question._id, studentAnswer: null, score: 0, confidence: null });
+        answerData.push({ questionId: question._id, studentAnswer: null, score: 0, confidence: 1.0 });
       }
     }
+
+    // Osztályzat javaslat az AI-tól
+    let suggestedGrade = 1;
+    const percentage = (achievedPoints / assignment.totalPoints) * 100;
+    if (percentage >= 90) suggestedGrade = 5;
+    else if (percentage >= 80) suggestedGrade = 4;
+    else if (percentage >= 65) suggestedGrade = 3;
+    else if (percentage >= 50) suggestedGrade = 2;
+    else suggestedGrade = 1;
 
     // A diák adatainak frissítése a kitöltött dolgozattal
     await User.findByIdAndUpdate(studentId, {
@@ -507,6 +555,7 @@ Diák válasza: ${studentAnswer}
           assignmentId,
           answers: answerData,
           achievedPoints,
+          suggestedGrade,
           completedAt: new Date()
         }
       }
@@ -577,18 +626,24 @@ router.get('/teacher/assignment-submissions/:assignmentId', authenticateTeacher,
         studentName: student.name,
         achievedPoints: submission.achievedPoints,
         totalPoints: assignment.totalPoints,
+        suggestedGrade: submission.suggestedGrade,
+        grade: submission.grade,
         completedAt: submission.completedAt,
         answers: submission.answers.map(answer => {
           const question = assignment.questions.find(q => q._id.equals(answer.questionId));
           return {
             questionId: answer.questionId,
             questionText: question ? question.questionText : null,
+            questionType: question ? question.questionType : 'short_answer',
             options: question ? question.options : [],
+            pairs: question ? question.pairs : [],
+            items: question ? question.items : [],
             studentAnswer: answer.studentAnswer,
             correctAnswer: question ? question.correctAnswer : null,
             score: answer.score,
             maxPoints: question ? question.points : 1,
             confidence: answer.confidence ?? null,
+            aiFeedback: answer.aiFeedback || '',
             flagged: answer.flagged ?? false,
           };
         }),
@@ -838,6 +893,26 @@ router.get('/teacher/detailed-statistics', authenticateTeacher, async (req, res)
   } catch (error) {
     console.error('Részletes statisztika hiba:', error);
     res.status(500).json({ message: 'Hiba történt a részletes statisztikák lekérdezése során.' });
+  }
+});
+
+// Tanár: osztályzat véglegesítése
+router.put('/teacher/finalize-grade', authenticateTeacher, async (req, res) => {
+  try {
+    const { studentId, assignmentId, grade } = req.body;
+    if (!studentId || !assignmentId || grade === undefined) {
+      return res.status(400).json({ message: 'Hiányzó mezők.' });
+    }
+
+    await User.updateOne(
+      { _id: studentId, 'assignments.assignmentId': assignmentId },
+      { $set: { 'assignments.$.grade': Number(grade) } }
+    );
+
+    res.json({ message: 'Osztályzat sikeresen rögzítve.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Hiba az osztályzat véglegesítésekor.' });
   }
 });
 

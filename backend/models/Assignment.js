@@ -2,8 +2,11 @@ const mongoose = require('mongoose');
 
 const questionSchema = new mongoose.Schema({
   questionText: { type: String, required: true },
+  questionType: { type: String, default: 'short_answer' }, // mcq, true_false, short_answer, fill_blank, matching, ordering
   options: { type: [String], default: [] },
-  correctAnswer: { type: String, default: null },
+  pairs: [{ left: String, right: String }],
+  items: { type: [String], default: [] },
+  correctAnswer: { type: mongoose.Schema.Types.Mixed, default: null },
   points: { type: Number, default: 1 },
 });
 

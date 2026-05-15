@@ -158,7 +158,7 @@ Utasítások:
     }
   }
 
-  async generatePracticeQuestionSet(subject, topic, difficulty = 3, count = 10, grade = 'általános iskola', weakQuestions = []) {
+  async generatePracticeQuestionSet(subject, topic, difficulty = 3, count = 10, grade = 'általános iskola', weakQuestions = [], excludeQuestions = []) {
     const difficultyDescriptions = {
       1: '1-2. osztályos szint: egyszerű tények felismerése, alapvető fogalmak azonosítása',
       2: '3-4. osztályos szint: alapfogalmak alkalmazása egyszerű szituációkban',
@@ -171,9 +171,13 @@ Utasítások:
       ? `\nADAPTÍV FELADATOK: A diák az előző fejezetben nehéznek találta az alábbi kérdés(eke)t. Adj meg legalább ${Math.min(weakQuestions.length, 3)} hasonló, de ELTÉRŐ megfogalmazású kérdést ugyanerre a témára, hogy megerősítsd a tudást:\n${weakQuestions.map((wq, i) => `  ${i+1}. [${wq.questionType}] "${wq.questionText}"`).join('\n')}\n`
       : '';
 
+    const excludeSection = excludeQuestions && excludeQuestions.length > 0
+      ? `\nKIZÁRANDÓ KÉRDÉSEK (Ezeket tilos megismételni!): \n${excludeQuestions.map((eq, i) => `  ${i+1}. "${eq.questionText}"`).join('\n')}\n`
+      : '';
+
     const prompt = `Te egy kreatív és tapasztalt pedagógus AI vagy. Készíts pontosan ${count} darab KIVÁLÓ MINŐSÉGŰ, érdekes és gondolkodtató gyakorló kérdést ${subject} tantárgyból, a "${topic}" témakörhöz egy ${grade} osztályos tanulónak.
 Nehézség: ${difficulty}/5 – ${difficultyDescriptions[difficulty] || difficultyDescriptions[3]}
-${weakSection}
+${weakSection}${excludeSection}
 FONTOS: NE generálj hanganyagot, videót vagy külső médiát igénylő kérdést! Minden kérdés önállóan, kizárólag szöveg alapján legyen megválaszolható!
 
 Kerüld a túl száraz, bemagolható definíciókat! Használj valós életből vett, kreatív példákat és szituációkat, amik felkeltik a diák érdeklődését és a tényleges megértést tesztelik.

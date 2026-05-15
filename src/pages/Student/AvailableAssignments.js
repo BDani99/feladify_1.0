@@ -2,9 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { fetchAvailableAssignments } from '../../api/Assignments/Student/Assignments';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { FaExclamationCircle, FaClock } from 'react-icons/fa';
+import { 
+    FaExclamationCircle, 
+    FaClock, 
+    FaBook, 
+    FaBrain, 
+    FaHistory, 
+    FaArrowRight, 
+    FaClipboardList 
+} from 'react-icons/fa';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import '../../styles/Teacher/GeneratedAssignments.css'
+import '../../styles/Student/AvailableAssignments.css';
 
 function getDeadlineInfo(dueDate) {
     if (!dueDate) return null;
@@ -22,78 +30,79 @@ const AvailableAssignments = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        let isMounted = true;
         const loadAssignments = async () => {
             try {
                 const data = await fetchAvailableAssignments();
-                if (isMounted) setAssignments(Array.isArray(data) ? [...data].reverse() : []);
+                setAssignments(Array.isArray(data) ? [...data].reverse() : []);
             } catch (err) {
-                if (isMounted) setError('Nem sikerült betölteni a dolgozatokat. Kérjük, próbáld újra.');
+                setError('Nem sikerült betölteni a dolgozatokat.');
             } finally {
-                if (isMounted) setLoading(false);
+                setLoading(false);
             }
         };
         loadAssignments();
-        return () => { isMounted = false; };
     }, []);
 
-    if (loading) {
-        return (
-            <div id="content">
-                <LoadingSpinner />
-            </div>
-        );
-    }
+    if (loading) return <div id="content"><LoadingSpinner /></div>;
 
     return (
         <div id="content">
-            <div className="assignments-container">
-                <h1 className="title">Elérhető Dolgozatok</h1>
-                {error && <p className="error-message"><FaExclamationCircle />{error}</p>}
-                <div className="assignment-grid">
+            <div className="available-assignments-wrapper">
+                <header className="page-header-premium">
+                    <div className="header-icon-box"><FaClipboardList /></div>
+                    <div className="header-text">
+                        <h1 className="title">Elérhető Dolgozatok</h1>
+                        <p className="subtitle">Itt találod a tanáraid által kiosztott aktuális feladatsorokat.</p>
+                    </div>
+                </header>
+
+                {error && <div className="error-box"><FaExclamationCircle /> {error}</div>}
+
+                <div className="student-assignment-grid">
                     {assignments.length > 0 ? (
-                        assignments.map((assignment) => {
-                            const dl = getDeadlineInfo(assignment.dueDate);
-                            const estimatedMinutes = (assignment.questions || []).length * 2;
+                        assignments.map((a) => {
+                            const dl = getDeadlineInfo(a.dueDate);
+                            const estimatedMinutes = (a.questions || []).length * 2;
                             return (
-                                <Link
-                                    key={assignment._id}
-                                    to={`/dolgozat/${assignment._id}`}
-                                    state={{ assignment }}
-                                    className="assignment-card-link"
-                                >
-                                    <div className="assignment-card">
-                                        <div className="title-container">
-                                            <h3>{assignment.title}</h3>
-                                        </div>
-                                        <div className="assignment-card-text">
-                                            <div>
-                                                <p>Tantárgy:</p>
-                                                <p>Nehézség:</p>
-                                                <p>Létrehozva:</p>
-                                                {dl && <p><FaClock style={{ fontSize: '0.75em', marginRight: 4 }} />Határidő:</p>}
-                                                <p>Becsült idő:</p>
-                                            </div>
-                                            <div>
-                                                <p>{assignment.subject}</p>
-                                                <p>{assignment.difficulty}</p>
-                                                <p className="created">
-                                                    {format(new Date(assignment.createdAt), 'yyyy.MM.dd HH:mm:ss')}
-                                                </p>
-                                                {dl && (
-                                                    <p className={dl.isUrgent || dl.isPast ? 'deadline-urgent' : ''}>
-                                                        {dl.formatted}
-                                                    </p>
-                                                )}
-                                                <p>{estimatedMinutes} perc</p>
-                                            </div>
-                                        </div>
+                                <div key={a._id} className="student-assignment-card">
+                                    <div className="card-top">
+                                        <div className="subject-badge">{a.subject}</div>
+                                        <div className={`difficulty-badge ${a.difficulty}`}>{a.difficulty}</div>
                                     </div>
-                                </Link>
+                                    
+                                    <h3 className="card-title">{a.title}</h3>
+                                    
+                                    <div className="card-meta">
+                                        <div className="meta-item">
+                                            <FaHistory /> <span>{format(new Date(a.createdAt), 'yyyy.MM.dd')}</span>
+                                        </div>
+                                        <div className="meta-item">
+                                            <FaClock /> <span>{estimatedMinutes} perc</span>
+                                        </div>
+                                        {dl && (
+                                            <div className={`meta-item deadline ${dl.isUrgent ? 'urgent' : ''} ${dl.isPast ? 'past' : ''}`}>
+                                                <FaExclamationCircle /> <span>{dl.formatted}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="card-footer">
+                                        <Link 
+                                            to={`/dolgozat/${a._id}`} 
+                                            state={{ assignment: a }} 
+                                            className="start-btn"
+                                        >
+                                            Megoldás elkezdése <FaArrowRight />
+                                        </Link>
+                                    </div>
+                                </div>
                             );
                         })
                     ) : (
-                        <p>Nincsenek elérhető dolgozatok.</p>
+                        <div className="empty-state-student">
+                            <FaBook />
+                            <p>Jelenleg nincs kitöltendő dolgozatod.</p>
+                        </div>
                     )}
                 </div>
             </div>

@@ -2,22 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fetchCompletedAssignments } from '../../api/Assignments/Student/Assignments';
-import { FaExclamationCircle } from 'react-icons/fa';
+import { 
+    FaCheckCircle, 
+    FaHourglassHalf, 
+    FaGraduationCap, 
+    FaBook, 
+    FaCalendarAlt, 
+    FaTrophy,
+    FaExclamationCircle,
+    FaArrowRight
+} from 'react-icons/fa';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import '../../styles/Teacher/GeneratedAssignments.css'
-
-function isOpenEnded(answers) {
-    return answers.some(ans => {
-        const ca = ans.correctAnswer || '';
-        return !ca.startsWith('A:') && !ca.startsWith('B:') && ca.length > 0;
-    });
-}
+import '../../styles/Student/CompletedAssignments.css';
 
 const CompletedAssignments = () => {
     const [assignments, setAssignments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [activeTab, setActiveTab] = useState('pending');
+    const [activeTab, setActiveTab] = useState('graded');
 
     useEffect(() => {
         const getAssignments = async () => {
@@ -25,98 +27,113 @@ const CompletedAssignments = () => {
                 const data = await fetchCompletedAssignments();
                 setAssignments(Array.isArray(data) ? data : (data.assignments || []));
             } catch (error) {
-                setError('A megoldott dolgozatok betöltése nem sikerült. Kérjük, próbáld újra.');
+                setError('A megoldott dolgozatok betöltése nem sikerült.');
             } finally {
                 setLoading(false);
             }
         };
-
         getAssignments();
     }, []);
 
-    if (loading) {
-        return (
-            <div id="content">
-                <LoadingSpinner />
-            </div>
-        );
-    }
+    if (loading) return <div id="content"><LoadingSpinner /></div>;
+    if (error) return <div id="content" className="error-box"><FaExclamationCircle /> {error}</div>;
 
-    if (error) {
-        return <div id="content"><p className="error-message"><FaExclamationCircle />{error}</p></div>;
-    }
+    const gradedAssignments = assignments.filter(a => a.grade !== null && a.grade !== undefined);
+    const pendingAssignments = assignments.filter(a => a.grade === null || a.grade === undefined);
 
-    // Függőben: ahol minden pontszám 0, VAGY nyílt végű kérdések vannak
-    const pendingAssignments = assignments.filter(a =>
-        a.answers.every(ans => ans.score === 0) || isOpenEnded(a.answers)
-    );
-
-    // Javított: ahol legalább egy nem-nulla pontszám van
-    const gradedAssignments = assignments.filter(a =>
-        a.answers.some(ans => ans.score > 0)
-    );
-
-    const displayList = activeTab === 'pending' ? pendingAssignments : gradedAssignments;
-
-    const renderCard = (assignment) => (
-        <div key={assignment.assignmentId}>
-            <Link
-                to={`/megoldott-dolgozatok/${assignment.assignmentId}`}
-                className="assignment-card-link"
-                state={{ assignment }}
-            >
-                <div className="assignment-card">
-                    <div className="title-container">
-                        <h3>{assignment.title}</h3>
-                    </div>
-                    <div className="assignment-card-text">
-                        <div>
-                            <p>Tantárgy:</p>
-                            <p>Elérhető/Elért pont:</p>
-                            <p>Megoldás dátuma:</p>
-                        </div>
-                        <div>
-                            <p>{assignment.subject}</p>
-                            <p>{assignment.totalPoints}/{assignment.achievedPoints} pont</p>
-                            <p className="created">
-                                {format(new Date(assignment.completedAt), 'yyyy.MM.dd HH:mm:ss')}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </Link>
-        </div>
-    );
+    const displayList = activeTab === 'graded' ? gradedAssignments : pendingAssignments;
 
     return (
         <div id='content'>
-            <div className="assignments-container">
-                <h1 className="title">Megoldott Dolgozatok</h1>
+            <div className="completed-assignments-wrapper">
+                <header className="page-header-premium">
+                    <div className="header-icon-box"><FaCheckCircle /></div>
+                    <div className="header-text">
+                        <h1 className="title">Befejezett Dolgozatok</h1>
+                        <p className="subtitle">Tekintsd meg az eredményeidet és a tanári visszajelzéseket.</p>
+                    </div>
+                </header>
 
-                <ul className="completed-tabs">
-                    <li className="nav-item">
-                        <button
-                            className={`nav-link ${activeTab === 'pending' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('pending')}
-                        >
-                            Függőben / Javítás alatt
-                        </button>
-                    </li>
-                    <li className="nav-item">
-                        <button
-                            className={`nav-link ${activeTab === 'graded' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('graded')}
-                        >
-                            Javított / Értékelt
-                        </button>
-                    </li>
-                </ul>
+                <div className="stats-mini-grid">
+                    <div className="mini-stat">
+                        <div className="stat-label">Átlag osztályzat</div>
+                        <div className="stat-val">
+                            {gradedAssignments.length > 0 
+                                ? (gradedAssignments.reduce((s, a) => s + a.grade, 0) / gradedAssignments.length).toFixed(1) 
+                                : '—'}
+                        </div>
+                    </div>
+                    <div className="mini-stat">
+                        <div className="stat-label">Befejezett</div>
+                        <div className="stat-val">{assignments.length}</div>
+                    </div>
+                    <div className="mini-stat">
+                        <div className="stat-label">Javítás alatt</div>
+                        <div className="stat-val">{pendingAssignments.length}</div>
+                    </div>
+                </div>
 
-                <div className="assignment-grid">
+                <div className="status-tabs-premium">
+                    <button 
+                        className={activeTab === 'graded' ? 'active' : ''} 
+                        onClick={() => setActiveTab('graded')}
+                    >
+                        Értékelt ({gradedAssignments.length})
+                    </button>
+                    <button 
+                        className={activeTab === 'pending' ? 'active' : ''} 
+                        onClick={() => setActiveTab('pending')}
+                    >
+                        Javítás alatt ({pendingAssignments.length})
+                    </button>
+                </div>
+
+                <div className="completed-grid">
                     {displayList.length === 0 ? (
-                        <p>Nincsenek dolgozatok ebben a kategóriában.</p>
+                        <div className="empty-state-completed">
+                            <FaHourglassHalf />
+                            <p>Nincsenek dolgozatok ebben a kategóriában.</p>
+                        </div>
                     ) : (
-                        displayList.slice().reverse().map(renderCard)
+                        displayList.slice().reverse().map((a) => (
+                            <Link 
+                                key={a.assignmentId} 
+                                to={`/megoldott-dolgozatok/${a.assignmentId}`} 
+                                className="completed-card-link"
+                                state={{ assignment: a }}
+                            >
+                                <div className="completed-card">
+                                    <div className="card-side-accent"></div>
+                                    <div className="card-main">
+                                        <div className="card-header-row">
+                                            <div className="subject-tag">{a.subject}</div>
+                                            <div className="date-tag">
+                                                <FaCalendarAlt /> {format(new Date(a.completedAt), 'yyyy.MM.dd')}
+                                            </div>
+                                            <div className={`status-badge ${a.grade ? 'graded' : 'pending'}`}>
+                                                {a.grade ? 'ÉRTÉKELVE' : 'JAVÍTÁS ALATT'}
+                                            </div>
+                                        </div>
+                                        
+                                        <h3 className="card-title">{a.title}</h3>
+                                        
+                                        <div className="card-details-row">
+                                            <div className="points-box">
+                                                <span className="label">Pontszám</span>
+                                                <span className="val">{a.achievedPoints} / {a.totalPoints}</span>
+                                            </div>
+                                            {a.grade && (
+                                                <div className="grade-box">
+                                                    <span className="label">Osztályzat</span>
+                                                    <span className={`val grade-${a.grade}`}>{a.grade}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="card-arrow"><FaArrowRight /></div>
+                                </div>
+                            </Link>
+                        ))
                     )}
                 </div>
             </div>

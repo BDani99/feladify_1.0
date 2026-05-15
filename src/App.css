@@ -113,9 +113,19 @@ body {
 /* Fő tartalom konténer */
 #content {
     margin-left: 280px;
-    padding: 70px 32px 40px 32px;
+    padding: 120px 32px 40px 32px;
     min-height: 100vh;
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hide number input spinners */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+input[type=number] {
+  -moz-appearance: textfield;
 }
 
 /* Sticky vissza gomb sáv – minden practice oldalon */

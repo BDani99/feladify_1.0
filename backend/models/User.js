@@ -1,17 +1,20 @@
 const mongoose = require('mongoose');
 
 const assignmentAnswerSchema = new mongoose.Schema({
-  assignmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Assignment', required: true, unique: true },
+  assignmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Assignment', required: true },
   answers: [
     {
       questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Question', required: true },
-      studentAnswer: { type: String, required: true },
+      studentAnswer: { type: mongoose.Schema.Types.Mixed, required: true },
       score: { type: Number, default: 0 },
       confidence: { type: Number, default: null },
+      aiFeedback: { type: String, default: '' },
       flagged: { type: Boolean, default: false }
     }
   ],
   achievedPoints: { type: Number, default: 0 },
+  suggestedGrade: { type: Number, default: null },
+  grade: { type: Number, default: null },
   completedAt: { type: Date, default: Date.now }
 });
 
