@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import Layout from './components/Layout';
 import { UserProvider } from './context/UserContext';
 import { ChatProvider } from './context/ChatContext';
+import { TeacherChatProvider } from './context/TeacherChatContext';
 import './App.css';
 
 function App() {
@@ -24,7 +25,9 @@ function App() {
             <BrowserRouter>
                 <UserProvider>
                     <ChatProvider>
-                        <Layout isLoggedIn={isLoggedIn} onLoginSuccess={handleLoginSuccess} />
+                        <TeacherChatProvider>
+                            <Layout isLoggedIn={isLoggedIn} onLoginSuccess={handleLoginSuccess} />
+                        </TeacherChatProvider>
                     </ChatProvider>
                 </UserProvider>
             </BrowserRouter>

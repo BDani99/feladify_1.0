@@ -753,6 +753,7 @@ router.get('/student/statistics', authenticateStudent, async (req, res) => {
 });
 
 const mongoose = require('mongoose');
+const TeacherChatHistory = require('../models/TeacherChatHistory');
 
 router.post('/chat', authenticateUser, async (req, res) => {
   try {
@@ -815,7 +816,202 @@ Szabályok:
 });
 
 
-// Részletes statisztika: osztályonként, tantárgyanként, top/bottom diákok
+// ─── Teacher Chat History ──────────────────────────────────────────────────
+
+// GET /api/assignments/teacher/chat/history
+router.get('/teacher/chat/history', authenticateTeacher, async (req, res) => {
+  try {
+    const teacherId = req.userId;
+    let chatDoc = await TeacherChatHistory.findOne({ teacherId });
+    if (!chatDoc) {
+      return res.json({ messages: [], sessions: [], currentSessionId: null });
+    }
+    const session = chatDoc.getCurrentSession();
+    const sessions = chatDoc.sessions
+      .map(s => ({ sessionId: s.sessionId, title: s.title, updatedAt: s.updatedAt }))
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    res.json({
+      messages: session ? session.messages : [],
+      sessions,
+      currentSessionId: chatDoc.currentSessionId
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Hiba a chat előzmények lekérésekor', error: err.message });
+  }
+});
+
+// POST /api/assignments/teacher/chat/send
+router.post('/teacher/chat/send', authenticateTeacher, async (req, res) => {
+  try {
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ message: 'Üzenet megadása kötelező' });
+
+    const teacherId = req.userId;
+    const userObjectId = new mongoose.Types.ObjectId(teacherId);
+
+    const [teacherAssignments, teacherClasses, teacherUser] = await Promise.all([
+      Assignment.find({ teacherId: userObjectId }).lean(),
+      Class.find({ teacherIds: userObjectId }).populate('studentIds', 'name className assignments').lean(),
+      User.findById(userObjectId).select('-password').lean(),
+    ]);
+
+    const classLines = teacherClasses.length > 0
+      ? teacherClasses.map(c => {
+          const students = c.studentIds || [];
+          const studentDetails = students.map(s => {
+            const completedCount = (s.assignments || []).length;
+            const totalAchieved = (s.assignments || []).reduce((sum, a) => sum + (a.achievedPoints || 0), 0);
+            return `    • ${s.name}: ${completedCount} megírt dolgozat, összesen ${totalAchieved} pont`;
+          });
+          return `  - ${c.name} (${students.length} diák)${studentDetails.length > 0 ? ':\n' + studentDetails.join('\n') : ''}`;
+        }).join('\n')
+      : '  Nincs hozzárendelt osztály.';
+
+    const assignmentLines = teacherAssignments.length > 0
+      ? teacherAssignments.map(a => {
+          const studentCount = (a.studentIds || []).length;
+          return `  - "${a.title}" | tantárgy: ${a.subject} | nehézség: ${a.difficulty} | teljesítette: ${a.completedCount || 0}/${studentCount} diák | max pont: ${a.totalPoints}`;
+        }).join('\n')
+      : '  Még nem hozott létre dolgozatot.';
+
+    const systemPrompt = `Te a Feladify általános iskolai oktatási platform asszisztense vagy. Magyarul, magabiztosan és tömören válaszolj. A felhasználó egy tanár.
+
+=== A TANÁR ADATAI (ezek tények, nem kell hozzájuk kétség) ===
+Neve: ${teacherUser ? teacherUser.name : 'ismeretlen'}
+Tantárgyai: ${(teacherUser?.subjects || []).join(', ') || 'nincs megadva'}
+
+=== OSZTÁLYAI (ezekben tanít) ===
+${classLines}
+
+=== DOLGOZATAI ===
+${assignmentLines}
+=== VÉGE ===
+
+Szabályok:
+1. A fenti adatok PONTOS TÉNYEK a rendszerből. Fogadd el őket igazként és válaszolj belőlük magabiztosan.
+2. Ne mondd azt, hogy "nem tudom pontosan" vagy "sajnos nincs információ" ha az adat szerepel fent.
+3. Ha valóban nincs adat (pl. üres lista), akkor és csak akkor jelezd.
+4. Ne adj általános tudásbázis-választ, csak a fenti adatokra alapozz.
+5. Rövid, lényegre törő válaszokat adj.`;
+
+    let chatDoc = await TeacherChatHistory.findOne({ teacherId });
+    if (!chatDoc) chatDoc = new TeacherChatHistory({ teacherId });
+
+    chatDoc.addMessage('user', message);
+
+    const allMessages = chatDoc.getRecentMessages(20);
+    const historyMessages = allMessages.slice(0, -1);
+    const messagesForAI = [
+      ...historyMessages.map(m => ({ role: m.role, content: m.content })),
+      { role: 'user', content: message }
+    ];
+
+    const aiResponse = await generateChatWithHistory(systemPrompt, messagesForAI);
+
+    chatDoc.addMessage('assistant', aiResponse);
+    await chatDoc.save();
+
+    res.json({ message: aiResponse, sessionId: chatDoc.currentSessionId });
+  } catch (err) {
+    console.error('[Teacher Chat] Send error:', err.message);
+    res.status(500).json({ message: 'Hiba az üzenet feldolgozásakor', error: err.message });
+  }
+});
+
+// POST /api/assignments/teacher/chat/new-session
+router.post('/teacher/chat/new-session', authenticateTeacher, async (req, res) => {
+  try {
+    const teacherId = req.userId;
+    let chatDoc = await TeacherChatHistory.findOne({ teacherId });
+    if (!chatDoc) chatDoc = new TeacherChatHistory({ teacherId });
+    chatDoc.currentSessionId = null;
+    await chatDoc.save();
+    res.json({ message: 'Új session indítva' });
+  } catch (err) {
+    res.status(500).json({ message: 'Hiba az új session létrehozásakor', error: err.message });
+  }
+});
+
+// POST /api/assignments/teacher/chat/load-session
+router.post('/teacher/chat/load-session', authenticateTeacher, async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    if (!sessionId) return res.status(400).json({ message: 'Session ID megadása kötelező' });
+
+    const teacherId = req.userId;
+    let chatDoc = await TeacherChatHistory.findOne({ teacherId });
+    if (!chatDoc) return res.status(404).json({ message: 'Chat előzmények nem találhatók' });
+
+    const session = chatDoc.sessions.find(s => s.sessionId === sessionId);
+    if (!session) return res.status(404).json({ message: 'Session nem található' });
+
+    chatDoc.currentSessionId = sessionId;
+    await chatDoc.save();
+
+    const sessions = chatDoc.sessions
+      .map(s => ({ sessionId: s.sessionId, title: s.title, updatedAt: s.updatedAt }))
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+    res.json({ messages: session.messages, sessions });
+  } catch (err) {
+    res.status(500).json({ message: 'Hiba a session betöltésekor', error: err.message });
+  }
+});
+
+// DELETE /api/assignments/teacher/chat/session/:sessionId
+router.delete('/teacher/chat/session/:sessionId', authenticateTeacher, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const teacherId = req.userId;
+
+    let chatDoc = await TeacherChatHistory.findOne({ teacherId });
+    if (!chatDoc) return res.status(404).json({ message: 'Chat előzmények nem találhatók' });
+
+    const sessionIndex = chatDoc.sessions.findIndex(s => s.sessionId === sessionId);
+    if (sessionIndex === -1) return res.status(404).json({ message: 'Session nem található' });
+
+    chatDoc.sessions.splice(sessionIndex, 1);
+    if (chatDoc.currentSessionId === sessionId) chatDoc.currentSessionId = null;
+    await chatDoc.save();
+
+    const sessions = chatDoc.sessions
+      .map(s => ({ sessionId: s.sessionId, title: s.title, updatedAt: s.updatedAt }))
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+    res.json({ message: 'Session sikeresen törölve', sessions });
+  } catch (err) {
+    res.status(500).json({ message: 'Hiba a session törlése során', error: err.message });
+  }
+});
+
+// PUT /api/assignments/teacher/chat/session/:sessionId
+router.put('/teacher/chat/session/:sessionId', authenticateTeacher, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { title } = req.body;
+    const teacherId = req.userId;
+
+    let chatDoc = await TeacherChatHistory.findOne({ teacherId });
+    if (!chatDoc) return res.status(404).json({ message: 'Chat előzmények nem találhatók' });
+
+    const session = chatDoc.sessions.find(s => s.sessionId === sessionId);
+    if (!session) return res.status(404).json({ message: 'Session nem található' });
+
+    session.title = title;
+    session.updatedAt = new Date();
+    await chatDoc.save();
+
+    const sessions = chatDoc.sessions
+      .map(s => ({ sessionId: s.sessionId, title: s.title, updatedAt: s.updatedAt }))
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+    res.json({ message: 'Session sikeresen átnevezve', sessions });
+  } catch (err) {
+    res.status(500).json({ message: 'Hiba a session átnevezése során', error: err.message });
+  }
+});
+
+// ─── Részletes statisztika: osztályonként, tantárgyanként, top/bottom diákok
 router.get('/teacher/detailed-statistics', authenticateTeacher, async (req, res) => {
   try {
     const teacherId = req.userId;

@@ -1,5 +1,6 @@
 /* Welcome Page - Koherens tér, háttér nélküli zónákkal */
 
+#content.teacher-welcome,
 #content.student-welcome {
   padding: 0;
   overflow: hidden;
