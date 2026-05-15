@@ -158,6 +158,99 @@ Utasítások:
     }
   }
 
+  // Dolgozat-specifikus generálás: pontosan a tanár által megadott típus/darabszám arányban
+  async generateExamQuestionSet(subject, topic, diffDesc, typeSpecs) {
+    const total = typeSpecs.reduce((s, t) => s + t.count, 0);
+
+    const typeDescriptions = {
+      mcq:          '"mcq": feleletválasztós, 4 valós szöveges lehetőség (NEM betűjelölők!). options: ["Első válasz szövege","Második válasz szövege","Harmadik válasz szövege","Negyedik válasz szövege"], correctAnswer: "Első válasz szövege"',
+      true_false:   '"true_false": igaz/hamis. options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"',
+      short_answer: '"short_answer": rövid szöveges válasz. options: [], correctAnswer: "szöveges válasz"',
+      fill_blank:   '"fill_blank": szövegkiegészítős, az üres helyet ___ jelöli. options: [], correctAnswer: "hiányzó szó"',
+      matching:     '"matching": párosítás. BAL OLDAL = rövid fogalom (1-3 szó), JOBB OLDAL = részletes definíció (teljes mondat, min. 5 szó). pairs: [{"left":"fogalom","right":"Részletes definíció..."},...], options: ["jobb oldali def. keverve",...], correctAnswer: {"fogalom":"Részletes definíció..."}',
+      ordering:     '"ordering": sorba rendezés. items: KEVEREDETT sorrend, correctAnswer: helyes sorrend tömbként. items: ["C elem","A elem","B elem"], correctAnswer: ["A elem","B elem","C elem"]',
+    };
+
+    const typeLines = typeSpecs.map(s => {
+      const desc = typeDescriptions[s.type] || `"${s.type}": rövid szöveges válasz`;
+      return `- PONTOSAN ${s.count} darab ${s.type} típusú kérdés. Formátum: ${desc}`;
+    }).join('\n');
+
+    const prompt = `Te egy kreatív és tapasztalt pedagógus AI vagy. Készíts pontosan ${total} darab KIVÁLÓ MINŐSÉGŰ vizsgakérdést ${subject} tantárgyból, a "${topic}" témakörhöz.
+Nehézség: ${diffDesc}
+
+KÖTELEZŐ TÍPUSOK ÉS DARABSZÁMOK (tartsd be szigorúan!):
+${typeLines}
+
+FONTOS: NE generálj hanganyagot, videót vagy külső médiát igénylő kérdést! Minden kérdés önállóan, kizárólag szöveg alapján legyen megválaszolható!
+Kerüld a túl száraz, bemagolható definíciókat! Használj valós életből vett, kreatív példákat.
+
+FONTOS SZABÁLYOK:
+1. Az MCQ options tömbben SOHA ne szerepeljenek puszta betűk ("A","B","C","D") – mindig valódi szöveges válaszok kellenek!
+2. A matching options tömb KIZÁRÓLAG a jobb oldali definíciókat tartalmazza (keverve) – SOHA nem a bal oldali fogalmakat!
+3. A fill_blank kérdésben KÖTELEZŐ az ___ jelölő szerepelni (pl. "A Nap egy ___ típusú csillag.").
+4. Az ordering items tömbje KEVEREDETT sorrendben legyen, a kérdésszöveg NE sorolja fel az elemeket!
+5. Minden kérdés EGYEDI legyen – ne ismételj meg fogalmakat!
+6. SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\`\`json ... \`\`\`), semmilyen egyéb szöveget ne írj!
+
+Válaszolj az alábbi JSON formátumban:
+{
+  "questions": [
+    {
+      "questionId": "q1",
+      "questionText": "A kérdés szövege",
+      "questionType": "mcq",
+      "options": [],
+      "pairs": [],
+      "items": [],
+      "correctAnswer": "...",
+      "explanation": "Rövid magyarázat"
+    }
+  ]
+}`;
+
+    let raw = '';
+    try {
+      // Reasoning modell a pontosabb típus-követéshez; nagyobb token limit komplex kérésekhez
+      raw = await this.generateResponse(prompt, [], { temperature: 0.65, max_tokens: 6000 }, true);
+      const parsed = this._extractJSON(raw);
+      if (Array.isArray(parsed.questions) && parsed.questions.length > 0) {
+        const mapped = parsed.questions.map((q, idx) => ({
+          questionId:    q.questionId || `q${idx + 1}`,
+          questionText:  q.questionText || 'Hiányzó kérdés',
+          questionType:  ['mcq','true_false','short_answer','fill_blank','matching','ordering'].includes(q.questionType) ? q.questionType : 'short_answer',
+          options:       Array.isArray(q.options) ? q.options : [],
+          pairs:         Array.isArray(q.pairs) ? q.pairs : [],
+          items:         Array.isArray(q.items) ? q.items : [],
+          correctAnswer: q.correctAnswer !== undefined ? q.correctAnswer : '',
+          explanation:   q.explanation || ''
+        }));
+        return this._sanitizeQuestions(mapped, 3);
+      }
+    } catch (error) {
+      console.warn('[GroqService] generateExamQuestionSet parse hiba:', error.message);
+      if (raw) console.warn('[GroqService] Nyers AI válasz:', raw.substring(0, 800));
+    }
+
+    // Fallback: minden kért típushoz generálunk annyi short_answer-t amennyi kellett
+    const fallback = [];
+    typeSpecs.forEach(({ type, count }) => {
+      for (let i = 0; i < count; i++) {
+        fallback.push({
+          questionId:    `q${fallback.length + 1}`,
+          questionText:  `Magyarázd el a saját szavaiddal: ${topic}`,
+          questionType:  type,
+          options:       type === 'mcq' ? ['Válasz A','Válasz B','Válasz C','Válasz D'] : (type === 'true_false' ? ['Igaz','Hamis'] : []),
+          pairs:         [],
+          items:         [],
+          correctAnswer: type === 'true_false' ? 'Igaz' : 'Logikus, témába vágó válasz elfogadható.',
+          explanation:   'Nyílt végű kérdés.'
+        });
+      }
+    });
+    return fallback;
+  }
+
   async generatePracticeQuestionSet(subject, topic, difficulty = 3, count = 10, grade = 'általános iskola', weakQuestions = [], excludeQuestions = []) {
     const difficultyDescriptions = {
       1: '1-2. osztályos szint: egyszerű tények felismerése, alapvető fogalmak azonosítása',

@@ -2,21 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { previewAssignment, saveAssignment } from '../../api/Assignments/Teacher/GenerateAssignment';
 import { fetchTeacherClasses } from '../../api/Assignments/Teacher/GetClasses';
 import { fetchUserData } from '../../api/Auth/ProfileData';
-import { 
-    FaExclamationCircle, 
-    FaCheckCircle, 
-    FaPen, 
-    FaListUl, 
-    FaCheck, 
-    FaLink, 
-    FaSortAmountDown, 
+import {
+    FaExclamationCircle,
+    FaCheckCircle,
+    FaPen,
+    FaListUl,
+    FaCheck,
+    FaLink,
+    FaSortAmountDown,
     FaMinusSquare,
     FaClock,
-    FaCalendarAlt,
     FaGraduationCap,
     FaBook,
     FaLayerGroup,
-    FaBrain
+    FaBrain,
+    FaEye,
+    FaSync
 } from 'react-icons/fa';
 import PreviewModal from '../../components/Teacher/PreviewModal';
 import '../../styles/Teacher/AssignmentGenerate.css';
@@ -68,6 +69,7 @@ const AssignmentGenerate = ({ token }) => {
     const [dueDate, setDueDate] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [previewQuestions, setPreviewQuestions] = useState([]);
+    const [lastPreviewQuestions, setLastPreviewQuestions] = useState([]);
     const [classes, setClasses] = useState([]);
     const [teacherSubjects, setTeacherSubjects] = useState([]);
 
@@ -101,8 +103,7 @@ const AssignmentGenerate = ({ token }) => {
         if (num > 0) setActiveTypes(prev => ({ ...prev, [id]: true }));
     };
 
-    const handleGenerate = async (e) => {
-        e.preventDefault();
+    const generatePreview = async () => {
         setIsLoading(true);
         setMessage('');
         setError('');
@@ -126,12 +127,18 @@ const AssignmentGenerate = ({ token }) => {
         try {
             const data = await previewAssignment(title, subject, difficulty, className, questionTypes);
             setPreviewQuestions(data.questions);
+            setLastPreviewQuestions(data.questions);
             setShowModal(true);
         } catch (err) {
             setError(err.message || 'Hiba történt a generálás során.');
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleGenerate = async (e) => {
+        e.preventDefault();
+        await generatePreview();
     };
 
     const handleSave = async (editedQuestions) => {
@@ -245,6 +252,18 @@ const AssignmentGenerate = ({ token }) => {
                                 {isLoading ? 'Generálás folyamatban...' : 'Dolgozat Előnézet'}
                                 <FaBrain className="btn-icon" />
                             </button>
+                            {lastPreviewQuestions.length > 0 && !showModal && (
+                                <button
+                                    type="button"
+                                    className="prev-preview-btn"
+                                    onClick={() => {
+                                        setPreviewQuestions(lastPreviewQuestions);
+                                        setShowModal(true);
+                                    }}
+                                >
+                                    <FaEye /> Előző előnézet megtekintése
+                                </button>
+                            )}
                         </form>
                     </div>
 
@@ -286,6 +305,7 @@ const AssignmentGenerate = ({ token }) => {
                     questions={previewQuestions}
                     onSave={handleSave}
                     onClose={() => setShowModal(false)}
+                    onRegenerate={generatePreview}
                     isLoading={isLoading}
                 />
             )}

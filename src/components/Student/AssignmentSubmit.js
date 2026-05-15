@@ -42,16 +42,6 @@ const AssignmentSubmitForm = () => {
         setAnswers(initialAnswers);
     }, [assignment]);
 
-    useEffect(() => {
-        if (timeLeft === null) return;
-        if (timeLeft <= 0) {
-            handleSubmit();
-            return;
-        }
-        const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
-        return () => clearInterval(timer);
-    }, [timeLeft, handleSubmit]);
-
     const formatTime = (seconds) => {
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
@@ -77,6 +67,16 @@ const AssignmentSubmitForm = () => {
             setIsSubmitting(false);
         }
     }, [assignment, answers, isSubmitting, navigate]);
+
+    useEffect(() => {
+        if (timeLeft === null) return;
+        if (timeLeft <= 0) {
+            handleSubmit();
+            return;
+        }
+        const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
+        return () => clearInterval(timer);
+    }, [timeLeft, handleSubmit]);
 
     const currentQuestion = assignment?.questions?.[currentStep];
     const isLastStep = currentStep === (assignment?.questions?.length || 0) - 1;

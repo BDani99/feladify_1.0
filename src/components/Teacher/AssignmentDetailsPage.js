@@ -19,6 +19,25 @@ import { overrideScore } from '../../api/Assignments/Teacher/OverrideScore';
 import { finalizeGrade } from '../../api/Assignments/Teacher/FinalizeGrade';
 import '../../styles/Teacher/AssignmentDetailsPage.css';
 
+const TYPE_LABELS = {
+    mcq: 'Feleletválasztós',
+    true_false: 'Igaz/Hamis',
+    short_answer: 'Nyílt végű',
+    fill_blank: 'Kiegészítős',
+    matching: 'Párosítás',
+    ordering: 'Sorba rendezés',
+};
+
+const formatCorrectAnswer = (q) => {
+    const ca = q.correctAnswer;
+    if (ca === null || ca === undefined) return '—';
+    if (typeof ca === 'object' && !Array.isArray(ca)) {
+        return Object.entries(ca).map(([k, v]) => `${k} → ${v}`).join(' | ');
+    }
+    if (Array.isArray(ca)) return ca.join(' → ');
+    return String(ca);
+};
+
 const SubmissionAnswerRow = ({ answer, studentId, assignmentId, onScoreUpdate }) => {
     const isManual = answer.questionType === 'short_answer';
     const isLowConfidence = answer.confidence !== null && answer.confidence < 0.7;
@@ -55,11 +74,6 @@ const SubmissionAnswerRow = ({ answer, studentId, assignmentId, onScoreUpdate })
         <div className={`answer-row ${isLowConfidence ? 'low-conf' : ''}`}>
             <div className="answer-row-header">
                 <div className="q-text">{answer.questionText}</div>
-                {answer.aiFeedback && (
-                    <div className="ai-feedback-pill">
-                        <FaBrain /> AI: {answer.aiFeedback}
-                    </div>
-                )}
             </div>
 
             <div className="answer-comparison">
@@ -80,12 +94,12 @@ const SubmissionAnswerRow = ({ answer, studentId, assignmentId, onScoreUpdate })
                 </div>
 
                 <div className="override-controls">
-                    <input 
-                        type="number" 
-                        min="0" 
-                        max={answer.maxPoints} 
-                        value={overrideVal} 
-                        onChange={e => setOverrideVal(e.target.value)} 
+                    <input
+                        type="number"
+                        min="0"
+                        max={answer.maxPoints}
+                        value={overrideVal}
+                        onChange={e => setOverrideVal(e.target.value)}
                     />
                     <button onClick={handleOverride} disabled={saving}>
                         {saving ? '...' : <FaEdit />}
@@ -93,6 +107,14 @@ const SubmissionAnswerRow = ({ answer, studentId, assignmentId, onScoreUpdate })
                     {saved && <span className="saved-msg">✓</span>}
                 </div>
             </div>
+
+            {answer.aiFeedback && (
+                <div className="answer-ai-section">
+                    <FaBrain className="ai-icon" />
+                    <span className="ai-label">AI értékelés:</span>
+                    <span className="ai-text">{answer.aiFeedback}</span>
+                </div>
+            )}
         </div>
     );
 };
@@ -155,24 +177,21 @@ const StudentSubmissionCard = ({ submission, assignmentId, onGradeFinalized }) =
                     </div>
                 </div>
 
-                <div className="grade-selector-premium" onClick={e => e.stopPropagation()}>
-                    <div className="select-wrapper">
-                        <select 
-                            value={grade} 
-                            onChange={e => setGrade(e.target.value)}
-                            className={grade ? `has-val grade-${grade}` : ''}
+                <div className="grade-buttons-group" onClick={e => e.stopPropagation()}>
+                    {[1, 2, 3, 4, 5].map(g => (
+                        <button
+                            key={g}
+                            type="button"
+                            className={`grade-btn grade-btn-${g} ${grade === String(g) ? 'active' : ''}`}
+                            onClick={() => setGrade(String(g))}
+                            title={['Elégtelen', 'Elégséges', 'Közepes', 'Jó', 'Jeles'][g - 1]}
                         >
-                            <option value="">Jegy...</option>
-                            <option value="5">5 - Jeles</option>
-                            <option value="4">4 - Jó</option>
-                            <option value="3">3 - Közepes</option>
-                            <option value="2">2 - Elégséges</option>
-                            <option value="1">1 - Elégtelen</option>
-                        </select>
-                    </div>
-                    <button 
-                        className={`save-grade-btn ${gradeSaved ? 'saved' : ''}`} 
-                        onClick={handleGradeSave} 
+                            {g}
+                        </button>
+                    ))}
+                    <button
+                        className={`save-grade-btn ${gradeSaved ? 'saved' : ''}`}
+                        onClick={handleGradeSave}
                         disabled={gradeSaving || !grade}
                     >
                         {gradeSaving ? '...' : (gradeSaved ? <FaCheckCircle /> : <FaCheck />)}
@@ -270,14 +289,14 @@ const AssignmentDetailsPage = () => {
                                 <div key={idx} className="question-item-card">
                                     <div className="q-header">
                                         <span className="q-num">{idx + 1}</span>
-                                        <span className="q-type">{q.questionType}</span>
+                                        <span className="q-type">{TYPE_LABELS[q.questionType] || q.questionType}</span>
                                         <span className="q-pts">{q.points} pont</span>
                                     </div>
                                     <div className="q-text">{q.questionText}</div>
                                     <div className="q-correct-box">
                                         <label>Helyes megoldás:</label>
                                         <div className="val">
-                                            {Array.isArray(q.correctAnswer) ? q.correctAnswer.join(', ') : String(q.correctAnswer)}
+                                            {formatCorrectAnswer(q)}
                                         </div>
                                     </div>
                                 </div>

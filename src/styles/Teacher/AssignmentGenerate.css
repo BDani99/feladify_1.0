@@ -267,6 +267,30 @@
     font-size: 22px;
 }
 
+.prev-preview-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 13px 18px;
+    background: transparent;
+    border: 1.5px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--color-text-dim);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+
+.prev-preview-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-glow);
+}
+
 /* Feedback Messages */
 .success-message, .error-message {
     margin-top: 25px;

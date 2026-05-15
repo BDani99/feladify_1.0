@@ -48,50 +48,33 @@ function parseJsonQuestions(text) {
   return null;
 }
 
-// AI generálás GroqService használatával
+const TYPE_MAPPING = {
+  'nyilt': 'short_answer',
+  'feleletvalasztos': 'mcq',
+  'igaz_hamis': 'true_false',
+  'parositas': 'matching',
+  'sorbarendezes': 'ordering',
+  'hianyos_szoveg': 'fill_blank'
+};
+
+// AI generálás GroqService használatával – egyetlen hívásban, pontos típus/darabszám arányban
 async function generateQuestions(subject, title, diffDesc, resolvedTypes) {
-  const allQuestions = [];
-  
-  for (const { type, count } of resolvedTypes) {
-    const typeMapping = {
-      'nyilt': 'short_answer',
-      'feleletvalasztos': 'mcq',
-      'igaz_hamis': 'true_false',
-      'parositas': 'matching',
-      'sorbarendezes': 'ordering',
-      'hianyos_szoveg': 'fill_blank'
-    };
+  const typeSpecs = resolvedTypes.map(({ type, count }) => ({
+    type: TYPE_MAPPING[type] || type,
+    count
+  }));
 
-    const groqType = typeMapping[type] || 'short_answer';
-    
-    // We'll generate questions specifically of this type
-    const prompt = `Készíts pontosan ${count} darab ${groqType} típusú kérdést ${subject} tantárgyból, a "${title}" témakörhöz.
-Nehézség: ${diffDesc}.
-Válaszolj KIZÁRÓLAG egy érvényes JSON blokkal a megadott formátumban.`;
+  const questions = await groqService.generateExamQuestionSet(subject, title, diffDesc, typeSpecs);
 
-    const questions = await groqService.generatePracticeQuestionSet(
-      subject, 
-      title, 
-      3, 
-      count, 
-      diffDesc, 
-      [],
-      allQuestions
-    );
-
-    const mapped = questions.map(q => ({
-      questionText: q.questionText,
-      questionType: q.questionType,
-      options: q.options,
-      pairs: q.pairs,
-      items: q.items,
-      correctAnswer: q.correctAnswer,
-      points: 1,
-    }));
-    
-    allQuestions.push(...mapped);
-  }
-  return shuffleArray(allQuestions);
+  return shuffleArray(questions.map(q => ({
+    questionText: q.questionText,
+    questionType: q.questionType,
+    options: q.options || [],
+    pairs: q.pairs || [],
+    items: q.items || [],
+    correctAnswer: q.correctAnswer,
+    points: 1,
+  })));
 }
 
 function resolveQuestionTypes(body) {
@@ -155,7 +138,7 @@ router.post('/teacher/save', authenticateTeacher, async (req, res) => {
       difficulty,
       questions: cleanQuestions,
       studentIds: students.map(s => s._id),
-      totalPoints: cleanQuestions.length,
+      totalPoints: cleanQuestions.reduce((sum, q) => sum + (q.points || 1), 0),
       timeLimit: timeLimit ? Number(timeLimit) : null,
       startDate: startDate ? new Date(startDate) : null,
       dueDate: dueDate ? new Date(dueDate) : null,
@@ -192,7 +175,7 @@ router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
     const assignment = new Assignment({
       teacherId: req.userId, title, subject, difficulty,
       questions, studentIds: students.map(s => s._id),
-      totalPoints: questions.length, createdAt: new Date(),
+      totalPoints: questions.reduce((sum, q) => sum + (q.points || 1), 0), createdAt: new Date(),
     });
     await assignment.save();
     res.status(201).json({ message: 'Feladatsor sikeresen generálva és hozzárendelve a kiválasztott osztály diákjaihoz', assignment });
@@ -391,28 +374,36 @@ router.get('/student/completed-assignments', authenticateStudent, async (req, re
       .select('assignments');
 
     // A megírt dolgozatokból egy egyszerűsített struktúrát készítünk
-    const completedAssignments = student.assignments.filter(a => a.assignmentId != null).map(assignment => ({
-      assignmentId: assignment.assignmentId._id,
-      title: assignment.assignmentId.title,
-      subject: assignment.assignmentId.subject,
-      achievedPoints: assignment.achievedPoints,
-      totalPoints: assignment.assignmentId.totalPoints,
-      completedAt: assignment.completedAt,
-      grade: assignment.grade,
-      answers: assignment.answers.map(answer => {
-        // Megkeresi a kérdés szövegét az eredeti kérdések között
-        const question = assignment.assignmentId.questions.find(q => q._id.equals(answer.questionId));
-        return {
-          questionId: answer.questionId,
-          questionText: question ? question.questionText : null,
-          studentAnswer: answer.studentAnswer,
-          correctAnswer: question ? question.correctAnswer : null,
-          score: answer.score,
-          confidence: answer.confidence ?? null,
-          flagged: answer.flagged ?? false,
-        };
-      })
-    }));
+    // correctAnswer csak akkor jelenik meg ha a tanár már értékelte (grade != null)
+    const completedAssignments = student.assignments.filter(a => a.assignmentId != null).map(assignment => {
+      const isGraded = assignment.grade != null;
+      return {
+        assignmentId: assignment.assignmentId._id,
+        title: assignment.assignmentId.title,
+        subject: assignment.assignmentId.subject,
+        achievedPoints: assignment.achievedPoints,
+        totalPoints: assignment.assignmentId.totalPoints,
+        completedAt: assignment.completedAt,
+        grade: assignment.grade ?? null,
+        answers: assignment.answers.map(answer => {
+          const question = assignment.assignmentId.questions.find(q => q._id.equals(answer.questionId));
+          const base = {
+            questionId: answer.questionId,
+            questionText: question ? question.questionText : null,
+            questionType: question ? question.questionType : 'short_answer',
+            studentAnswer: answer.studentAnswer,
+            score: answer.score,
+            maxPoints: question ? question.points : 1,
+            flagged: answer.flagged ?? false,
+          };
+          // Helyes válasz és kérdéstípus csak értékelés után látható
+          if (isGraded) {
+            base.correctAnswer = question ? question.correctAnswer : null;
+          }
+          return base;
+        })
+      };
+    });
 
     res.status(200).json({ message: 'Megírt dolgozatok sikeresen lekérve', assignments: completedAssignments });
   } catch (error) {
@@ -720,32 +711,39 @@ router.get('/student/statistics', authenticateStudent, async (req, res) => {
   try {
     const studentId = req.userId;
 
-    // Diák adatainak lekérdezése az assignments mezővel
-    const student = await User.findById(studentId).populate('assignments.assignmentId', 'title totalPoints');
+    const student = await User.findById(studentId).populate('assignments.assignmentId', 'title totalPoints subject');
 
     if (!student) {
       return res.status(404).json({ message: 'Diák nem található.' });
     }
 
-    // Megírt dolgozatok száma
-    const completedAssignmentsCount = student.assignments.length;
+    const validAssignments = student.assignments.filter(a => a.assignmentId != null);
 
-    // Átlagos pontszám kiszámítása
-    const totalAchievedPoints = student.assignments.reduce((sum, assignment) => sum + assignment.achievedPoints, 0);
-    const totalPossiblePoints = student.assignments.reduce((sum, assignment) => sum + assignment.assignmentId.totalPoints, 0);
-    const averageScorePercentage = completedAssignmentsCount > 0 ? (totalAchievedPoints / totalPossiblePoints) * 100 : 0;
+    // Megírt (beküldött) és értékelt (jegyezett) dolgozatok száma
+    const totalAssignments = validAssignments.length;
+    const completedAssignments = validAssignments.filter(a => a.grade != null).length;
 
-    // Egyéni dolgozatok statisztikája (cím, elért pontszám, max pontszám, kitöltés dátuma)
-    const assignmentsStatistics = student.assignments.map(assignment => ({
-      title: assignment.assignmentId.title,
-      achievedPoints: assignment.achievedPoints,
-      totalPoints: assignment.assignmentId.totalPoints,
-      completedAt: assignment.completedAt
+    // Átlagos pontszám kiszámítása (csak ahol van totalPoints)
+    const totalAchievedPoints = validAssignments.reduce((sum, a) => sum + (a.achievedPoints || 0), 0);
+    const totalPossiblePoints = validAssignments.reduce((sum, a) => sum + (a.assignmentId.totalPoints || 0), 0);
+    const averageScore = totalPossiblePoints > 0
+      ? Math.round((totalAchievedPoints / totalPossiblePoints) * 100)
+      : 0;
+
+    // Egyéni dolgozatok statisztikája
+    const assignmentsStatistics = validAssignments.map(a => ({
+      title: a.assignmentId.title,
+      subject: a.assignmentId.subject,
+      achievedPoints: a.achievedPoints,
+      totalPoints: a.assignmentId.totalPoints,
+      completedAt: a.completedAt,
+      grade: a.grade ?? null,
     }));
 
     res.status(200).json({
-      completedAssignmentsCount,
-      averageScorePercentage,
+      totalAssignments,
+      completedAssignments,
+      averageScore,
       assignmentsStatistics
     });
   } catch (error) {

@@ -314,7 +314,7 @@
 /* ─── Assignment list ─── */
 .sts-assignment-row {
     display: grid;
-    grid-template-columns: 28px 1fr 1fr 80px 54px;
+    grid-template-columns: 28px 1fr 1fr 80px 54px 40px;
     gap: 12px;
     align-items: center;
     padding: 10px 0;
@@ -330,6 +330,13 @@
     text-align: right;
 }
 
+.sts-assignment-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
 .sts-assignment-title {
     font-size: 0.95rem;
     font-weight: 700;
@@ -337,6 +344,12 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.sts-assignment-subject {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-dim);
 }
 
 .sts-assignment-pts {
@@ -351,6 +364,25 @@
     font-size: 0.95rem;
     font-weight: 900;
     text-align: right;
+}
+
+.sts-grade-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    font-size: 1rem;
+    font-weight: 900;
+    text-align: center;
+}
+
+.sts-grade-badge.pending {
+    background: var(--bg-input);
+    color: var(--color-text-dim);
+    border: 1px solid var(--border-color);
+    font-size: 0.85rem;
 }
 
 /* ─── Generic bar row ─── */
@@ -691,7 +723,7 @@
     .sts-page-title { font-size: 1.9rem; }
     .sts-cards-row { grid-template-columns: 1fr 1fr; gap: 12px; }
     .sts-two-col { grid-template-columns: 1fr; }
-    .sts-assignment-row { grid-template-columns: 24px 1fr 56px 44px; }
+    .sts-assignment-row { grid-template-columns: 24px 1fr 56px 44px 34px; }
     .sts-assignment-pts { display: none; }
     .sts-tab { padding: 10px 16px; font-size: 0.9rem; }
 }

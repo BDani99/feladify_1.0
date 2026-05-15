@@ -124,15 +124,26 @@ const AssignmentTab = ({ data }) => {
             <div className="sts-card-block">
               {assignmentsStatistics.map((a, i) => {
                 const pct = a.totalPoints > 0 ? Math.round((a.achievedPoints / a.totalPoints) * 100) : 0;
+                const gradeColors = { 5: '#10b981', 4: '#3b82f6', 3: '#f59e0b', 2: '#f97316', 1: '#ef4444' };
                 return (
                   <div key={i} className="sts-assignment-row">
                     <span className="sts-assignment-num">{i + 1}.</span>
-                    <span className="sts-assignment-title">{a.title || 'Dolgozat'}</span>
+                    <div className="sts-assignment-info">
+                      <span className="sts-assignment-title">{a.title || 'Dolgozat'}</span>
+                      {a.subject && <span className="sts-assignment-subject">{a.subject}</span>}
+                    </div>
                     <div className="sts-bar-track">
                       <div className="sts-bar-fill" style={{ width: `${pct}%`, background: scoreGrad(pct) }} />
                     </div>
                     <span className="sts-assignment-pts">{a.achievedPoints}/{a.totalPoints} pt</span>
                     <span className="sts-assignment-pct" style={{ color: scoreColor(pct) }}>{pct}%</span>
+                    {a.grade != null ? (
+                      <span className="sts-grade-badge" style={{ background: gradeColors[a.grade] + '22', color: gradeColors[a.grade], border: `1px solid ${gradeColors[a.grade]}44` }}>
+                        {a.grade}
+                      </span>
+                    ) : (
+                      <span className="sts-grade-badge pending">–</span>
+                    )}
                   </div>
                 );
               })}

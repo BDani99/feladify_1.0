@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FaSave, FaTimes, FaEdit, FaCheckCircle, FaLayerGroup, FaArrowRight } from 'react-icons/fa';
+import { FaSave, FaTimes, FaEdit, FaCheckCircle, FaLayerGroup, FaArrowRight, FaSync } from 'react-icons/fa';
 import '../../styles/Teacher/PreviewModal.css';
 
-const PreviewModal = ({ questions: initialQuestions, onSave, onClose, isLoading }) => {
+const PreviewModal = ({ questions: initialQuestions, onSave, onClose, onRegenerate, isLoading }) => {
     const [questions, setQuestions] = useState([]);
 
     useEffect(() => {
@@ -130,8 +130,13 @@ const PreviewModal = ({ questions: initialQuestions, onSave, onClose, isLoading 
                     <button className="secondary-btn" onClick={onClose} disabled={isLoading}>
                         Mégsem
                     </button>
+                    {onRegenerate && (
+                        <button className="regen-btn" onClick={onRegenerate} disabled={isLoading}>
+                            <FaSync className={isLoading ? 'spin' : ''} /> {isLoading ? 'Generálás...' : 'Újragenerálás'}
+                        </button>
+                    )}
                     <button className="primary-btn" onClick={() => onSave(questions)} disabled={isLoading}>
-                        {isLoading ? 'Mentés...' : 'Dolgozat Létrehozása'}
+                        {isLoading ? 'Feldolgozás...' : 'Dolgozat Létrehozása'}
                         <FaCheckCircle className="btn-icon" />
                     </button>
                 </footer>

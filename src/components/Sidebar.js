@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaHome, FaClipboardCheck, FaChartBar, FaListAlt, FaClipboard, FaCog, FaCompass, FaGraduationCap } from 'react-icons/fa';
+import { FaHome, FaClipboardCheck, FaChartBar, FaListAlt, FaClipboard, FaCog, FaCompass, FaGraduationCap, FaTachometerAlt, FaTasks } from 'react-icons/fa';
 import '../styles/Sidebar.css';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
@@ -39,6 +39,11 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                             </a>
                         </li>
                         <li>
+                            <a tabIndex={0} className={isActiveLink('/iranyitopult') ? 'active-link' : ''} onClick={() => handleNavigation('/iranyitopult')}>
+                                <FaTachometerAlt className="icon" /> Irányítópult
+                            </a>
+                        </li>
+                        <li>
                             <a tabIndex={0} className={isActiveLink('/dolgozat-generalas') ? 'active-link' : ''} onClick={() => handleNavigation('/dolgozat-generalas')}>
                                 <FaListAlt className="icon" /> Dolgozat Generálás
                             </a>
@@ -66,6 +71,11 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                         <li>
                             <a tabIndex={0} className={isActiveLink('/') ? 'active-link' : ''} onClick={() => handleNavigation('/')}>
                                 <FaHome className="icon" /> Kezdőlap
+                            </a>
+                        </li>
+                        <li>
+                            <a tabIndex={0} className={isActiveLink('/teendoim') ? 'active-link' : ''} onClick={() => handleNavigation('/teendoim')}>
+                                <FaTasks className="icon" /> Teendőim
                             </a>
                         </li>
                         <li>

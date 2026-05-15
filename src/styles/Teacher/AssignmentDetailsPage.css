@@ -217,14 +217,17 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 16px;
     cursor: pointer;
+    flex-wrap: wrap;
 }
 
 .student-info {
     display: flex;
     align-items: center;
     gap: 15px;
-    min-width: 200px;
+    min-width: 160px;
+    flex: 1;
 }
 
 .avatar {
@@ -277,38 +280,42 @@
     color: var(--accent);
 }
 
-.grade-selector-premium {
+.grade-buttons-group {
     display: flex;
     align-items: center;
-    gap: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    padding: 6px 6px 6px 15px;
-    border-radius: 100px;
+    gap: 5px;
+    background: var(--bg-input);
+    padding: 5px;
+    border-radius: 50px;
     border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
 }
 
-.grade-selector-premium:hover {
-    border-color: var(--accent);
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.grade-selector-premium select {
-    background: transparent;
-    border: none;
-    color: var(--color-text);
+.grade-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid transparent;
     font-weight: 800;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     cursor: pointer;
-    outline: none;
-    padding-right: 5px;
+    background: transparent;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.grade-selector-premium select.has-val.grade-5 { color: #10b981; }
-.grade-selector-premium select.has-val.grade-4 { color: #3b82f6; }
-.grade-selector-premium select.has-val.grade-3 { color: #f59e0b; }
-.grade-selector-premium select.has-val.grade-2 { color: #f97316; }
-.grade-selector-premium select.has-val.grade-1 { color: #ef4444; }
+.grade-btn-1 { color: #ef4444; }
+.grade-btn-2 { color: #f97316; }
+.grade-btn-3 { color: #eab308; }
+.grade-btn-4 { color: #3b82f6; }
+.grade-btn-5 { color: #10b981; }
+
+.grade-btn-1:hover, .grade-btn-1.active { background: #ef4444; color: white; border-color: #ef4444; }
+.grade-btn-2:hover, .grade-btn-2.active { background: #f97316; color: white; border-color: #f97316; }
+.grade-btn-3:hover, .grade-btn-3.active { background: #eab308; color: white; border-color: #eab308; }
+.grade-btn-4:hover, .grade-btn-4.active { background: #3b82f6; color: white; border-color: #3b82f6; }
+.grade-btn-5:hover, .grade-btn-5.active { background: #10b981; color: white; border-color: #10b981; }
 
 .save-grade-btn {
     width: 38px;
@@ -370,29 +377,45 @@
 }
 
 .answer-row-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
     margin-bottom: 15px;
 }
 
 .q-text {
-    font-weight: 700;
-    font-size: 0.95rem;
-    flex: 1;
+    font-weight: 600;
+    font-size: 0.88rem;
+    word-break: break-word;
+    color: var(--color-text);
+    line-height: 1.5;
 }
 
-.ai-feedback-pill {
-    background: rgba(139, 92, 246, 0.1);
-    color: #8b5cf6;
-    padding: 4px 10px;
-    border-radius: var(--radius-pill);
-    font-size: 0.8rem;
-    font-weight: 600;
+.answer-ai-section {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-left: 15px;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: rgba(139, 92, 246, 0.07);
+    border: 1px solid rgba(139, 92, 246, 0.18);
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    color: #8b5cf6;
+    line-height: 1.5;
+}
+
+.answer-ai-section .ai-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-size: 0.85rem;
+}
+
+.answer-ai-section .ai-label {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.answer-ai-section .ai-text {
+    font-weight: 500;
+    word-break: break-word;
 }
 
 .answer-comparison {
@@ -467,17 +490,34 @@
     font-size: 1.1rem;
 }
 
-@media (max-width: 850px) {
+@media (max-width: 1000px) {
+    .card-summary {
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+    .grade-buttons-group {
+        flex: 0 0 auto;
+    }
+}
+
+@media (max-width: 700px) {
     .card-summary {
         flex-direction: column;
-        gap: 20px;
         align-items: flex-start;
+        gap: 16px;
     }
     .submission-stats {
         width: 100%;
         justify-content: space-between;
     }
+    .grade-buttons-group {
+        width: 100%;
+        justify-content: space-between;
+    }
     .answer-comparison {
         grid-template-columns: 1fr;
+    }
+    .override-controls {
+        flex-wrap: wrap;
     }
 }

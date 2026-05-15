@@ -29,16 +29,30 @@
 }
 
 .final-grade {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 2.2rem;
-    font-weight: 900;
+    min-width: 80px;
+    padding: 10px 18px;
+    border-radius: var(--radius-md);
     color: white;
     box-shadow: var(--shadow-md);
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.grade-num {
+    font-size: 2.2rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.grade-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    opacity: 0.9;
+    margin-top: 3px;
 }
 
 .final-grade.grade-5 { background: #10b981; }
@@ -46,6 +60,65 @@
 .final-grade.grade-3 { background: #f59e0b; }
 .final-grade.grade-2 { background: #f97316; }
 .final-grade.grade-1 { background: #ef4444; }
+
+/* Javítás alatt jelvény */
+.pending-grade-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    padding: 10px 20px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+/* Javítás alatt banner */
+.pending-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 18px;
+    background: rgba(245, 158, 11, 0.07);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-left: 4px solid #f59e0b;
+    padding: 20px 25px;
+    border-radius: var(--radius-md);
+    margin-bottom: 25px;
+}
+
+.pending-icon {
+    font-size: 1.5rem;
+    color: #f59e0b;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.pending-banner strong {
+    display: block;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--color-text);
+    margin-bottom: 6px;
+}
+
+.pending-banner p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-text-dim);
+    line-height: 1.5;
+}
+
+/* Csak saját válasz block (értékelés előtt) */
+.single-answer-block {
+    margin-bottom: 20px;
+}
+
+.single-answer-block .ans-block {
+    max-width: 500px;
+}
 
 .meta-info {
     display: flex;
@@ -89,6 +162,7 @@
 
 .review-card.correct { border-left: 5px solid #10b981; }
 .review-card.wrong { border-left: 5px solid #ef4444; }
+.review-card.pending { border-left: 5px solid #6b7280; }
 
 .review-card .card-top {
     display: flex;
@@ -297,6 +371,10 @@
 
 @media (max-width: 768px) {
     .comparison-grid { grid-template-columns: 1fr; }
-    .header-top { flex-direction: column; align-items: flex-start; gap: 20px; }
-    .final-grade { order: -1; }
+    .header-top { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .final-grade, .pending-grade-badge { order: -1; }
+    .pending-banner { flex-direction: column; gap: 12px; }
+    .review-card { padding: 20px; }
+    .card-actions { flex-direction: column; gap: 10px; }
+    .tutor-btn, .flag-btn { width: 100%; }
 }

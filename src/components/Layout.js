@@ -25,6 +25,8 @@ import PracticeTest from '../pages/Student/PracticeTest';
 import RoadmapView from '../pages/Student/RoadmapView';
 import CheckpointPractice from '../pages/Student/CheckpointPractice';
 import DiagnosticResult from '../pages/Student/DiagnosticResult';
+import TeacherDashboard from '../pages/Teacher/TeacherDashboard';
+import StudentDashboard from '../pages/Student/StudentDashboard';
 
 const Layout = ({ onLoginSuccess }) => {
     const { user } = useUser() || {};
@@ -68,6 +70,7 @@ const Layout = ({ onLoginSuccess }) => {
 
                 {user?.role === 'teacher' && (
                     <>
+                        <Route path="/iranyitopult" element={<TeacherDashboard />} />
                         <Route path="/dolgozat-generalas" element={<AssignmentGeneratePage />} />
                         <Route path="/generalt-dolgozatok" element={<GeneratedAssignments />} />
                         <Route path="/statisztika" element={<TeacherStatisticsPage />} />
@@ -78,6 +81,7 @@ const Layout = ({ onLoginSuccess }) => {
 
                 {user?.role === 'student' && (
                     <>
+                        <Route path="/teendoim" element={<StudentDashboard />} />
                         <Route path="/elerheto-dolgozatok" element={<AvailableAssignments />} />
                         <Route path="/megoldott-dolgozatok" element={<SolvedAssignments />} />
                         <Route path="/megoldott-dolgozatok/:id" element={<CompletedDetails />} />
