@@ -1,316 +1,715 @@
 import React, { useState, useEffect } from 'react';
-import { fetchStudentStatistics } from '../../api/Student/Roadmap';
+import { fetchStudentStatistics, fetchPracticeStatistics } from '../../api/Student/Roadmap';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import {
   Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  PointElement,
-  LineElement,
-  RadialLinearScale
+  Title, Tooltip, Legend,
+  PointElement, LineElement,
+  BarElement, ArcElement,
+  CategoryScale, LinearScale,
+  RadialLinearScale,
+  Filler
 } from 'chart.js';
-import { Line, Radar } from 'react-chartjs-2';
-import { FaStar, FaFire, FaTrophy, FaChartLine, FaBrain, FaExclamationCircle } from 'react-icons/fa';
+import { Line, Bar, Doughnut, Radar } from 'react-chartjs-2';
+import {
+  FaStar, FaFire, FaTrophy, FaChartLine,
+  FaBrain, FaBook, FaCheckCircle, FaClock, FaChevronDown, FaChevronUp
+} from 'react-icons/fa';
 import '../../styles/Student/StudentStatistics.css';
 
 ChartJS.register(
-  Title,
-  Tooltip,
-  Legend,
-  PointElement,
-  LineElement,
-  RadialLinearScale
+  Title, Tooltip, Legend, Filler,
+  PointElement, LineElement, BarElement, ArcElement,
+  CategoryScale, LinearScale, RadialLinearScale
 );
 
-const StudentStatistics = () => {
-  const [statistics, setStatistics] = useState(null);
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+const SUBJECT_ICONS = { Matematika: '🔢', Magyar: '📖', Angol: '🌍', Környezetismeret: '🌱' };
 
-  const loadStatistics = async () => {
-    try {
-      const data = await fetchStudentStatistics();
-      setStatistics(data);
-    } catch (error) {
-      console.error('[StudentStatistics] Error loading statistics:', error);
-      setError(error.message || 'A statisztikák betöltése nem sikerült. Kérjük, próbáld újra.');
-    } finally {
-      setIsLoading(false);
+/* ─── Score colour helper ─── */
+const scoreColor = (v) => v >= 80 ? '#10b981' : v >= 60 ? '#3b82f6' : '#f59e0b';
+const scoreGrad  = (v) => v >= 80
+  ? 'linear-gradient(90deg,#10b981,#34d399)'
+  : v >= 60
+    ? 'linear-gradient(90deg,#3b82f6,#60a5fa)'
+    : 'linear-gradient(90deg,#f59e0b,#fbbf24)';
+
+/* ══════════════════════════════════════════════
+   ASSIGNMENTS TAB
+══════════════════════════════════════════════ */
+const AssignmentTab = ({ data }) => {
+  if (!data) return null;
+  const {
+    averageScore, completedAssignments, totalAssignments,
+    assignmentsStatistics, strengths, weaknesses
+  } = data;
+
+  const hasAssignments = assignmentsStatistics && assignmentsStatistics.length > 0;
+
+  const lineData = {
+    labels: assignmentsStatistics?.map((_, i) => `${i + 1}.`) || [],
+    datasets: [{
+      label: 'Pontszám (%)',
+      data: assignmentsStatistics?.map(s =>
+        s.totalPoints > 0 ? Math.round((s.achievedPoints / s.totalPoints) * 100) : 0
+      ) || [],
+      borderColor: '#3b82f6',
+      backgroundColor: 'rgba(59,130,246,0.08)',
+      tension: 0.4,
+      pointRadius: 5,
+      pointHoverRadius: 7,
+      pointBackgroundColor: '#3b82f6',
+      borderWidth: 2.5
+    }]
+  };
+
+  const lineOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw}%` } } },
+    scales: {
+      x: { grid: { display: false } },
+      y: { beginAtZero: true, max: 100, ticks: { callback: v => `${v}%` } }
     }
   };
 
-  useEffect(() => {
-    loadStatistics();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div id="content">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div id="content">
-        <p className="error-message">
-          <FaExclamationCircle />{error}
-        </p>
-      </div>
-    );
-  }
-
-  if (!statistics) {
-    return null;
-  }
-
-  // Gamification stats
-  const { totalXP, streak, badges, averageScore, completedAssignments, totalAssignments } = statistics;
-
-  // Radar chart for topic-level breakdown
-  const radarChartData = {
-    labels: statistics.topicStats?.map(stat => stat.topic) || [],
-    datasets: [
-      {
-        label: 'Teljesítmény (%)',
-        data: statistics.topicStats?.map(stat => stat.averageScore) || [],
-        backgroundColor: 'rgba(52, 152, 219, 0.2)',
-        borderColor: 'rgba(52, 152, 219, 1)',
-        borderWidth: 2,
-        pointBackgroundColor: 'rgba(52, 152, 219, 1)',
-      }
-    ]
-  };
-
-  // Line chart for performance over time
-  const lineChartData = {
-    labels: statistics.assignmentsStatistics?.map((_, index) => `${index + 1}.`) || [],
-    datasets: [
-      {
-        label: 'Pontszám (%)',
-        data: statistics.assignmentsStatistics?.map(stat => 
-          stat.totalPoints > 0 ? (stat.achievedPoints / stat.totalPoints) * 100 : 0
-        ) || [],
-        borderColor: '#3498db',
-        backgroundColor: 'rgba(52, 152, 219, 0.1)',
-        fill: true,
-        tension: 0.4
-      }
-    ]
-  };
-
-  // Strengths and weaknesses
-  const strengths = statistics.strengths || [];
-  const weaknesses = statistics.weaknesses || [];
-
   return (
-    <div id="content">
-      <div className="student-statistics-container">
-        <h1 className="stat-title">Statisztikák és Elemzések</h1>
-
-        {/* Gamification Header */}
-        <div className="stats-gamification-header">
-          <div className="stat-card xp-card">
-            <FaStar className="stat-icon" />
-            <div className="stat-info">
-              <span className="stat-value">{totalXP}</span>
-              <span className="stat-label">Összes XP</span>
-            </div>
-          </div>
-
-          <div className="stat-card streak-card">
-            <FaFire className="stat-icon" />
-            <div className="stat-info">
-              <span className="stat-value">{streak}</span>
-              <span className="stat-label">Napi Streak</span>
-            </div>
-          </div>
-
-          <div className="stat-card badges-card">
-            <FaTrophy className="stat-icon" />
-            <div className="stat-info">
-              <span className="stat-value">{badges.length}</span>
-              <span className="stat-label">Kitűzők</span>
-            </div>
-          </div>
-
-          <div className="stat-card score-card">
-            <FaChartLine className="stat-icon" />
-            <div className="stat-info">
-              <span className="stat-value">{averageScore}%</span>
-              <span className="stat-label">Átlag Pontszám</span>
-            </div>
+    <>
+      {/* Summary row */}
+      <div className="sts-cards-row">
+        <div className="sts-card">
+          <div className="sts-card-icon blue"><FaBook /></div>
+          <div className="sts-card-body">
+            <div className="sts-card-value">{totalAssignments}</div>
+            <div className="sts-card-label">Összes dolgozat</div>
           </div>
         </div>
+        <div className="sts-card">
+          <div className="sts-card-icon green"><FaCheckCircle /></div>
+          <div className="sts-card-body">
+            <div className="sts-card-value">{completedAssignments}</div>
+            <div className="sts-card-label">Értékelt</div>
+          </div>
+        </div>
+        <div className="sts-card">
+          <div className="sts-card-icon orange"><FaClock /></div>
+          <div className="sts-card-body">
+            <div className="sts-card-value">{totalAssignments - completedAssignments}</div>
+            <div className="sts-card-label">Folyamatban</div>
+          </div>
+        </div>
+        <div className="sts-card">
+          <div className="sts-card-icon purple"><FaChartLine /></div>
+          <div className="sts-card-body">
+            <div className="sts-card-value">{averageScore}%</div>
+            <div className="sts-card-label">Átlagos pontszám</div>
+          </div>
+        </div>
+      </div>
 
-        {/* Badges Section */}
-        {badges.length > 0 && (
-          <div className="badges-section">
-            <h2>🏆 Kitűzők</h2>
-            <div className="badges-grid">
-              {badges.map((badge, index) => (
-                <div key={index} className="badge-card" title={badge.description}>
-                  <span className="badge-emoji">{badge.icon}</span>
-                  <span className="badge-name">{badge.name}</span>
-                  <span className="badge-desc">{badge.description}</span>
+      {hasAssignments ? (
+        <>
+          {/* Score timeline */}
+          <div className="sts-section">
+            <h2 className="sts-section-title">Pontszámok időbeli alakulása</h2>
+            <div className="sts-chart-card">
+              <div className="sts-chart-wrap">
+                <Line data={lineData} options={lineOptions} />
+              </div>
+            </div>
+          </div>
+
+          {/* Assignment list */}
+          <div className="sts-section">
+            <h2 className="sts-section-title">Dolgozatok részletei</h2>
+            <div className="sts-card-block">
+              {assignmentsStatistics.map((a, i) => {
+                const pct = a.totalPoints > 0 ? Math.round((a.achievedPoints / a.totalPoints) * 100) : 0;
+                return (
+                  <div key={i} className="sts-assignment-row">
+                    <span className="sts-assignment-num">{i + 1}.</span>
+                    <span className="sts-assignment-title">{a.title || 'Dolgozat'}</span>
+                    <div className="sts-bar-track">
+                      <div className="sts-bar-fill" style={{ width: `${pct}%`, background: scoreGrad(pct) }} />
+                    </div>
+                    <span className="sts-assignment-pts">{a.achievedPoints}/{a.totalPoints} pt</span>
+                    <span className="sts-assignment-pct" style={{ color: scoreColor(pct) }}>{pct}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Strengths / Weaknesses */}
+          {((strengths && strengths.length > 0) || (weaknesses && weaknesses.length > 0)) && (
+            <div className="sts-two-col">
+              {strengths && strengths.length > 0 && (
+                <div className="sts-card-block">
+                  <h3 className="sts-block-title">💪 Erős tantárgyak</h3>
+                  {strengths.map((s, i) => (
+                    <div key={i} className="sts-bar-row">
+                      <span className="sts-bar-label">{s.topic}</span>
+                      <div className="sts-bar-track">
+                        <div className="sts-bar-fill" style={{ width: `${s.averageScore}%`, background: 'linear-gradient(90deg,#10b981,#34d399)' }} />
+                      </div>
+                      <span className="sts-bar-value" style={{ color: '#10b981' }}>{s.averageScore}%</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {weaknesses && weaknesses.length > 0 && (
+                <div className="sts-card-block">
+                  <h3 className="sts-block-title">📚 Fejleszthető területek</h3>
+                  {weaknesses.map((w, i) => (
+                    <div key={i} className="sts-bar-row">
+                      <span className="sts-bar-label">{w.topic}</span>
+                      <div className="sts-bar-track">
+                        <div className="sts-bar-fill" style={{ width: `${w.averageScore}%`, background: 'linear-gradient(90deg,#ef4444,#f87171)' }} />
+                      </div>
+                      <span className="sts-bar-value" style={{ color: '#ef4444' }}>{w.averageScore}%</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="sts-empty">
+          <div className="sts-empty-icon">📝</div>
+          <h3>Még nincsenek dolgozataid</h3>
+          <p>Amint a tanárod kioszt egy dolgozatot, itt láthatod a statisztikáidat.</p>
+        </div>
+      )}
+    </>
+  );
+};
+
+/* ══════════════════════════════════════════════
+   PRACTICE TAB
+══════════════════════════════════════════════ */
+const STATUS_MAP = {
+  not_started:          { label: 'Nem kezdett',        color: '#6b7280' },
+  requires_diagnostic:  { label: 'Felmérő szükséges',  color: '#f59e0b' },
+  in_progress:          { label: 'Folyamatban',         color: '#3b82f6' },
+  level_complete:       { label: 'Szint teljesítve ✓', color: '#10b981' }
+};
+
+const SubjectCard = ({ sub, diag }) => {
+  const [open, setOpen] = useState(false);
+  const progressPct = sub.totalCheckpoints > 0
+    ? Math.round((sub.completedCheckpoints / sub.totalCheckpoints) * 100)
+    : 0;
+  const statusInfo = STATUS_MAP[sub.status] || STATUS_MAP.not_started;
+
+  return (
+    <div className={`sts-subject-card${open ? ' expanded' : ''}`}>
+      {/* Header */}
+      <button className="sts-subject-header" onClick={() => setOpen(v => !v)}>
+        <div className="sts-subject-left">
+          <span className="sts-subject-emoji">{SUBJECT_ICONS[sub.subject] || '📚'}</span>
+          <div>
+            <div className="sts-subject-name">{sub.subject}</div>
+            <div className="sts-subject-status" style={{ color: statusInfo.color }}>{statusInfo.label}</div>
+          </div>
+        </div>
+        <div className="sts-subject-right">
+          <span className="sts-level-badge">Szint {sub.currentLevel}</span>
+          {open ? <FaChevronUp className="sts-chevron" /> : <FaChevronDown className="sts-chevron" />}
+        </div>
+      </button>
+
+      {/* Compact stats */}
+      <div className="sts-subject-stats">
+        <div className="sts-mini-stat">
+          <span className="sts-mini-label">Fejezetek</span>
+          <span className="sts-mini-value">{sub.completedCheckpoints}/{sub.totalCheckpoints}</span>
+        </div>
+        <div className="sts-mini-stat">
+          <span className="sts-mini-label">Átlag</span>
+          <span className="sts-mini-value" style={{ color: sub.avgScore > 0 ? scoreColor(sub.avgScore) : undefined }}>{sub.avgScore > 0 ? `${sub.avgScore}%` : '–'}</span>
+        </div>
+        <div className="sts-mini-stat">
+          <span className="sts-mini-label">Legjobb</span>
+          <span className="sts-mini-value" style={{ color: sub.bestScore > 0 ? scoreColor(sub.bestScore) : undefined }}>{sub.bestScore > 0 ? `${sub.bestScore}%` : '–'}</span>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="sts-subject-progress">
+        <div className="sts-progress-track">
+          <div className="sts-progress-fill" style={{ width: `${progressPct}%` }} />
+        </div>
+        <span className="sts-progress-label">{progressPct}%</span>
+      </div>
+
+      {/* Expandable details */}
+      {open && (
+        <div className="sts-subject-details">
+          {sub.checkpointDetails && sub.checkpointDetails.length > 0 && (
+            <div className="sts-detail-section">
+              <h4>Fejezetek eredményei</h4>
+              {sub.checkpointDetails.map((cp, i) => (
+                <div key={i} className="sts-bar-row">
+                  <span className="sts-bar-label">{cp.idx + 1}. Fejezet</span>
+                  <div className="sts-bar-track">
+                    <div className="sts-bar-fill" style={{ width: `${cp.score}%`, background: scoreGrad(cp.score) }} />
+                  </div>
+                  <span className="sts-bar-value" style={{ color: scoreColor(cp.score) }}>{cp.score}%</span>
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Main Stats Grid */}
-        <div className="stats-grid">
-          {/* Topic Performance Radar Chart */}
-          <div className="stat-card large">
-            <h3>Témakör Szintű Teljesítmény</h3>
-            <div className="chart-container">
-              {statistics.topicStats && statistics.topicStats.length > 0 ? (
-                <Radar data={radarChartData} options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  scales: {
-                    r: {
-                      beginAtZero: true,
-                      max: 100
-                    }
-                  }
-                }} />
-              ) : (
-                <div className="no-data">Még nincs elegendő adat. Oldj meg néhány feladatot!</div>
-              )}
-            </div>
-          </div>
-
-          {/* Performance Over Time */}
-          <div className="stat-card large">
-            <h3>Teljesítmény Időbeli Alakulása</h3>
-            <div className="chart-container">
-              {statistics.assignmentsStatistics && statistics.assignmentsStatistics.length > 0 ? (
-                <Line data={lineChartData} options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  scales: {
-                    y: {
-                      beginAtZero: true,
-                      max: 100
-                    }
-                  }
-                }} />
-              ) : (
-                <div className="no-data">Még nincs elegendő adat. Oldj meg néhány feladatot!</div>
-              )}
-            </div>
-          </div>
-
-          {/* Strengths */}
-          <div className="stat-card">
-            <h3>💪 Erősségeid</h3>
-            <div className="strengths-weaknesses">
-              {strengths.length > 0 ? (
-                strengths.map((item, index) => (
-                  <div key={index} className="sw-item strength">
-                    <span className="sw-topic">{item.topic}</span>
-                    <div className="sw-bar-container">
-                      <div 
-                        className="sw-bar" 
-                        style={{ width: `${item.averageScore}%` }}
-                      />
-                    </div>
-                    <span className="sw-score">{item.averageScore}%</span>
-                  </div>
-                ))
-              ) : (
-                <div className="no-data">Még nincs adat</div>
-              )}
-            </div>
-          </div>
-
-          {/* Weaknesses */}
-          <div className="stat-card">
-            <h3>📚 Fejlesztendő Területek</h3>
-            <div className="strengths-weaknesses">
-              {weaknesses.length > 0 ? (
-                weaknesses.map((item, index) => (
-                  <div key={index} className="sw-item weakness">
-                    <span className="sw-topic">{item.topic}</span>
-                    <div className="sw-bar-container">
-                      <div 
-                        className="sw-bar" 
-                        style={{ width: `${item.averageScore}%` }}
-                      />
-                    </div>
-                    <span className="sw-score">{item.averageScore}%</span>
-                  </div>
-                ))
-              ) : (
-                <div className="no-data">Még nincs adat</div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* AI Analysis Section */}
-        <div className="ai-analysis-section">
-          <div className="ai-analysis-header">
-            <FaBrain className="ai-icon" />
-            <h2>Az AI Tanárod Elemzése</h2>
-          </div>
-          <div className="ai-analysis-content">
-            <p>
-              {averageScore >= 80 ? (
-                <>
-                  🎉 <strong>Gratulálok!</strong> Kiváló teljesítményt nyújtasz! 
-                  Az átlagos pontszámod <strong>{averageScore}%</strong>, ami kiemelkedő. 
-                  Folytasd így, és érdemes lehet nehezebb kihívásokat is vállalnod!
-                </>
-              ) : averageScore >= 60 ? (
-                <>
-                  👍 <strong>Jó munkát végzel!</strong> Az átlagos pontszámod <strong>{averageScore}%</strong>. 
-                  {weaknesses.length > 0 && ` Érdemes több figyelmet fordítanod a "${weaknesses[0]?.topic}" témakörre, 
-                  ahol még van fejlődési lehetőség.`}
-                  <br/><br/>
-                  💡 <strong>Tipp:</strong> Használd az AI Tanár chatet, hogy segítsen a gyengébb területek fejlesztésében!
-                </>
-              ) : (
-                <>
-                  💪 <strong>Ne add fel!</strong> Mindenki így kezdte. 
-                  Az átlagos pontszámod jelenleg <strong>{averageScore}%</strong>, 
-                  de ez csak egy szám – a fontos, hogy fejlődj!
-                  <br/><br/>
-                  🎯 <strong>Javaslat:</strong> Kezdd az alapokkal, és használd az AI Tanár segítségét. 
-                  Napi 15 perc gyakorlással már egy hét alatt is javulhatsz!
-                </>
-              )}
-            </p>
-            
-            {streak > 0 && (
-              <div className="streak-motivation">
-                🔥 <strong>{streak} napos streak!</strong> 
-                {streak >= 7 ? ' Egy hete folyamatosan tanulsz – ez fantasztikus!' : 
-                 streak >= 3 ? ' Már 3 napja folyamatosan tanulsz – így tovább!' : 
-                 ' Kezdesz belejönni a rendszeres tanulásba!'}
+          {diag && (
+            <div className="sts-detail-section">
+              <h4>
+                Legutóbbi szintfelmérő
+                <span className="sts-diag-pct" style={{ color: scoreColor(diag.scorePercentage) }}>
+                  {Math.round(diag.scorePercentage)}%
+                </span>
+              </h4>
+              <div className="sts-diag-summary">
+                <span className="sts-diag-correct"><strong>{diag.correctAnswers}</strong>/{diag.totalQuestions} helyes válasz</span>
               </div>
-            )}
+
+              {diag.categoryAnalysis && diag.categoryAnalysis.length > 0 && (
+                <div className="sts-category-bars">
+                  {diag.categoryAnalysis.map((cat, i) => {
+                    const sc = Math.round(cat.score || 0);
+                    return (
+                      <div key={i} className="sts-bar-row">
+                        <span className="sts-bar-label">{cat.category}</span>
+                        <div className="sts-bar-track">
+                          <div className="sts-bar-fill" style={{ width: `${sc}%`, background: sc >= 80 ? 'linear-gradient(90deg,#10b981,#34d399)' : sc >= 60 ? 'linear-gradient(90deg,#3b82f6,#60a5fa)' : 'linear-gradient(90deg,#ef4444,#f87171)' }} />
+                        </div>
+                        <span className="sts-bar-value" style={{ color: scoreColor(sc) }}>{sc}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {diag.aiAnalysis?.personalizedFeedback && (
+                <div className="sts-ai-feedback">
+                  <FaBrain className="sts-brain-icon" />
+                  <p>{diag.aiAnalysis.personalizedFeedback}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {sub.checkpointDetails?.length === 0 && !diag && (
+            <p className="sts-no-detail">Még nincs részletes adat. Kezdj el egy szintfelmérőt!</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
+
+const PracticeTab = ({ data }) => {
+  if (!data) return null;
+  const { totalXP, streak, badges, subjectStats, diagnosticBySubject, totalCheckpointsCompleted, overallAvgScore } = data;
+  const xpLevel = Math.floor(totalXP / 50) + 1;
+  const hasData = subjectStats && subjectStats.some(s => s.status !== 'not_started');
+  const activeSubs = (subjectStats || []).filter(s => s.completedCheckpoints > 0);
+
+  /* ════════ AGGREGATE CHARTS ════════ */
+  const allCheckpoints = activeSubs.flatMap(s => s.checkpointDetails);
+
+  // 1. Doughnut – score distribution
+  const excellent = allCheckpoints.filter(c => c.score >= 80).length;
+  const good      = allCheckpoints.filter(c => c.score >= 60 && c.score < 80).length;
+  const weak      = allCheckpoints.filter(c => c.score < 60).length;
+  const doughnutData = {
+    labels: ['Kiváló (≥80%)', 'Jó (60–79%)', 'Fejleszthető (<60%)'],
+    datasets: [{
+      data: [excellent, good, weak],
+      backgroundColor: ['rgba(16,185,129,0.82)', 'rgba(59,130,246,0.82)', 'rgba(245,158,11,0.82)'],
+      borderColor: ['#10b981', '#3b82f6', '#f59e0b'],
+      borderWidth: 2,
+      hoverOffset: 10,
+    }]
+  };
+  const doughnutOptions = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} fejezet` } }
+    },
+    cutout: '64%'
+  };
+  const doughnutLegend = [
+    { label: 'Kiváló (≥80%)',      color: '#10b981', count: excellent },
+    { label: 'Jó (60–79%)',         color: '#3b82f6', count: good },
+    { label: 'Fejleszthető (<60%)', color: '#f59e0b', count: weak },
+  ];
+
+  // 2. Line – progress trend (all checkpoints sorted by date, with moving-avg overlay)
+  const sortedCps = [...allCheckpoints]
+    .filter(c => c.completedAt)
+    .sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
+  const trendPoints = sortedCps.length >= 2 ? sortedCps : allCheckpoints;
+  const winSize = Math.max(2, Math.floor(trendPoints.length / 3));
+  const movingAvg = trendPoints.map((_, i) => {
+    const slice = trendPoints.slice(Math.max(0, i - winSize + 1), i + 1);
+    return Math.round(slice.reduce((s, c) => s + c.score, 0) / slice.length);
+  });
+  const trendLineData = {
+    labels: trendPoints.map((_, i) => `${i + 1}.`),
+    datasets: [
+      {
+        label: 'Pontszám',
+        data: trendPoints.map(c => c.score),
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,0.08)',
+        tension: 0.4, pointRadius: 4, borderWidth: 2.5, fill: true,
+      },
+      {
+        label: 'Trend',
+        data: movingAvg,
+        borderColor: '#f59e0b',
+        borderDash: [6, 3],
+        pointRadius: 0, borderWidth: 2, fill: false,
+      }
+    ]
+  };
+  const trendOptions = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14 } },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}%` } }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { beginAtZero: true, max: 100, ticks: { callback: v => `${v}%` } }
+    }
+  };
+
+  // 3. Radar – aggregated diagnostic category performance
+  const catMap = {};
+  (diagnosticBySubject || []).forEach(dr => {
+    (dr.categoryAnalysis || []).forEach(cat => {
+      if (!catMap[cat.category]) catMap[cat.category] = { total: 0, n: 0 };
+      catMap[cat.category].total += (cat.score || 0);
+      catMap[cat.category].n++;
+    });
+  });
+  const radarEntries = Object.entries(catMap)
+    .map(([name, d]) => ({ name, avg: Math.round(d.total / d.n) }))
+    .slice(0, 8);
+  const radarData = {
+    labels: radarEntries.map(c => c.name),
+    datasets: [{
+      label: 'Teljesítmény (%)',
+      data: radarEntries.map(c => c.avg),
+      backgroundColor: 'rgba(99,102,241,0.18)',
+      borderColor: '#6366f1',
+      borderWidth: 2,
+      pointBackgroundColor: '#6366f1',
+      pointRadius: 4,
+    }]
+  };
+  const radarOptions = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      r: {
+        beginAtZero: true, max: 100,
+        ticks: { stepSize: 25, font: { size: 9 }, backdropColor: 'transparent', color: 'rgba(156,163,175,0.8)' },
+        grid: { color: 'rgba(156,163,175,0.15)' },
+        angleLines: { color: 'rgba(156,163,175,0.2)' },
+        pointLabels: { font: { size: 11, weight: '600' } }
+      }
+    }
+  };
+
+  // 4. Bar – avg score by difficulty level (only levels with data)
+  const diffAllLabels  = ['1 – Könnyű', '2 – Alap', '3 – Közepes', '4 – Nehéz', '5 – Haladó'];
+  const diffAllColors  = ['rgba(16,185,129,0.75)', 'rgba(59,130,246,0.75)', 'rgba(245,158,11,0.75)', 'rgba(239,68,68,0.75)', 'rgba(139,92,246,0.75)'];
+  const diffAllBorders = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const diffMap = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+  allCheckpoints.forEach(c => { const d = c.difficulty || 3; if (diffMap[d]) diffMap[d].push(c.score); });
+  const activeDiffs = [1,2,3,4,5].filter(d => diffMap[d].length > 0);
+  const diffBarData = {
+    labels: activeDiffs.map(d => diffAllLabels[d - 1]),
+    datasets: [{
+      label: 'Átlag pontszám (%)',
+      data: activeDiffs.map(d => Math.round(diffMap[d].reduce((s,v) => s+v,0) / diffMap[d].length)),
+      backgroundColor: activeDiffs.map(d => diffAllColors[d - 1]),
+      borderColor: activeDiffs.map(d => diffAllBorders[d - 1]),
+      borderWidth: 2, borderRadius: 10,
+    }]
+  };
+  const diffBarOptions = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.raw}%` } }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { beginAtZero: true, max: 100, ticks: { callback: v => `${v}%` } }
+    }
+  };
+
+  /* ── Bar chart: subject avg scores ── */
+  const barData = {
+    labels: activeSubs.map(s => s.subject),
+    datasets: [{
+      label: 'Átlagos pontszám (%)',
+      data: activeSubs.map(s => s.avgScore),
+      backgroundColor: activeSubs.map(s =>
+        s.avgScore >= 80 ? 'rgba(16,185,129,0.25)' : s.avgScore >= 60 ? 'rgba(59,130,246,0.25)' : 'rgba(245,158,11,0.25)'
+      ),
+      borderColor: activeSubs.map(s => scoreColor(s.avgScore)),
+      borderWidth: 2,
+      borderRadius: 10,
+    }]
+  };
+  const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.raw}%` } }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { beginAtZero: true, max: 100, ticks: { callback: v => `${v}%` } }
+    }
+  };
+
+  /* ── Multi-line chart: checkpoint scores per subject ── */
+  const maxLen = Math.max(...activeSubs.map(s => s.checkpointDetails.length), 0);
+  const multiLineData = {
+    labels: Array.from({ length: maxLen }, (_, i) => `${i + 1}. Fejezet`),
+    datasets: activeSubs.map((s, i) => ({
+      label: s.subject,
+      data: Array.from({ length: maxLen }, (_, idx) => s.checkpointDetails[idx]?.score ?? null),
+      borderColor: CHART_COLORS[i % CHART_COLORS.length],
+      backgroundColor: CHART_COLORS[i % CHART_COLORS.length] + '18',
+      tension: 0.35,
+      pointRadius: 5,
+      pointHoverRadius: 7,
+      borderWidth: 2.5,
+      spanGaps: false,
+    }))
+  };
+  const multiLineOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 12, padding: 16 } },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw}%` } }
+    },
+    scales: {
+      x: { grid: { display: false } },
+      y: { beginAtZero: true, max: 100, ticks: { callback: v => `${v}%` } }
+    }
+  };
+
+  return (
+    <>
+      {/* Summary cards */}
+      <div className="sts-cards-row">
+        <div className="sts-card xp-gradient">
+          <div className="sts-card-icon yellow"><FaStar /></div>
+          <div className="sts-card-body">
+            <div className="sts-card-value">{totalXP} <span className="sts-unit">XP</span></div>
+            <div className="sts-card-label">Tapasztalati pont</div>
+            <div className="sts-card-sub">Szint {xpLevel}</div>
           </div>
         </div>
+        <div className={`sts-card${streak >= 3 ? ' streak-hot' : ''}`}>
+          <div className={`sts-card-icon${streak >= 3 ? ' red' : ' orange'}`}><FaFire /></div>
+          <div className="sts-card-body">
+            <div className="sts-card-value">{streak} <span className="sts-unit">nap</span></div>
+            <div className="sts-card-label">Tanulási sorozat</div>
+            <div className="sts-card-sub">{streak >= 7 ? 'Tűzön vagy! 🔥' : streak >= 3 ? 'Folytasd így!' : streak === 0 ? 'Ma még nem tanultál' : 'Kezded belejönni!'}</div>
+          </div>
+        </div>
+        <div className="sts-card">
+          <div className="sts-card-icon green"><FaCheckCircle /></div>
+          <div className="sts-card-body">
+            <div className="sts-card-value">{totalCheckpointsCompleted}</div>
+            <div className="sts-card-label">Teljesített fejezet</div>
+            <div className="sts-card-sub">Összesen, minden tantárgy</div>
+          </div>
+        </div>
+        <div className="sts-card">
+          <div className="sts-card-icon purple"><FaChartLine /></div>
+          <div className="sts-card-body">
+            <div className="sts-card-value">{overallAvgScore > 0 ? `${overallAvgScore}%` : '–'}</div>
+            <div className="sts-card-label">Átlagos eredmény</div>
+            <div className="sts-card-sub">Minden tantárgy</div>
+          </div>
+        </div>
+      </div>
 
-        {/* Assignment Summary */}
-        <div className="assignment-summary">
-          <div className="summary-card">
-            <h3>Összes Dolgozat</h3>
-            <p className="summary-value">{totalAssignments}</p>
+      {/* Badges */}
+      {badges && badges.length > 0 && (
+        <div className="sts-section">
+          <h2 className="sts-section-title">🏆 Elért kitűzők</h2>
+          <div className="sts-badges-row">
+            {badges.map((b, i) => (
+              <div key={i} className="sts-badge">
+                <span className="sts-badge-icon">{b.icon}</span>
+                <span className="sts-badge-name">{b.name}</span>
+                <span className="sts-badge-desc">{b.description}</span>
+              </div>
+            ))}
           </div>
-          <div className="summary-card completed">
-            <h3>Teljesített</h3>
-            <p className="summary-value">{completedAssignments}</p>
+        </div>
+      )}
+
+      {/* Aggregate charts – only when there's checkpoint data */}
+      {allCheckpoints.length > 0 && (
+        <div className="sts-section">
+          <h2 className="sts-section-title">Összesített statisztikák</h2>
+          <div className="sts-agg-grid">
+
+            {/* 1 – Doughnut: score distribution */}
+            <div className="sts-chart-card">
+              <h3 className="sts-chart-title">Teljesítmény eloszlás</h3>
+              <p className="sts-chart-sub">Összes fejezet eredménye kategóriánként</p>
+              <div className="sts-doughnut-wrap">
+                <div className="sts-chart-wrap sts-chart-wrap--md">
+                  <Doughnut data={doughnutData} options={doughnutOptions} />
+                </div>
+                <div className="sts-doughnut-center">
+                  <span className="sts-doughnut-total">{allCheckpoints.length}</span>
+                  <span className="sts-doughnut-label">fejezet</span>
+                </div>
+              </div>
+              <div className="sts-doughnut-legend">
+                {doughnutLegend.map((l, i) => (
+                  <div key={i} className="sts-doughnut-legend-item">
+                    <span className="sts-doughnut-dot" style={{ background: l.color }} />
+                    <span className="sts-doughnut-legend-label">{l.label}</span>
+                    <span className="sts-doughnut-legend-count" style={{ color: l.color }}>{l.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 2 – Line: progress trend */}
+            <div className="sts-chart-card">
+              <h3 className="sts-chart-title">Fejlődési görbe</h3>
+              <p className="sts-chart-sub">Fejezetek pontszámai időrendben + trendvonal</p>
+              <div className="sts-chart-wrap">
+                {trendPoints.length >= 2
+                  ? <Line data={trendLineData} options={trendOptions} />
+                  : <div className="sts-chart-empty">Legalább 2 teljesített fejezet szükséges</div>
+                }
+              </div>
+            </div>
+
+            {/* 3 – Radar: diagnostic category performance */}
+            <div className="sts-chart-card">
+              <h3 className="sts-chart-title">Szintfelmérő kategóriák</h3>
+              <p className="sts-chart-sub">Összes szintfelmérő aggregált kategória-teljesítménye</p>
+              <div className="sts-chart-wrap">
+                {radarEntries.length >= 3
+                  ? <Radar data={radarData} options={radarOptions} />
+                  : <div className="sts-chart-empty">Nincs elég szintfelmérő adat</div>
+                }
+              </div>
+            </div>
+
+            {/* 4 – Bar: avg score by difficulty */}
+            <div className="sts-chart-card">
+              <h3 className="sts-chart-title">Nehézségi szint szerinti eredmény</h3>
+              <p className="sts-chart-sub">Átlagos pontszám fejezetenként, nehézség alapján</p>
+              <div className="sts-chart-wrap">
+                <Bar data={diffBarData} options={diffBarOptions} />
+              </div>
+            </div>
+
           </div>
-          <div className="summary-card pending">
-            <h3>Várakozó</h3>
-            <p className="summary-value">{totalAssignments - completedAssignments}</p>
+        </div>
+      )}
+
+      {/* Per-subject cards */}
+      {hasData ? (
+        <div className="sts-section">
+          <h2 className="sts-section-title">Tantárgyak részletei</h2>
+          <div className="sts-subject-grid">
+            {subjectStats
+              .filter(s => s.status !== 'not_started')
+              .map(sub => {
+                const diag = diagnosticBySubject?.find(d => d.subject === sub.subject);
+                return <SubjectCard key={sub.subject} sub={sub} diag={diag} />;
+              })}
           </div>
+        </div>
+      ) : (
+        <div className="sts-empty">
+          <div className="sts-empty-icon">🎯</div>
+          <h3>Még nincs egyéni gyakorlás adatod</h3>
+          <p>Kezdj el egy szintfelmérőt az Egyéni Gyakorlás menüpontban!</p>
+        </div>
+      )}
+    </>
+  );
+};
+
+/* ══════════════════════════════════════════════
+   MAIN PAGE
+══════════════════════════════════════════════ */
+const StudentStatistics = () => {
+  const [activeTab, setActiveTab] = useState('assignments');
+  const [assignmentStats, setAssignmentStats] = useState(null);
+  const [practiceStats, setPracticeStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [aStats, pStats] = await Promise.all([
+          fetchStudentStatistics(),
+          fetchPracticeStatistics()
+        ]);
+        setAssignmentStats(aStats);
+        setPracticeStats(pStats);
+      } catch (err) {
+        setError(err.message || 'Betöltési hiba');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  if (loading) return <div id="content"><LoadingSpinner /></div>;
+  if (error) return <div id="content"><p style={{ padding: 24, color: 'var(--color-text-dim)' }}>{error}</p></div>;
+
+  return (
+    <div id="content">
+      <div className="sts-page">
+        <h1 className="sts-page-title">Statisztikák és Elemzések</h1>
+
+        <div className="sts-tabs">
+          <button
+            className={`sts-tab${activeTab === 'assignments' ? ' active' : ''}`}
+            onClick={() => setActiveTab('assignments')}
+          >
+            <FaTrophy /> Dolgozatok
+          </button>
+          <button
+            className={`sts-tab${activeTab === 'practice' ? ' active' : ''}`}
+            onClick={() => setActiveTab('practice')}
+          >
+            <FaStar /> Egyéni Gyakorlás
+          </button>
+        </div>
+
+        <div className="sts-tab-content">
+          {activeTab === 'assignments' && <AssignmentTab data={assignmentStats} />}
+          {activeTab === 'practice'    && <PracticeTab   data={practiceStats}   />}
         </div>
       </div>
     </div>

@@ -379,7 +379,7 @@ router.get('/student/completed-assignments', authenticateStudent, async (req, re
       .select('assignments');
 
     // A megírt dolgozatokból egy egyszerűsített struktúrát készítünk
-    const completedAssignments = student.assignments.map(assignment => ({
+    const completedAssignments = student.assignments.filter(a => a.assignmentId != null).map(assignment => ({
       assignmentId: assignment.assignmentId._id,
       title: assignment.assignmentId.title,
       subject: assignment.assignmentId.subject,

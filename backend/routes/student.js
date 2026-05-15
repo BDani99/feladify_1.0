@@ -1468,6 +1468,82 @@ router.get('/statistics', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/student/practice-statistics
+router.get('/practice-statistics', authMiddleware, async (req, res) => {
+  try {
+    const progress = await StudentProgress.findOne({ studentId: req.user._id });
+    const diagnosticResults = await DiagnosticResult.find({
+      studentId: req.user._id,
+      status: { $in: ['completed', 'analyzed'] }
+    }).sort({ completedAt: -1 }).lean();
+
+    const totalXP = progress?.totalXP || 0;
+    const streak = progress?.streak || 0;
+    const badges = progress?.badges || [];
+    const subjectProgressArr = progress?.subjectProgress || [];
+
+    const subjectStats = subjectProgressArr.map(sp => {
+      const checkpoints = sp.checkpoints || [];
+      const completed = checkpoints.filter(c => c.status === 'completed');
+      const avgScore = completed.length > 0
+        ? Math.round(completed.reduce((s, c) => s + (c.score || 0), 0) / completed.length)
+        : 0;
+      const bestScore = completed.length > 0
+        ? Math.max(...completed.map(c => c.score || 0))
+        : 0;
+      const checkpointDetails = checkpoints
+        .map((c, i) => ({ idx: i, score: c.score || 0, status: c.status, difficulty: c.difficulty || 3, attempts: c.attempts || 1, completedAt: c.completedAt }))
+        .filter(c => c.status === 'completed');
+
+      return {
+        subject: sp.subject,
+        status: sp.status || 'not_started',
+        currentLevel: sp.currentLevel || 1,
+        totalCheckpoints: checkpoints.length,
+        completedCheckpoints: completed.length,
+        avgScore,
+        bestScore,
+        checkpointDetails
+      };
+    });
+
+    // Most recent diagnostic per subject
+    const diagnosticMap = {};
+    diagnosticResults.forEach(dr => {
+      if (!diagnosticMap[dr.subject]) {
+        diagnosticMap[dr.subject] = {
+          subject: dr.subject,
+          scorePercentage: dr.scorePercentage || 0,
+          categoryAnalysis: dr.categoryAnalysis || [],
+          aiAnalysis: dr.aiAnalysis || null,
+          completedAt: dr.completedAt,
+          totalQuestions: dr.totalQuestions || 0,
+          correctAnswers: dr.correctAnswers || 0
+        };
+      }
+    });
+
+    const totalCheckpointsCompleted = subjectStats.reduce((s, sub) => s + sub.completedCheckpoints, 0);
+    const activeSubs = subjectStats.filter(s => s.completedCheckpoints > 0);
+    const overallAvgScore = activeSubs.length > 0
+      ? Math.round(activeSubs.reduce((s, sub) => s + sub.avgScore, 0) / activeSubs.length)
+      : 0;
+
+    res.json({
+      totalXP,
+      streak,
+      badges,
+      subjectStats,
+      diagnosticBySubject: Object.values(diagnosticMap),
+      totalCheckpointsCompleted,
+      overallAvgScore
+    });
+  } catch (error) {
+    console.error('[Student API] Practice statistics error:', error);
+    res.status(500).json({ message: 'Hiba az egyéni gyakorlás statisztikák lekérésekor', error: error.message });
+  }
+});
+
 // (Legacy segédfüggvények meghagyva, ha valami régi kód még hivatkozna rájuk)
 function generateInitialRoadmap(className) {
   return []; // Üresen hagyva, az új logika már a practicePath-et használja

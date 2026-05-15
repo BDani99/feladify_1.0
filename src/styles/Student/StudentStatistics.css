@@ -1,330 +1,702 @@
-/* StudentStatistics.css - Prémium Vezérlőpult */
+/* StudentStatistics.css */
 
-.student-statistics-container {
+.sts-page {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 32px 24px;
+    padding: 28px 24px 64px;
 }
 
-.student-statistics-container .stat-title {
-    text-align: left;
-    margin-bottom: 40px;
-    color: var(--color-text);
+.sts-page-title {
     font-size: 2.4rem;
-    font-weight: 800;
+    font-weight: 900;
+    color: var(--color-text);
     letter-spacing: -0.5px;
+    margin: 0 0 32px 0;
 }
 
-/* Gamifikációs Fejléc */
-.stats-gamification-header {
+/* ─── Tabs ─── */
+.sts-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0;
+}
+
+.sts-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text-dim);
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 8px 8px 0 0;
+}
+
+.sts-tab:hover {
+    color: var(--color-text);
+    background: var(--bg-input);
+}
+
+.sts-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: var(--accent-glow);
+}
+
+.sts-tab-content {
+    padding-top: 8px;
+}
+
+/* ─── Summary cards row ─── */
+.sts-cards-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 24px;
-    margin-bottom: 48px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
 }
 
-.stat-card {
+.sts-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 20px;
-    padding: 28px;
+    padding: 20px 20px 18px;
     display: flex;
-    align-items: center;
-    gap: 20px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    align-items: flex-start;
+    gap: 14px;
     box-shadow: var(--shadow-soft);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
     overflow: hidden;
 }
 
-/* Felső finom szín-vonal */
-.stat-card::before {
+.sts-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
     background: var(--border-color-2);
-    transition: all 0.3s ease;
+    transition: background 0.3s;
 }
 
-.stat-card:hover {
-    transform: translateY(-6px);
+.sts-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
+
+.sts-card.xp-gradient::before { background: linear-gradient(90deg,#f59e0b,#fbbf24); }
+.sts-card.streak-hot::before  { background: linear-gradient(90deg,#ef4444,#f97316); }
+
+.sts-card-icon {
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.sts-card-icon.blue   { background: rgba(59,130,246,0.12);  color: #3b82f6; }
+.sts-card-icon.green  { background: rgba(16,185,129,0.12);  color: #10b981; }
+.sts-card-icon.orange { background: rgba(245,158,11,0.12);  color: #f59e0b; }
+.sts-card-icon.purple { background: rgba(139,92,246,0.12);  color: #8b5cf6; }
+.sts-card-icon.yellow { background: rgba(245,158,11,0.15);  color: #f59e0b; }
+.sts-card-icon.red    { background: rgba(239,68,68,0.12);   color: #ef4444; }
+
+.sts-card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.sts-card-value {
+    font-size: 1.7rem;
+    font-weight: 900;
+    color: var(--color-text);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+}
+
+.sts-card.xp-gradient .sts-card-value {
+    background: linear-gradient(135deg,#f59e0b,#fbbf24);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.sts-unit {
+    font-size: 0.9rem;
+    font-weight: 700;
+    opacity: 0.55;
+}
+
+.sts-card-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.sts-card-sub {
+    font-size: 0.78rem;
+    color: var(--color-text-dim);
+    font-weight: 600;
+}
+
+/* ─── Section ─── */
+.sts-section { margin-bottom: 36px; }
+
+.sts-section-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--color-text);
+    margin: 0 0 16px 0;
+}
+
+/* ─── Charts ─── */
+.sts-charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* 2×2 aggregate grid */
+.sts-agg-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.sts-chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 22px 22px 18px;
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sts-chart-card:hover {
+    transform: translateY(-3px);
     box-shadow: var(--shadow-hover);
 }
 
-.xp-card:hover::before { background: #f59e0b; }
-.streak-card:hover::before { background: #ef4444; }
-.badges-card:hover::before { background: #8b5cf6; }
-.score-card:hover::before { background: var(--accent); }
-
-.stat-icon {
-    font-size: 2.5rem;
-    padding: 16px;
-    border-radius: 16px;
+.sts-chart-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--color-text);
+    margin: 0 0 4px 0;
 }
 
-.xp-card .stat-icon    { color: #f59e0b; background: rgba(245, 158, 11, 0.15); }
-.streak-card .stat-icon { color: #ef4444; background: rgba(239, 68, 68, 0.15); }
-.badges-card .stat-icon { color: #8b5cf6; background: rgba(139, 92, 246, 0.15); }
-.score-card .stat-icon  { color: var(--accent); background: rgba(59, 130, 246, 0.15); }
+.sts-chart-sub {
+    font-size: 0.78rem;
+    color: var(--color-text-dim);
+    font-weight: 600;
+    margin: 0 0 16px 0;
+}
 
-.stat-info {
+.sts-chart-wrap {
+    height: 240px;
+    position: relative;
+}
+
+.sts-chart-wrap--md {
+    height: 210px;
+}
+
+.sts-chart-empty {
+    height: 100%;
     display: flex;
-    flex-direction: column;
-    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: var(--color-text-dim);
+    font-weight: 600;
+    text-align: center;
+    padding: 20px;
 }
 
-.student-statistics-container .stat-value {
-    font-size: 2.2rem;
+/* Doughnut wrapper – relative container for chart + center overlay */
+.sts-doughnut-wrap {
+    position: relative;
+}
+
+/* Center overlay sits inside .sts-doughnut-wrap, vertically centred on the chart */
+.sts-doughnut-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+}
+
+.sts-doughnut-total {
+    display: block;
+    font-size: 2rem;
     font-weight: 900;
     color: var(--color-text);
     line-height: 1;
 }
 
-.stat-label {
-    font-size: 1rem;
+.sts-doughnut-label {
+    font-size: 0.72rem;
+    font-weight: 700;
     color: var(--color-text-dim);
-    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    margin-top: 2px;
+    display: block;
 }
 
-/* Kitűzők (Badges) */
-.badges-section {
-    margin-bottom: 48px;
+/* Custom legend below the doughnut */
+.sts-doughnut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 14px;
 }
 
-.badges-section h2 {
-    color: var(--color-text);
-    margin-bottom: 24px;
-    font-size: 1.6rem;
-    font-weight: 800;
+.sts-doughnut-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
 }
 
-.badges-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 20px;
+.sts-doughnut-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
 }
 
-.badge-card {
+.sts-doughnut-legend-label {
+    flex: 1;
+    color: var(--color-text-dim);
+    font-weight: 600;
+}
+
+.sts-doughnut-legend-count {
+    font-weight: 900;
+    font-size: 0.88rem;
+}
+
+/* ─── Card block (list container) ─── */
+.sts-card-block {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 20px;
-    padding: 24px 16px;
-    text-align: center;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
+    padding: 20px 24px;
     box-shadow: var(--shadow-soft);
 }
 
-.badge-card:hover {
-    transform: translateY(-6px) scale(1.03);
-    border-color: var(--accent);
-    box-shadow: var(--shadow-hover);
-}
-
-.badge-emoji {
-    font-size: 3.5rem;
-    display: block;
-    margin-bottom: 16px;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
-}
-
-.badge-name {
+.sts-block-title {
+    font-size: 1.05rem;
     font-weight: 800;
-    font-size: 1.1rem;
-    display: block;
-    margin-bottom: 6px;
+    color: var(--color-text);
+    margin: 0 0 16px 0;
+}
+
+/* ─── Two-col ─── */
+.sts-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 36px;
+}
+
+/* ─── Assignment list ─── */
+.sts-assignment-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 1fr 80px 54px;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sts-assignment-row:last-child { border-bottom: none; }
+
+.sts-assignment-num {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-text-dim);
+    text-align: right;
+}
+
+.sts-assignment-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sts-assignment-pts {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-dim);
+    text-align: right;
+    white-space: nowrap;
+}
+
+.sts-assignment-pct {
+    font-size: 0.95rem;
+    font-weight: 900;
+    text-align: right;
+}
+
+/* ─── Generic bar row ─── */
+.sts-bar-row {
+    display: grid;
+    grid-template-columns: 130px 1fr 48px;
+    gap: 12px;
+    align-items: center;
+    padding: 6px 0;
+}
+
+.sts-bar-label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sts-bar-track {
+    height: 8px;
+    background: var(--bg-input);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+}
+
+.sts-bar-fill {
+    height: 100%;
+    border-radius: var(--radius-pill);
+    transition: width 0.9s cubic-bezier(0.4,0,0.2,1);
+}
+
+.sts-bar-value {
+    font-size: 0.88rem;
+    font-weight: 800;
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* ─── Badges ─── */
+.sts-badges-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.sts-badge {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    min-width: 130px;
+    box-shadow: var(--shadow-soft);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sts-badge:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
+
+.sts-badge-icon { font-size: 2.4rem; line-height: 1; }
+
+.sts-badge-name {
+    font-size: 0.9rem;
+    font-weight: 800;
     color: var(--color-text);
 }
 
-.badge-desc {
-    font-size: 0.9rem;
+.sts-badge-desc {
+    font-size: 0.78rem;
     color: var(--color-text-dim);
-    display: block;
     line-height: 1.4;
 }
 
-/* Grafikonok és Elemzések Grid */
-.stats-grid {
+/* ─── Subject grid ─── */
+.sts-subject-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 32px;
-    margin-bottom: 48px;
-}
-
-.stat-card.large {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 32px;
-}
-
-.stat-card h3 {
-    color: var(--color-text);
-    margin: 0 0 24px 0;
-    font-size: 1.4rem;
-    font-weight: 800;
-    width: 100%;
-}
-
-.chart-container {
-    height: 320px;
-    width: 100%;
-    position: relative;
-}
-
-/* Erősségek és Gyengeségek Sávok */
-.strengths-weaknesses {
-    display: flex;
-    flex-direction: column;
     gap: 20px;
-    width: 100%;
+    align-items: start;
 }
 
-.sw-item {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.sw-topic {
-    min-width: 130px;
-    font-size: 1.05rem;
-    color: var(--color-text);
-    font-weight: 700;
-}
-
-.sw-bar-container {
-    flex: 1;
-    height: 12px;
-    background: var(--bg-input);
-    border-radius: 6px;
-    overflow: hidden;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
-}
-
-.sw-bar {
-    height: 100%;
-    border-radius: 6px;
-    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.strength .sw-bar { background: linear-gradient(90deg, #10b981, #34d399); }
-.weakness .sw-bar  { background: linear-gradient(90deg, #ef4444, #f87171); }
-
-.sw-score {
-    min-width: 60px;
-    text-align: right;
-    font-weight: 800;
-    font-size: 1.1rem;
-}
-
-.strength .sw-score { color: #10b981; }
-.weakness .sw-score { color: #ef4444; }
-
-/* AI Elemzés */
-.ai-analysis-section {
+.sts-subject-card {
     background: var(--bg-card);
-    border: 1px solid var(--accent);
-    border-radius: 24px;
-    padding: 40px;
-    margin-bottom: 48px;
-    box-shadow: 0 10px 40px var(--accent-glow);
-    position: relative;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+    transition: box-shadow 0.25s ease;
+}
+
+.sts-subject-card.expanded {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-glow), var(--shadow-soft);
+}
+
+.sts-subject-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    gap: 12px;
+    transition: background 0.15s;
+}
+
+.sts-subject-header:hover { background: var(--bg-input); }
+
+.sts-subject-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.sts-subject-emoji { font-size: 2rem; line-height: 1; }
+
+.sts-subject-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--color-text);
+}
+
+.sts-subject-status {
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+.sts-subject-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.sts-level-badge {
+    background: var(--accent-gradient);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 900;
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+}
+
+.sts-chevron {
+    color: var(--color-text-dim);
+    font-size: 0.85rem;
+    transition: transform 0.2s;
+}
+
+/* Compact stats bar */
+.sts-subject-stats {
+    display: flex;
+    gap: 0;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.sts-mini-stat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 8px;
+    border-right: 1px solid var(--border-color);
+}
+
+.sts-mini-stat:last-child { border-right: none; }
+
+.sts-mini-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--color-text-dim);
+}
+
+.sts-mini-value {
+    font-size: 1.05rem;
+    font-weight: 900;
+    color: var(--color-text);
+}
+
+/* Progress bar */
+.sts-subject-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+}
+
+.sts-progress-track {
+    flex: 1;
+    height: 7px;
+    background: var(--bg-input);
+    border-radius: var(--radius-pill);
     overflow: hidden;
 }
 
-.ai-analysis-section::before {
-    content: '';
-    position: absolute;
-    top: -50px;
-    right: -50px;
-    width: 200px;
-    height: 200px;
-    background: var(--accent);
-    filter: blur(100px);
-    opacity: 0.15;
-    pointer-events: none;
+.sts-progress-fill {
+    height: 100%;
+    background: var(--accent-gradient);
+    border-radius: var(--radius-pill);
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
 }
 
-.ai-analysis-header {
+.sts-progress-label {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--color-text-dim);
+    min-width: 32px;
+    text-align: right;
+}
+
+/* Expanded details */
+.sts-subject-details {
+    border-top: 1px solid var(--border-color);
+    padding: 20px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: var(--bg-input);
+}
+
+.sts-detail-section h4 {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--color-text);
+    margin: 0 0 12px 0;
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 10px;
 }
 
-.ai-icon {
-    font-size: 2.5rem;
-    color: var(--accent);
-    filter: drop-shadow(0 4px 10px var(--accent-glow));
+.sts-diag-pct {
+    font-size: 1rem;
+    font-weight: 900;
+    margin-left: 8px;
 }
 
-.ai-analysis-header h2 {
-    margin: 0;
-    color: var(--color-text);
-    font-size: 1.8rem;
-    font-weight: 800;
+.sts-diag-summary {
+    margin-bottom: 12px;
 }
 
-.ai-analysis-content {
-    background: var(--bg-input);
-    border-radius: 16px;
-    padding: 32px;
-    border: 1px solid var(--border-color);
-    color: var(--color-text);
-    line-height: 1.7;
-    font-size: 1.15rem;
-    font-weight: 500;
-}
-
-.streak-motivation {
-    margin-top: 24px;
-    padding: 20px 24px;
-    background: rgba(245, 158, 11, 0.1);
-    border-radius: 16px;
-    border-left: 6px solid #f59e0b;
-    font-size: 1.1rem;
-    color: #d97706;
-    font-weight: 700;
-}
-
-/* Áttekintés - Kis kártyák lent */
-.assignment-summary {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-}
-
-.summary-card {
-    background: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 24px;
-    text-align: center;
-}
-
-.summary-card h3 {
-    margin: 0 0 12px 0;
-    font-size: 1.1rem;
+.sts-diag-correct {
+    font-size: 0.9rem;
     color: var(--color-text-dim);
     font-weight: 600;
 }
 
-.summary-value {
-    font-size: 2.5rem;
-    font-weight: 900;
+.sts-diag-correct strong {
     color: var(--color-text);
+    font-size: 1rem;
+}
+
+.sts-category-bars { display: flex; flex-direction: column; gap: 4px; }
+
+.sts-ai-feedback {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 4px;
+}
+
+.sts-brain-icon {
+    color: var(--accent);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.sts-ai-feedback p {
+    font-size: 0.9rem;
+    color: var(--color-text);
+    line-height: 1.6;
     margin: 0;
 }
 
-.summary-card.completed .summary-value { color: #10b981; }
-.summary-card.pending .summary-value   { color: #f59e0b; }
+.sts-no-detail {
+    font-size: 0.9rem;
+    color: var(--color-text-dim);
+    margin: 0;
+    text-align: center;
+    padding: 8px 0;
+}
 
+/* ─── Empty state ─── */
+.sts-empty {
+    text-align: center;
+    padding: 64px 24px;
+    color: var(--color-text-dim);
+}
+
+.sts-empty-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.6;
+}
+
+.sts-empty h3 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--color-text);
+    margin: 0 0 10px 0;
+}
+
+.sts-empty p {
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 380px;
+    margin: 0 auto;
+}
+
+/* ─── Responsive ─── */
 @media (max-width: 1024px) {
-    .stats-grid { grid-template-columns: 1fr; }
-    .assignment-summary { grid-template-columns: 1fr; }
+    .sts-cards-row { grid-template-columns: repeat(2, 1fr); }
+    .sts-subject-grid { grid-template-columns: 1fr; }
+    .sts-charts-row { grid-template-columns: 1fr; }
+    .sts-agg-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+    .sts-page { padding: 20px 16px 48px; }
+    .sts-page-title { font-size: 1.9rem; }
+    .sts-cards-row { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .sts-two-col { grid-template-columns: 1fr; }
+    .sts-assignment-row { grid-template-columns: 24px 1fr 56px 44px; }
+    .sts-assignment-pts { display: none; }
+    .sts-tab { padding: 10px 16px; font-size: 0.9rem; }
+}
+
+@media (max-width: 480px) {
+    .sts-cards-row { grid-template-columns: 1fr; }
+    .sts-bar-row { grid-template-columns: 100px 1fr 44px; }
 }

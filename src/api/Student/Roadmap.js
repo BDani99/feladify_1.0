@@ -50,6 +50,23 @@ export const submitPracticeCheckpoint = async ({ subject, checkpointId, score, a
   }
 };
 
+export const fetchPracticeStatistics = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/student/practice-statistics`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Hiba az egyéni gyakorlás statisztikák lekérésekor');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('[Roadmap API] fetchPracticeStatistics hiba:', error);
+    throw error;
+  }
+};
+
 export const fetchStudentStatistics = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/student/statistics`, {
