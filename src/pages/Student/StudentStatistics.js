@@ -701,7 +701,7 @@ const StudentStatistics = () => {
   return (
     <div id="content">
       <div className="sts-page">
-        <h1 className="sts-page-title">Statisztikák és Elemzések</h1>
+        <h1 className="title">Statisztikák és Elemzések</h1>
 
         <div className="sts-tabs">
           <button

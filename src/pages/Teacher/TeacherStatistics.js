@@ -78,7 +78,7 @@ const TeacherStatistics = () => {
     return (
         <div id="content">
             <div className="statistics-container">
-                <h1 className="stat-title">Statisztikák</h1>
+                <h1 className="title">Statisztikák</h1>
                 <div className="stats-content">
 
                     {/* Összesítő számok */}

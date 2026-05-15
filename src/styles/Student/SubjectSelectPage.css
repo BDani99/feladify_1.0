@@ -12,11 +12,7 @@
 }
 
 .subject-header h1 {
-    font-size: 2.5rem;
     margin-bottom: 20px;
-    color: var(--color-text);
-    font-weight: 800;
-    letter-spacing: -0.5px;
 }
 
 /* ─── XP Stats Grid ─── */
@@ -235,49 +231,61 @@
 
 .subject-card {
     background: var(--bg-card);
+    backdrop-filter: var(--blur-md);
+    -webkit-backdrop-filter: var(--blur-md);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
-    padding: 40px 24px;
+    border-radius: 24px;
+    padding: 0;
     text-align: center;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
     box-shadow: var(--shadow-soft);
     display: flex;
     flex-direction: column;
-    align-items: center;
     overflow: hidden;
-}
-
-/* WOW Faktor: Felső világító vonal */
-.subject-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: var(--border-color-2);
-    transition: all 0.3s ease;
 }
 
 .subject-card:hover {
     transform: translateY(-8px);
-    box-shadow: var(--shadow-hover);
-    border-color: var(--border-color-2);
+    border-color: var(--accent-color, var(--accent));
+    box-shadow: var(--shadow-lg);
+    background: var(--bg-card-hover);
 }
 
-.subject-card:hover::before {
-    background: var(--accent-gradient);
+.subject-card-top {
+    padding: 48px 24px 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.02) 0%, transparent 70%);
 }
 
-.subject-card.level_complete::before {
-    background: linear-gradient(90deg, #10b981, #059669);
+.subject-icon-wrap {
+    font-size: 3.5rem;
+    color: var(--accent-color, var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.subject-card.level_complete {
-    border-color: rgba(16,185,129,0.25);
+.subject-card:hover .subject-icon-wrap {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 14px var(--accent-color, var(--accent)));
 }
+
+.subject-card-body {
+    background: var(--bg-input);
+    padding: 24px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+}
+
+/* Removing old icon and cta styles */
 
 .subject-icon {
     font-size: 4.5rem;
@@ -289,33 +297,69 @@
     transform: scale(1.15);
 }
 
-.subject-card h3 {
-    font-size: 1.4rem;
-    margin: 8px 0 20px 0;
+.subject-card-body h3 {
+    font-size: 1.3rem;
+    margin: 0;
     color: var(--color-text);
     font-weight: 800;
 }
 
-.status-label {
-    display: inline-block;
-    padding: 8px 20px;
-    border-radius: 30px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
+.subject-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
 }
 
-.subject-card.not_started .status-label { background: var(--bg-input); color: var(--color-text-dim); }
-.subject-card.requires_diagnostic .status-label { background: rgba(245, 158, 11, 0.15); color: #d97706; }
-.subject-card.in_progress .status-label { background: var(--accent-glow); color: var(--accent); }
-.subject-card.level_complete .status-label {
-    background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(59,130,246,0.1));
-    color: #10b981;
-    border: 1px solid rgba(16,185,129,0.3);
-    text-transform: none;
-    font-size: 0.82rem;
-    letter-spacing: 0.2px;
+.status-label {
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: var(--bg-input);
+    color: var(--color-text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.status-label.level_complete {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-label.in_progress {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent);
+    border: 1px solid var(--accent-glow);
+}
+
+.subject-next-level {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #059669;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: all 0.25s ease;
+}
+
+.subject-card:hover .subject-next-level {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.level-mini-badge {
+    padding: 4px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-dim);
 }
 
 .subject-card .progress-bar {

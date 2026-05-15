@@ -443,7 +443,7 @@
     background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.06));
     border: 2px solid rgba(16,185,129,0.4);
     border-radius: 20px;
-    padding: 28px 32px;
+    padding: 24px 28px 24px 20px;
     margin-bottom: 32px;
     box-shadow: 0 4px 24px rgba(16,185,129,0.12);
 }
@@ -452,6 +452,7 @@
     font-size: 3rem;
     line-height: 1;
     flex-shrink: 0;
+    margin-left: -4px;
     filter: drop-shadow(0 4px 8px rgba(16,185,129,0.3));
 }
 

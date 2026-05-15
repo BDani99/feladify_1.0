@@ -3,8 +3,7 @@
     margin: 0 auto;
 }
 
-.statistics-container .stat-title {
-    color: var(--color-text);
+.statistics-container .title {
     margin-top: 1rem;
     padding-left: 0;
 }

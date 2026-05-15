@@ -224,7 +224,7 @@ const StudentWelcome = () => {
               onClick={handleNewChat}
               title="Új beszélgetés"
             >
-              <FaPlus /> Új chat
+              <FaPlus /> Új beszélgetés
             </button>
           </div>
         </div>
@@ -384,24 +384,27 @@ const StudentWelcome = () => {
 
         {/* Input Area */}
         <form onSubmit={handleChatSubmit} className="chat-input-form">
-          <textarea
-            ref={inputRef}
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            placeholder="Írd ide kérdésedet..."
-            className="chat-input"
-            disabled={isBotTyping}
-            rows={1}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleChatSubmit(e);
-              }
-            }}
-          />
-          <button type="submit" className="chat-submit" disabled={isBotTyping}>
-            <FaPaperPlane />
-          </button>
+          <div className="chat-input-wrapper">
+            <textarea
+              ref={inputRef}
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Írj ide egy kérdést vagy feladatot..."
+              className="chat-input"
+              disabled={isBotTyping}
+              rows={1}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleChatSubmit(e);
+                }
+              }}
+            />
+            <button type="submit" className="chat-submit" disabled={isBotTyping}>
+              <FaPaperPlane />
+            </button>
+          </div>
+          <p className="chat-footer-note">A Feladify AI hibázhat. Ellenőrizd a fontos információkat.</p>
         </form>
 
       </div>

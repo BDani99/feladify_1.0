@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../api/config';
 import { useUser } from '../../context/UserContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { FaStar, FaFire, FaBolt } from 'react-icons/fa';
+import { FaStar, FaFire, FaBolt, FaCalculator, FaBookOpen, FaGlobeAmericas, FaLeaf } from 'react-icons/fa';
 import '../../styles/Student/SubjectSelectPage.css';
 
 const XP_PER_LEVEL = 50;
@@ -16,10 +16,10 @@ const SubjectSelectPage = () => {
   const [stats, setStats] = useState({ totalXP: 0, streak: 0 });
 
   const subjectList = [
-    { name: 'Matematika', icon: '🔢', subject: 'Matematika' },
-    { name: 'Magyar', icon: '📖', subject: 'Magyar' },
-    { name: 'Angol', icon: '🌍', subject: 'Angol' },
-    { name: 'Környezetismeret', icon: '🌱', subject: 'Környezetismeret' }
+    { name: 'Matematika', icon: <FaCalculator />, subject: 'Matematika', color: '#a5b4fc' },
+    { name: 'Magyar', icon: <FaBookOpen />, subject: 'Magyar', color: '#22d3ee' },
+    { name: 'Angol', icon: <FaGlobeAmericas />, subject: 'Angol', color: '#c084fc' },
+    { name: 'Környezetismeret', icon: <FaLeaf />, subject: 'Környezetismeret', color: '#fb923c' }
   ];
 
   useEffect(() => {
@@ -111,7 +111,7 @@ const SubjectSelectPage = () => {
     <div id="content">
     <div className="subject-select-page">
       <div className="subject-header">
-        <h1>Egyéni Gyakorlás</h1>
+        <h1 className="title">Egyéni Gyakorlás</h1>
 
         <div className="xp-stats-grid">
           {/* XP kártya */}
@@ -184,8 +184,8 @@ const SubjectSelectPage = () => {
           const statusTexts = {
             'not_started': 'Kezdő',
             'requires_diagnostic': 'Felmérő',
-            'in_progress': `Szint: ${status.level}`,
-            'level_complete': `${status.level}. szint ✓ → folytatható`
+            'in_progress': 'Folyamatban',
+            'level_complete': 'Befejezve'
           };
 
           return (
@@ -193,18 +193,31 @@ const SubjectSelectPage = () => {
               key={subj.subject}
               className={`subject-card ${status.status}`}
               onClick={() => handleSubjectClick(subj.subject)}
+              style={{ '--accent-color': subj.color }}
             >
-              <div className="subject-icon">{subj.icon}</div>
-              <h3>{subj.name}</h3>
-              <div className="subject-status">
-                <span className="status-label">{statusTexts[status.status]}</span>
-              </div>
-              {status.percentage > 0 && (
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${status.percentage}%` }} />
+              <div className="subject-card-top">
+                <div className="subject-icon-wrap">
+                  {subj.icon}
                 </div>
-              )}
-              {status.status === 'not_started' && <span className="cta">Kattints itt</span>}
+              </div>
+              
+              <div className="subject-card-body">
+                <h3>{subj.name}</h3>
+                <div className="subject-status-row">
+                  <span className={`status-label ${status.status}`}>{statusTexts[status.status]}</span>
+                  <span className="level-mini-badge">Szint: {status.level}</span>
+                </div>
+                {status.percentage > 0 && (
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${status.percentage}%` }} />
+                  </div>
+                )}
+                {status.status === 'level_complete' && (
+                  <div className="subject-next-level">
+                    Következő szint indítása →
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}
