@@ -51,16 +51,37 @@ const SubjectSelectPage = () => {
 
   const getSubjectStatus = (subjectName) => {
     const found = subjects.find(s => s.subject === subjectName);
-    if (!found) return { status: 'not_started', percentage: 0, level: 'Kezdő' };
+    if (!found) return { status: 'not_started', percentage: 0, level: 1 };
+    const cps = found.checkpoints || [];
+    const completed = cps.filter(c => c.status === 'completed').length;
+    const percentage = cps.length > 0 ? Math.round((completed / cps.length) * 100) : 0;
     return {
       status: found.status || 'not_started',
-      percentage: found.percentage || 0,
-      level: found.currentLevel || 'Kezdő'
+      percentage,
+      level: found.currentLevel || 1
     };
   };
 
   const handleSubjectClick = (subject) => {
     navigate(`/egyeni-gyakorlas/${subject}`);
+  };
+
+  const handleReset = async () => {
+    if (!window.confirm('Biztosan törlöd az összes egyéni gyakorlás adatot? Ez visszafordíthatatlan!')) return;
+    try {
+      const token = sessionStorage.getItem('AccessToken');
+      const res = await fetch(`${API_BASE_URL}/student/progress/reset`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        await fetchProgressData();
+      } else {
+        alert('Hiba a reset során.');
+      }
+    } catch (err) {
+      alert('Hiba: ' + err.message);
+    }
   };
 
   if (loading) {
@@ -151,6 +172,12 @@ const SubjectSelectPage = () => {
         </div>
       </div>
 
+      <div className="reset-test-bar">
+        <button className="reset-test-btn" onClick={handleReset} title="Fejlesztési célra: összes egyéni gyakorlás adat törlése">
+          🔄 Teszt reset
+        </button>
+      </div>
+
       <div className="subject-grid">
         {subjectList.map((subj) => {
           const status = getSubjectStatus(subj.subject);
@@ -158,7 +185,7 @@ const SubjectSelectPage = () => {
             'not_started': 'Kezdő',
             'requires_diagnostic': 'Felmérő',
             'in_progress': `Szint: ${status.level}`,
-            'level_complete': 'Befejezve'
+            'level_complete': `${status.level}. szint ✓ → folytatható`
           };
 
           return (

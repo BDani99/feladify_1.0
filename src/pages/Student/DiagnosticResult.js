@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { FaCheckCircle, FaExclamationTriangle, FaChartLine, FaBrain, FaRedo, FaHome } from 'react-icons/fa';
+import { API_BASE_URL } from '../../api/config';
+import { FaCheckCircle, FaExclamationTriangle, FaChartLine, FaBrain, FaRedo, FaHome, FaChevronDown, FaChevronUp, FaSearch } from 'react-icons/fa';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import ReactMarkdown from 'react-markdown';
 import '../../styles/Student/DiagnosticResult.css';
 
 const SUBJECT_COLORS = {
@@ -9,6 +11,122 @@ const SUBJECT_COLORS = {
   'Magyar': '#ef4444',
   'Angol': '#10b981',
   'Környezetismeret': '#9b59b6'
+};
+
+const getAuthHeaders = () => ({
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`
+});
+
+const formatAnswer = (answer, questionType) => {
+  if (answer === null || answer === undefined) return '(nem válaszolt)';
+  if (questionType === 'matching' && typeof answer === 'object' && !Array.isArray(answer)) {
+    return Object.entries(answer).map(([k, v]) => `${k} → ${v}`).join(', ');
+  }
+  if (questionType === 'ordering' && Array.isArray(answer)) {
+    return answer.join(' → ');
+  }
+  return String(answer);
+};
+
+const QuestionCard = ({ item, index, subject }) => {
+  const [open, setOpen] = useState(false);
+  const [analysisOpen, setAnalysisOpen] = useState(false);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
+
+  const handleAnalysis = async () => {
+    if (analysis) { setAnalysisOpen(v => !v); return; }
+    setAnalysisLoading(true);
+    setAnalysisOpen(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/student/diagnostic/question-analysis`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          subject,
+          questionText: item.questionText,
+          correctAnswer: item.correctAnswer,
+          studentAnswer: item.studentAnswer,
+          isCorrect: item.isCorrect
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAnalysis(data);
+      } else {
+        setAnalysis({ explanation: 'Nem sikerült az elemzés betöltése.', whyWrong: null, conceptTip: null });
+      }
+    } catch {
+      setAnalysis({ explanation: 'Hiba az elemzés lekérésekor.', whyWrong: null, conceptTip: null });
+    } finally {
+      setAnalysisLoading(false);
+    }
+  };
+
+  return (
+    <div className={`question-accordion ${item.isCorrect ? 'correct' : 'incorrect'}`}>
+      <button className="question-accordion-header" onClick={() => setOpen(v => !v)}>
+        <span className="q-index">{index + 1}.</span>
+        <span className={`q-result-icon ${item.isCorrect ? 'correct' : 'incorrect'}`}>
+          {item.isCorrect ? <FaCheckCircle /> : <FaExclamationTriangle />}
+        </span>
+        <span className="q-text-preview">{item.questionText.length > 80 ? item.questionText.slice(0, 80) + '…' : item.questionText}</span>
+        <span className="q-category-tag">{item.category}</span>
+        <span className="q-toggle-icon">{open ? <FaChevronUp /> : <FaChevronDown />}</span>
+      </button>
+
+      {open && (
+        <div className="question-accordion-body">
+          <p className="q-full-text"><strong>Kérdés:</strong> {item.questionText}</p>
+
+          <div className="q-answers">
+            <div className={`q-answer-box student ${item.isCorrect ? 'correct' : 'incorrect'}`}>
+              <span className="q-answer-label">Te válaszoltad:</span>
+              <span className="q-answer-value">{formatAnswer(item.studentAnswer, item.questionType)}</span>
+            </div>
+            {!item.isCorrect && (
+              <div className="q-answer-box correct-ans">
+                <span className="q-answer-label">Helyes válasz:</span>
+                <span className="q-answer-value">{formatAnswer(item.correctAnswer, item.questionType)}</span>
+              </div>
+            )}
+          </div>
+
+          <button className="q-analysis-btn" onClick={handleAnalysis} disabled={analysisLoading}>
+            <FaSearch /> {analysis ? (analysisOpen ? 'Elemzés elrejtése' : 'Elemzés megmutatása') : 'AI elemzés kérése'}
+          </button>
+
+          {analysisOpen && (
+            <div className="q-analysis-result">
+              {analysisLoading ? (
+                <div className="q-analysis-loading"><LoadingSpinner /><span>Elemzés generálása...</span></div>
+              ) : analysis ? (
+                <>
+                  <div className="q-analysis-section">
+                    <strong>Magyarázat:</strong>
+                    <ReactMarkdown>{analysis.explanation}</ReactMarkdown>
+                  </div>
+                  {analysis.whyWrong && (
+                    <div className="q-analysis-section wrong">
+                      <strong>Miért volt helytelen?</strong>
+                      <ReactMarkdown>{analysis.whyWrong}</ReactMarkdown>
+                    </div>
+                  )}
+                  {analysis.conceptTip && (
+                    <div className="q-analysis-section tip">
+                      <strong>💡 Tipp:</strong>
+                      <ReactMarkdown>{analysis.conceptTip}</ReactMarkdown>
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
 
 const DiagnosticResult = () => {
@@ -19,18 +137,18 @@ const DiagnosticResult = () => {
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [questionsOpen, setQuestionsOpen] = useState(false);
 
-  // Location state-ből származó adatok
-  const { resultId, score, categoryAnalysis, aiAnalysis } = location.state || {};
+  const { resultId, score, categoryAnalysis, aiAnalysis, perQuestionResults } = location.state || {};
 
   useEffect(() => {
-    // Az összes szükséges adat már megvan a location.state-ből (submit válaszból)
     if (score !== undefined && categoryAnalysis && aiAnalysis) {
       setResult({
         subject,
         score,
         categoryAnalysis,
         aiAnalysis,
+        perQuestionResults: perQuestionResults || [],
         totalQuestions: categoryAnalysis.reduce((sum, cat) => sum + cat.totalQuestions, 0),
         correctAnswers: categoryAnalysis.reduce((sum, cat) => sum + cat.correctAnswers, 0)
       });
@@ -39,7 +157,7 @@ const DiagnosticResult = () => {
       setError('Nem található eredmény adat. Kérlek, végezz el egy szintfelmérőt.');
       setLoading(false);
     }
-  }, [subject, score, categoryAnalysis, aiAnalysis]);
+  }, [subject, score, categoryAnalysis, aiAnalysis, perQuestionResults]);
 
   if (loading) {
     return (
@@ -88,7 +206,7 @@ const DiagnosticResult = () => {
             </span>
             <span className="score-label">Eredmény</span>
           </div>
-          
+
           <div className="result-info">
             <h1>{result.subject} Diagnosztika</h1>
             <p className="result-subtitle">
@@ -104,7 +222,7 @@ const DiagnosticResult = () => {
               <FaBrain className="ai-icon" />
               <h2>AI Elemzés</h2>
             </div>
-            
+
             <div className="ai-feedback">
               <p>{result.aiAnalysis.personalizedFeedback}</p>
             </div>
@@ -126,50 +244,45 @@ const DiagnosticResult = () => {
             <h2>
               <FaChartLine /> Részletes elemzés témakörönként
             </h2>
-            
+
             <div className="categories-grid">
               {result.categoryAnalysis
-                .sort((a, b) => a.score - b.score) // Leggyengébb elöl
+                .sort((a, b) => a.score - b.score)
                 .map((category, index) => {
-                  const score = category.score;
-                  const color = score >= 70 ? '#10b981' : score >= 40 ? '#f39c12' : '#ef4444';
-                  
+                  const catScore = category.score;
+                  const color = catScore >= 70 ? '#10b981' : catScore >= 40 ? '#f39c12' : '#ef4444';
+
                   return (
-                    <div 
-                      key={index} 
+                    <div
+                      key={index}
                       className="category-card"
                       style={{ borderLeftColor: color }}
                     >
                       <div className="category-header">
                         <h3>{category.category}</h3>
                         <span className="category-score" style={{ color }}>
-                          {Math.round(score)}%
+                          {Math.round(catScore)}%
                         </span>
                       </div>
-                      
+
                       <div className="category-progress">
-                        <div 
+                        <div
                           className="category-progress-bar"
-                          style={{ 
-                            width: `${score}%`,
-                            backgroundColor: color
-                          }}
+                          style={{ width: `${catScore}%`, backgroundColor: color }}
                         />
                       </div>
-                      
+
                       <div className="category-stats">
-                        <span>
-                          {category.correctAnswers}/{category.totalQuestions} helyes
-                        </span>
+                        <span>{category.correctAnswers}/{category.totalQuestions} helyes</span>
                       </div>
-                      
+
                       {category.weaknesses && category.weaknesses.length > 0 && (
                         <div className="category-weaknesses">
                           <FaExclamationTriangle />
                           <span>{category.weaknesses[0]}</span>
                         </div>
                       )}
-                      
+
                       {category.strengths && category.strengths.length > 0 && (
                         <div className="category-strengths">
                           <FaCheckCircle />
@@ -189,7 +302,7 @@ const DiagnosticResult = () => {
             <h2>
               <FaBrain /> Fókuszálandó területek
             </h2>
-            
+
             <div className="weaknesses-list">
               {result.aiAnalysis.weaknesses.map((weakness, index) => (
                 <div key={index} className="weakness-item">
@@ -210,12 +323,12 @@ const DiagnosticResult = () => {
         )}
 
         {/* Learning Path */}
-        {result.aiAnalysis?.learningPath && (
+        {result.aiAnalysis?.learningPath?.recommendedOrder?.length > 0 && (
           <div className="learning-path">
             <h2>
               <FaChartLine /> Ajánlott tanulási útvonal
             </h2>
-            
+
             <div className="path-timeline">
               {result.aiAnalysis.learningPath.recommendedOrder.map((category, index) => (
                 <div key={index} className="path-node">
@@ -227,10 +340,38 @@ const DiagnosticResult = () => {
                 </div>
               ))}
             </div>
-            
-            <div className="estimated-time">
-              <strong>Becsült teljes idő:</strong> {result.aiAnalysis.learningPath.estimatedTime} óra
-            </div>
+
+            {result.aiAnalysis.learningPath.estimatedTime > 0 && (
+              <div className="estimated-time">
+                <strong>Becsült teljes idő:</strong> {result.aiAnalysis.learningPath.estimatedTime} óra
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Per-question accordion */}
+        {result.perQuestionResults && result.perQuestionResults.length > 0 && (
+          <div className="questions-detail-section">
+            <button
+              className="questions-detail-toggle"
+              onClick={() => setQuestionsOpen(v => !v)}
+            >
+              <FaChartLine />
+              <span>Kérdések részletei ({result.perQuestionResults.length} kérdés)</span>
+              <span className="questions-summary">
+                ✅ {result.perQuestionResults.filter(q => q.isCorrect).length} helyes &nbsp;
+                ❌ {result.perQuestionResults.filter(q => !q.isCorrect).length} helytelen
+              </span>
+              {questionsOpen ? <FaChevronUp /> : <FaChevronDown />}
+            </button>
+
+            {questionsOpen && (
+              <div className="questions-accordion-list">
+                {result.perQuestionResults.map((item, idx) => (
+                  <QuestionCard key={item.questionId || idx} item={item} index={idx} subject={result.subject} />
+                ))}
+              </div>
+            )}
           </div>
         )}
 

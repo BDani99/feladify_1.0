@@ -33,6 +33,7 @@ const CheckpointPractice = () => {
   const [dragIdx, setDragIdx] = useState(null);
   const [dragOverIdx, setDragOverIdx] = useState(null);
   const [scoreError, setScoreError] = useState(null);
+  const [chatQuestionIndex, setChatQuestionIndex] = useState(0);
   const chatEndRef = useRef(null);
 
   useEffect(() => { startCheckpoint(); }, [subject, checkpointId]);
@@ -104,7 +105,7 @@ const CheckpointPractice = () => {
     if (question.questionType === 'matching') {
       return (question.pairs || []).every((_, idx) => answers[`${qid}-${idx}`]);
     }
-    if (question.questionType === 'ordering') return true;
+    if (question.questionType === 'ordering') return !!answers[qid];
     return answers[qid] !== undefined && answers[qid] !== '';
   };
 
@@ -144,11 +145,33 @@ const CheckpointPractice = () => {
 
   const handleNextQuestion = () => {
     if (currentIndex < questions.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
       setScoreError(null);
+      addSeparatorMessage(nextIndex);
     } else {
       completeCheckpoint();
     }
+  };
+
+  const handleSkipQuestion = () => {
+    setQuestionStatuses(prev => ({ ...prev, [questions[currentIndex].questionId]: 'skipped' }));
+    if (currentIndex < questions.length - 1) {
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      setScoreError(null);
+      addSeparatorMessage(nextIndex);
+    } else {
+      completeCheckpoint();
+    }
+  };
+
+  const addSeparatorMessage = (nextIndex) => {
+    setChatQuestionIndex(nextIndex);
+    setChatMessages(prev => [
+      ...prev,
+      { role: 'separator', content: `— ${nextIndex + 1}. kérdés / ${questions.length} —`, timestamp: new Date() }
+    ]);
   };
 
   const completeCheckpoint = async () => {
@@ -195,8 +218,15 @@ const CheckpointPractice = () => {
     const answer = collectAnswer(question);
     const updatedHistory = [...chatMessages, { role: 'user', content: userMsg }];
 
+    // Csak az aktuális kérdéshez tartozó üzeneteket küldjük (utolsó separator után)
+    const lastSepIdx = updatedHistory.map(m => m.role).lastIndexOf('separator');
+    const currentQuestionHistory = updatedHistory
+      .slice(lastSepIdx + 1)
+      .filter(m => m.role === 'user' || m.role === 'bot')
+      .slice(-6);
+
     try {
-      const attempts = chatMessages.filter(m => m.role === 'user').length + 1;
+      const attempts = currentQuestionHistory.filter(m => m.role === 'user').length;
       const res = await fetch(`${API_BASE}/hint`, {
         method: 'POST',
         headers: getAuthHeaders(),
@@ -205,7 +235,7 @@ const CheckpointPractice = () => {
           questionId: question.questionId,
           studentAnswer: answer || userMsg,
           attemptNumber: attempts,
-          chatHistory: updatedHistory
+          chatHistory: currentQuestionHistory
         })
       });
       if (res.ok) {
@@ -274,7 +304,7 @@ const CheckpointPractice = () => {
                     <button
                       key={q.questionId}
                       className={`question-dot ${idx === currentIndex ? 'active' : ''} ${status || ''}`}
-                      onClick={() => { if (!isChecking) { setCurrentIndex(idx); setScoreError(null); } }}
+                      onClick={() => { if (!isChecking) { setCurrentIndex(idx); setScoreError(null); if (idx !== currentIndex) addSeparatorMessage(idx); } }}
                       disabled={isChecking}
                       title={`Kérdés ${idx + 1}`}
                     />
@@ -415,13 +445,23 @@ const CheckpointPractice = () => {
                         : 'Következő kérdés →'}
                   </button>
                 ) : (
-                  <button
-                    className={`check-btn ${isChecking ? 'checking' : ''}`}
-                    onClick={handleCheckAnswer}
-                    disabled={!answered || isChecking}
-                  >
-                    {isChecking ? 'Ellenőrzés...' : 'Ellenőrzés'}
-                  </button>
+                  <>
+                    <button
+                      className={`check-btn ${isChecking ? 'checking' : ''}`}
+                      onClick={handleCheckAnswer}
+                      disabled={!answered || isChecking}
+                    >
+                      {isChecking ? 'Ellenőrzés...' : 'Ellenőrzés'}
+                    </button>
+                    <button
+                      className="skip-btn"
+                      onClick={handleSkipQuestion}
+                      disabled={isChecking || completing}
+                      title="Kihagyás – a kérdés rossznak számít"
+                    >
+                      {isLastQuestion ? 'Kihagyás & befejezés →' : 'Kihagyás →'}
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -430,7 +470,7 @@ const CheckpointPractice = () => {
           {/* Jobb oldal – AI Mentor chat */}
           <div className={`practice-right ${isChatOpen ? 'open' : 'closed'}`}>
             <div className="chat-header" onClick={() => setIsChatOpen(!isChatOpen)} style={{ cursor: 'pointer' }}>
-              <h4>🤖 AI Tanár</h4>
+              <h4>🤖 AI Tanár <span className="chat-question-badge">{currentIndex + 1}. kérdés</span></h4>
               <button className="chat-toggle" aria-label="Csevegő megnyitása/zárása">
                 {isChatOpen ? <FaChevronDown /> : <FaChevronUp />}
               </button>
@@ -440,11 +480,15 @@ const CheckpointPractice = () => {
               <>
                 <div className="chat-messages">
                   {chatMessages.map((msg, idx) => (
-                    <div key={idx} className={`chat-msg ${msg.role}`}>
-                      <div className="msg-content">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    msg.role === 'separator' ? (
+                      <div key={idx} className="chat-separator">{msg.content}</div>
+                    ) : (
+                      <div key={idx} className={`chat-msg ${msg.role}`}>
+                        <div className="msg-content">
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
                       </div>
-                    </div>
+                    )
                   ))}
                   {isChecking && (
                     <div className="chat-msg bot">

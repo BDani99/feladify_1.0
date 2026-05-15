@@ -76,7 +76,7 @@ const PracticeTest = () => {
     if (question.questionType === 'matching') {
       return (question.pairs || []).every((_, idx) => answers[`${qid}-${idx}`]);
     }
-    if (question.questionType === 'ordering') return true;
+    if (question.questionType === 'ordering') return !!answers[qid];
     return answers[qid] !== undefined && answers[qid] !== '';
   };
 
@@ -117,7 +117,7 @@ const PracticeTest = () => {
       if (response.ok) {
         const data = await response.json();
         navigate(`/egyeni-gyakorlas/${subject}/eredmeny`, {
-          state: { justCompleted: true, score: data.score, categoryAnalysis: data.categoryAnalysis, aiAnalysis: data.aiAnalysis }
+          state: { justCompleted: true, score: data.score, categoryAnalysis: data.categoryAnalysis, aiAnalysis: data.aiAnalysis, perQuestionResults: data.perQuestionResults || [] }
         });
       } else {
         const err = await response.json();

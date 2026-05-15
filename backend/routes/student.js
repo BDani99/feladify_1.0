@@ -339,8 +339,10 @@ router.post('/diagnostic/start', authMiddleware, async (req, res) => {
     }
 
     // AI-val generálunk 10 kérdést (gyorsabb teszt)
-    console.log(`[Diagnostic] Generating questions for ${subject} / ${grade || '4. osztály'}`);
-    const generatedQuestions = await groqService.generateDiagnosticTest(subject, grade || '4. osztály', 10);
+    const subjectProg = progress.subjectProgress?.find(sp => sp.subject === subject);
+    const currentLevel = subjectProg?.currentLevel || 1;
+    console.log(`[Diagnostic] Generating questions for ${subject} / ${grade || '4. osztály'} / level ${currentLevel}`);
+    const generatedQuestions = await groqService.generateDiagnosticTest(subject, grade || '4. osztály', 10, currentLevel);
 
     // Teljes kérdéssort (correctAnswer-rel) elmentjük a session-be
     progress.diagnosticSession = {
@@ -447,7 +449,18 @@ router.post('/diagnostic/submit', authMiddleware, async (req, res) => {
       }
 
       if (isCorrect) categoryResults[cat].correct++;
-      perQuestionResults.push({ questionId: qid, isCorrect, category: cat });
+      perQuestionResults.push({
+        questionId: qid,
+        questionText: question.questionText,
+        questionType: question.questionType,
+        category: cat,
+        options: question.options || [],
+        pairs: question.pairs || [],
+        items: question.items || [],
+        correctAnswer: question.correctAnswer,
+        studentAnswer: studentAnswer !== undefined ? studentAnswer : null,
+        isCorrect
+      });
     }
 
     const totalCount = session.questions.length;
@@ -500,11 +513,39 @@ router.post('/diagnostic/submit', authMiddleware, async (req, res) => {
       resultId: result._id,
       score: scorePercentage,
       categoryAnalysis,
-      aiAnalysis: result.aiAnalysis
+      aiAnalysis: result.aiAnalysis,
+      perQuestionResults
     });
   } catch (error) {
     console.error('[Student API] Error in /diagnostic/submit:', error);
     res.status(500).json({ message: 'Hiba történt a beküldéskor', error: error.message });
+  }
+});
+
+// POST /api/student/diagnostic/question-analysis – kérdésenkénti AI elemzés
+router.post('/diagnostic/question-analysis', authMiddleware, async (req, res) => {
+  try {
+    const { subject, questionText, correctAnswer, studentAnswer, isCorrect } = req.body;
+    if (!subject || !questionText || correctAnswer === undefined) {
+      return res.status(400).json({ message: 'Hiányos adatok' });
+    }
+    const analysis = await groqService.generateQuestionAnalysis(subject, questionText, correctAnswer, studentAnswer, !!isCorrect);
+    res.json(analysis);
+  } catch (error) {
+    console.error('[Student API] Error in diagnostic/question-analysis:', error);
+    res.status(500).json({ message: 'Hiba az elemzés generálásakor', error: error.message });
+  }
+});
+
+// DELETE /api/student/progress/reset – összes egyéni gyakorlás adat törlése (fejlesztési célra)
+router.delete('/progress/reset', authMiddleware, async (req, res) => {
+  try {
+    await StudentProgress.deleteOne({ studentId: req.user._id });
+    await DiagnosticResult.deleteMany({ studentId: req.user._id });
+    res.json({ message: 'Reset sikeres – minden egyéni gyakorlás adat törölve.' });
+  } catch (error) {
+    console.error('[Student API] Error in progress/reset:', error);
+    res.status(500).json({ message: 'Hiba a reset során', error: error.message });
   }
 });
 
@@ -609,27 +650,68 @@ async function createOrUpdatePracticePath(studentId, analyzedResultDoc, subjectN
 
   // Építjük fel a checkpointokat az AI elemzés alapján
   const aiAnalysis = analyzedResultDoc.aiAnalysis || {};
-  const recommended = aiAnalysis.recommendedCheckpoints || [];
-  
-  const checkpoints = [];
-  
-  if (recommended.length > 0) {
-    recommended.forEach((rec, index) => {
-      checkpoints.push({
-        checkpointId: `chk_${Date.now()}_${index}`,
-        topic: rec.topic || 'Gyakorló feladat',
-        difficulty: rec.difficulty || 3,
-        status: index === 0 ? 'unlocked' : 'locked',
-        score: 0,
-        attempts: 0
-      });
-    });
-  } else {
-    // Biztonsági fallback, ha a Groq véletlen nem adott volna rendes tömböt
-    checkpoints.push({ checkpointId: `chk_${Date.now()}_0`, topic: 'Alapok ismétlése', difficulty: 2, status: 'unlocked', score: 0, attempts: 0 });
-    checkpoints.push({ checkpointId: `chk_${Date.now()}_1`, topic: 'Gyakorlás', difficulty: 3, status: 'locked', score: 0, attempts: 0 });
-    checkpoints.push({ checkpointId: `chk_${Date.now()}_2`, topic: 'Kihívás', difficulty: 4, status: 'locked', score: 0, attempts: 0 });
+  let recommended = (aiAnalysis.recommendedCheckpoints || []).filter(r => r && r.topic);
+
+  // Minimum 5 checkpoint biztosítása – ha az AI kevesebbet adott, kiegészítjük
+  const subjectFallbackTopics = {
+    'Matematika': [
+      { topic: 'Számolás és alapműveletek', difficulty: 1 },
+      { topic: 'Törtek és tizedes törtek', difficulty: 2 },
+      { topic: 'Algebrai kifejezések', difficulty: 3 },
+      { topic: 'Geometria és mértékegységek', difficulty: 3 },
+      { topic: 'Szöveges feladatok', difficulty: 4 },
+      { topic: 'Statisztika és valószínűség', difficulty: 4 }
+    ],
+    'Magyar': [
+      { topic: 'Szófajok felismerése', difficulty: 1 },
+      { topic: 'Helyesírás alapszabályai', difficulty: 2 },
+      { topic: 'Mondatelemzés', difficulty: 3 },
+      { topic: 'Szövegértés', difficulty: 3 },
+      { topic: 'Fogalmazás és stíluseszközök', difficulty: 4 },
+      { topic: 'Irodalmi műfajok', difficulty: 4 }
+    ],
+    'Angol': [
+      { topic: 'Alapvető szókincs', difficulty: 1 },
+      { topic: 'Jelen idők és igeidők', difficulty: 2 },
+      { topic: 'Szövegértés', difficulty: 3 },
+      { topic: 'Múlt és jövő idők', difficulty: 3 },
+      { topic: 'Kommunikációs feladatok', difficulty: 4 },
+      { topic: 'Összetett grammatika', difficulty: 4 }
+    ],
+    'Környezetismeret': [
+      { topic: 'Élőlények és életközösségek', difficulty: 1 },
+      { topic: 'Anyagok tulajdonságai', difficulty: 2 },
+      { topic: 'Magyarország földrajza', difficulty: 2 },
+      { topic: 'Természeti jelenségek', difficulty: 3 },
+      { topic: 'Környezetvédelem', difficulty: 4 },
+      { topic: 'Összefüggések a természetben', difficulty: 4 }
+    ]
+  };
+
+  if (recommended.length < 5) {
+    const fallbacks = subjectFallbackTopics[subject] || [
+      { topic: 'Alapfogalmak', difficulty: 1 }, { topic: 'Alkalmazás', difficulty: 2 },
+      { topic: 'Összefüggések', difficulty: 3 }, { topic: 'Elemzés', difficulty: 4 },
+      { topic: 'Komplex feladatok', difficulty: 5 }
+    ];
+    const existingTopics = recommended.map(r => r.topic);
+    for (const fb of fallbacks) {
+      if (recommended.length >= 5) break;
+      if (!existingTopics.includes(fb.topic)) {
+        recommended.push({ topic: fb.topic, difficulty: fb.difficulty, reason: 'Alapozó témakör' });
+        existingTopics.push(fb.topic);
+      }
+    }
   }
+
+  const checkpoints = recommended.map((rec, index) => ({
+    checkpointId: `chk_${Date.now()}_${index}`,
+    topic: rec.topic || 'Gyakorló feladat',
+    difficulty: rec.difficulty || 3,
+    status: index === 0 ? 'unlocked' : 'locked',
+    score: 0,
+    attempts: 0
+  }));
 
   subjectData.checkpoints = checkpoints;
   subjectData.lastUpdated = new Date();
@@ -989,9 +1071,24 @@ router.post('/checkpoint/start', authMiddleware, async (req, res) => {
     const checkpoint = subjectData.checkpoints.find(c => c.checkpointId === checkpointId);
     if (!checkpoint) return res.status(404).json({ message: 'Checkpoint nem található' });
 
+    // Szint-alapú nehézség skálázás: alap + szintbónusz
+    const student = await User.findById(req.user._id);
+    const gradeNum = parseInt(student?.className) || 4;
+    const currentLevel = subjectData.currentLevel || 1;
+    const baseDifficulty = Math.max(1, Math.min(5, Math.ceil(gradeNum / 2)));
+    const levelBonus = Math.floor((Math.max(1, Math.min(10, currentLevel)) - 1) / 3);
+    const effectiveDifficulty = Math.max(1, Math.min(5, baseDifficulty + levelBonus));
+
+    // Adaptív: előző checkpoint gyenge kérdéseinek beépítése
+    const weakQuestions = subjectData.weakQuestionsForNext || [];
+    // Felhasználás után töröljük, hogy ne ismétlődjön
+    subjectData.weakQuestionsForNext = null;
+    progress.markModified('subjectProgress');
+    await progress.save();
+
     // Kérdéssor generálása AI-val (6+ feladattípus)
     const generatedQuestions = await groqService.generatePracticeQuestionSet(
-      subject, checkpoint.topic, checkpoint.difficulty, 10
+      subject, checkpoint.topic, effectiveDifficulty, 10, student?.className || '4. osztály', weakQuestions
     );
 
     // Kérdések mentése a session-be (correctAnswer-rel együtt, a backenden marad)
@@ -1216,6 +1313,22 @@ router.post('/checkpoint/complete', authMiddleware, async (req, res) => {
     const allDone = subjectData.checkpoints.every(c => c.status === 'completed');
     if (allDone) {
       subjectData.status = 'level_complete';
+      subjectData.weakQuestionsForNext = null; // szintváltáskor töröljük
+    } else {
+      // Gyenge kérdések kiszámítása az adaptív következő checkpoint-hoz
+      const weakQs = [];
+      if (session) {
+        for (const q of session.questions) {
+          const ans = session.answers.find(a => a.questionId === q.questionId);
+          const wasSkipped = !ans;
+          const wasHard = ans && !ans.isCorrect;
+          const multipleAttempts = ans && (ans.attempts || 1) >= 2 && !ans.isCorrect;
+          if (wasSkipped || wasHard || multipleAttempts) {
+            weakQs.push({ questionText: q.questionText, questionType: q.questionType });
+          }
+        }
+      }
+      subjectData.weakQuestionsForNext = weakQs.slice(0, 3);
     }
 
     // XP: alap + nehézség * 8 + teljesítmény (max 50)
@@ -1225,6 +1338,7 @@ router.post('/checkpoint/complete', authMiddleware, async (req, res) => {
 
     // Session törlése
     progress.checkpointSession = null;
+    progress.markModified('subjectProgress');
 
     await progress.save();
 
@@ -1235,7 +1349,9 @@ router.post('/checkpoint/complete', authMiddleware, async (req, res) => {
       totalXP: progress.totalXP,
       streak: progress.streak,
       newBadges,
-      nextUnlocked: checkpointIndex < subjectData.checkpoints.length - 1
+      nextUnlocked: checkpointIndex < subjectData.checkpoints.length - 1,
+      levelComplete: allDone,
+      currentLevel: subjectData.currentLevel || 1
     });
   } catch (error) {
     console.error('[Student API] Error in checkpoint/complete:', error);
@@ -1259,7 +1375,9 @@ router.get('/roadmap/:subject', authMiddleware, async (req, res) => {
       checkpoints: subjectData.checkpoints || [],
       totalXP: progress.totalXP,
       streak: progress.streak,
-      subject
+      subject,
+      status: subjectData.status,
+      currentLevel: subjectData.currentLevel || 1
     });
   } catch (error) {
     console.error('[Student API] Error in roadmap/:subject:', error);

@@ -74,10 +74,11 @@ const subjectProgressSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['not_started', 'requires_diagnostic', 'in_progress', 'level_complete'],
-    default: 'requires_diagnostic' // Alapból diagnosztika kell az új koncepció szerint
+    default: 'requires_diagnostic'
   },
   currentLevel: { type: Number, default: 1 },
   checkpoints: [subjectCheckpointSchema],
+  weakQuestionsForNext: { type: mongoose.Schema.Types.Mixed, default: null },
   lastUpdated: { type: Date, default: Date.now }
 });
 

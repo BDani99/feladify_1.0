@@ -13,7 +13,7 @@ const RoadmapView = () => {
   const location = useLocation();
   const [checkpoints, setCheckpoints] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ totalXP: 0, progress: 0 });
+  const [stats, setStats] = useState({ totalXP: 0, progress: 0, status: 'in_progress', currentLevel: 1 });
   const [xpFlash, setXpFlash] = useState(false);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ const RoadmapView = () => {
         setCheckpoints(data.checkpoints || []);
         const completed = (data.checkpoints || []).filter(cp => cp.status === 'completed').length;
         const progress = data.checkpoints ? (completed / data.checkpoints.length) * 100 : 0;
-        setStats({ totalXP: data.totalXP || 0, progress });
+        setStats({ totalXP: data.totalXP || 0, progress, status: data.status || 'in_progress', currentLevel: data.currentLevel || 1 });
       }
     } catch (err) {
       console.error('Hiba a roadmap lekérésekor:', err);
@@ -152,6 +152,22 @@ const RoadmapView = () => {
         </div>
       </div>
 
+      {stats.status === 'level_complete' && (
+        <div className="level-complete-banner">
+          <div className="level-complete-icon">🏆</div>
+          <div className="level-complete-body">
+            <h2>Gratulálunk! Teljesítetted a {stats.currentLevel}. szint összes fejezetét!</h2>
+            <p>Készen állsz a következő szintre? Indíts egy nehezebb szintfelmérőt!</p>
+            <button
+              className="next-level-btn"
+              onClick={() => navigate(`/egyeni-gyakorlas/${subject}`, { state: { fromLevelComplete: true } })}
+            >
+              {stats.currentLevel + 1}. szint indítása →
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="checkpoints-list">
         {checkpoints.map((checkpoint, index) => (
           <div
@@ -167,7 +183,7 @@ const RoadmapView = () => {
 
             <div className="checkpoint-content">
               <div className="checkpoint-number">
-                {index + 1}. {checkpoint.topic}
+                {index + 1}. Fejezet
               </div>
 
               <div className="checkpoint-meta">
