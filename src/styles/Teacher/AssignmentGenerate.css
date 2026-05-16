@@ -4,42 +4,6 @@
     animation: fadeIn 0.5s ease-out;
 }
 
-.page-header {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 40px;
-    background: var(--bg-card);
-    padding: 30px;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-soft);
-}
-
-.header-icon {
-    width: 60px;
-    height: 60px;
-    background: var(--accent-gradient);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    color: white;
-    box-shadow: 0 8px 20px var(--accent-glow);
-}
-
-.header-text h1 {
-    margin: 0;
-    font-size: 2rem;
-    font-weight: 800;
-}
-
-.header-text .subtitle {
-    margin: 5px 0 0;
-    color: var(--color-text-dim);
-    font-size: 1.1rem;
-}
 
 .generate-grid {
     display: grid;
@@ -355,10 +319,5 @@
     }
     .difficulty-options {
         grid-template-columns: 1fr;
-    }
-    .page-header {
-        flex-direction: column;
-        text-align: center;
-        padding: 20px;
     }
 }

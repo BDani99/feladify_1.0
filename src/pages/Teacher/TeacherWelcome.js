@@ -5,7 +5,7 @@ import { useTeacherChat } from '../../context/TeacherChatContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Welcome.css';
 import logo from '../../assets/logo-400.png';
-import { FaPaperPlane, FaPlus, FaHistory, FaTrash, FaPen, FaExclamationCircle } from 'react-icons/fa';
+import { FaPaperPlane, FaPlus, FaHistory, FaTrash, FaPen, FaExclamationCircle, FaChalkboardTeacher } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 
 const quickPrompts = [
@@ -194,12 +194,16 @@ const TeacherWelcome = () => {
         <div id="content" className="teacher-welcome">
             <div className="welcome-container" style={{ position: 'relative' }}>
 
-                <div className="chat-header">
-                    <div className="chat-header-info">
-                        <h1 className="title">Üdv, {userName || 'Tanár'}! 👋</h1>
-                        <p className="date">{currentDate}</p>
+                {/* Header */}
+                <div className="page-header-banner" style={{ margin: '18px 40px 12px 40px', background: 'transparent', boxShadow: 'none', border: 'none', padding: 0 }}>
+                    <div className="phb-icon" style={{width: '48px', height: '48px', padding: 0, overflow: 'hidden', background: 'none', border: 'none'}}>
+                        <img src={logo} alt="Feladify" style={{width: '100%', height: '100%', objectFit: 'contain'}} />
                     </div>
-                    <div className="chat-header-actions">
+                    <div className="phb-text">
+                        <h1 className="phb-title">Üdv, {userName || 'Tanár'}!</h1>
+                        <p className="phb-subtitle">Miben segíthetek ma?</p>
+                    </div>
+                    <div className="chat-header-actions" style={{ marginLeft: 'auto' }}>
                         <button
                             className="header-btn"
                             onClick={() => setShowSessionHistory(!showSessionHistory)}

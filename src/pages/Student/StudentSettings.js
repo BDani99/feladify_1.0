@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { fetchUserData } from '../../api/Auth/ProfileData';
-import { FaUser, FaPalette, FaBell, FaBullseye, FaLock, FaSave, FaBrain } from 'react-icons/fa';
+import { useLocation } from 'react-router-dom';
+import { FaUser, FaPalette, FaBell, FaBullseye, FaLock, FaSave, FaBrain, FaCog } from 'react-icons/fa';
 import { useUser } from '../../context/UserContext';
 import '../../styles/Settings.css';
 
@@ -13,7 +14,8 @@ const StudentSettings = () => {
     className: ''
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('account');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'account');
   const [settings, setSettings] = useState({
     theme: 'system',
     fontSize: 'normal',
@@ -54,6 +56,12 @@ const StudentSettings = () => {
     };
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -125,8 +133,14 @@ const StudentSettings = () => {
 
   return (
     <div id="content">
-      <div className="settings-container modern-settings">
-        <h1 className="title">Beállítások</h1>
+      <div className="settings-container modern-settings" style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '60px' }}>
+        <div className="page-header-banner" style={{ marginBottom: '32px' }}>
+            <div className="phb-icon"><FaCog /></div>
+            <div className="phb-text">
+                <h1 className="phb-title">Beállítások</h1>
+                <p className="phb-subtitle">Szabd személyre a tanulási élményedet</p>
+            </div>
+        </div>
         
         <div className="settings-layout">
           {/* Sidebar Tabs */}

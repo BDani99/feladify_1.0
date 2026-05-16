@@ -1,9 +1,9 @@
 /* PracticeHub.css – Szintfelmérő kapu + Szint teljesítve oldal */
 
 .practice-hub {
-    max-width: 1100px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 24px 24px 48px;
+    padding-bottom: 60px;
 }
 
 

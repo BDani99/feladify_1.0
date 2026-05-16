@@ -26,8 +26,8 @@
 
     /* ── Text ── */
     --color-text:       #e8eef8;
-    --color-text-dim:   #8b9ab8;
-    --color-text-muted: #566180;
+    --color-text-dim:   #a1aec6;
+    --color-text-muted: #717d9a;
 
     /* ── Borders ── */
     --border-color:        rgba(255, 255, 255, 0.08);
@@ -74,8 +74,8 @@
     --space-2xl: 48px;
 
     /* ── Transitions ── */
-    --transition-fast:   0.15s ease;
-    --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast:   0.2s ease;
+    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     /* ── Layout ── */
@@ -155,8 +155,8 @@
     --space-2xl: 48px;
 
     /* ── Transitions ── */
-    --transition-fast:   0.15s ease;
-    --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast:   0.2s ease;
+    --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     /* ── Layout ── */
@@ -290,6 +290,62 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
     animation: slideDown 0.2s ease;
 }
 
+/* ─── Page Header Banner ─── */
+
+.page-header-banner {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color-strong);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 32px;
+    box-shadow: var(--shadow-md);
+}
+
+.phb-icon {
+    width: 52px;
+    height: 52px;
+    background: var(--accent-gradient);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 16px var(--accent-glow);
+}
+
+.phb-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.phb-title {
+    margin: 0 0 4px;
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: var(--color-text);
+    letter-spacing: -0.3px;
+}
+
+.phb-subtitle {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--color-text-dim);
+}
+
+[data-theme="light"] .welcome-avatar img {
+  filter: none;
+}
+
+[data-theme="light"] .phb-subtitle {
+    color: var(--color-text);
+    opacity: 0.7;
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 1024px) {
     #content {
@@ -297,6 +353,7 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
         padding: 88px 16px 32px;
     }
     .title { font-size: 1.8rem; }
+    .phb-title { font-size: 1.3rem; }
 }
 
 /* ─── Animations ─── */

@@ -175,13 +175,13 @@ const AssignmentGenerate = ({ token }) => {
     return (
         <div id="content">
             <div className="assignment-generate-container">
-                <header className="page-header">
-                    <div className="header-icon"><FaBrain /></div>
-                    <div className="header-text">
-                        <h1 className="title">Dolgozat Generálás</h1>
-                        <p className="subtitle">Hozz létre professzionális feladatsorokat AI segítségével másodpercek alatt.</p>
+                <div className="page-header-banner">
+                    <div className="phb-icon"><FaBrain /></div>
+                    <div className="phb-text">
+                        <h1 className="phb-title">Dolgozat Generálás</h1>
+                        <p className="phb-subtitle">Hozz létre professzionális feladatsorokat AI segítségével másodpercek alatt</p>
                     </div>
-                </header>
+                </div>
 
                 <div className="generate-grid">
                     <div className="generate-card main-config">

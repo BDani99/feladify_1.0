@@ -7,6 +7,7 @@ const authRoutes = require('./routes/auth');
 const assignmentRoutes = require('./routes/assignments');
 const classRoutes = require('./routes/classes');
 const studentRoutes = require('./routes/student');
+const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 app.use(cors());
@@ -46,6 +47,7 @@ app.use('/api', classRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 if (require.main === module) {
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

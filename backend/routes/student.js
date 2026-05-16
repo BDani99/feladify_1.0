@@ -503,10 +503,13 @@ router.post('/diagnostic/submit', authMiddleware, async (req, res) => {
     // Gyakorlóút létrehozása/frissítése – az AI raw eredményt adjuk át (recommendedCheckpoints megmarad)
     await createOrUpdatePracticePath(req.user._id, { aiAnalysis: aiAnalysisResult }, session.subject);
 
-    // Session törlése
-    progress.diagnosticSession = null;
-    progress.markModified('diagnosticSession');
-    await progress.save();
+    // Session törlése – fresh fetch kell, mert a createOrUpdatePracticePath már elmentette a doc-ot
+    const freshProgress = await StudentProgress.findOne({ studentId: req.user._id });
+    if (freshProgress) {
+      freshProgress.diagnosticSession = null;
+      freshProgress.markModified('diagnosticSession');
+      await freshProgress.save();
+    }
 
     res.json({
       message: 'Sikeresen beküldve',
@@ -1101,28 +1104,50 @@ router.post('/checkpoint/start', authMiddleware, async (req, res) => {
     const levelBonus = Math.floor((Math.max(1, Math.min(10, currentLevel)) - 1) / 3);
     const effectiveDifficulty = Math.max(1, Math.min(5, baseDifficulty + levelBonus));
 
-    // Adaptív: előző checkpoint gyenge kérdéseinek beépítése
     const weakQuestions = subjectData.weakQuestionsForNext || [];
-    // Felhasználás után töröljük, hogy ne ismétlődjön
-    subjectData.weakQuestionsForNext = null;
-    progress.markModified('subjectProgress');
-    await progress.save();
 
     // Kérdéssor generálása AI-val (6+ feladattípus)
+
     const generatedQuestions = await groqService.generatePracticeQuestionSet(
       subject, checkpoint.topic, effectiveDifficulty, 10, student?.className || '4. osztály', weakQuestions
     );
 
-    // Kérdések mentése a session-be (correctAnswer-rel együtt, a backenden marad)
-    progress.checkpointSession = {
-      checkpointId,
-      subject,
-      topic: checkpoint.topic,
-      questions: generatedQuestions,
-      answers: [],
-      startedAt: new Date()
-    };
-    await progress.save();
+    // Mentés robusztus módon (VersionError kezelésével)
+    let saved = false;
+    let attempts = 0;
+    while (!saved && attempts < 2) {
+      try {
+        const freshProgress = await StudentProgress.findOne({ studentId: req.user._id });
+        if (!freshProgress) throw new Error('Progress document lost');
+
+        const freshSubjectData = freshProgress.subjectProgress.find(s => s.subject === subject);
+        if (freshSubjectData) {
+          // Adaptív: felhasználás után töröljük
+          freshSubjectData.weakQuestionsForNext = null;
+        }
+
+        freshProgress.checkpointSession = {
+          checkpointId,
+          subject,
+          topic: checkpoint.topic,
+          questions: generatedQuestions,
+          answers: [],
+          startedAt: new Date()
+        };
+
+        freshProgress.markModified('subjectProgress');
+        await freshProgress.save();
+        saved = true;
+      } catch (saveErr) {
+        attempts++;
+        if (saveErr.name === 'VersionError' && attempts < 2) {
+          console.warn('[Student API] VersionError a checkpoint mentésekor, újrapróbálkozás...');
+          continue;
+        }
+        throw saveErr;
+      }
+    }
+
 
     // Frontend csak sanitizált kérdéseket kap (correctAnswer nélkül)
     const sanitizedQuestions = generatedQuestions.map(q => ({

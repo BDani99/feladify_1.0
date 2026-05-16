@@ -94,12 +94,13 @@ const StudentDashboard = () => {
         <div id="content">
             <div className="dashboard-container">
 
-                <div className="dash-greeting">
-                    <div className="dash-greeting-left">
-                        <h1>{greeting}, {firstName}!</h1>
-                        <p className="dash-date">{today}</p>
+                <div className="page-header-banner">
+                    <div className="phb-icon"><FaTasks /></div>
+                    <div className="phb-text">
+                        <h1 className="phb-title">{greeting}, {firstName}!</h1>
+                        <p className="phb-subtitle">Üdvözlünk újra a Feladify-ban! Jó tanulást mára.</p>
                     </div>
-                    <div className="dash-greeting-right">
+                    <div className="dash-greeting-right" style={{ marginLeft: 'auto' }}>
                         {stats?.streak > 0 && (
                             <span className="dash-streak-badge">
                                 <FaFire /> {stats.streak} napos sorozat

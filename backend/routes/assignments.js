@@ -5,6 +5,15 @@ const User = require('../models/User');
 const Class = require('../models/Class');
 const { generateText, generateChat, generateChatWithHistory } = require('../services/groq');
 const groqService = require('../services/groqService');
+const Notification = require('../models/Notification');
+
+async function notify(userId, type, title, message, data = {}) {
+  try {
+    await Notification.create({ userId, type, title, message, data });
+  } catch (e) {
+    console.error('[Notification] Létrehozási hiba:', e.message);
+  }
+}
 const router = express.Router();
 const authenticateTeacher = require('../middleware/authenticateTeacher');
 const authenticateStudent = require('../middleware/authenticateStudent');
@@ -146,6 +155,11 @@ router.post('/teacher/save', authenticateTeacher, async (req, res) => {
     });
 
     await assignment.save();
+
+    // Értesítés minden diáknak
+    const notifMsg = `Új dolgozat érkezett: "${title}" – ${subject}`;
+    students.forEach(s => notify(s._id, 'new_assignment', 'Új dolgozat kiírva', notifMsg, { assignmentId: assignment._id }));
+
     res.status(201).json({ message: 'Feladatsor sikeresen mentve és hozzárendelve az osztály diákjaihoz.', assignment });
   } catch (error) {
     console.error(error);
@@ -178,6 +192,11 @@ router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
       totalPoints: questions.reduce((sum, q) => sum + (q.points || 1), 0), createdAt: new Date(),
     });
     await assignment.save();
+
+    // Értesítés minden diáknak
+    const genNotifMsg = `Új dolgozat érkezett: "${title}" – ${subject}`;
+    students.forEach(s => notify(s._id, 'new_assignment', 'Új dolgozat kiírva', genNotifMsg, { assignmentId: assignment._id }));
+
     res.status(201).json({ message: 'Feladatsor sikeresen generálva és hozzárendelve a kiválasztott osztály diákjaihoz', assignment });
   } catch (error) {
     console.error(error);
@@ -557,6 +576,18 @@ router.post('/student/submit/:assignmentId', authenticateStudent, async (req, re
     // Dolgozat completedCount növelése
     assignment.completedCount = (assignment.completedCount || 0) + 1;
     await assignment.save();
+
+    // Értesítés a tanárnak (fire-and-forget)
+    User.findById(studentId).select('name').then(submitter => {
+      const studentName = submitter?.name || 'Egy diák';
+      notify(
+        assignment.teacherId,
+        'assignment_submitted',
+        'Dolgozat beküldve',
+        `${studentName} beadta: "${assignment.title}"`,
+        { assignmentId, studentId }
+      );
+    }).catch(() => {});
 
     res.status(200).json({
       message: 'Dolgozat sikeresen beküldve.',
@@ -1133,6 +1164,17 @@ router.put('/teacher/finalize-grade', authenticateTeacher, async (req, res) => {
       { _id: studentId, 'assignments.assignmentId': assignmentId },
       { $set: { 'assignments.$.grade': Number(grade) } }
     );
+
+    // Értesítés a diáknak
+    Assignment.findById(assignmentId).select('title subject').then(asgn => {
+      notify(
+        studentId,
+        'assignment_graded',
+        'Dolgozatod értékelve',
+        `"${asgn?.title || 'Dolgozat'}" – Osztályzat: ${grade}`,
+        { assignmentId, grade }
+      );
+    }).catch(() => {});
 
     res.json({ message: 'Osztályzat sikeresen rögzítve.' });
   } catch (error) {

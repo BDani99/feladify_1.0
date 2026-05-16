@@ -447,7 +447,7 @@ const CheckpointPractice = () => {
                       onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
                     >
                       <span className="drag-handle">☰</span>
-                      <span className="order-num">{idx + 1}.</span>
+                      <span className="order-num">{idx + 1}</span>
                       <span className="order-text">{item}</span>
                     </div>
                   ))}

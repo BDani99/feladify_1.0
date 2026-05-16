@@ -13,14 +13,14 @@
     background: var(--bg-card);
     backdrop-filter: var(--blur-md);
     -webkit-backdrop-filter: var(--blur-md);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-xl);
-    padding: 35px 40px;
+    border: 1px solid var(--border-color-strong);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 20px;
-    box-shadow: var(--shadow-soft);
+    box-shadow: var(--shadow-md);
     position: relative;
     overflow: hidden;
 }
@@ -37,9 +37,10 @@
 }
 
 .dash-greeting-left h1 {
-    margin: 0 0 6px;
-    font-size: 2rem;
+    margin: 0 0 4px;
+    font-size: 1.55rem;
     font-weight: 800;
+    letter-spacing: -0.3px;
     background: var(--accent-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

@@ -3,7 +3,7 @@ import { fetchTeacherStatistics } from '../../api/Assignments/Teacher/Statistics
 import { fetchDetailedStatistics } from '../../api/Assignments/Teacher/DetailedStatistics';
 import { Bar, Pie, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
-import { FaExclamationCircle } from 'react-icons/fa';
+import { FaExclamationCircle, FaChartBar } from 'react-icons/fa';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Teacher/TeacherStatistics.css';
 
@@ -78,7 +78,13 @@ const TeacherStatistics = () => {
     return (
         <div id="content">
             <div className="statistics-container">
-                <h1 className="title">Statisztikák</h1>
+                <div className="page-header-banner">
+                    <div className="phb-icon"><FaChartBar /></div>
+                    <div className="phb-text">
+                        <h1 className="phb-title">Statisztikák</h1>
+                        <p className="phb-subtitle">Tekintsd át a diákok teljesítményét és az osztályok haladását</p>
+                    </div>
+                </div>
                 <div className="stats-content">
 
                     {/* Összesítő számok */}

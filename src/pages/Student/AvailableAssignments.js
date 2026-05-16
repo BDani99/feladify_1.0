@@ -48,13 +48,13 @@ const AvailableAssignments = () => {
     return (
         <div id="content">
             <div className="available-assignments-wrapper">
-                <header className="page-header-premium">
-                    <div className="header-icon-box"><FaClipboardList /></div>
-                    <div className="header-text">
-                        <h1 className="title">Elérhető Dolgozatok</h1>
-                        <p className="subtitle">Itt találod a tanáraid által kiosztott aktuális feladatsorokat.</p>
+                <div className="page-header-banner">
+                    <div className="phb-icon"><FaClipboardList /></div>
+                    <div className="phb-text">
+                        <h1 className="phb-title">Elérhető Dolgozatok</h1>
+                        <p className="phb-subtitle">Itt találod a tanáraid által kiosztott aktuális feladatsorokat</p>
                     </div>
-                </header>
+                </div>
 
                 {error && <div className="error-box"><FaExclamationCircle /> {error}</div>}
 

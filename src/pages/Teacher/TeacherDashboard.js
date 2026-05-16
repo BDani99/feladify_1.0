@@ -90,12 +90,13 @@ const TeacherDashboard = () => {
         <div id="content">
             <div className="dashboard-container">
 
-                <div className="dash-greeting">
-                    <div className="dash-greeting-left">
-                        <h1>{greeting}, {user?.name?.split(' ')[0] || 'Tanár'}!</h1>
-                        <p className="dash-date">{today}</p>
+                <div className="page-header-banner">
+                    <div className="phb-icon"><FaTachometerAlt /></div>
+                    <div className="phb-text">
+                        <h1 className="phb-title">{greeting}, {user?.name?.split(' ')[0] || 'Tanár'}!</h1>
+                        <p className="phb-subtitle">{today}</p>
                     </div>
-                    <div className="dash-greeting-right">
+                    <div className="dash-greeting-right" style={{ marginLeft: 'auto' }}>
                         {(user?.subjects || []).map(s => (
                             <span key={s} className="dash-subject-badge">{s}</span>
                         ))}

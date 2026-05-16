@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaHome, FaClipboardCheck, FaChartBar, FaListAlt, FaClipboard, FaCog, FaCompass, FaGraduationCap, FaTachometerAlt, FaTasks, FaRobot } from 'react-icons/fa';
+import { FaTachometerAlt, FaChalkboardTeacher, FaBrain, FaClipboard, FaChartBar, FaCog, FaGraduationCap, FaTasks, FaCompass, FaClipboardList, FaCheckCircle } from 'react-icons/fa';
 import '../styles/Sidebar.css';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
@@ -8,8 +8,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
     const location = useLocation();
     const sidebarRef = useRef(null);
 
-    const handleNavigation = (to) => {
-        navigate(to);
+    const handleNavigation = (to, state = null) => {
+        navigate(to, { state });
         setIsSidebarOpen(false);
     };
 
@@ -35,7 +35,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                     <>
                         <li className="new-chat-li">
                             <button className="new-chat-btn" onClick={() => handleNavigation('/')}>
-                                <FaRobot /> AI Asszisztens
+                                <FaChalkboardTeacher /> AI Asszisztens
                             </button>
                         </li>
                         <li>
@@ -45,7 +45,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                         </li>
                         <li>
                             <a tabIndex={0} className={isActiveLink('/dolgozat-generalas') ? 'active-link' : ''} onClick={() => handleNavigation('/dolgozat-generalas')}>
-                                <FaListAlt className="icon" /> Dolgozat Generálás
+                                <FaBrain className="icon" /> Dolgozat Generálás
                             </a>
                         </li>
                         <li>
@@ -59,7 +59,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                             </a>
                         </li>
                         <li className="settings-link">
-                            <a id="settings-link" tabIndex={0} className={isActiveLink('/tanar-beallitasok') ? 'settings-active' : ''} onClick={() => handleNavigation('/tanar-beallitasok')}>
+                            <a id="settings-link" tabIndex={0} className={isActiveLink('/tanar-beallitasok') ? 'settings-active' : ''} onClick={() => handleNavigation('/tanar-beallitasok', { activeTab: 'appearance' })}>
                                 <FaCog className="settings-icon" /> Beállítások
                             </a>
                         </li>
@@ -70,7 +70,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                     <>
                         <li className="new-chat-li">
                             <button className="new-chat-btn" onClick={() => handleNavigation('/')}>
-                                <FaRobot /> AI Mentor
+                                <FaGraduationCap /> AI Mentor
                             </button>
                         </li>
                         <li>
@@ -85,12 +85,12 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                         </li>
                         <li>
                             <a tabIndex={0} className={isActiveLink('/elerheto-dolgozatok') ? 'active-link' : ''} onClick={() => handleNavigation('/elerheto-dolgozatok')}>
-                                <FaGraduationCap className="icon" /> Dolgozatok
+                                <FaClipboardList className="icon" /> Dolgozatok
                             </a>
                         </li>
                         <li>
                             <a tabIndex={0} className={isActiveLink('/megoldott-dolgozatok') ? 'active-link' : ''} onClick={() => handleNavigation('/megoldott-dolgozatok')}>
-                                <FaClipboardCheck className="icon" /> Eredmények
+                                <FaCheckCircle className="icon" /> Eredmények
                             </a>
                         </li>
                         <li>
@@ -99,7 +99,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                             </a>
                         </li>
                         <li className="settings-link">
-                            <a id="settings-link" tabIndex={0} className={isActiveLink('/diak-beallitasok') ? 'settings-active' : ''} onClick={() => handleNavigation('/diak-beallitasok')}>
+                            <a id="settings-link" tabIndex={0} className={isActiveLink('/diak-beallitasok') ? 'settings-active' : ''} onClick={() => handleNavigation('/diak-beallitasok', { activeTab: 'appearance' })}>
                                 <FaCog className="settings-icon" /> Beállítások
                             </a>
                         </li>

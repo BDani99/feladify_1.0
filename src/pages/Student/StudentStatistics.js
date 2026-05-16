@@ -12,7 +12,7 @@ import {
 } from 'chart.js';
 import { Line, Bar, Doughnut, Radar } from 'react-chartjs-2';
 import {
-  FaStar, FaFire, FaTrophy, FaChartLine,
+  FaStar, FaFire, FaTrophy, FaChartBar,
   FaBrain, FaBook, FaCheckCircle, FaClock, FaChevronDown, FaChevronUp
 } from 'react-icons/fa';
 import '../../styles/Student/StudentStatistics.css';
@@ -98,7 +98,7 @@ const AssignmentTab = ({ data }) => {
           </div>
         </div>
         <div className="sts-card">
-          <div className="sts-card-icon purple"><FaChartLine /></div>
+          <div className="sts-card-icon purple"><FaChartBar /></div>
           <div className="sts-card-body">
             <div className="sts-card-value">{averageScore}%</div>
             <div className="sts-card-label">Átlagos pontszám</div>
@@ -557,7 +557,7 @@ const PracticeTab = ({ data }) => {
           </div>
         </div>
         <div className="sts-card">
-          <div className="sts-card-icon purple"><FaChartLine /></div>
+          <div className="sts-card-icon purple"><FaChartBar /></div>
           <div className="sts-card-body">
             <div className="sts-card-value">{overallAvgScore > 0 ? `${overallAvgScore}%` : '–'}</div>
             <div className="sts-card-label">Átlagos eredmény</div>
@@ -707,7 +707,13 @@ const StudentStatistics = () => {
   return (
     <div id="content">
       <div className="sts-page">
-        <h1 className="title">Statisztikák és Elemzések</h1>
+        <div className="page-header-banner">
+          <div className="phb-icon"><FaChartBar /></div>
+          <div className="phb-text">
+            <h1 className="phb-title">Statisztikák és Elemzések</h1>
+            <p className="phb-subtitle">Elemezd fejlődésedet és teljesítményedet részletes grafikonokkal</p>
+          </div>
+        </div>
 
         <div className="sts-tabs">
           <button

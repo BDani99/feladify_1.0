@@ -1,12 +1,17 @@
 const axios = require('axios');
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+
 class GroqService {
   constructor() {
     this.apiKey = process.env.GROQ_API_KEY;
     this.apiBase = 'https://api.groq.com/openai/v1';
-    this.reasoningModel = 'qwen/qwen3-32b'; // Használja a <think> blokkot
-    this.fastModel = 'llama-3.3-70b-versatile'; // Gyors, token-takarékos, JSON generálásra
-    this.fallbackModel = 'llama-3.3-70b-versatile';
+    this.reasoningModel = 'qwen/qwen3-32b';
+    this.reasoningFallback = 'openai/gpt-oss-20b';
+    this.fastModel = 'llama-3.3-70b-versatile';
+    this.fastFallback = 'openai/gpt-oss-120b';
+
 
     if (!this.apiKey) {
       console.warn('[GroqService] FIGYELMEZTETÉS: GROQ_API_KEY nincs beállítva! Az AI funkciók nem fognak működni.');
@@ -22,35 +27,105 @@ class GroqService {
   _extractJSON(raw) {
     try {
       const mdMatch = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-      if (mdMatch) return JSON.parse(mdMatch[1]);
-      const match = raw.match(/\{[\s\S]*\}/);
-      if (match) return JSON.parse(match[0]);
+      let jsonStr = mdMatch ? mdMatch[1] : null;
+      
+      if (!jsonStr) {
+        const match = raw.match(/\{[\s\S]*\}/);
+        if (match) jsonStr = match[0];
+      }
+
+      if (jsonStr) {
+        try {
+          return JSON.parse(jsonStr.trim());
+        } catch (e) {
+          // Egyszerű javítás, ha a JSON vége levágódott (pl. max_tokens miatt)
+          let repaired = jsonStr.trim();
+          if (!repaired.endsWith('}') && !repaired.endsWith(']')) {
+            console.warn('[GroqService] Levágott JSON észlelve, javítás megkísérlése...');
+            // Próbáljuk meg bezárni a tömböt és az objektumot
+            if (repaired.includes('"questions"') && !repaired.includes(']')) {
+              // Ha a kérdések listája közben szakadt meg, próbáljuk meg lezárni az utolsó elemet
+              if (repaired.endsWith(',')) repaired = repaired.slice(0, -1);
+              repaired += ']}';
+            } else if (!repaired.endsWith('}')) {
+              repaired += '}';
+            }
+            try {
+              return JSON.parse(repaired);
+            } catch (e2) {
+              throw e; // Ha még mindig nem jó, dobjuk az eredeti hibát
+            }
+          }
+          throw e;
+        }
+      }
     } catch (e) {
       throw new Error('Hiba a JSON feldolgozásakor: ' + e.message);
     }
     throw new Error('Nem található érvényes JSON struktúra a válaszban.');
   }
 
+
   async _callModel(model, messages, options) {
-    const response = await axios.post(
-      `${this.apiBase}/chat/completions`,
-      {
-        model,
-        messages,
-        temperature: options.temperature || 0.7,
-        max_tokens: options.max_tokens || 1024,
-        top_p: options.top_p || 1,
-        stream: false
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json'
+    try {
+      const response = await axios.post(
+        `${this.apiBase}/chat/completions`,
+        {
+          model,
+          messages,
+          temperature: options.temperature || 0.7,
+          max_tokens: options.max_tokens || 1024,
+          top_p: options.top_p || 1,
+          stream: false
         },
-        timeout: 30000
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 45000 // Increased timeout
+        }
+      );
+      return this._stripThinking(response.data.choices[0].message.content);
+    } catch (error) {
+      const status = error.response?.status;
+      const errorData = error.response?.data?.error;
+      const headers = error.response?.headers;
+
+      if (status === 429) {
+        const groqMsg = errorData?.message || '';
+        const limitType = groqMsg.toLowerCase().includes('tokens') ? 'TPM (Token)' : 'RPM (Request)';
+        
+        console.warn(`[GroqService] ✗ Rate limit (429) hiba [${limitType}]:`);
+        if (groqMsg) console.warn(`[GroqService]   Üzenet: ${groqMsg}`);
+        
+        // Log rate limit headers if available
+        if (headers) {
+          const resetTime = headers['x-ratelimit-reset-requests'] || headers['x-ratelimit-reset-tokens'];
+          if (resetTime) console.warn(`[GroqService]   Reset idő: ${resetTime}`);
+        }
+        console.warn(`[GroqService]   Azonnali fallback indítása...`);
       }
-    );
-    return this._stripThinking(response.data.choices[0].message.content);
+
+      throw error;
+    }
+
+  }
+
+  async _callModelWithFallback(primaryModel, fallbackModel, messages, options) {
+    try {
+      return await this._callModel(primaryModel, messages, options);
+    } catch (primaryError) {
+      if (primaryModel === fallbackModel) throw primaryError;
+      const status = primaryError.response?.status || 'timeout';
+      console.warn(`[GroqService] ✗ ${primaryModel} sikertelen (HTTP ${status}), próbálkozás a fallback modellel: ${fallbackModel}`);
+      try {
+        return await this._callModel(fallbackModel, messages, options);
+      } catch (fallbackError) {
+        console.error(`[GroqService] ✗ Fallback modell (${fallbackModel}) is sikertelen.`);
+        throw fallbackError;
+      }
+    }
   }
 
   async generateResponse(prompt, messages = [], options = {}, useReasoning = false) {
@@ -60,34 +135,19 @@ class GroqService {
     }
 
     const allMessages = [{ role: 'system', content: prompt }, ...messages];
-    const targetModel = useReasoning ? this.reasoningModel : this.fastModel;
+    const primaryModel = useReasoning ? this.reasoningModel : this.fastModel;
+    const fallbackModel = useReasoning ? this.reasoningFallback : this.fastFallback;
 
-    // Try primary target model
     try {
-      console.log(`[GroqService] API hívás → ${targetModel}`);
-      const content = await this._callModel(targetModel, allMessages, options);
-      console.log(`[GroqService] ✓ Válasz: ${targetModel} (${content.length} kar.)`);
+      console.log(`[GroqService] API hívás → ${primaryModel} (fallback: ${fallbackModel})`);
+      const content = await this._callModelWithFallback(primaryModel, fallbackModel, allMessages, options);
+      console.log(`[GroqService] ✓ Válasz kész (${content.length} kar.)`);
       return content;
-    } catch (primaryError) {
-      const status = primaryError.response?.status;
-      console.warn(`[GroqService] ✗ ${targetModel} sikertelen (HTTP ${status ?? 'timeout'}) → fallback: ${this.fallbackModel}`);
+    } catch (e) {
+      return this._getFallbackResponse();
     }
-
-    // Try fallback model
-    if (targetModel !== this.fallbackModel) {
-      try {
-        const content = await this._callModel(this.fallbackModel, allMessages, options);
-        console.log(`[GroqService] ✓ Válasz: ${this.fallbackModel} [FALLBACK] (${content.length} kar.)`);
-        return content;
-      } catch (fallbackError) {
-        const status = fallbackError.response?.status;
-        console.error(`[GroqService] ✗ ${this.fallbackModel} is sikertelen (HTTP ${status ?? 'timeout'}):`, fallbackError.response?.data || fallbackError.message);
-        return this._getFallbackResponse();
-      }
-    }
-    
-    return this._getFallbackResponse();
   }
+
 
   async analyzeDiagnosticTest(testResult, questions) {
     const prompt = `Te egy tapasztalt pedagógus és oktatási szakértő vagy. Elemezd egy diák diagnosztikai tesztjének eredményét, és készíts belőle egy személyre szabott tanulási útvonalat (checkpointokat) az "Egyéni Gyakorlás" modulhoz.
@@ -145,8 +205,9 @@ SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\
     const user = `Tantárgy: ${subject} | Témakör: ${topic}\nKérdés: ${questionText}\nHelyes válasz: ${correctAnswer}\nDiák válasza: "${studentAnswer}"`;
 
     try {
-      const result = await this._callModel(
+      const result = await this._callModelWithFallback(
         this.reasoningModel,
+        this.reasoningFallback,
         [{ role: 'system', content: prompts[level] }, { role: 'user', content: user }],
         { temperature: 0.65, max_tokens: 300 }
       );
@@ -215,8 +276,9 @@ ${contextRule}
 KIMENET – sima szöveg, például:
 ${exampleLine}`;
 
-    return await this._callModel(
+    return await this._callModelWithFallback(
       this.reasoningModel,
+      this.reasoningFallback,
       [{ role: 'system', content: prompt }],
       { temperature: 0.85, top_p: 0.9, max_tokens: 1500 }
     );
@@ -292,12 +354,18 @@ VÁLASZOLJ KIZÁRÓLAG ÉRVÉNYES JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!
 [{"questionText":"...","questionType":"...","options":[],"pairs":[],"items":[],"correctAnswer":"...","explanation":"..."}]`;
 
       try {
+        if (allQuestions.length > 0) {
+          await sleep(3000); // Várakozás a chunk-ok között (RPM/TPM kímélés)
+        }
         console.log(`[GroqService]   → chunk: [${chunk.join(', ')}]`);
-        const raw = await this._callModel(
+        const raw = await this._callModelWithFallback(
           this.fastModel,
+          this.fastFallback,
           [{ role: 'system', content: prompt }],
           { temperature: 0.7, max_tokens: 2000 }
         );
+
+
         const parsed = this._extractJSONArray(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
           allQuestions.push(...parsed);
@@ -521,7 +589,8 @@ Fontos: minden kérdésnél adj meg "questionId" mezőt "q1", "q2", stb. érték
 
     let raw = '';
     try {
-      raw = await this.generateResponse(prompt, [], { temperature: 0.7, max_tokens: 3000 });
+      raw = await this.generateResponse(prompt, [], { temperature: 0.7, max_tokens: 5000 });
+
       const parsed = this._extractJSON(raw);
       if (Array.isArray(parsed.questions)) {
         const mapped = parsed.questions.map((q, idx) => ({
@@ -570,11 +639,13 @@ KIMENET – sima szöveg (NEM JSON!), pl.:
 1. Kérdés (Alkalmazás). Mikro-képesség: Százalékszámítás. Szituáció: Egy streamer nézőinek száma 35%-kal nőtt januárban.
 2. Kérdés (Értés). Mikro-képesség: ...`;
 
-    return await this._callModel(
+    return await this._callModelWithFallback(
       this.reasoningModel,
+      this.reasoningFallback,
       [{ role: 'system', content: prompt }],
       { temperature: 0.85, top_p: 0.9, max_tokens: 1200 }
     );
+
   }
 
   async _generateDiagnosticQuestionsChunked(outline, subject, grade, count, currentLevel) {
@@ -621,21 +692,45 @@ VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
 [{"questionText":"...","questionType":"mcq|true_false|short_answer|fill_blank|matching|ordering","category":"...","difficulty":${effectiveDifficulty},"options":[],"pairs":[],"items":[],"correctAnswer":"...","explanation":"..."}]`;
 
       try {
+        if (allQuestions.length > 0) {
+          await sleep(3000); // Szünet a diagnosztika chunk-ok között (TPM kímélés)
+        }
+
         console.log(`[GroqService]   → diagnosztika chunk ${i + 1}/${totalChunks} (${chunkCount} kérdés)`);
-        const raw = await this._callModel(
+        const raw = await this._callModelWithFallback(
           this.fastModel,
+          this.fastFallback,
           [{ role: 'system', content: prompt }],
           { temperature: 0.7, max_tokens: 2500 }
         );
+
         const parsed = this._extractJSONArray(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          allQuestions.push(...parsed);
+          allQuestions.push(...parsed.slice(0, chunkCount));
           console.log(`[GroqService]   ✓ diagnosztika chunk kész (+${parsed.length} kérdés)`);
+        } else {
+          throw new Error('Üres vagy érvénytelen válasz a chunk-ban.');
         }
       } catch (e) {
         console.warn(`[GroqService]   ✗ diagnosztika chunk ${i + 1} sikertelen:`, e.message);
+        // Fallback kérdések hozzáadása, hogy a folyamat ne szakadjon meg és a darabszám stimmeljen
+        for (let j = 0; j < chunkCount; j++) {
+          const type = typePool[j % typePool.length];
+          allQuestions.push({
+            questionText: `Diagnosztikai kérdés (${subject}): Mi a véleményed a(z) ${subject} fontosságáról?`,
+            questionType: type === 'mcq' ? 'mcq' : 'short_answer',
+            category: 'Általános',
+            difficulty: effectiveDifficulty,
+            options: type === 'mcq' ? ['Nagyon fontos', 'Fontos', 'Kevéssé fontos', 'Nem fontos'] : [],
+            pairs: [],
+            items: [],
+            correctAnswer: type === 'mcq' ? 'Nagyon fontos' : 'Pozitív válasz elvárt.',
+            explanation: 'Tartalék kérdés technikai hiba esetén.'
+          });
+        }
       }
     }
+
     return allQuestions;
   }
 
@@ -824,7 +919,12 @@ Fontos: minden kérdésnél add meg a "category" mezőt (az adott témakör nev�
     ];
 
     try {
-      const result = await this._callModel(this.reasoningModel, messages, { temperature: 0.65, max_tokens: 350 });
+      const result = await this._callModelWithFallback(
+        this.reasoningModel,
+        this.reasoningFallback,
+        messages,
+        { temperature: 0.65, max_tokens: 350 }
+      );
       return result?.trim() || this._getFallbackHint(attemptNumber);
     } catch (error) {
       return this._getFallbackHint(attemptNumber);

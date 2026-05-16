@@ -1,9 +1,9 @@
 /* CheckpointPractice.css */
 
 .checkpoint-practice {
-    padding: 0 24px 24px 24px;
     max-width: 1200px;
     margin: 0 auto;
+    padding-bottom: 60px;
 }
 
 .checkpoint-practice .back-btn {
@@ -414,11 +414,20 @@
 }
 
 .checkpoint-practice .order-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
     font-weight: 800;
-    color: var(--accent);
-    font-size: 1rem;
-    min-width: 24px;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px var(--accent-glow);
 }
+
 
 .checkpoint-practice .order-text {
     flex: 1;
@@ -484,6 +493,20 @@
 
 /* ─── Score Error ─── */
 
+.error-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 16px 0 0;
+    line-height: 1.45;
+}
 
 /* ─── Action Buttons ─── */
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../api/config';
 import { useUser } from '../../context/UserContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { FaStar, FaFire, FaBolt, FaCalculator, FaBookOpen, FaGlobeAmericas, FaLeaf, FaChevronDown, FaChevronUp, FaTrash } from 'react-icons/fa';
+import { FaStar, FaFire, FaBolt, FaCalculator, FaBookOpen, FaGlobeAmericas, FaLeaf, FaChevronDown, FaChevronUp, FaTrash, FaCompass } from 'react-icons/fa';
 import '../../styles/Student/SubjectSelectPage.css';
 
 const XP_PER_LEVEL = 50;
@@ -137,8 +137,14 @@ const SubjectSelectPage = () => {
   return (
     <div id="content">
     <div className="subject-select-page">
+      <div className="page-header-banner">
+        <div className="phb-icon"><FaCompass /></div>
+        <div className="phb-text">
+          <h1 className="phb-title">Egyéni Gyakorlás</h1>
+          <p className="phb-subtitle">Fejleszd tudásodat tárgyankénti szintfelmérőkkel és kihívásokkal</p>
+        </div>
+      </div>
       <div className="subject-header">
-        <h1 className="title">Egyéni Gyakorlás</h1>
 
         <div className="xp-stats-grid">
           {/* XP kártya */}

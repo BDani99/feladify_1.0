@@ -46,13 +46,13 @@ const CompletedAssignments = () => {
     return (
         <div id='content'>
             <div className="completed-assignments-wrapper">
-                <header className="page-header-premium">
-                    <div className="header-icon-box"><FaCheckCircle /></div>
-                    <div className="header-text">
-                        <h1 className="title">Befejezett Dolgozatok</h1>
-                        <p className="subtitle">Tekintsd meg az eredményeidet és a tanári visszajelzéseket.</p>
+                <div className="page-header-banner">
+                    <div className="phb-icon"><FaCheckCircle /></div>
+                    <div className="phb-text">
+                        <h1 className="phb-title">Befejezett Dolgozatok</h1>
+                        <p className="phb-subtitle">Tekintsd meg az eredményeidet és a tanári visszajelzéseket</p>
                     </div>
-                </header>
+                </div>
 
                 <div className="stats-mini-grid">
                     <div className="mini-stat">

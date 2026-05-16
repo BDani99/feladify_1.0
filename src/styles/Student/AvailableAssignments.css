@@ -4,42 +4,6 @@
     animation: fadeIn 0.5s ease-out;
 }
 
-.page-header-premium {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 40px;
-    background: var(--bg-card);
-    padding: 30px;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-soft);
-}
-
-.header-icon-box {
-    width: 60px;
-    height: 60px;
-    background: var(--accent-gradient);
-    color: white;
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    box-shadow: 0 8px 20px var(--accent-glow);
-}
-
-.page-header-premium h1 {
-    margin: 0;
-    font-size: 2rem;
-    font-weight: 800;
-}
-
-.page-header-premium .subtitle {
-    margin: 5px 0 0;
-    color: var(--color-text-dim);
-    font-size: 1.1rem;
-}
 
 /* Grid */
 .student-assignment-grid {

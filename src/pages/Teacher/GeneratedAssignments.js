@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { 
     FaClipboardList, 
+    FaClipboard,
     FaCheckCircle, 
     FaHourglassHalf, 
     FaUsers, 
@@ -51,13 +52,13 @@ const GeneratedAssignments = () => {
     return (
         <div id="content">
             <div className="generated-assignments-wrapper">
-                <header className="page-header-simple">
-                    <div className="header-icon-box"><FaClipboardList /></div>
-                    <div className="header-info">
-                        <h1 className="title">Létrehozott Dolgozatok</h1>
-                        <p className="subtitle">Kövessd nyomon a diákok haladását és javítsd ki a beérkezett válaszokat.</p>
+                <div className="page-header-banner">
+                    <div className="phb-icon"><FaClipboard /></div>
+                    <div className="phb-text">
+                        <h1 className="phb-title">Létrehozott Dolgozatok</h1>
+                        <p className="phb-subtitle">Kövessd nyomon a diákok haladását és javítsd ki a beérkezett válaszokat</p>
                     </div>
-                </header>
+                </div>
 
                 <div className="stats-overview">
                     <div className="stat-card">

@@ -148,7 +148,10 @@ const PracticeTest = () => {
       <div id="content">
         <div className="practice-test">
           <p>Hiba: Nem sikerült a kérdéseket betölteni.</p>
-          <button onClick={() => navigate('/egyeni-gyakorlas')}>Vissza</button>
+          <button className="back-btn" onClick={() => navigate('/egyeni-gyakorlas')}>
+            <FaArrowLeft /> Vissza
+          </button>
+
         </div>
       </div>
     );
@@ -311,7 +314,7 @@ const PracticeTest = () => {
                     onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
                   >
                     <span className="drag-handle">☰</span>
-                    <span className="order-num">{idx + 1}.</span>
+                    <span className="order-num">{idx + 1}</span>
                     <span className="order-text">{item}</span>
                   </div>
                 ))}
