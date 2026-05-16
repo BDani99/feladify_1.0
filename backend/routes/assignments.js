@@ -507,7 +507,7 @@ router.post('/student/submit/:assignmentId', authenticateStudent, async (req, re
             );
             if (evaluation.correct) score = question.points;
             aiFeedback = evaluation.reason;
-            confidence = 0.8; // AI alapú
+            confidence = evaluation.confidence ?? 0.8;
           } catch (err) {
             console.error('AI grading error:', err);
             // Fallback: egyszerű tartalmazás vizsgálat
@@ -530,9 +530,11 @@ router.post('/student/submit/:assignmentId', authenticateStudent, async (req, re
       }
     }
 
-    // Osztályzat javaslat az AI-tól
+    // Osztályzat javaslat
     let suggestedGrade = 1;
-    const percentage = (achievedPoints / assignment.totalPoints) * 100;
+    const percentage = assignment.totalPoints > 0
+        ? (achievedPoints / assignment.totalPoints) * 100
+        : 0;
     if (percentage >= 90) suggestedGrade = 5;
     else if (percentage >= 80) suggestedGrade = 4;
     else if (percentage >= 65) suggestedGrade = 3;
@@ -680,6 +682,35 @@ router.put('/teacher/override-score', authenticateTeacher, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Hiba a pontszám felülírásakor.' });
+  }
+});
+
+// Diák: Közvetlen AI magyarázat (miért volt rossz a válasz)
+router.post('/student/explain', authenticateStudent, async (req, res) => {
+  try {
+    const { questionText, correctAnswer, studentAnswer } = req.body;
+    if (!questionText) return res.status(400).json({ message: 'questionText megadása kötelező.' });
+
+    const formatAnswer = (ans) => {
+      if (ans === null || ans === undefined) return '(nem válaszolt)';
+      if (typeof ans === 'object') return JSON.stringify(ans, null, 2);
+      return String(ans);
+    };
+
+    const systemPrompt = `Te egy segítőkész, empatikus általános iskolai tanár vagy magyarul.
+A diák hibásan válaszolt egy kérdésre. Magyarázd el KÖZVETLENÜL és ÉRTHETŐEN, hogy:
+1. Miért volt helytelen a diák válasza (1-2 mondat)
+2. Mi a helyes válasz és miért (2-3 mondat)
+Légy barátságos, bátorító és tömör. Maximum 5-6 mondatban válaszolj.
+Kérdés: "${questionText}"
+Helyes válasz: "${formatAnswer(correctAnswer)}"
+A diák válasza: "${formatAnswer(studentAnswer)}"`;
+
+    const explanation = await generateChatWithHistory(systemPrompt, []);
+    res.json({ explanation });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Hiba a magyarázat generálásakor.' });
   }
 });
 

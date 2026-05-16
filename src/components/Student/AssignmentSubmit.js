@@ -21,6 +21,7 @@ const AssignmentSubmitForm = () => {
     const [timeLeft, setTimeLeft] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const [dragOverIdx, setDragOverIdx] = useState(null);
 
     useEffect(() => {
         if (!assignment) {
@@ -156,22 +157,38 @@ const AssignmentSubmitForm = () => {
                 );
             case 'ordering':
                 const items = answers[q._id] || [];
-                const moveItem = (from, to) => {
+                const handleDragStart = (e, idx) => {
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', String(idx));
+                };
+                const handleDrop = (e, toIdx) => {
+                    e.preventDefault();
+                    setDragOverIdx(null);
+                    const fromIdx = Number(e.dataTransfer.getData('text/plain'));
+                    if (fromIdx === toIdx) return;
                     const newArr = [...items];
-                    const [removed] = newArr.splice(from, 1);
-                    newArr.splice(to, 0, removed);
+                    const [removed] = newArr.splice(fromIdx, 1);
+                    newArr.splice(toIdx, 0, removed);
                     handleAnswerChange(q._id, newArr);
                 };
+                const handleDragOver = (e, i) => { e.preventDefault(); setDragOverIdx(i); };
+                const handleDragLeave = () => setDragOverIdx(null);
                 return (
                     <div className="ordering-container">
+                        <p className="ordering-hint">Húzd a kártyákat a megfelelő sorrendbe</p>
                         {items.map((item, i) => (
-                            <div key={i} className="order-card">
+                            <div
+                                key={item}
+                                className={`order-card ${dragOverIdx === i ? 'drag-over' : ''}`}
+                                draggable
+                                onDragStart={e => handleDragStart(e, i)}
+                                onDrop={e => handleDrop(e, i)}
+                                onDragOver={e => handleDragOver(e, i)}
+                                onDragLeave={handleDragLeave}
+                            >
+                                <div className="order-drag-handle">⠿</div>
                                 <div className="order-index">{i + 1}</div>
                                 <span className="item-text">{item}</span>
-                                <div className="order-actions">
-                                    <button type="button" className="order-btn" onClick={() => moveItem(i, i - 1)} disabled={i === 0}>↑</button>
-                                    <button type="button" className="order-btn" onClick={() => moveItem(i, i + 1)} disabled={i === items.length - 1}>↓</button>
-                                </div>
                             </div>
                         ))}
                     </div>
@@ -199,9 +216,15 @@ const AssignmentSubmitForm = () => {
                                         }}
                                     >
                                         <option value="">Válassz egy definíciót...</option>
-                                        {shuffledMatchingRight.map((opt, oi) => (
-                                            <option key={oi} value={opt}>{opt}</option>
-                                        ))}
+                                        {shuffledMatchingRight.map((opt, oi) => {
+                                            const takenByOther = Object.entries(currentMatching)
+                                                .some(([key, val]) => val === opt && key !== pair.left);
+                                            return (
+                                                <option key={oi} value={opt} disabled={takenByOther}>
+                                                    {opt}
+                                                </option>
+                                            );
+                                        })}
                                     </select>
                                 </div>
                             </div>

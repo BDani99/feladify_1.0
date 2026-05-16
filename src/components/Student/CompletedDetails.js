@@ -14,23 +14,42 @@ import {
     FaLock
 } from 'react-icons/fa';
 import { flagAnswer } from '../../api/Student/FlagAnswer';
-import TutorChat from './TutorChat';
+import { getAnswerExplanation } from '../../api/Student/TutorChat';
 import '../../styles/Student/CompletedDetails.css';
 
 const GRADE_LABELS = { 5: 'Jeles', 4: 'Jó', 3: 'Közepes', 2: 'Elégséges', 1: 'Elégtelen' };
+const TYPE_LABELS = {
+    mcq: 'Feleletválasztós',
+    true_false: 'Igaz/Hamis',
+    short_answer: 'Nyílt végű',
+    fill_blank: 'Kiegészítős',
+    matching: 'Párosítás',
+    ordering: 'Sorba rendezés',
+};
 
 const CompletedDetails = () => {
     const location = useLocation();
     const { assignment } = location.state || {};
-    const [openTutors, setOpenTutors] = useState({});
+    const [explanations, setExplanations] = useState({});
+    const [loadingExplain, setLoadingExplain] = useState({});
     const [flaggedAnswers, setFlaggedAnswers] = useState({});
 
     if (!assignment) return <div className="error-state">Adatok nem találhatók.</div>;
 
     const isGraded = assignment.grade != null;
 
-    const toggleTutor = (questionId) =>
-        setOpenTutors(prev => ({ ...prev, [questionId]: !prev[questionId] }));
+    const handleAiExplain = async (questionId, questionText, correctAnswer, studentAnswer) => {
+        if (explanations[questionId] || loadingExplain[questionId]) return;
+        setLoadingExplain(prev => ({ ...prev, [questionId]: true }));
+        try {
+            const text = await getAnswerExplanation(questionText, correctAnswer, studentAnswer);
+            setExplanations(prev => ({ ...prev, [questionId]: text }));
+        } catch {
+            setExplanations(prev => ({ ...prev, [questionId]: 'Nem sikerült betölteni a magyarázatot. Próbáld újra.' }));
+        } finally {
+            setLoadingExplain(prev => ({ ...prev, [questionId]: false }));
+        }
+    };
 
     const handleFlag = async (questionId) => {
         try {
@@ -60,12 +79,12 @@ const CompletedDetails = () => {
 
         if (Array.isArray(ans)) {
             return (
-                <div className="complex-ans-sequence">
+                <div className="complex-ans-ordered">
                     {ans.map((item, idx) => (
-                        <React.Fragment key={idx}>
-                            <span className="sequence-item">{item}</span>
-                            {idx < ans.length - 1 && <span className="sequence-arrow">→</span>}
-                        </React.Fragment>
+                        <div key={idx} className="ordered-item">
+                            <span className="ordered-num">{idx + 1}</span>
+                            <span className="ordered-text">{item}</span>
+                        </div>
                     ))}
                 </div>
             );
@@ -123,7 +142,8 @@ const CompletedDetails = () => {
                         {assignment.answers.map((answer, index) => {
                             const isCorrect = isGraded && answer.score === answer.maxPoints;
                             const isFlagged = flaggedAnswers[answer.questionId] || answer.flagged;
-                            const showTutor = openTutors[answer.questionId];
+                            const explanation = explanations[answer.questionId];
+                            const isLoadingExplain = loadingExplain[answer.questionId];
 
                             return (
                                 <div
@@ -133,7 +153,7 @@ const CompletedDetails = () => {
                                     <div className="card-top">
                                         <div className="q-info">
                                             <span className="q-num">{index + 1}</span>
-                                            <span className="q-type">{answer.questionType}</span>
+                                            <span className="q-type">{TYPE_LABELS[answer.questionType] || answer.questionType}</span>
                                         </div>
                                         {isGraded && (
                                             <div className="score-badge">
@@ -146,7 +166,7 @@ const CompletedDetails = () => {
 
                                     {isGraded ? (
                                         /* Értékelés után: saját vs. helyes megoldás */
-                                        <div className="comparison-grid">
+                                        <div className={`comparison-grid ${['matching','ordering'].includes(answer.questionType) ? 'wide' : ''}`}>
                                             <div className="ans-block student">
                                                 <label>Te válaszod</label>
                                                 <div className="val">{renderAnswer(answer.studentAnswer, answer.questionType)}</div>
@@ -166,29 +186,38 @@ const CompletedDetails = () => {
                                         </div>
                                     )}
 
-                                    {/* Gombok csak értékelés után elérhetők */}
-                                    {isGraded && (
+                                    {/* Gombok csak értékelés után és CSAK rossz válaszoknál */}
+                                    {isGraded && !isCorrect && (
                                         <>
                                             <div className="card-actions">
-                                                <button className="tutor-btn" onClick={() => toggleTutor(answer.questionId)}>
-                                                    {showTutor ? 'Chat bezárása' : 'AI Segítség kérése'}
+                                                <button
+                                                    className={`tutor-btn ${explanation ? 'explained' : ''}`}
+                                                    onClick={() => handleAiExplain(answer.questionId, answer.questionText, answer.correctAnswer, answer.studentAnswer)}
+                                                    disabled={isLoadingExplain || !!explanation}
+                                                >
+                                                    {isLoadingExplain ? '⏳ Magyarázat betöltése...' : explanation ? '✓ AI magyarázat betöltve' : '🤖 Miért volt rossz?'}
                                                 </button>
                                                 <button
                                                     className={`flag-btn ${isFlagged ? 'active' : ''}`}
                                                     onClick={() => handleFlag(answer.questionId)}
                                                     disabled={isFlagged}
                                                 >
-                                                    {isFlagged ? 'Jelezve a tanárnak' : 'Nem értem a javítást'}
+                                                    {isFlagged ? '✓ Jelezve a tanárnak' : '⚑ Nem értem a javítást'}
                                                 </button>
                                             </div>
 
-                                            {showTutor && (
-                                                <div className="embedded-tutor">
-                                                    <TutorChat
-                                                        questionText={answer.questionText}
-                                                        correctAnswer={answer.correctAnswer}
-                                                        studentAnswer={answer.studentAnswer}
-                                                    />
+                                            {(isLoadingExplain || explanation) && (
+                                                <div className="ai-explanation-box">
+                                                    {isLoadingExplain ? (
+                                                        <div className="ai-explain-loading">
+                                                            <span className="ai-explain-dot" /><span className="ai-explain-dot" /><span className="ai-explain-dot" />
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <div className="ai-explain-label">🤖 AI magyarázat</div>
+                                                            <p className="ai-explain-text">{explanation}</p>
+                                                        </>
+                                                    )}
                                                 </div>
                                             )}
                                         </>

@@ -65,6 +65,12 @@
     gap: 15px;
 }
 
+.completed-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
 .completed-card {
     display: flex;
     background: var(--bg-card);
@@ -164,6 +170,12 @@
 .grade-box .val {
     font-weight: 900;
     font-size: 1.5rem;
+}
+
+.pending-score-msg {
+    font-size: 0.8rem;
+    color: var(--color-text-dim);
+    font-style: italic;
 }
 
 .grade-5 { color: #10b981; }

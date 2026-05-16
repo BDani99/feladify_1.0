@@ -416,6 +416,35 @@
 .answer-ai-section .ai-text {
     font-weight: 500;
     word-break: break-word;
+    flex: 1;
+}
+
+.confidence-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 9px;
+    border-radius: var(--radius-pill);
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.confidence-badge.high {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.confidence-badge.low {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.conf-warn-icon {
+    font-size: 0.7rem;
 }
 
 .answer-comparison {
@@ -469,25 +498,50 @@
 }
 
 .override-controls input {
-    width: 50px;
-    padding: 5px;
+    width: 60px;
+    padding: 7px 10px;
     text-align: center;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-color-2);
+    background: var(--bg-input);
+    color: var(--color-text);
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.override-controls input:focus {
+    outline: none;
+    border-color: var(--accent);
 }
 
 .override-controls button {
-    background: var(--bg-input);
-    border: 1px solid var(--border-color-2);
-    padding: 5px 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--accent-gradient);
+    border: none;
+    padding: 7px 14px;
     border-radius: var(--radius-sm);
     cursor: pointer;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: opacity 0.2s;
+}
+
+.override-controls button:hover:not(:disabled) {
+    opacity: 0.85;
+}
+
+.override-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .saved-msg {
     color: #10b981;
     font-weight: 800;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 @media (max-width: 1000px) {

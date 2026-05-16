@@ -104,12 +104,9 @@
 }
 
 .login-name {
-    font-size: 2.2rem;
-    font-weight: 900;
-    color: var(--color-text);
-    letter-spacing: 0.1rem;
-    text-transform: uppercase;
-    margin: 0;
+    height: 28px;
+    width: auto;
+    object-fit: contain;
 }
 
 .subjects-group {

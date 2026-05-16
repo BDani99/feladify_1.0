@@ -1388,77 +1388,68 @@ router.get('/roadmap/:subject', authMiddleware, async (req, res) => {
 // GET /api/student/statistics
 router.get('/statistics', authMiddleware, async (req, res) => {
   try {
-    const student = await User.findById(req.user._id).select('-password');
-    const progress = await StudentProgress.findOne({ studentId: req.user._id });
-    const assignments = await Assignment.find({ submittedBy: req.user._id }).lean();
+    const student = await User.findById(req.user._id)
+      .populate('assignments.assignmentId', 'title totalPoints subject');
 
-    const totalXP = progress?.totalXP || 0;
-    const streak = progress?.streak || 0;
-    const badges = progress?.badges || [];
+    if (!student) return res.status(404).json({ message: 'Diák nem található.' });
 
-    let totalAssignments = 0;
-    let completedAssignments = 0;
-    let totalPoints = 0;
-    let achievedPoints = 0;
-    const assignmentsStatistics = [];
+    const validAssignments = student.assignments.filter(a => a.assignmentId != null);
+    const gradedAssignments = validAssignments.filter(a => a.grade != null);
+
+    const totalAssignments = validAssignments.length;
+    const completedAssignments = gradedAssignments.length;
+
+    let totalAchieved = 0;
+    let totalPossible = 0;
     const topicStats = {};
 
-    assignments.forEach(assignment => {
-      totalAssignments++;
-      const points = assignment.totalPoints || 100;
-      const achieved = assignment.achievedPoints || 0;
-      totalPoints += points;
-      achievedPoints += achieved;
+    const assignmentsStatistics = gradedAssignments.map(a => {
+      const points = a.assignmentId.totalPoints || 0;
+      const achieved = a.achievedPoints || 0;
+      totalAchieved += achieved;
+      totalPossible += points;
 
-      if (assignment.submissionStatus === 'graded') {
-        completedAssignments++;
+      const subject = a.assignmentId.subject;
+      if (subject) {
+        if (!topicStats[subject]) topicStats[subject] = { scores: [], count: 0 };
+        topicStats[subject].scores.push(points > 0 ? (achieved / points) * 100 : 0);
+        topicStats[subject].count++;
       }
 
-      assignmentsStatistics.push({
-        totalPoints: points,
+      return {
+        title: a.assignmentId.title,
+        subject,
         achievedPoints: achieved,
-        title: assignment.title
-      });
-
-      // Témakör statisztikák
-      if (assignment.subject) {
-        if (!topicStats[assignment.subject]) {
-          topicStats[assignment.subject] = { scores: [], count: 0 };
-        }
-        const scorePercentage = points > 0 ? (achieved / points) * 100 : 0;
-        topicStats[assignment.subject].scores.push(scorePercentage);
-        topicStats[assignment.subject].count++;
-      }
+        totalPoints: points,
+        completedAt: a.completedAt,
+        grade: a.grade ?? null,
+      };
     });
 
-    const averageScore = totalPoints > 0 ? Math.round((achievedPoints / totalPoints) * 100) : 0;
+    const averageScore = totalPossible > 0
+      ? Math.round((totalAchieved / totalPossible) * 100)
+      : 0;
 
-    // Témakör átlagok
     const topicStatsArray = Object.entries(topicStats).map(([topic, data]) => ({
       topic,
       averageScore: Math.round(data.scores.reduce((a, b) => a + b, 0) / data.count)
     }));
 
-    // Erősségek és gyengeségek
-    const strengths = topicStatsArray
+    const strengths = [...topicStatsArray]
       .sort((a, b) => b.averageScore - a.averageScore)
       .slice(0, 3)
       .filter(t => t.averageScore >= 60);
 
-    const weaknesses = topicStatsArray
+    const weaknesses = [...topicStatsArray]
       .sort((a, b) => a.averageScore - b.averageScore)
       .slice(0, 3)
       .filter(t => t.averageScore < 80);
 
     res.json({
-      totalXP,
-      streak,
-      badges,
-      averageScore,
-      completedAssignments,
       totalAssignments,
+      completedAssignments,
+      averageScore,
       assignmentsStatistics,
-      topicStats: topicStatsArray,
       strengths,
       weaknesses
     });

@@ -118,15 +118,19 @@ const CompletedAssignments = () => {
                                         <h3 className="card-title">{a.title}</h3>
                                         
                                         <div className="card-details-row">
-                                            <div className="points-box">
-                                                <span className="label">Pontszám</span>
-                                                <span className="val">{a.achievedPoints} / {a.totalPoints}</span>
-                                            </div>
-                                            {a.grade && (
-                                                <div className="grade-box">
-                                                    <span className="label">Osztályzat</span>
-                                                    <span className={`val grade-${a.grade}`}>{a.grade}</span>
-                                                </div>
+                                            {a.grade ? (
+                                                <>
+                                                    <div className="points-box">
+                                                        <span className="label">Pontszám</span>
+                                                        <span className="val">{a.achievedPoints} / {a.totalPoints}</span>
+                                                    </div>
+                                                    <div className="grade-box">
+                                                        <span className="label">Osztályzat</span>
+                                                        <span className={`val grade-${a.grade}`}>{a.grade}</span>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <span className="pending-score-msg">Az eredmény a tanári értékelés után lesz látható.</span>
                                             )}
                                         </div>
                                     </div>

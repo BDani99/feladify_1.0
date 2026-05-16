@@ -4,6 +4,7 @@ import { fetchAllClasses } from '../api/Classes/ClassApi';
 import { FaExclamationCircle, FaCheckCircle } from 'react-icons/fa';
 import '../styles/Login.css';
 import logo from '../assets/logo-400.png';
+import name from '../assets/name.png';
 
 const CANONICAL_SUBJECTS = ['Nyelvtan', 'Irodalom', 'Angol', 'Matematika', 'Környezetismeret'];
 
@@ -81,7 +82,7 @@ const RegistrationForm = () => {
             <form className="registration-form" onSubmit={handleSubmit}>
                 <div className='login-images'>
                     <img src={logo} alt='logo' className='login-logo' />
-                    <h1 className='login-name'>FELADIFY</h1>
+                    <img src={name} alt='Feladify' className='login-name' />
                 </div>
                 <h2>Regisztráció</h2>
                 <input

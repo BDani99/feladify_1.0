@@ -108,11 +108,17 @@ const SubmissionAnswerRow = ({ answer, studentId, assignmentId, onScoreUpdate })
                 </div>
             </div>
 
-            {answer.aiFeedback && (
+            {(answer.aiFeedback || answer.questionType === 'short_answer') && (
                 <div className="answer-ai-section">
                     <FaBrain className="ai-icon" />
                     <span className="ai-label">AI értékelés:</span>
-                    <span className="ai-text">{answer.aiFeedback}</span>
+                    <span className="ai-text">{answer.aiFeedback || '—'}</span>
+                    {answer.confidence !== null && answer.confidence !== undefined && (
+                        <span className={`confidence-badge ${isLowConfidence ? 'low' : 'high'}`}>
+                            {isLowConfidence && <FaExclamationTriangle className="conf-warn-icon" />}
+                            {Math.round(answer.confidence * 100)}% bizonyosság
+                        </span>
+                    )}
                 </div>
             )}
         </div>

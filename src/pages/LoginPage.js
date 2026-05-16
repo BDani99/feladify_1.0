@@ -28,7 +28,7 @@ const Login = ({ onLoginSuccess }) => {
             <form className="login-form" onSubmit={handleLogin}>
                 <div className='login-images'>
                     <img src={logo} alt='logo' className='login-logo' />
-                    <h1 className='login-name'>FELADIFY</h1>
+                    <img src={name} alt='Feladify' className='login-name' />
                 </div>
                 <h2>Bejelentkezés</h2>
                 <div>

@@ -85,7 +85,10 @@ const StudentDashboard = () => {
     });
 
     const underReview = completed.filter(a => a.grade == null);
-    const recentGraded = completed.filter(a => a.grade != null).slice(0, 3);
+    const recentGraded = completed
+        .filter(a => a.grade != null)
+        .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
+        .slice(0, 3);
 
     return (
         <div id="content">

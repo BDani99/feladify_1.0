@@ -112,7 +112,7 @@ const PreviewModal = ({ questions: initialQuestions, onSave, onClose, onRegenera
 
                                     {q.questionType === 'ordering' && (
                                         <div className="ordering-preview">
-                                            {q.correctAnswer.map((item, i) => (
+                                            {(Array.isArray(q.correctAnswer) ? q.correctAnswer : Array.isArray(q.items) ? q.items : []).map((item, i) => (
                                                 <div key={i} className="order-item">
                                                     <span className="order-num">{i + 1}</span>
                                                     {item}
