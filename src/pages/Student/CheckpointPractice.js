@@ -96,6 +96,12 @@ const CheckpointPractice = () => {
     if (question.questionType === 'ordering') {
       return answers[qid] || [...(question.items || [])];
     }
+    if (question.questionType === 'fill_blank') {
+      const blankCount = (question.questionText.match(/___/g) || []).length || 1;
+      const blanks = Array.from({ length: blankCount }, (_, i) => answers[`${qid}_b${i}`] || '');
+      if (blanks.every(b => b !== '')) return blanks.join('|');
+      return null;
+    }
     const val = answers[qid];
     return val !== undefined && val !== '' ? val : null;
   };
@@ -106,6 +112,10 @@ const CheckpointPractice = () => {
       return (question.pairs || []).every((_, idx) => answers[`${qid}-${idx}`]);
     }
     if (question.questionType === 'ordering') return !!answers[qid];
+    if (question.questionType === 'fill_blank') {
+      const blankCount = (question.questionText.match(/___/g) || []).length || 1;
+      return Array.from({ length: blankCount }, (_, i) => answers[`${qid}_b${i}`]).every(v => v && v !== '');
+    }
     return answers[qid] !== undefined && answers[qid] !== '';
   };
 
@@ -314,7 +324,18 @@ const CheckpointPractice = () => {
             </div>
 
             <div className="question-card">
-              <h3>{question.questionText}</h3>
+              {question.questionType === 'fill_blank' ? (
+                <h3>
+                  {question.questionText.split('___').map((part, idx, arr) => (
+                    <React.Fragment key={idx}>
+                      {part}
+                      {idx < arr.length - 1 && <span className="fill-blank-marker">[{idx + 1}]</span>}
+                    </React.Fragment>
+                  ))}
+                </h3>
+              ) : (
+                <h3>{question.questionText}</h3>
+              )}
 
               {/* MCQ */}
               {question.questionType === 'mcq' && (
@@ -364,16 +385,26 @@ const CheckpointPractice = () => {
               )}
 
               {/* Szövegkiegészítés */}
-              {question.questionType === 'fill_blank' && (
-                <input
-                  type="text"
-                  className="answer-input"
-                  placeholder="Hiányzó szó vagy kifejezés..."
-                  value={answers[qid] || ''}
-                  onChange={e => handleAnswerChange(qid, e.target.value)}
-                  disabled={isCurrentCorrect || isChecking}
-                />
-              )}
+              {question.questionType === 'fill_blank' && (() => {
+                const blankCount = (question.questionText.match(/___/g) || []).length || 1;
+                return (
+                  <div className="fill-blank-fields">
+                    {Array.from({ length: blankCount }, (_, i) => (
+                      <div key={i} className="fill-blank-row">
+                        {blankCount > 1 && <span className="fill-blank-num">[{i + 1}]</span>}
+                        <input
+                          type="text"
+                          className="answer-input fill-blank-input"
+                          placeholder={blankCount > 1 ? `${i + 1}. hiányzó szó...` : 'Hiányzó szó vagy kifejezés...'}
+                          value={answers[`${qid}_b${i}`] || ''}
+                          onChange={e => handleAnswerChange(`${qid}_b${i}`, e.target.value)}
+                          disabled={isCurrentCorrect || isChecking}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
 
               {/* Párosítás */}
               {question.questionType === 'matching' && (
@@ -403,7 +434,7 @@ const CheckpointPractice = () => {
                   <p className="ordering-hint">Húzd a kívánt sorrendbe:</p>
                   {currentItems.map((item, idx) => (
                     <div
-                      key={`${qid}-${idx}`}
+                      key={`${qid}-${item}`}
                       className={`order-item ${dragIdx === idx ? 'dragging' : ''} ${dragOverIdx === idx && dragIdx !== idx ? 'drag-over' : ''}`}
                       draggable={!isCurrentCorrect && !isChecking}
                       onDragStart={() => { if (!isCurrentCorrect && !isChecking) setDragIdx(idx); }}
@@ -415,7 +446,7 @@ const CheckpointPractice = () => {
                       }}
                       onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
                     >
-                      <span className="drag-handle">⠿</span>
+                      <span className="drag-handle">☰</span>
                       <span className="order-num">{idx + 1}.</span>
                       <span className="order-text">{item}</span>
                     </div>

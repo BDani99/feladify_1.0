@@ -246,6 +246,37 @@
   outline: none;
 }
 
+.fill-blank-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fill-blank-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fill-blank-num {
+  font-weight: 800;
+  color: var(--accent);
+  font-size: 1rem;
+  min-width: 32px;
+  flex-shrink: 0;
+}
+
+.fill-blank-marker {
+  display: inline-block;
+  font-weight: 800;
+  color: var(--accent);
+  background: rgba(59, 130, 246, 0.12);
+  border-radius: 4px;
+  padding: 0 5px;
+  margin: 0 2px;
+  font-size: 0.95em;
+}
+
 .matching {
   display: flex;
   flex-direction: column;

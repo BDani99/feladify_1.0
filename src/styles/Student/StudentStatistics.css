@@ -573,6 +573,10 @@
     color: var(--color-text);
 }
 
+.sts-xp-value {
+    color: #f59e0b;
+}
+
 /* Progress bar */
 .sts-subject-progress {
     display: flex;

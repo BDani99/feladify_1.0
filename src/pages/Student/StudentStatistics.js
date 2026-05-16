@@ -243,6 +243,12 @@ const SubjectCard = ({ sub, diag }) => {
           <span className="sts-mini-label">Legjobb</span>
           <span className="sts-mini-value" style={{ color: sub.bestScore > 0 ? scoreColor(sub.bestScore) : undefined }}>{sub.bestScore > 0 ? `${sub.bestScore}%` : '–'}</span>
         </div>
+        {sub.subjectXP > 0 && (
+          <div className="sts-mini-stat">
+            <span className="sts-mini-label">XP</span>
+            <span className="sts-mini-value sts-xp-value">⭐ {sub.subjectXP}</span>
+          </div>
+        )}
       </div>
 
       {/* Progress bar */}

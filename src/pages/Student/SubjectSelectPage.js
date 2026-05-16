@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../api/config';
 import { useUser } from '../../context/UserContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { FaStar, FaFire, FaBolt, FaCalculator, FaBookOpen, FaGlobeAmericas, FaLeaf } from 'react-icons/fa';
+import { FaStar, FaFire, FaBolt, FaCalculator, FaBookOpen, FaGlobeAmericas, FaLeaf, FaChevronDown, FaChevronUp, FaTrash } from 'react-icons/fa';
 import '../../styles/Student/SubjectSelectPage.css';
 
 const XP_PER_LEVEL = 50;
@@ -14,6 +14,8 @@ const SubjectSelectPage = () => {
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalXP: 0, streak: 0 });
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetting, setResetting] = useState({});
 
   const subjectList = [
     { name: 'Matematika', icon: <FaCalculator />, subject: 'Matematika', color: '#a5b4fc' },
@@ -66,11 +68,34 @@ const SubjectSelectPage = () => {
     navigate(`/egyeni-gyakorlas/${subject}`);
   };
 
-  const handleReset = async () => {
-    if (!window.confirm('Biztosan törlöd az összes egyéni gyakorlás adatot? Ez visszafordíthatatlan!')) return;
+  const handleResetAll = async () => {
+    if (!window.confirm('Biztosan törlöd AZ ÖSSZES tantárgy egyéni gyakorlás adatát? Ez visszafordíthatatlan!')) return;
+    setResetting({ __all: true });
     try {
       const token = sessionStorage.getItem('AccessToken');
       const res = await fetch(`${API_BASE_URL}/student/progress/reset`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setResetOpen(false);
+        await fetchProgressData();
+      } else {
+        alert('Hiba a reset során.');
+      }
+    } catch (err) {
+      alert('Hiba: ' + err.message);
+    } finally {
+      setResetting({});
+    }
+  };
+
+  const handleResetSubject = async (subject) => {
+    if (!window.confirm(`Biztosan törlöd a(z) "${subject}" tantárgy összes adatát?`)) return;
+    setResetting(prev => ({ ...prev, [subject]: true }));
+    try {
+      const token = sessionStorage.getItem('AccessToken');
+      const res = await fetch(`${API_BASE_URL}/student/progress/reset/${encodeURIComponent(subject)}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -81,6 +106,8 @@ const SubjectSelectPage = () => {
       }
     } catch (err) {
       alert('Hiba: ' + err.message);
+    } finally {
+      setResetting(prev => ({ ...prev, [subject]: false }));
     }
   };
 
@@ -172,10 +199,42 @@ const SubjectSelectPage = () => {
         </div>
       </div>
 
-      <div className="reset-test-bar">
-        <button className="reset-test-btn" onClick={handleReset} title="Fejlesztési célra: összes egyéni gyakorlás adat törlése">
+      <div className="reset-panel-wrap">
+        <button className="reset-panel-toggle" onClick={() => setResetOpen(v => !v)}>
           🔄 Teszt reset
+          {resetOpen ? <FaChevronUp className="reset-chevron" /> : <FaChevronDown className="reset-chevron" />}
         </button>
+
+        {resetOpen && (
+          <div className="reset-panel-content">
+            <div className="reset-panel-row">
+              <button
+                className="reset-all-btn"
+                onClick={handleResetAll}
+                disabled={!!resetting.__all}
+              >
+                <FaTrash /> {resetting.__all ? 'Törlés...' : 'Összes törlése'}
+              </button>
+            </div>
+
+            <div className="reset-subjects-row">
+              {subjectList.map(subj => {
+                const hasData = subjects.some(s => s.subject === subj.subject);
+                return (
+                  <button
+                    key={subj.subject}
+                    className={`reset-subject-btn${!hasData ? ' no-data' : ''}`}
+                    onClick={() => hasData && handleResetSubject(subj.subject)}
+                    disabled={!hasData || !!resetting[subj.subject]}
+                    title={!hasData ? 'Nincs adat ehhez a tantárgyhoz' : `${subj.name} adatainak törlése`}
+                  >
+                    {resetting[subj.subject] ? '...' : subj.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="subject-grid">

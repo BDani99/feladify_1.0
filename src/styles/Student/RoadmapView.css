@@ -141,6 +141,25 @@
     -webkit-text-fill-color: transparent;
 }
 
+.xp-total-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0 6px 0;
+}
+
+.xp-total-label {
+    font-size: 0.78rem;
+    color: var(--color-text-dim);
+    font-weight: 600;
+}
+
+.xp-total-value {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--color-text-dim);
+}
+
 .score-value.good { color: #10b981; }
 .score-value.low  { color: #f59e0b; }
 

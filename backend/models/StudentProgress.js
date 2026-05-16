@@ -77,6 +77,7 @@ const subjectProgressSchema = new mongoose.Schema({
     default: 'requires_diagnostic'
   },
   currentLevel: { type: Number, default: 1 },
+  subjectXP: { type: Number, default: 0, min: 0 },
   checkpoints: [subjectCheckpointSchema],
   weakQuestionsForNext: { type: mongoose.Schema.Types.Mixed, default: null },
   lastUpdated: { type: Date, default: Date.now }

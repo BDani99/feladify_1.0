@@ -77,6 +77,10 @@ const PracticeTest = () => {
       return (question.pairs || []).every((_, idx) => answers[`${qid}-${idx}`]);
     }
     if (question.questionType === 'ordering') return !!answers[qid];
+    if (question.questionType === 'fill_blank') {
+      const blankCount = (question.questionText.match(/___/g) || []).length || 1;
+      return Array.from({ length: blankCount }, (_, i) => answers[`${qid}_b${i}`]).every(v => v && v !== '');
+    }
     return answers[qid] !== undefined && answers[qid] !== '';
   };
 
@@ -105,6 +109,12 @@ const PracticeTest = () => {
         }
         if (q.questionType === 'ordering' && !finalAnswers[q.questionId]) {
           finalAnswers[q.questionId] = [...(q.items || [])];
+        }
+        if (q.questionType === 'fill_blank') {
+          const blankCount = (q.questionText.match(/___/g) || []).length || 1;
+          const blanks = Array.from({ length: blankCount }, (_, i) => answers[`${q.questionId}_b${i}`] || '');
+          finalAnswers[q.questionId] = blanks.join('|');
+          for (let i = 0; i < blankCount; i++) delete finalAnswers[`${q.questionId}_b${i}`];
         }
       });
 
@@ -182,7 +192,18 @@ const PracticeTest = () => {
 
         <div className="question-container">
           <div className="question-category">{question.category}</div>
-          <h2>{question.questionText}</h2>
+          {question.questionType === 'fill_blank' ? (
+            <h2>
+              {question.questionText.split('___').map((part, idx, arr) => (
+                <React.Fragment key={idx}>
+                  {part}
+                  {idx < arr.length - 1 && <span className="fill-blank-marker">[{idx + 1}]</span>}
+                </React.Fragment>
+              ))}
+            </h2>
+          ) : (
+            <h2>{question.questionText}</h2>
+          )}
 
           <div className="question-content">
             {/* MCQ */}
@@ -230,15 +251,25 @@ const PracticeTest = () => {
             )}
 
             {/* Szövegkiegészítés */}
-            {question.questionType === 'fill_blank' && (
-              <input
-                type="text"
-                className="fill-blank-input"
-                placeholder="Írd be a hiányzó szót..."
-                value={answers[qid] || ''}
-                onChange={e => handleAnswerChange(qid, e.target.value)}
-              />
-            )}
+            {question.questionType === 'fill_blank' && (() => {
+              const blankCount = (question.questionText.match(/___/g) || []).length || 1;
+              return (
+                <div className="fill-blank-fields">
+                  {Array.from({ length: blankCount }, (_, i) => (
+                    <div key={i} className="fill-blank-row">
+                      {blankCount > 1 && <span className="fill-blank-num">[{i + 1}]</span>}
+                      <input
+                        type="text"
+                        className="fill-blank-input"
+                        placeholder={blankCount > 1 ? `${i + 1}. hiányzó szó...` : 'Írd be a hiányzó szót...'}
+                        value={answers[`${qid}_b${i}`] || ''}
+                        onChange={e => handleAnswerChange(`${qid}_b${i}`, e.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
 
             {/* Párosítás */}
             {question.questionType === 'matching' && (
@@ -267,7 +298,7 @@ const PracticeTest = () => {
                 <p className="ordering-instruction">Húzd a kívánt sorrendbe:</p>
                 {currentItems.map((item, idx) => (
                   <div
-                    key={`${qid}-${idx}`}
+                    key={`${qid}-${item}`}
                     className={`order-item ${dragIdx === idx ? 'dragging' : ''} ${dragOverIdx === idx && dragIdx !== idx ? 'drag-over' : ''}`}
                     draggable
                     onDragStart={() => setDragIdx(idx)}
@@ -279,7 +310,7 @@ const PracticeTest = () => {
                     }}
                     onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
                   >
-                    <span className="drag-handle">⠿</span>
+                    <span className="drag-handle">☰</span>
                     <span className="order-num">{idx + 1}.</span>
                     <span className="order-text">{item}</span>
                   </div>

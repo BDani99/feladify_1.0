@@ -549,6 +549,27 @@ router.delete('/progress/reset', authMiddleware, async (req, res) => {
   }
 });
 
+// DELETE /api/student/progress/reset/:subject – egyetlen tantárgy adatainak törlése
+router.delete('/progress/reset/:subject', authMiddleware, async (req, res) => {
+  try {
+    const { subject } = req.params;
+    const progress = await StudentProgress.findOne({ studentId: req.user._id });
+    if (!progress) return res.status(404).json({ message: 'Nincs adat' });
+
+    progress.subjectProgress = progress.subjectProgress.filter(s => s.subject !== subject);
+    if (progress.diagnosticSession?.subject === subject) progress.diagnosticSession = null;
+    if (progress.checkpointSession?.subject === subject) progress.checkpointSession = null;
+
+    await progress.save();
+    await DiagnosticResult.deleteMany({ studentId: req.user._id, subject });
+
+    res.json({ message: `${subject} adat törölve.` });
+  } catch (error) {
+    console.error('[Student API] Error in progress/reset/:subject:', error);
+    res.status(500).json({ message: 'Hiba a tantárgy reset során', error: error.message });
+  }
+});
+
 // ==================== TOVÁBBI TUTOR & STAT ENDPOINTOK ====================
 
 router.post('/tutor/hint', authMiddleware, async (req, res) => {
@@ -707,6 +728,7 @@ async function createOrUpdatePracticePath(studentId, analyzedResultDoc, subjectN
   const checkpoints = recommended.map((rec, index) => ({
     checkpointId: `chk_${Date.now()}_${index}`,
     topic: rec.topic || 'Gyakorló feladat',
+    gamifiedTitle: rec.gamifiedTitle || null,
     difficulty: rec.difficulty || 3,
     status: index === 0 ? 'unlocked' : 'locked',
     score: 0,
@@ -1334,6 +1356,7 @@ router.post('/checkpoint/complete', authMiddleware, async (req, res) => {
     // XP: alap + nehézség * 8 + teljesítmény (max 50)
     const xpEarned = 30 + (checkpoint.difficulty * 8) + Math.floor(score * 0.5);
     progress.addXP(xpEarned);
+    subjectData.subjectXP = (subjectData.subjectXP || 0) + xpEarned;
     const newBadges = progress.checkBadges();
 
     // Session törlése
@@ -1374,6 +1397,7 @@ router.get('/roadmap/:subject', authMiddleware, async (req, res) => {
     res.json({
       checkpoints: subjectData.checkpoints || [],
       totalXP: progress.totalXP,
+      subjectXP: subjectData.subjectXP || 0,
       streak: progress.streak,
       subject,
       status: subjectData.status,
@@ -1490,6 +1514,7 @@ router.get('/practice-statistics', authMiddleware, async (req, res) => {
         subject: sp.subject,
         status: sp.status || 'not_started',
         currentLevel: sp.currentLevel || 1,
+        subjectXP: sp.subjectXP || 0,
         totalCheckpoints: checkpoints.length,
         completedCheckpoints: completed.length,
         avgScore,

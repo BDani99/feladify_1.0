@@ -109,6 +109,7 @@ FONTOS SZABÁLYOK A CHECKPOINTOKHOZ:
 4. Az első 1-2 checkpoint alapozó legyen (a gyenge területek megalapozása), a later-iek alkalmazás szintű.
 5. Minden checkpointhoz adj "learningObjective" mezőt: mit fog tudni a diák a fejezet elvégzése után (egy mondatban).
 6. A diák GYENGE területein kezdd a sort, de adj erős területekre is fejlesztő checkpointot.
+7. Minden checkpointhoz adj "gamifiedTitle" mezőt: rövid, lelkesítő, gamifikált cím MAX 5 szóban (pl. "Küldetés: Törtek mestere", "Boss Level: Egyenletek", "Akadémia: Szókincs Sprint", "Kihívás: Geometria kód"). Legyen tettre sarkáló és motiváló!
 
 SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\`\`json ... \`\`\`), semmilyen egyéb bevezető vagy magyarázó szöveget ne írj!
 {
@@ -118,7 +119,7 @@ SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\
     {"category":"kategória","description":"Miben volt jó?"}
   ],
   "recommendedCheckpoints": [
-    {"topic":"Specifikus, cselekvő témacím","difficulty": 1, "reason": "Miért kell ezt gyakorolni", "learningObjective": "Mit fog tudni utána"}
+    {"topic":"Specifikus, cselekvő témacím","gamifiedTitle":"Küldetés: Témacím","difficulty": 1, "reason": "Miért kell ezt gyakorolni", "learningObjective": "Mit fog tudni utána"}
   ]
 }`;
 
@@ -133,25 +134,23 @@ SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\
   }
 
   async generateSocraticHint(subject, topic, questionText, studentAnswer, correctAnswer, attemptNumber = 1) {
-    const prompt = `Te egy türelmes, támogató Szókratészi mentor és tanár vagy. A diák hibázott egy feladatban, és a te feladatod rávezetni a jó megoldásra anélkül, hogy elárulnád azt.
+    const level = Math.min(attemptNumber, 3);
 
-A diák egy ${subject} - ${topic} témában dolgozik.
-KÉRDÉS: ${questionText}
-A DIÁK ROSSZ VÁLASZA: ${studentAnswer}
-A HELYES VÁLASZ (Ezt NE írd le a diáknak!): ${correctAnswer}
-PRÓBÁLKOZÁSOK SZÁMA: ${attemptNumber}
+    const prompts = {
+      1: `Te vagy Szókratész. A diák hibás választ adott. SZIGORÚAN TILOS megmondani a megoldást vagy a képletet! Kérdezz vissza az alapokra, vagy mondj egy életszerű, modern analógiát (gaming, sport, közösségi média). Max 2-3 mondat, tegeződve, semmi preamble.`,
+      2: `A diák másodszor is hibázott. Adj meg egy konkrét részletszabályt vagy képletet, ami elvezet a megoldáshoz, majd kérdezd meg, hogyan alkalmazná a feladatban. Max 2-3 mondat, tegeződve.`,
+      3: `A diák harmadszor is elakadt. Vezesd le a feladat ELSŐ FELÉT (az első 1-2 logikai lépést) teljes részletességgel, és csak az utolsó logikai lépést hagyd meg neki befejezésre. Max 4 mondat, tegeződve.`
+    };
 
-Utasítások:
-1. Ne mondd meg direktben a helyes választ!
-2. Közvetlenül a diákhoz szólj (tegeződve), mintha egy chaten beszélgetnétek. Semmilyen bevezetőt vagy zárást ne írj, csak a te tanári reakciódat/kérdésedet.
-3. Tedd fel a megfelelő rávezető kérdést, vagy adj egy apró mankót/analógiát.
-4. Legyél bátorító és barátságos.
-5. Ha ez már a 3. vagy többedik próbálkozása, adj erősebb, konkrétabb tippet (de még mindig ne magát a választ).
-6. Válaszod legyen nagyon rövid (maximum 2-3 mondat).`;
+    const user = `Tantárgy: ${subject} | Témakör: ${topic}\nKérdés: ${questionText}\nHelyes válasz: ${correctAnswer}\nDiák válasza: "${studentAnswer}"`;
 
     try {
-      // Itt engedjük a reasoning (gondolkodó) modellt
-      return await this.generateResponse(prompt, [], { temperature: 0.6, max_tokens: 1024 }, true);
+      const result = await this._callModel(
+        this.reasoningModel,
+        [{ role: 'system', content: prompts[level] }, { role: 'user', content: user }],
+        { temperature: 0.65, max_tokens: 300 }
+      );
+      return result?.trim() || this._getFallbackHint(attemptNumber);
     } catch (error) {
       console.error('[GroqService] Szókratészi tipp hiba:', error.message);
       return this._getFallbackHint(attemptNumber);
@@ -240,9 +239,9 @@ ${exampleLine}`;
   async _generateQuestionsChunked(outline, subject, topic, diffDesc, typeSpecs, fewShotExamples) {
     const typeDescriptions = {
       mcq:          '"mcq": feleletválasztós, 4 valós szöveges lehetőség (NEM betűjelölők!). options: ["Első válasz","Második válasz","Harmadik válasz","Negyedik válasz"], correctAnswer: "Első válasz"',
-      true_false:   '"true_false": igaz/hamis. options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"',
+      true_false:   '"true_false": igaz/hamis. KÖTELEZŐ: a questionText KIJELENTŐ MONDAT legyen (pl. "A fotoszintézis során a növények CO2-t vesznek fel.") – TILOS kérdőmondat, összehasonlítás, "melyik" kezdetű szöveg! options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"',
       short_answer: '"short_answer": rövid szöveges válasz. options: [], correctAnswer: "szöveges válasz"',
-      fill_blank:   '"fill_blank": szövegkiegészítős, az üres helyet ___ jelöli. options: [], correctAnswer: "hiányzó szó"',
+      fill_blank:   '"fill_blank": szövegkiegészítős, az üres helyet ___ jelöli (több ___ is lehet). options: [], correctAnswer: "hiányzó szó" (több üres helynél: "szó1|szó2")',
       matching:     '"matching": párosítás. BAL OLDAL = rövid fogalom/esemény/személy (1-4 szó), JOBB OLDAL = RÉSZLETES magyarázat/következmény/jellemzés (min. 6 szó, SOHA NEM EGYSZERŰ ÁTNEVEZÉS!). A jobb oldal NEM tartalmazhatja a bal oldal szavait! pairs: [{"left":"fogalom","right":"Részletes magyarázat ami nem tartalmazza a fogalom szavait"},...], options: [jobb oldali értékek keverve]',
       ordering:     '"ordering": sorbarendezés. items: KEVEREDETT sorrendben, correctAnswer: helyes sorrend tömbként.',
     };
@@ -382,9 +381,9 @@ VÁLASZOLJ KIZÁRÓLAG ÉRVÉNYES JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!
     const total = typeSpecs.reduce((s, t) => s + t.count, 0);
     const typeDescriptions = {
       mcq:          '"mcq": feleletválasztós, 4 valós szöveges lehetőség (NEM betűjelölők!). options: ["Első válasz szövege","Második válasz szövege","Harmadik válasz szövege","Negyedik válasz szövege"], correctAnswer: "Első válasz szövege"',
-      true_false:   '"true_false": igaz/hamis. options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"',
+      true_false:   '"true_false": igaz/hamis. KÖTELEZŐ: a questionText KIJELENTŐ MONDAT legyen (pl. "A fotoszintézis során a növények CO2-t vesznek fel.") – TILOS kérdőmondat, összehasonlítás! options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"',
       short_answer: '"short_answer": rövid szöveges válasz. options: [], correctAnswer: "szöveges válasz"',
-      fill_blank:   '"fill_blank": szövegkiegészítős, az üres helyet ___ jelöli. options: [], correctAnswer: "hiányzó szó"',
+      fill_blank:   '"fill_blank": szövegkiegészítős, az üres helyet ___ jelöli (több ___ is lehet). options: [], correctAnswer: "hiányzó szó" (több üres helynél: "szó1|szó2")',
       matching:     '"matching": párosítás. BAL OLDAL = rövid fogalom (1-3 szó), JOBB OLDAL = részletes definíció (teljes mondat, min. 5 szó). pairs: [{"left":"fogalom","right":"Részletes definíció..."},...], options: ["jobb oldali def. keverve",...], correctAnswer: {"fogalom":"Részletes definíció..."}',
       ordering:     '"ordering": sorba rendezés. items: KEVEREDETT sorrend, correctAnswer: helyes sorrend tömbként. items: ["C elem","A elem","B elem"], correctAnswer: ["A elem","B elem","C elem"]',
     };
@@ -463,25 +462,33 @@ FONTOS SZABÁLYOK:
     };
 
     const weakSection = weakQuestions && weakQuestions.length > 0
-      ? `\nADAPTÍV FELADATOK: A diák az előző fejezetben nehéznek találta az alábbi kérdés(eke)t. Adj meg legalább ${Math.min(weakQuestions.length, 3)} hasonló, de ELTÉRŐ megfogalmazású kérdést ugyanerre a témára, hogy megerősítsd a tudást:\n${weakQuestions.map((wq, i) => `  ${i+1}. [${wq.questionType}] "${wq.questionText}"`).join('\n')}\n`
+      ? `\nADAPTÍV FELADATOK: A diák az előző fejezetben nehéznek találta az alábbi kérdés(eke)t. Adj meg legalább ${Math.min(weakQuestions.length, 3)} hasonló témájú, de TELJESEN ELTÉRŐ szituációba ágyazott kérdést, hogy megerősítsd a tudást:\n${weakQuestions.map((wq, i) => `  ${i+1}. [${wq.questionType}] "${wq.questionText}"`).join('\n')}\n`
       : '';
 
     const excludeSection = excludeQuestions && excludeQuestions.length > 0
       ? `\nKIZÁRANDÓ KÉRDÉSEK (Ezeket tilos megismételni!): \n${excludeQuestions.map((eq, i) => `  ${i+1}. "${eq.questionText}"`).join('\n')}\n`
       : '';
 
+    const seenContexts = [
+      ...(weakQuestions || []),
+      ...(excludeQuestions || [])
+    ].slice(-6).map(q => q.questionText?.substring(0, 55)).filter(Boolean);
+    const negativePrompt = seenContexts.length > 0
+      ? `\nSZIGORÚ SZABÁLY: Ezeket a szituációkat/kontextusokat a diák már látta – TILOS hasonlókat generálni:\n${seenContexts.map((c, i) => `  ${i+1}. "${c}..."`).join('\n')}\nTeljesen új, eltérő környezetbe ágyazott feladatokat készíts, amelyek ugyanazt a logikát tesztelik!\n`
+      : '';
+
     const prompt = `Te egy kreatív és tapasztalt pedagógus AI vagy. Készíts pontosan ${count} darab KIVÁLÓ MINŐSÉGŰ, érdekes és gondolkodtató gyakorló kérdést ${subject} tantárgyból, a "${topic}" témakörhöz egy ${grade} osztályos tanulónak.
 Nehézség: ${difficulty}/5 – ${difficultyDescriptions[difficulty] || difficultyDescriptions[3]}
-${weakSection}${excludeSection}
+${weakSection}${excludeSection}${negativePrompt}
 FONTOS: NE generálj hanganyagot, videót vagy külső médiát igénylő kérdést! Minden kérdés önállóan, kizárólag szöveg alapján legyen megválaszolható!
 
 Kerüld a túl száraz, bemagolható definíciókat! Használj valós életből vett, kreatív példákat és szituációkat, amik felkeltik a diák érdeklődését és a tényleges megértést tesztelik.
 
 KÖTELEZŐ: legalább 6 különböző feladattípust használj, ezeket a típusokat:
 - "mcq": feleletválasztós, 4 valós szöveges lehetőség (NEM betűjelölők!). options: ["Első válasz szövege","Második válasz szövege","Harmadik válasz szövege","Negyedik válasz szövege"], correctAnswer: "Első válasz szövege"
-- "true_false": igaz/hamis. options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"
+- "true_false": igaz/hamis. KÖTELEZŐ: a questionText KIJELENTŐ MONDAT legyen (pl. "A naprendszer 8 bolygóból áll.") – TILOS kérdőmondat, összehasonlítás ("melyik", "hogyan", "mi a különbség")! options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"
 - "short_answer": rövid szöveges válasz. FONTOS: ha a kérdés egy mondatot/szöveget kell értékelni (pl. "Mi a helyes fogalmazás?", "Javítsd ki a mondatot!"), a teljes értékelendő szöveget/mondatot BEL KELL FOGLALNI a questionText-be! options: [], correctAnswer: "szöveges válasz"
-- "fill_blank": szövegkiegészítős, az üres helyet ___ jelöli. options: [], correctAnswer: "hiányzó szó"
+- "fill_blank": szövegkiegészítős, az üres helyet ___ jelöli (egy kérdésben akár 2-3 ___ is lehet). options: [], correctAnswer: "hiányzó szó" (több üres helynél |-vel elválasztva: "szó1|szó2")
 - "matching": párosítás. BAL OLDAL = rövid fogalom/szó (1-3 szó), JOBB OLDAL = annak RÉSZLETES definíciója/magyarázata (teljes mondat, minimum 5 szó). TILOS: a kérdés szövegében felsorolni a bal oldali fogalmakat! A kérdés legyen általános bevezető (pl. "Párosítsd a fogalmakat a definícióikkal:"). Az options tömb KIZÁRÓLAG a jobb oldali definíciókat tartalmazza (keverve), SOHA nem a bal oldali fogalmakat! pairs: [{"left":"fogalom","right":"A fogalom részletes, teljes mondatos magyarázata"},...], options: ["jobb oldali definíciók keverve",...], correctAnswer: {"fogalom":"A fogalom részletes, teljes mondatos magyarázata",...}
 - "ordering": sorba rendezés. TILOS az items elemeit felsorolni a kérdés szövegében – az elemek KIZÁRÓLAG az items tömbben szerepeljenek! A kérdésben CSAK az elvárt sorrendet jelezd (pl. "Rendezd növekvő sorrendbe az elemeket:" vagy "Tedd időrendi sorrendbe:"). Az items tömb KEVEREDETT sorrendben legyen (NEM helyes sorrendben!), a correctAnswer helyes sorrendben. items: ["elem C","elem A","elem B"], correctAnswer: ["elem A","elem B","elem C"]
 
@@ -548,7 +555,142 @@ Fontos: minden kérdésnél adj meg "questionId" mezőt "q1", "q2", stb. érték
     }));
   }
 
+  async _generateDiagnosticOutline(subject, grade, count) {
+    const prompt = `Te egy kreatív pedagógus-stratéga vagy.
+Tantárgy: ${subject} | Évfolyam: ${grade} | Kérdések száma: ${count}
+
+FELADATOD:
+1. Bontsd fel a tantárgyat 10 SPECIFIKUS mikro-képességre (pl. "Szövegértés: ok-okozati összefüggések felismerése", "Algebra: lineáris egyenletek megoldása").
+2. Véletlenszerűen válassz ki 3-at.
+3. Minden kérdéshez rendelj: mikro-képesség + valódi, modern szituáció (Persona/Scenario: gaming, sport, social media, tech) + Bloom-szint (Emlékezés/Értés/Alkalmazás/Elemzés/Értékelés).
+
+SZIGORÚ SZABÁLY: Tilos az elcsépelt tankönyvi példák használata (alma/torta, vonat-sebesség, elvont halmazok). Modern, a mai generáció számára releváns kontextust használj.
+
+KIMENET – sima szöveg (NEM JSON!), pl.:
+1. Kérdés (Alkalmazás). Mikro-képesség: Százalékszámítás. Szituáció: Egy streamer nézőinek száma 35%-kal nőtt januárban.
+2. Kérdés (Értés). Mikro-képesség: ...`;
+
+    return await this._callModel(
+      this.reasoningModel,
+      [{ role: 'system', content: prompt }],
+      { temperature: 0.85, top_p: 0.9, max_tokens: 1200 }
+    );
+  }
+
+  async _generateDiagnosticQuestionsChunked(outline, subject, grade, count, currentLevel) {
+    const gradeNum = parseInt(grade) || 4;
+    const baseDifficulty = Math.max(1, Math.min(5, Math.ceil(gradeNum / 2)));
+    const levelBonus = Math.floor((Math.max(1, Math.min(10, currentLevel)) - 1) / 3);
+    const effectiveDifficulty = Math.max(1, Math.min(5, baseDifficulty + levelBonus));
+
+    const typePool = ['mcq', 'true_false', 'short_answer', 'fill_blank', 'matching', 'ordering'];
+    const chunkSize = 3;
+    const totalChunks = Math.ceil(count / chunkSize);
+    const allQuestions = [];
+
+    for (let i = 0; i < totalChunks; i++) {
+      const chunkCount = i === totalChunks - 1 ? count - allQuestions.length : chunkSize;
+      if (chunkCount <= 0) break;
+
+      const usedTypes = allQuestions.map(q => q.questionType);
+      const preferredTypes = typePool.filter(t => !usedTypes.includes(t));
+      const typeHint = preferredTypes.slice(0, chunkCount).join(', ') || 'mcq, short_answer';
+
+      const prevContext = allQuestions.length > 0
+        ? `\nEddig generált kérdések (KERÜLD a szóhasználat és megközelítés ismétlését):\n${JSON.stringify(allQuestions.map(q => ({ text: q.questionText.substring(0, 60), type: q.questionType })))}\n`
+        : '';
+
+      const prompt = `Te egy precíz diagnosztikai kérdés-generáló AI vagy.
+
+VÁZLAT (Qwen tervei):
+${outline}
+${prevContext}
+Generálj PONTOSAN ${chunkCount} kérdést a vázlat alapján!
+Preferált típusok: ${typeHint}
+Nehézség: ~${effectiveDifficulty}/5
+Kötelező: minden kérdésnek legyen "category" mezője (a mikro-képesség neve).
+
+SZABÁLYOK:
+- MCQ: 4 valódi szöveges option (nem betűjelölő), correctAnswer = az egyik option szövege
+- true_false: KÖTELEZŐ KIJELENTŐ MONDAT (nem kérdés, nem összehasonlítás!), options: ["Igaz","Hamis"]
+- fill_blank: a szövegben kötelező a ___ jelölő (akár több is), correctAnswer több üres helynél "szó1|szó2"
+- matching: options CSAK a jobb oldali értékek (keverve), pairs: [{"left":"...","right":"..."}]
+- ordering: items KEVEREDETT sorrendben, correctAnswer helyes sorrendként
+
+VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
+[{"questionText":"...","questionType":"mcq|true_false|short_answer|fill_blank|matching|ordering","category":"...","difficulty":${effectiveDifficulty},"options":[],"pairs":[],"items":[],"correctAnswer":"...","explanation":"..."}]`;
+
+      try {
+        console.log(`[GroqService]   → diagnosztika chunk ${i + 1}/${totalChunks} (${chunkCount} kérdés)`);
+        const raw = await this._callModel(
+          this.fastModel,
+          [{ role: 'system', content: prompt }],
+          { temperature: 0.7, max_tokens: 2500 }
+        );
+        const parsed = this._extractJSONArray(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          allQuestions.push(...parsed);
+          console.log(`[GroqService]   ✓ diagnosztika chunk kész (+${parsed.length} kérdés)`);
+        }
+      } catch (e) {
+        console.warn(`[GroqService]   ✗ diagnosztika chunk ${i + 1} sikertelen:`, e.message);
+      }
+    }
+    return allQuestions;
+  }
+
   async generateDiagnosticTest(subject, grade, count = 20, currentLevel = 1) {
+    const gradeNum = parseInt(grade) || 4;
+    const baseDifficulty = Math.max(1, Math.min(5, Math.ceil(gradeNum / 2)));
+    const levelBonus = Math.floor((Math.max(1, Math.min(10, currentLevel)) - 1) / 3);
+    const effectiveDifficulty = Math.max(1, Math.min(5, baseDifficulty + levelBonus));
+
+    // === FÁZIS 1: Qwen vázlat ===
+    let outline = '';
+    try {
+      console.log('[GroqService] Diagnosztika 1. fázis: vázlat generálása (Qwen)...');
+      outline = await this._generateDiagnosticOutline(subject, grade, count);
+      console.log('[GroqService] ✓ Diagnosztika vázlat kész:', outline.substring(0, 100).replace(/\n/g, ' '));
+    } catch (e) {
+      console.warn('[GroqService] Diagnosztika vázlat sikertelen, egyfázisú fallbackre váltok:', e.message);
+      outline = '';
+    }
+
+    // === FÁZIS 2: Llama chunking (csak ha van vázlat) ===
+    if (outline) {
+      try {
+        console.log('[GroqService] Diagnosztika 2. fázis: kérdések generálása (Llama chunking)...');
+        const questions = await this._generateDiagnosticQuestionsChunked(outline, subject, grade, count, currentLevel);
+        if (questions.length >= Math.floor(count * 0.7)) {
+          const subjectCategories = {
+            'Matematika': ['Algebra', 'Geometria', 'Statisztika', 'Függvények', 'Számelmélet', 'Mértékegységek'],
+            'Magyar': ['Nyelvtan', 'Irodalom', 'Fogalmazás', 'Helyesírás', 'Szövegértés', 'Nyelvhelyesség'],
+            'Angol': ['Grammar', 'Vocabulary', 'Reading', 'Writing', 'Comprehension', 'Communication'],
+            'Környezetismeret': ['Földrajz', 'Biológia', 'Fizika', 'Kémia', 'Társadalomismeret', 'Környezetvédelem']
+          };
+          const categories = subjectCategories[subject] || ['Általános'];
+          const mapped = questions.map((q, idx) => ({
+            questionId:    q.questionId || `d${idx + 1}`,
+            questionText:  q.questionText || 'Hiányzó kérdés',
+            questionType:  ['mcq','true_false','short_answer','fill_blank','matching','ordering'].includes(q.questionType) ? q.questionType : 'mcq',
+            category:      q.category || categories[idx % categories.length],
+            difficulty:    q.difficulty || effectiveDifficulty,
+            options:       Array.isArray(q.options) ? q.options : [],
+            pairs:         Array.isArray(q.pairs) ? q.pairs : [],
+            items:         Array.isArray(q.items) ? q.items : [],
+            correctAnswer: q.correctAnswer !== undefined ? q.correctAnswer : '',
+            explanation:   q.explanation || ''
+          }));
+          console.log(`[GroqService] ✓ Diagnosztika kétfázisú generálás kész: ${mapped.length} kérdés`);
+          return this._sanitizeQuestions(mapped, baseDifficulty);
+        }
+      } catch (e) {
+        console.warn('[GroqService] Diagnosztika chunking sikertelen, egyfázisú fallback:', e.message);
+      }
+    }
+
+    // === FALLBACK: egyfázisú Qwen generálás ===
+    console.log('[GroqService] Diagnosztika fallback: egyfázisú generálás...');
     const subjectCategories = {
       'Matematika': ['Algebra', 'Geometria', 'Statisztika', 'Függvények', 'Számelmélet', 'Mértékegységek'],
       'Magyar': ['Nyelvtan', 'Irodalom', 'Fogalmazás', 'Helyesírás', 'Szövegértés', 'Nyelvhelyesség'],
@@ -556,12 +698,6 @@ Fontos: minden kérdésnél adj meg "questionId" mezőt "q1", "q2", stb. érték
       'Környezetismeret': ['Földrajz', 'Biológia', 'Fizika', 'Kémia', 'Társadalomismeret', 'Környezetvédelem']
     };
     const categories = subjectCategories[subject] || ['Általános'];
-
-    const gradeNum = parseInt(grade) || 4;
-    const baseDifficulty = Math.max(1, Math.min(5, Math.ceil(gradeNum / 2)));
-    // Level 1-10 within grade: every 3 levels adds +1 difficulty
-    const levelBonus = Math.floor((Math.max(1, Math.min(10, currentLevel)) - 1) / 3);
-    const effectiveDifficulty = Math.max(1, Math.min(5, baseDifficulty + levelBonus));
 
     const difficultyDescriptions = {
       1: '1-2. osztályos szint: egyszerű tények, alapvető felismerés',
@@ -579,9 +715,9 @@ FONTOS: NE generálj hanganyagot, videót vagy külső médiát igénylő kérd�
 
 Legalább 4 különböző feladattípust használj:
 - "mcq": 4 valós szöveges lehetőség (NEM betűjelölők!), egy helyes. options: ["Első válasz szövege","Második válasz szövege","Harmadik válasz szövege","Negyedik válasz szövege"], correctAnswer: "Első válasz szövege"
-- "true_false": igaz/hamis. options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"
+- "true_false": igaz/hamis. KÖTELEZŐ: a questionText KIJELENTŐ MONDAT legyen (pl. "A Hold a Föld természetes holdja.") – TILOS kérdőmondat, összehasonlítás ("melyik", "hogyan", "mi a különbség" stb.)! options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"
 - "short_answer": rövid szöveges válasz. FONTOS: ha a kérdés egy szöveget/mondatot értékel, azt a szöveget be kell illeszteni a questionText-be! options: [], correctAnswer: "szöveges válasz"
-- "fill_blank": szövegkiegészítős (az üres helyet ___ jelöli). options: [], correctAnswer: "hiányzó szó"
+- "fill_blank": szövegkiegészítős (az üres helyet ___ jelöli, akár 2-3 ___ is lehet). options: [], correctAnswer: "hiányzó szó" (több üres helynél |-vel elválasztva: "szó1|szó2")
 - "matching": párosítás. BAL OLDAL = rövid fogalom/szó (1-3 szó), JOBB OLDAL = annak RÉSZLETES definíciója/magyarázata (teljes mondat, minimum 5 szó). TILOS a kérdésszövegben felsorolni a bal oldali fogalmakat – általános bevezető kell (pl. "Párosítsd a fogalmakat a definícióikkal:"). Az options tömb kizárólag a JOBB OLDALI értékeket tartalmazza (keverve), SOHA nem a bal oldaliak másolatát!
 - "ordering": sorba rendezés. TILOS az items elemeit felsorolni a kérdésszövegben – csak az irányt jelezd (pl. "Rendezd növekvő sorrendbe:" vagy "Tedd időrendi sorrendbe:"). Az items tömb KEVEREDETT sorrendben, correctAnswer helyes sorrendben!
 
@@ -648,44 +784,48 @@ Fontos: minden kérdésnél add meg a "category" mezőt (az adott témakör nev�
   }
 
   async generateCheckpointHint(subject, topic, currentQuestion, studentAnswer, correctAnswer, attemptNumber, allQuestions, previousAnswers, chatHistory = []) {
-    const progress = previousAnswers.length > 0
-      ? `${previousAnswers.filter(a => a.isCorrect).length}/${previousAnswers.length} helyes eddigi`
-      : 'Ez az első kérdés';
+    const level = Math.min(attemptNumber, 3);
 
-    const contextSummary = allQuestions.slice(0, 5).map((q, i) => {
-      const ans = previousAnswers.find(a => a.questionId === q.questionId);
-      return `${i + 1}. ${q.questionText.substring(0, 60)}... → ${ans ? (ans.isCorrect ? '✓ helyes' : '✗ hibás') : 'még nem válaszolt'}`;
-    }).join('\n');
+    // Few-shot: utolsó 2 helyes kérdés-válasz pár kontextusként
+    const successes = previousAnswers
+      .filter(a => a.isCorrect)
+      .slice(-2)
+      .map(a => {
+        const q = allQuestions.find(q => q.questionId === a.questionId);
+        return q
+          ? `"${q.questionText.substring(0, 60)}" → Helyes: "${String(a.studentAnswer).substring(0, 40)}"`
+          : null;
+      })
+      .filter(Boolean);
+    const fewShotCtx = successes.length > 0
+      ? `\nEmlékeztetőül: ezeket már helyesen tudtad: ${successes.join('; ')}.`
+      : '';
 
-    const prompt = `Te egy türelmes, szókratészi tanár-mentor vagy. A diák éppen egy "${topic}" témájú ${subject} feladatsort old meg.
+    const prompts = {
+      1: `Te vagy Szókratész. TILOS megmondani a megoldást. Kérdezz az alapokra, vagy adj életszerű analógiát! Max 3 mondat, tegeződve.${fewShotCtx}`,
+      2: `A diák másodszor hibázott. Adj konkrét részletszabályt, kérdezd meg, hogyan alkalmazná. Max 3 mondat, tegeződve.${fewShotCtx}`,
+      3: `Harmadik hiba. Vezesd le a feladat első felét, az utolsó lépést hagyd neki. Max 4 mondat, tegeződve.${fewShotCtx}`
+    };
 
-Jelenlegi haladás: ${progress}
-Feladatsor kontextusa (első 5 feladat):
-${contextSummary}
-
-Jelenlegi kérdés: ${currentQuestion.questionText}
-Kérdés típusa: ${currentQuestion.questionType}
-A diák jelenlegi válasza: ${JSON.stringify(studentAnswer)}
-Helyes válasz (NE áruld el!): ${JSON.stringify(correctAnswer)}
-Próbálkozások száma: ${attemptNumber}
-
-Utasítások:
-1. NE mondd meg a helyes választ közvetlenül!
-2. Közvetlenül a diáknak válaszolj tegeződve, mintha chaten beszélgetnétek. Semmilyen bevezető szöveget vagy köszönést ne használj!
-3. Adj rávezető kérdést, analógiát, vagy egy kis segítséget – figyelembe véve a korábbi chat-előzményeket, nehogy ugyanazt ismételd!
-4. Legyél bátorító és motiváló.
-5. Ha ez a 3. vagy több próbálkozás, adj konkrétabb, de még mindig nem közvetlen tippet.
-6. Max 3 mondat.
-7. KÖTELEZŐ SZABÁLY: Bármi történik, mindenképp adj szöveges, segítő visszajelzést! SOHA ne adj vissza üres választ!`;
+    const correct = previousAnswers.filter(a => a.isCorrect).length;
+    const total = allQuestions.length;
 
     const historyMessages = chatHistory
       .filter(m => m.content && m.content.trim())
       .slice(-4)
       .map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content }));
 
+    const user = `Haladás: ${correct}/${total} helyes\nKérdés: ${currentQuestion.questionText}\nHelyes válasz (NE áruld el!): ${JSON.stringify(correctAnswer)}\nDiák válasza: "${JSON.stringify(studentAnswer)}"`;
+
+    const messages = [
+      { role: 'system', content: prompts[level] },
+      ...historyMessages,
+      { role: 'user', content: user }
+    ];
+
     try {
-      // Itt engedjük a reasoning (gondolkodó) modellt
-      return await this.generateResponse(prompt, historyMessages, { temperature: 0.65, max_tokens: 2048 }, true);
+      const result = await this._callModel(this.reasoningModel, messages, { temperature: 0.65, max_tokens: 350 });
+      return result?.trim() || this._getFallbackHint(attemptNumber);
     } catch (error) {
       return this._getFallbackHint(attemptNumber);
     }

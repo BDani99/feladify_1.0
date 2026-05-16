@@ -13,7 +13,7 @@ const RoadmapView = () => {
   const location = useLocation();
   const [checkpoints, setCheckpoints] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ totalXP: 0, progress: 0, status: 'in_progress', currentLevel: 1 });
+  const [stats, setStats] = useState({ totalXP: 0, subjectXP: 0, progress: 0, status: 'in_progress', currentLevel: 1 });
   const [xpFlash, setXpFlash] = useState(false);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ const RoadmapView = () => {
         setCheckpoints(data.checkpoints || []);
         const completed = (data.checkpoints || []).filter(cp => cp.status === 'completed').length;
         const progress = data.checkpoints ? (completed / data.checkpoints.length) * 100 : 0;
-        setStats({ totalXP: data.totalXP || 0, progress, status: data.status || 'in_progress', currentLevel: data.currentLevel || 1 });
+        setStats({ totalXP: data.totalXP || 0, subjectXP: data.subjectXP || 0, progress, status: data.status || 'in_progress', currentLevel: data.currentLevel || 1 });
       }
     } catch (err) {
       console.error('Hiba a roadmap lekérésekor:', err);
@@ -95,8 +95,12 @@ const RoadmapView = () => {
           <div className={`stat-card xp-card${xpFlash ? ' xp-flash' : ''}`}>
             <div className="stat-card-icon">⭐</div>
             <div className="stat-card-body">
-              <div className="stat-card-value xp-value">{stats.totalXP} XP</div>
-              <div className="stat-card-label">Szerzett tapasztalat</div>
+              <div className="stat-card-value xp-value">{stats.subjectXP} XP</div>
+              <div className="stat-card-label">{subject} – tantárgyi tapasztalat</div>
+              <div className="xp-total-row">
+                <span className="xp-total-label">Összesen:</span>
+                <span className="xp-total-value">{stats.totalXP} XP</span>
+              </div>
               <div className="level-bar-wrap">
                 <div className="level-bar-fill" style={{ width: `${levelProgress}%` }} />
               </div>
@@ -183,7 +187,7 @@ const RoadmapView = () => {
 
             <div className="checkpoint-content">
               <div className="checkpoint-number">
-                {index + 1}. Fejezet
+                {checkpoint.gamifiedTitle || `${index + 1}. Fejezet`}
               </div>
 
               <div className="checkpoint-meta">
