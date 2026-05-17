@@ -60,8 +60,8 @@
     margin-top: 3px;
 }
 
-.final-grade.grade-5 { background: #10b981; }
-.final-grade.grade-4 { background: #3b82f6; }
+.final-grade.grade-5 { background: #3b82f6; } /* Swapped: Blue */
+.final-grade.grade-4 { background: #10b981; } /* Swapped: Green */
 .final-grade.grade-3 { background: #f59e0b; }
 .final-grade.grade-2 { background: #f97316; }
 .final-grade.grade-1 { background: #ef4444; }

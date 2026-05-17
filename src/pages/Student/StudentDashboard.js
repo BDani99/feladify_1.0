@@ -33,7 +33,7 @@ const urgencyLabel = (days) => {
 };
 
 const GRADE_LABELS = { 5: 'Jeles', 4: 'Jó', 3: 'Közepes', 2: 'Elégséges', 1: 'Elégtelen' };
-const GRADE_COLORS = { 5: '#10b981', 4: '#3b82f6', 3: '#eab308', 2: '#f97316', 1: '#ef4444' };
+const GRADE_COLORS = { 5: '#3b82f6', 4: '#10b981', 3: '#eab308', 2: '#f97316', 1: '#ef4444' }; // Swapped: 5 is Blue (#3b82f6), 4 is Green (#10b981)
 
 const StudentDashboard = () => {
     const navigate = useNavigate();

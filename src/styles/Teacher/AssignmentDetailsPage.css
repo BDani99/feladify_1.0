@@ -286,7 +286,16 @@
 
 .stat-item .val.suggested {
     color: var(--accent);
+    font-weight: 900;
+    font-size: 1.2rem;
+    transition: color 0.2s ease;
 }
+
+.stat-item .val.suggested.suggested-grade-5 { color: #3b82f6; }
+.stat-item .val.suggested.suggested-grade-4 { color: #10b981; }
+.stat-item .val.suggested.suggested-grade-3 { color: #eab308; }
+.stat-item .val.suggested.suggested-grade-2 { color: #f97316; }
+.stat-item .val.suggested.suggested-grade-1 { color: #ef4444; }
 
 .grade-buttons-group {
     display: flex;
@@ -316,14 +325,14 @@
 .grade-btn-1 { color: #ef4444; }
 .grade-btn-2 { color: #f97316; }
 .grade-btn-3 { color: #eab308; }
-.grade-btn-4 { color: #3b82f6; }
-.grade-btn-5 { color: #10b981; }
+.grade-btn-4 { color: #10b981; }
+.grade-btn-5 { color: #3b82f6; }
 
 .grade-btn-1:hover, .grade-btn-1.active { background: #ef4444; color: white; border-color: #ef4444; }
 .grade-btn-2:hover, .grade-btn-2.active { background: #f97316; color: white; border-color: #f97316; }
 .grade-btn-3:hover, .grade-btn-3.active { background: #eab308; color: white; border-color: #eab308; }
-.grade-btn-4:hover, .grade-btn-4.active { background: #3b82f6; color: white; border-color: #3b82f6; }
-.grade-btn-5:hover, .grade-btn-5.active { background: #10b981; color: white; border-color: #10b981; }
+.grade-btn-4:hover, .grade-btn-4.active { background: #10b981; color: white; border-color: #10b981; }
+.grade-btn-5:hover, .grade-btn-5.active { background: #3b82f6; color: white; border-color: #3b82f6; }
 
 .save-grade-btn {
     width: 38px;

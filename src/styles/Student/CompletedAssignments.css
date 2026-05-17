@@ -184,8 +184,8 @@
     font-style: italic;
 }
 
-.grade-5 { color: #10b981; }
-.grade-4 { color: #3b82f6; }
+.grade-5 { color: #3b82f6; } /* Swapped: Blue */
+.grade-4 { color: #10b981; } /* Swapped: Green */
 .grade-3 { color: #f59e0b; }
 .grade-2 { color: #f97316; }
 .grade-1 { color: #ef4444; }

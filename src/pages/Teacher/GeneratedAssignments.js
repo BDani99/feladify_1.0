@@ -32,8 +32,12 @@ const GeneratedAssignments = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const data = await fetchAssignments();
+                const [data, flaggedRes] = await Promise.all([
+                    fetchAssignments(),
+                    fetchFlaggedAnswers().catch(() => ({ flaggedByAssignment: [] }))
+                ]);
                 setAssignments(data);
+                setFlaggedData(flaggedRes?.flaggedByAssignment || []);
             } catch {
                 setError('Hiba történt a dolgozatok betöltésekor');
             } finally {
@@ -102,8 +106,19 @@ const GeneratedAssignments = () => {
         }, {});
     };
 
+    const activeFlaggedData = flaggedData
+        ?.map(item => {
+            const activeSubmissions = item.flaggedSubmissions.map(sub => {
+                const activeAnswers = sub.flaggedAnswers.filter(a => !a.flagResponse && !a.flagRejected);
+                return { ...sub, flaggedAnswers: activeAnswers };
+            }).filter(sub => sub.flaggedAnswers.length > 0);
+            
+            return { ...item, flaggedSubmissions: activeSubmissions };
+        })
+        .filter(item => item.flaggedSubmissions.length > 0) || [];
+
     const groupedNormal = groupAssignmentsBySubject(filteredAssignments);
-    const groupedFlagged = groupFlaggedBySubject(flaggedData);
+    const groupedFlagged = groupFlaggedBySubject(activeFlaggedData);
 
     return (
         <div id="content">
@@ -255,7 +270,7 @@ const GeneratedAssignments = () => {
                     <div className="completed-groups-container">
                         {flaggedLoading && <LoadingSpinner />}
 
-                        {!flaggedLoading && flaggedData?.length === 0 && (
+                        {!flaggedLoading && activeFlaggedData.length === 0 && (
                             <div className="empty-state">
                                 <FaFlag />
                                 <p>Nincsenek reklamációk egyetlen dolgozatnál sem.</p>

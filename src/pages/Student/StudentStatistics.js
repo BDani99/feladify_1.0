@@ -127,7 +127,7 @@ const AssignmentTab = ({ data }) => {
             <div className="sts-card-block">
               {assignmentsStatistics.map((a, i) => {
                 const pct = a.totalPoints > 0 ? Math.round((a.achievedPoints / a.totalPoints) * 100) : 0;
-                const gradeColors = { 5: '#10b981', 4: '#3b82f6', 3: '#f59e0b', 2: '#f97316', 1: '#ef4444' };
+                const gradeColors = { 5: '#3b82f6', 4: '#10b981', 3: '#f59e0b', 2: '#f97316', 1: '#ef4444' }; // Swapped: 5 is Blue (#3b82f6), 4 is Green (#10b981)
                 return (
                   <div key={i} className="sts-assignment-row">
                     <span className="sts-assignment-num">{i + 1}.</span>

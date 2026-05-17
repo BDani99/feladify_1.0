@@ -386,13 +386,13 @@ const StudentSubmissionCard = ({ submission, assignmentId, onGradeFinalized }) =
                 <div className="submission-stats">
                     <div className="stat-item"><span className="label">Eredmény</span><span className="val">{localPoints} / {submission.totalPoints}</span></div>
                     <div className="stat-item"><span className="label">Százalék</span><span className="val">{percentage}%</span></div>
-                    <div className="stat-item"><span className="label">Javasolt jegy</span><span className="val suggested">{submission.suggestedGrade}</span></div>
+                    <div className="stat-item"><span className="label">Javasolt jegy</span><span className={`val suggested suggested-grade-${submission.suggestedGrade}`}>{submission.suggestedGrade}</span></div>
                 </div>
 
                 <div className="grade-buttons-group" onClick={e => e.stopPropagation()}>
                     {[1, 2, 3, 4, 5].map(g => (
                         <button key={g} type="button"
-                            className={`grade-btn grade-btn-${g} ${grade === String(g) ? 'active' : ''}`}
+                            className={`grade-btn grade-btn-${g} ${String(grade) === String(g) ? 'active' : ''}`}
                             onClick={() => setGrade(String(g))}
                             title={['Elégtelen', 'Elégséges', 'Közepes', 'Jó', 'Jeles'][g - 1]}>
                             {g}

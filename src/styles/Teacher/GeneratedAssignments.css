@@ -116,6 +116,7 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
     display: inline-block;
+    align-self: flex-start;
 }
 
 .difficulty-tag {
@@ -267,41 +268,54 @@
 .flagged-assignments-list {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 24px;
 }
 
 .flagged-assignment-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    padding: 24px;
+    padding: 28px 32px;
     border-left: 4px solid #f59e0b;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flagged-assignment-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(245, 158, 11, 0.15);
+    border-color: #f59e0b;
+}
+
+.flagged-assignment-card .subject-tag {
+    background: rgba(245, 158, 11, 0.08);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 .flagged-asgn-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 16px;
+    gap: 24px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
 }
 
 .flagged-asgn-info {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 .flagged-asgn-title {
-    font-size: 1.15rem;
-    font-weight: 700;
-    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin: 4px 0;
 }
 
 .flagged-asgn-meta {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     align-items: center;
     flex-wrap: wrap;
 }
@@ -332,7 +346,10 @@
 .flagged-students-summary {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .flagged-student-chip {
