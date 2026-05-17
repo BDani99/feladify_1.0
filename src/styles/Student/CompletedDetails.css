@@ -120,6 +120,10 @@
     max-width: 500px;
 }
 
+.single-answer-block.wide .ans-block {
+    max-width: none;
+}
+
 .meta-info {
     display: flex;
     gap: 25px;
@@ -252,11 +256,11 @@
 }
 
 .complex-ans-item {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(120px, max-content) 18px minmax(0, 1fr);
     align-items: center;
     gap: 10px;
     font-size: 0.88rem;
-    flex-wrap: wrap;
 }
 
 .ans-key {
@@ -278,6 +282,13 @@
 .ans-val {
     color: var(--color-text);
     font-size: 0.85rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    line-height: 1.45;
+}
+
+.matching-ans-list {
+    gap: 10px;
 }
 
 /* Numbered ordering display */

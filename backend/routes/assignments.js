@@ -94,6 +94,66 @@ function resolveQuestionTypes(body) {
   return [{ type: body.questionType || 'nyilt', count }];
 }
 
+function normalizeAndValidateQuestions(questions) {
+  const sanitized = groqService._sanitizeQuestions(questions.map(q => ({
+    questionText: (q.questionText || '').trim(),
+    questionType: q.questionType || 'short_answer',
+    options: Array.isArray(q.options) ? q.options : [],
+    pairs: Array.isArray(q.pairs) ? q.pairs : [],
+    items: Array.isArray(q.items) ? q.items : [],
+    correctAnswer: q.correctAnswer,
+    explanation: q.explanation || '',
+  })), 3);
+
+  const invalid = sanitized
+    .map((q, index) => ({ index, validation: groqService._validateQuestion(q) }))
+    .filter(item => !item.validation.valid);
+
+  if (invalid.length > 0) {
+    const details = invalid
+      .slice(0, 3)
+      .map(item => `${item.index + 1}. kérdés: ${item.validation.reasons.join(', ')}`)
+      .join('; ');
+    const suffix = invalid.length > 3 ? ` (+${invalid.length - 3} további hiba)` : '';
+    const error = new Error(`Hibás kérdés-válasz struktúra: ${details}${suffix}`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return sanitized.map((q, idx) => ({
+    questionText: q.questionText,
+    questionType: q.questionType,
+    options: q.options || [],
+    pairs: q.pairs || [],
+    items: q.items || [],
+    correctAnswer: q.correctAnswer,
+    points: Math.max(1, Number(questions[idx]?.points) || 1),
+  }));
+}
+
+function sanitizeQuestionForStudent(question) {
+  const base = question.toObject ? question.toObject() : { ...question };
+  delete base.correctAnswer;
+
+  if (base.questionType === 'matching') {
+    const pairs = Array.isArray(base.pairs) ? base.pairs : [];
+    const rightOptions = Array.isArray(base.options) && base.options.length === pairs.length
+      ? base.options
+      : shuffleArray(pairs.map(pair => pair.right).filter(Boolean));
+
+    base.pairs = shuffleArray(pairs.map(pair => ({ left: pair.left, right: '' })));
+    base.options = shuffleArray([...rightOptions]);
+  }
+
+  return base;
+}
+
+function sanitizeAssignmentForStudent(assignment) {
+  const plain = assignment.toObject ? assignment.toObject() : { ...assignment };
+  plain.questions = (plain.questions || []).map(sanitizeQuestionForStudent);
+  return plain;
+}
+
 // Előnézet generálása (DB írás nélkül)
 router.post('/teacher/preview', authenticateTeacher, async (req, res) => {
   try {
@@ -130,15 +190,7 @@ router.post('/teacher/save', authenticateTeacher, async (req, res) => {
     const students = await User.find({ role: 'student', className: classData.name }).select('_id');
     if (students.length === 0) return res.status(400).json({ message: 'Nincs diák az adott osztályban.' });
 
-    const cleanQuestions = questions.map(q => ({
-      questionText: (q.questionText || '').trim(),
-      questionType: q.questionType || 'short_answer',
-      options: Array.isArray(q.options) ? q.options : [],
-      pairs: Array.isArray(q.pairs) ? q.pairs : [],
-      items: Array.isArray(q.items) ? q.items : [],
-      correctAnswer: q.correctAnswer,
-      points: Number(q.points) || 1,
-    }));
+    const cleanQuestions = normalizeAndValidateQuestions(questions);
 
     const assignment = new Assignment({
       teacherId: req.userId,
@@ -163,7 +215,7 @@ router.post('/teacher/save', authenticateTeacher, async (req, res) => {
     res.status(201).json({ message: 'Feladatsor sikeresen mentve és hozzárendelve az osztály diákjaihoz.', assignment });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Hiba történt a mentés során.' });
+    res.status(error.statusCode || 500).json({ message: error.statusCode ? error.message : 'Hiba történt a mentés során.' });
   }
 });
 
@@ -350,7 +402,10 @@ router.get('/student/list', authenticateStudent, async (req, res) => {
       studentIds: studentId,
     });
 
-    res.status(200).json({ message: 'Elérhető dolgozatok sikeresen lekérve', assignments });
+    res.status(200).json({
+      message: 'Elérhető dolgozatok sikeresen lekérve',
+      assignments: assignments.map(sanitizeAssignmentForStudent)
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Hiba történt az elérhető dolgozatok lekérdezése során' });
@@ -370,9 +425,12 @@ router.get('/student/available-assignments', authenticateStudent, async (req, re
     const availableAssignments = await Assignment.find({
       studentIds: studentId,
       _id: { $nin: completedAssignmentIds }
-    }).select('-questions.correctAnswer'); // A helyes válasz mező kihagyása
+    }); // A helyes válaszokat és párosítási kulcsokat kézzel sanitizáljuk
 
-    res.status(200).json({ message: 'Elérhető dolgozatok sikeresen lekérve', assignments: availableAssignments });
+    res.status(200).json({
+      message: 'Elérhető dolgozatok sikeresen lekérve',
+      assignments: availableAssignments.map(sanitizeAssignmentForStudent)
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Hiba történt az elérhető dolgozatok lekérdezése során.' });

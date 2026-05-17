@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaSave, FaTimes, FaEdit, FaCheckCircle, FaLayerGroup, FaArrowRight, FaSync } from 'react-icons/fa';
+import { FaTimes, FaCheckCircle, FaLayerGroup, FaArrowRight, FaSync } from 'react-icons/fa';
 import '../../styles/Teacher/PreviewModal.css';
 
 const PreviewModal = ({ questions: initialQuestions, onSave, onClose, onRegenerate, isLoading }) => {
@@ -11,6 +11,37 @@ const PreviewModal = ({ questions: initialQuestions, onSave, onClose, onRegenera
 
     const updateQuestion = (idx, field, value) =>
         setQuestions(prev => prev.map((q, i) => i === idx ? { ...q, [field]: value } : q));
+
+    const updateOption = (qIdx, optIdx, value) =>
+        setQuestions(prev => prev.map((q, i) => {
+            if (i !== qIdx) return q;
+            const options = [...(q.options || [])];
+            const previous = options[optIdx];
+            options[optIdx] = value;
+            return {
+                ...q,
+                options,
+                correctAnswer: q.correctAnswer === previous ? value : q.correctAnswer
+            };
+        }));
+
+    const updatePair = (qIdx, pairIdx, field, value) =>
+        setQuestions(prev => prev.map((q, i) => {
+            if (i !== qIdx) return q;
+            const pairs = [...(q.pairs || [])];
+            pairs[pairIdx] = { ...pairs[pairIdx], [field]: value };
+            return {
+                ...q,
+                pairs,
+                options: pairs.map(p => p.right).filter(Boolean),
+                correctAnswer: Object.fromEntries(pairs.filter(p => p.left && p.right).map(p => [p.left, p.right]))
+            };
+        }));
+
+    const updateOrderingAnswer = (qIdx, lineText) => {
+        const correctAnswer = lineText.split('\n').map(item => item.trim()).filter(Boolean);
+        updateQuestion(qIdx, 'correctAnswer', correctAnswer);
+    };
 
     const getTypeName = (type) => {
         const types = {
@@ -66,10 +97,21 @@ const PreviewModal = ({ questions: initialQuestions, onSave, onClose, onRegenera
                                 <div className="q-answer-section">
                                     {q.questionType === 'mcq' && (
                                         <div className="options-grid">
-                                            {q.options.map((opt, i) => (
+                                            {(q.options || []).map((opt, i) => (
                                                 <div key={i} className={`opt-item ${opt === q.correctAnswer ? 'correct' : ''}`}>
                                                     <span className="opt-marker">{String.fromCharCode(65 + i)}</span>
-                                                    {opt}
+                                                    <input
+                                                        type="text"
+                                                        value={opt}
+                                                        onChange={(e) => updateOption(idx, i, e.target.value)}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="mark-correct-btn"
+                                                        onClick={() => updateQuestion(idx, 'correctAnswer', opt)}
+                                                    >
+                                                        {opt === q.correctAnswer ? 'Helyes' : 'Helyes válasz'}
+                                                    </button>
                                                 </div>
                                             ))}
                                         </div>
@@ -77,7 +119,14 @@ const PreviewModal = ({ questions: initialQuestions, onSave, onClose, onRegenera
 
                                     {q.questionType === 'true_false' && (
                                         <div className="tf-preview">
-                                            Helyes válasz: <span className="tf-val">{q.correctAnswer}</span>
+                                            <label>Helyes válasz:</label>
+                                            <select
+                                                value={q.correctAnswer || 'Igaz'}
+                                                onChange={(e) => updateQuestion(idx, 'correctAnswer', e.target.value)}
+                                            >
+                                                <option value="Igaz">Igaz</option>
+                                                <option value="Hamis">Hamis</option>
+                                            </select>
                                         </div>
                                     )}
 
@@ -94,17 +143,30 @@ const PreviewModal = ({ questions: initialQuestions, onSave, onClose, onRegenera
 
                                     {q.questionType === 'fill_blank' && (
                                         <div className="fill-blank-preview">
-                                            Hiányzó szó: <span className="fb-val">{q.correctAnswer}</span>
+                                            <label>Hiányzó szó / megoldás:</label>
+                                            <input
+                                                type="text"
+                                                value={q.correctAnswer || ''}
+                                                onChange={(e) => updateQuestion(idx, 'correctAnswer', e.target.value)}
+                                            />
                                         </div>
                                     )}
 
                                     {q.questionType === 'matching' && (
                                         <div className="matching-preview">
-                                            {q.pairs.map((pair, i) => (
+                                            {(q.pairs || []).map((pair, i) => (
                                                 <div key={i} className="match-pair">
-                                                    <span>{pair.left}</span>
+                                                    <input
+                                                        type="text"
+                                                        value={pair.left || ''}
+                                                        onChange={(e) => updatePair(idx, i, 'left', e.target.value)}
+                                                    />
                                                     <FaArrowRight />
-                                                    <span>{pair.right}</span>
+                                                    <input
+                                                        type="text"
+                                                        value={pair.right || ''}
+                                                        onChange={(e) => updatePair(idx, i, 'right', e.target.value)}
+                                                    />
                                                 </div>
                                             ))}
                                         </div>
@@ -118,6 +180,11 @@ const PreviewModal = ({ questions: initialQuestions, onSave, onClose, onRegenera
                                                     {item}
                                                 </div>
                                             ))}
+                                            <label>Helyes sorrend (soronként egy elem):</label>
+                                            <textarea
+                                                value={(Array.isArray(q.correctAnswer) ? q.correctAnswer : []).join('\n')}
+                                                onChange={(e) => updateOrderingAnswer(idx, e.target.value)}
+                                            />
                                         </div>
                                     )}
                                 </div>

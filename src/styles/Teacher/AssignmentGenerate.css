@@ -151,15 +151,6 @@
     box-shadow: 0 0 0 1px var(--accent);
 }
 
-.type-item.active::after {
-    content: '✓';
-    position: absolute;
-    right: 80px;
-    color: var(--accent);
-    font-weight: 900;
-    font-size: 1rem;
-}
-
 .type-info {
     display: flex;
     align-items: center;

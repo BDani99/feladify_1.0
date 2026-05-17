@@ -82,10 +82,27 @@ const AssignmentSubmitForm = () => {
     const currentQuestion = assignment?.questions?.[currentStep];
     const isLastStep = currentStep === (assignment?.questions?.length || 0) - 1;
 
+    const isQuestionAnswered = (q) => {
+        const answer = answers[q._id];
+        if (q.questionType === 'matching') {
+            const leftValues = (q.pairs || []).map(pair => pair.left);
+            return leftValues.length > 0 && leftValues.every(left => answer?.[left]);
+        }
+        if (q.questionType === 'ordering') {
+            if (!Array.isArray(answer) || !Array.isArray(q.items)) return false;
+            return answer.length === q.items.length && answer.some((item, idx) => item !== q.items[idx]);
+        }
+        if (Array.isArray(answer)) return answer.length > 0;
+        return String(answer || '').trim().length > 0;
+    };
+
     // Shuffle matching right side once per question
     const shuffledMatchingRight = React.useMemo(() => {
         if (!currentQuestion || currentQuestion.questionType !== 'matching') return [];
-        return [...currentQuestion.pairs].map(p => p.right).sort(() => Math.random() - 0.5);
+        const options = Array.isArray(currentQuestion.options) && currentQuestion.options.length > 0
+            ? currentQuestion.options
+            : (currentQuestion.pairs || []).map(p => p.right).filter(Boolean);
+        return [...options].sort(() => Math.random() - 0.5);
     }, [currentQuestion]);
 
     if (error && !assignment) return <div id="content" className="error-state">{error}</div>;
@@ -256,7 +273,7 @@ const AssignmentSubmitForm = () => {
                     {assignment.questions.map((_, i) => (
                         <div 
                             key={i} 
-                            className={`step-dot ${i === currentStep ? 'active' : ''} ${answers[assignment.questions[i]._id] ? 'filled' : ''}`}
+                            className={`step-dot ${i === currentStep ? 'active' : ''} ${isQuestionAnswered(assignment.questions[i]) ? 'filled' : ''}`}
                             onClick={() => setCurrentStep(i)}
                         ></div>
                     ))}

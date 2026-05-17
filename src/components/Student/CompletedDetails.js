@@ -65,7 +65,7 @@ const CompletedDetails = () => {
 
         if (typeof ans === 'object' && !Array.isArray(ans)) {
             return (
-                <div className="complex-ans-list">
+                <div className={`complex-ans-list ${type === 'matching' ? 'matching-ans-list' : ''}`}>
                     {Object.entries(ans).map(([key, val], idx) => (
                         <div key={idx} className="complex-ans-item">
                             <span className="ans-key">{key}</span>
@@ -178,7 +178,7 @@ const CompletedDetails = () => {
                                         </div>
                                     ) : (
                                         /* Javítás alatt: csak saját válasz */
-                                        <div className="single-answer-block">
+                                        <div className={`single-answer-block ${['matching','ordering'].includes(answer.questionType) ? 'wide' : ''}`}>
                                             <div className="ans-block student">
                                                 <label>A te válaszod</label>
                                                 <div className="val">{renderAnswer(answer.studentAnswer, answer.questionType)}</div>
