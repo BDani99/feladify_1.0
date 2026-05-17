@@ -805,22 +805,7 @@ router.post('/chat/send', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: 'Üzenet megadása kötelező' });
     }
 
-    // Szűrés: csak tanulási kérdéseket engedélyezni
-    const nonEducationalPatterns = [
-      /vicc/i, /meme/i, /függetlenség/, /política/i, /politika/i,
-      /ételrezept/i, /játék.*letöltés/i, /film.*nézés/i, /zene/i,
-      /szerelem/i, /barátság/i, /kedvenc/i, /hobbi/i, /szórakozás/i
-    ];
-
-    const isNonEducational = nonEducationalPatterns.some(p => p.test(message));
-    console.log('[Student API] Chat send - Tanulási kérdés?', !isNonEducational);
-
-    if (isNonEducational) {
-      return res.json({
-        message: `Elnézést, de csak tanulással kapcsolatos kérdésekre tudok válaszolni! 📚 Kérlek, kérdezz valamit a tantárgyaidról, és szívesen segítek.`,
-        sessionId: null
-      });
-    }
+    // Szűrés kikapcsolva a kérésnek megfelelően
 
     let chatDoc = await StudentChatHistory.findOne({ studentId: req.user._id });
     if (!chatDoc) {
@@ -930,7 +915,7 @@ FONTOS SZABÁLYOK:
       console.log('[Student API] Chat send - Kezdődik a válasz streaming...');
       let fullResponse = '';
 
-      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 })) {
+      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true)) {
         fullResponse += chunk;
         res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
       }
@@ -944,7 +929,7 @@ FONTOS SZABÁLYOK:
     }
 
     console.log('[Student API] Chat send - Groq API hívása előtt');
-    const aiResponse = await groqService.generateResponse(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 });
+    const aiResponse = await groqService.generateResponse(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true);
     console.log('[Student API] Chat send - AI válasz hossza:', aiResponse.length, 'Első 100 char:', aiResponse.substring(0, 100));
 
     chatDoc.addMessage('assistant', aiResponse);

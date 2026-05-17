@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { FaBell, FaCheck, FaClipboardList, FaTrophy, FaTrash } from 'react-icons/fa';
+import { FaBell, FaBullhorn, FaCheck, FaClipboardList, FaTrophy, FaTrash } from 'react-icons/fa';
 import { API_BASE_URL } from '../api/config';
+
 import '../styles/NotificationBell.css';
 
 const TYPE_CONFIG = {
   new_assignment:      { icon: <FaClipboardList />, color: '#3b82f6', label: 'Dolgozat' },
   assignment_submitted:{ icon: <FaCheck />,         color: '#10b981', label: 'Beküldés' },
   assignment_graded:   { icon: <FaTrophy />,        color: '#f59e0b', label: 'Értékelés' },
+  announcement:        { icon: <FaBullhorn />,      color: '#8b5cf6', label: 'Faliújság' },
 };
 
 function timeAgo(dateStr) {
@@ -43,6 +45,35 @@ const NotificationBell = () => {
     const id = setInterval(fetchNotifications, 30000);
     return () => clearInterval(id);
   }, [fetchNotifications]);
+
+  // SSE: valós idejű push – new_announcement eseménynél azonnal frissítünk
+  useEffect(() => {
+    const token = localStorage.getItem('AccessToken');
+    if (!token) return;
+
+    const sseUrl = `${API_BASE_URL}/realtime/stream?token=${token}`;
+    const es = new EventSource(sseUrl);
+
+    es.addEventListener('new_announcement', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        const newNotif = {
+          _id: `sse-${Date.now()}`,
+          type: 'announcement',
+          title: 'Új faliújság bejegyzés',
+          message: `${data.teacherName} új bejegyzést írt: "${data.title}"`,
+          read: false,
+          createdAt: new Date().toISOString()
+        };
+        setNotifications(prev => [newNotif, ...prev]);
+        setUnreadCount(prev => prev + 1);
+      } catch {}
+    });
+
+    es.onerror = () => {}; // csendben kezeljük
+
+    return () => es.close();
+  }, []);
 
   // Kattintás kívülre → zárás
   useEffect(() => {

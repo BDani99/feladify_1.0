@@ -5,6 +5,7 @@ const Class = require('../models/Class');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const authenticateUser = require('../middleware/authenticateUser');
+const realtimeService = require('../services/realtimeService');
 
 // Helper a valós idejű értesítések küldéséhez
 async function notify(userId, type, title, message, data = {}) {
@@ -87,7 +88,14 @@ router.post('/', async (req, res) => {
     const studentIds = targetClass.studentIds || [];
     const teacherName = user.name || 'Egy tanár';
     
-    // Fire-and-forget értesítés küldés minden diáknak
+    // Fire-and-forget értesítés küldés minden diáknak (DB + SSE push)
+    const announcementPayload = {
+      announcementId: String(announcement._id),
+      title,
+      teacherName,
+      className: targetClass.name
+    };
+
     Promise.all(
       studentIds.map(studentId => 
         notify(
@@ -95,10 +103,17 @@ router.post('/', async (req, res) => {
           'announcement', 
           'Új faliújság bejegyzés', 
           `${teacherName} új bejegyzést írt: "${title}"`, 
-          { announcementId: announcement._id }
+          announcementPayload
         )
       )
-    ).catch(err => console.error('[Announcement Notification Alert Error]', err));
+    ).then(() => {
+      // SSE valós idejű push a diákoknak, akik éppen online
+      realtimeService.sendToUsers(
+        studentIds.map(id => String(id)),
+        'new_announcement',
+        announcementPayload
+      );
+    }).catch(err => console.error('[Announcement Notification Alert Error]', err));
 
     const populatedAnnouncement = await Announcement.findById(announcement._id).populate('classId', 'name');
 

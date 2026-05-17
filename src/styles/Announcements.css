@@ -1,0 +1,597 @@
+/* ════════════════════════════════════════════════════
+   Announcements.css — Osztálytermi Faliújság
+   Fully theme-aware: dark & light mode via CSS variables
+   ════════════════════════════════════════════════════ */
+
+/* ─── Layout ─── */
+
+.ann-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ann-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.ann-grid--two-col {
+  grid-template-columns: 1fr 1fr;
+}
+
+.ann-left-col,
+.ann-right-col,
+.ann-student-col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ─── Card ─── */
+
+.ann-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color-strong);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition-normal);
+}
+
+.ann-card:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+.ann-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 20px 0;
+}
+
+.ann-card-title-icon {
+  font-size: 1rem;
+}
+
+.ann-card-title-icon--primary {
+  color: var(--accent);
+}
+
+.ann-card-title-icon--green {
+  color: #10b981;
+}
+
+/* ─── Form ─── */
+
+.ann-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ann-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ann-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ann-input,
+.ann-textarea,
+.ann-select {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.ann-input:focus,
+.ann-textarea:focus,
+.ann-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.ann-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* ─── Select options (dark mode fallback) ─── */
+.ann-select option {
+  background: var(--bg-card);
+  color: var(--color-text);
+}
+
+/* ─── Submit button ─── */
+
+.ann-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--accent-gradient);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 4px 14px var(--accent-glow);
+  transition: all var(--transition-bounce);
+}
+
+.ann-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--accent-glow);
+}
+
+.ann-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ─── Section titles ─── */
+
+.ann-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 4px 0;
+}
+
+.ann-section-title-icon {
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+/* ─── Announcement list ─── */
+
+.ann-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ─── Teacher announcement item ─── */
+
+.ann-teacher-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-normal), transform var(--transition-fast);
+}
+
+.ann-teacher-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.ann-teacher-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.ann-class-badge {
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--accent);
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.ann-delete-btn {
+  background: transparent;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.ann-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  transform: scale(1.1);
+}
+
+/* ─── Shared item styles ─── */
+
+.ann-item-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 8px 0;
+}
+
+.ann-item-content {
+  font-size: 0.9rem;
+  color: var(--color-text-dim);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  margin: 0 0 14px 0;
+}
+
+.ann-item-meta {
+  display: flex;
+  gap: 14px;
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+  align-items: center;
+}
+
+.ann-item-meta--bordered {
+  border-top: 1px solid var(--border-color-2);
+  padding-top: 12px;
+}
+
+.ann-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ─── Empty states ─── */
+
+.ann-empty-card {
+  background: var(--bg-card);
+  border: 1px dashed var(--border-color-strong);
+  border-radius: var(--radius-md);
+  padding: 40px;
+  text-align: center;
+  color: var(--color-text-dim);
+  font-size: 0.9rem;
+}
+
+.ann-empty-hero {
+  background: var(--bg-card);
+  border: 1px dashed var(--border-color-strong);
+  border-radius: var(--radius-lg);
+  padding: 56px 24px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.ann-empty-hero-icon {
+  font-size: 2.8rem;
+  color: var(--color-text-muted);
+  opacity: 0.45;
+  margin-bottom: 16px;
+}
+
+.ann-empty-hero-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 8px 0;
+}
+
+.ann-empty-hero-subtitle {
+  font-size: 0.88rem;
+  color: var(--color-text-dim);
+  margin: 0;
+  max-width: 340px;
+  margin-inline: auto;
+}
+
+.ann-empty-small {
+  text-align: center;
+  padding: 24px 12px;
+  color: var(--color-text-dim);
+  font-size: 0.85rem;
+}
+
+/* ─── Roster ─── */
+
+.ann-roster-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.ann-roster-list {
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 4px;
+  margin-top: 12px;
+}
+
+.ann-roster-list::-webkit-scrollbar { width: 4px; }
+.ann-roster-list::-webkit-scrollbar-track { background: transparent; }
+.ann-roster-list::-webkit-scrollbar-thumb { background: var(--border-color-strong); border-radius: 4px; }
+
+.ann-roster-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-form-group);
+  border: 1px solid var(--border-color-2);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.ann-roster-item--new {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.35);
+  animation: ann-pulse 2s infinite;
+}
+
+.ann-roster-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.ann-roster-name--new {
+  color: #10b981;
+}
+
+.ann-roster-email {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.ann-new-badge {
+  background: #10b981;
+  color: #fff;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+}
+
+/* ─── Student item ─── */
+
+.ann-student-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), box-shadow var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.ann-student-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--accent-gradient);
+  border-radius: 0 0 0 var(--radius-lg);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.ann-student-item:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+}
+
+.ann-student-item:hover::before {
+  opacity: 1;
+}
+
+.ann-student-item--new {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2), var(--shadow-md);
+  animation: ann-new-glow 3s ease-out forwards;
+}
+
+.ann-student-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ann-teacher-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ann-teacher-avatar {
+  width: 36px;
+  height: 36px;
+  background: var(--accent-gradient);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px var(--accent-glow);
+}
+
+.ann-teacher-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--color-text);
+}
+
+.ann-teacher-role {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.ann-right-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ann-class-badge-green {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.ann-new-post-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  animation: ann-badge-pulse 1.5s ease-in-out infinite;
+}
+
+/* ─── Animations ─── */
+
+@keyframes ann-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.3); }
+  50%       { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+}
+
+@keyframes ann-new-glow {
+  0%   { box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.4), var(--shadow-md); }
+  100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0), var(--shadow-sm); }
+}
+
+@keyframes ann-badge-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.65; }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s ease both;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Light mode overrides ─── */
+
+[data-theme="light"] .ann-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.07);
+}
+
+[data-theme="light"] .ann-teacher-item {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] .ann-student-item {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] .ann-empty-card,
+[data-theme="light"] .ann-empty-hero {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .ann-roster-item {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+[data-theme="light"] .ann-input,
+[data-theme="light"] .ann-textarea,
+[data-theme="light"] .ann-select {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .ann-input:focus,
+[data-theme="light"] .ann-textarea:focus,
+[data-theme="light"] .ann-select:focus {
+  background: #ffffff;
+  border-color: #2563eb;
+}
+
+[data-theme="light"] .ann-select option {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+/* ─── Responsive ─── */
+
+@media (max-width: 900px) {
+  .ann-grid--two-col {
+    grid-template-columns: 1fr;
+  }
+}

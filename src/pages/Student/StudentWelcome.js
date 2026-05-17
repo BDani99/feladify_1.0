@@ -140,7 +140,7 @@ const StudentWelcome = () => {
                   const copy = [...prev];
                   const lastMsg = copy[copy.length - 1];
                   if (lastMsg && lastMsg.role === 'assistant') {
-                    lastMsg.content += data.chunk;
+                    copy[copy.length - 1] = { ...lastMsg, content: lastMsg.content + data.chunk };
                   }
                   return copy;
                 });
@@ -406,7 +406,9 @@ const StudentWelcome = () => {
           {/* Chat Messages */}
           {((messages && messages.length > 0) || isBotTyping) && (
             <div className="chat-history">
-              {messages && messages.map((chat, index) => (
+              {messages && messages.map((chat, index) => {
+                if (isBotTyping && chat.role === 'assistant' && chat.content === '') return null;
+                return (
                 <div
                   key={index}
                   className={`chat-message ${chat.role === 'user' ? 'user' : 'bot'}`}
@@ -434,7 +436,8 @@ const StudentWelcome = () => {
                     )}
                   </div>
                 </div>
-              ))}
+                );
+              })}
               {isBotTyping && (
                 <div className="chat-message bot">
                   <img src={logo} alt="Logo" className="chat-logo" />

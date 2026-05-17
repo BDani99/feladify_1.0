@@ -145,7 +145,7 @@ const TeacherWelcome = () => {
                                     const copy = [...prev];
                                     const lastMsg = copy[copy.length - 1];
                                     if (lastMsg && lastMsg.role === 'assistant') {
-                                        lastMsg.content += data.chunk;
+                                        copy[copy.length - 1] = { ...lastMsg, content: lastMsg.content + data.chunk };
                                     }
                                     return copy;
                                 });
@@ -394,7 +394,9 @@ const TeacherWelcome = () => {
 
                     {((messages && messages.length > 0) || isBotTyping) && (
                         <div className="chat-history">
-                            {messages && messages.map((msg, index) => (
+                            {messages && messages.map((msg, index) => {
+                                if (isBotTyping && msg.role === 'assistant' && msg.content === '') return null;
+                                return (
                                 <div
                                     key={index}
                                     className={`chat-message ${msg.role === 'user' ? 'user' : 'bot'}`}
@@ -422,7 +424,8 @@ const TeacherWelcome = () => {
                                         )}
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                             {isBotTyping && (
                                 <div className="chat-message bot">
                                     <img src={logo} alt="Logo" className="chat-logo" />

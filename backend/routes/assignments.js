@@ -1158,7 +1158,7 @@ Szabályok:
       console.log('[Teacher Chat] Kezdődik a válasz streaming...');
       let fullResponse = '';
 
-      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 })) {
+      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true)) {
         fullResponse += chunk;
         res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
       }
