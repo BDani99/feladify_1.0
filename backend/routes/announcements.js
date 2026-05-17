@@ -37,6 +37,20 @@ router.get('/', async (req, res) => {
         .sort({ createdAt: -1 });
 
       res.json({ announcements, classes: [] });
+    } else if (user.role === 'parent') {
+      // Megkeressük a szülő gyermekeit
+      const childrenIds = user.children || [];
+      // Megkeressük az osztályokat, amikbe a gyerekek járnak
+      const childrenClasses = await Class.find({ studentIds: { $in: childrenIds } }).select('_id');
+      const classIds = childrenClasses.map(c => c._id);
+
+      // Lekérjük az ezekhez az osztályokhoz tartozó közleményeket
+      const announcements = await Announcement.find({ classId: { $in: classIds } })
+        .populate('teacherId', 'name')
+        .populate('classId', 'name')
+        .sort({ createdAt: -1 });
+
+      res.json({ announcements, classes: [] });
     } else if (user.role === 'teacher') {
       // Tanárként lekérjük a saját közleményeinket
       const announcements = await Announcement.find({ teacherId: req.userId })

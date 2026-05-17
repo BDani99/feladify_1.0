@@ -53,7 +53,9 @@ const Header = () => {
                     <div 
                         className="header-user-btn interactive" 
                         onClick={() => {
-                            const path = user?.role === 'teacher' ? '/tanar-beallitasok' : '/diak-beallitasok';
+                            const path = user?.role === 'teacher' 
+                                ? '/tanar-beallitasok' 
+                                : (user?.role === 'parent' ? '/szulo-beallitasok' : '/diak-beallitasok');
                             navigate(path, { state: { activeTab: 'account' } });
                         }}
                     >

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { submitAssignment } from '../../api/Assignments/Student/SubmitAssignment';
+import { submitAssignment, autosaveAssignment } from '../../api/Assignments/Student/SubmitAssignment';
 import { 
     FaExclamationCircle, 
     FaCheckCircle, 
@@ -42,6 +42,21 @@ const AssignmentSubmitForm = () => {
         });
         setAnswers(initialAnswers);
     }, [assignment]);
+
+    // Debounced autosave effect
+    useEffect(() => {
+        if (!assignment || Object.keys(answers).length === 0) return;
+
+        const delayDebounceFn = setTimeout(async () => {
+            try {
+                await autosaveAssignment(assignment._id, answers);
+            } catch (err) {
+                console.warn('Autosave failed:', err);
+            }
+        }, 3000);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [answers, assignment]);
 
     const formatTime = (seconds) => {
         const m = Math.floor(seconds / 60);

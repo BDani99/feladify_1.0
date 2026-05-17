@@ -125,6 +125,45 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                         </li>
                     </>
                 )}
+                {userRole === 'parent' && (
+                    <>
+                        <li className="new-chat-li">
+                            <button className={`new-chat-btn${isActiveLink('/szulo-ai-tanacsado') ? ' active' : ''}`} onClick={() => handleNavigation('/szulo-ai-tanacsado')}>
+                                <FaGraduationCap /> AI Tanácsadó
+                            </button>
+                        </li>
+                        <li>
+                            <a tabIndex={0} className={isActiveLink('/szulo-iranyitopult') ? 'active-link' : ''} onClick={() => handleNavigation('/szulo-iranyitopult')}>
+                                <FaTachometerAlt className="icon" /> Irányítópult
+                            </a>
+                        </li>
+                        <li>
+                            <a tabIndex={0} className={isActiveLink('/szulo-teendok') ? 'active-link' : ''} onClick={() => handleNavigation('/szulo-teendok')}>
+                                <FaTasks className="icon" /> Gyermek Teendők
+                            </a>
+                        </li>
+                        <li>
+                            <a tabIndex={0} className={isActiveLink('/szulo-eredmenyek') ? 'active-link' : ''} onClick={() => handleNavigation('/szulo-eredmenyek')}>
+                                <FaCheckCircle className="icon" /> Eredmények
+                            </a>
+                        </li>
+                        <li>
+                            <a tabIndex={0} className={isActiveLink('/szulo-roadmap') ? 'active-link' : ''} onClick={() => handleNavigation('/szulo-roadmap')}>
+                                <FaCompass className="icon" /> Fejlődési Térkép
+                            </a>
+                        </li>
+                        <li>
+                            <a tabIndex={0} className={isActiveLink('/szulo-osztalyterem') ? 'active-link' : ''} onClick={() => handleNavigation('/szulo-osztalyterem')}>
+                                <FaChalkboard className="icon" /> Osztályterem
+                            </a>
+                        </li>
+                        <li className="settings-link">
+                            <a id="settings-link" tabIndex={0} className={isActiveLink('/szulo-beallitasok') ? 'settings-active' : ''} onClick={() => handleNavigation('/szulo-beallitasok', { activeTab: 'appearance' })}>
+                                <FaCog className="settings-icon" /> Beállítások
+                            </a>
+                        </li>
+                    </>
+                )}
             </ul>
         </nav>
     );

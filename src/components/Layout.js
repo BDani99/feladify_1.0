@@ -29,6 +29,12 @@ import TeacherDashboard from '../pages/Teacher/TeacherDashboard';
 import StudentDashboard from '../pages/Student/StudentDashboard';
 import DocumentsPage from '../pages/Documents';
 import AnnouncementsPage from '../pages/Announcements';
+import ParentDashboard from '../pages/Parent/ParentDashboard';
+import ParentTasks from '../pages/Parent/ParentTasks';
+import ParentResults from '../pages/Parent/ParentResults';
+import ParentRoadmap from '../pages/Parent/ParentRoadmap';
+import ParentAIConsultant from '../pages/Parent/ParentAIConsultant';
+import ParentSettings from '../pages/Parent/ParentSettings';
 
 const Layout = ({ onLoginSuccess }) => {
     const { user } = useUser() || {};
@@ -66,7 +72,11 @@ const Layout = ({ onLoginSuccess }) => {
             )}
 
             <Routes>
-                <Route path="/" element={user?.role === 'teacher' ? <Navigate to="/iranyitopult" /> : <Navigate to="/teendoim" />} />
+                <Route path="/" element={
+                    user?.role === 'teacher' 
+                        ? <Navigate to="/iranyitopult" /> 
+                        : (user?.role === 'parent' ? <Navigate to="/szulo-iranyitopult" /> : <Navigate to="/teendoim" />)
+                } />
                 <Route path="/bejelentkezes" element={<Navigate to="/" />} />
                 <Route path="/regisztracio" element={<Navigate to="/" />} />
 
@@ -102,6 +112,19 @@ const Layout = ({ onLoginSuccess }) => {
                         <Route path="/egyeni-gyakorlas/:subject/eredmeny" element={<DiagnosticResult />} />
                         <Route path="/dokumentumok" element={<DocumentsPage />} />
                         <Route path="/osztalyterem" element={<AnnouncementsPage />} />
+                    </>
+                )}
+
+                {user?.role === 'parent' && (
+                    <>
+                        <Route path="/szulo-iranyitopult" element={<ParentDashboard />} />
+                        <Route path="/szulo-teendok" element={<ParentTasks />} />
+                        <Route path="/szulo-eredmenyek" element={<ParentResults />} />
+                        <Route path="/szulo-eredmenyek/:id" element={<CompletedDetails />} />
+                        <Route path="/szulo-roadmap" element={<ParentRoadmap />} />
+                        <Route path="/szulo-ai-tanacsado" element={<ParentAIConsultant />} />
+                        <Route path="/szulo-beallitasok" element={<ParentSettings />} />
+                        <Route path="/szulo-osztalyterem" element={<AnnouncementsPage />} />
                     </>
                 )}
             </Routes>

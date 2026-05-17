@@ -13,3 +13,16 @@ export const submitAssignment = async (assignmentId, answers) => {
     if (!response.ok) await handleApiError(response);
     return response.json();
 };
+
+export const autosaveAssignment = async (assignmentId, answers) => {
+    const response = await fetch(`${API_BASE_URL}/assignments/student/autosave/${assignmentId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`,
+        },
+        body: JSON.stringify({ answers }),
+    });
+    if (!response.ok) await handleApiError(response);
+    return response.json();
+};

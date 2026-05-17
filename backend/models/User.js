@@ -17,14 +17,15 @@ const assignmentAnswerSchema = new mongoose.Schema({
   achievedPoints: { type: Number, default: 0 },
   suggestedGrade: { type: Number, default: null },
   grade: { type: Number, default: null },
-  completedAt: { type: Date, default: Date.now }
+  completedAt: { type: Date, default: Date.now },
+  isDraft: { type: Boolean, default: false }
 });
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['teacher', 'student'], required: true },
+  role: { type: String, enum: ['teacher', 'student', 'parent'], required: true },
   subjects: {
     type: [String],
     default: [],
@@ -40,6 +41,13 @@ const userSchema = new mongoose.Schema({
     type: String, 
     required: function() { return this.role === 'student'; }, 
     message: 'Az osztály megadása kötelező a diákoknak.' 
+  },
+  children: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  parentSettings: {
+    notifyLowGrade: { type: Boolean, default: false },
+    lowGradeThreshold: { type: Number, default: 3 },
+    notifyUpcomingDeadline: { type: Boolean, default: false },
+    deadlineThresholdHours: { type: Number, default: 24 }
   },
   assignments: [assignmentAnswerSchema], // Kitöltött dolgozatok tárolása
   createdAt: { type: Date, default: Date.now }

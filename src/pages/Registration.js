@@ -16,6 +16,7 @@ const RegistrationForm = () => {
         role: 'student',
         subjects: [],
         className: '',
+        childEmails: '',
     });
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
@@ -65,11 +66,13 @@ const RegistrationForm = () => {
                 email: formData.email,
                 password: formData.password,
                 role: formData.role,
-                ...(formData.role === 'teacher' ? { subjects: formData.subjects } : { className: formData.className }),
+                ...(formData.role === 'teacher' ? { subjects: formData.subjects } : {}),
+                ...(formData.role === 'student' ? { className: formData.className } : {}),
+                ...(formData.role === 'parent' ? { childEmails: formData.childEmails } : {}),
             };
             const response = await registerUser(payload);
             setMessage(response.message);
-            setFormData({ name: '', email: '', password: '', role: 'student', subjects: [], className: '' });
+            setFormData({ name: '', email: '', password: '', role: 'student', subjects: [], className: '', childEmails: '' });
         } catch (err) {
             setError(err.message);
         } finally {
@@ -112,6 +115,7 @@ const RegistrationForm = () => {
                 <select name="role" value={formData.role} onChange={handleChange} required>
                     <option value="student">Diák</option>
                     <option value="teacher">Tanár</option>
+                    <option value="parent">Szülő</option>
                 </select>
 
                 {formData.role === 'teacher' && (
@@ -144,6 +148,17 @@ const RegistrationForm = () => {
                             </option>
                         ))}
                     </select>
+                )}
+
+                {formData.role === 'parent' && (
+                    <input
+                        type="text"
+                        name="childEmails"
+                        placeholder="Gyermek(ek) e-mail címe (vesszővel elválasztva)"
+                        value={formData.childEmails}
+                        onChange={handleChange}
+                        required
+                    />
                 )}
 
                 <button type="submit" className="main-button" disabled={isSubmitting}>

@@ -509,6 +509,75 @@ router.get('/student/completed-assignments', authenticateStudent, async (req, re
   }
 });
 
+// Dolgozat részleges mentése (Autosave) a diák által
+router.post('/student/autosave/:assignmentId', authenticateStudent, async (req, res) => {
+  try {
+    const studentId = req.userId;
+    const { assignmentId } = req.params;
+    const { answers } = req.body;
+
+    const assignment = await Assignment.findById(assignmentId);
+    if (!assignment) {
+      return res.status(404).json({ message: 'Dolgozat nem található.' });
+    }
+
+    // Ellenőrizzük, hogy van-e már véglegesített dolgozat
+    const alreadyCompleted = await User.findOne({
+      _id: studentId,
+      assignments: {
+        $elemMatch: { assignmentId, isDraft: false }
+      }
+    });
+    if (alreadyCompleted) {
+      return res.status(400).json({ message: 'Ezt a dolgozatot már véglegesen beküldte.' });
+    }
+
+    const answerData = [];
+    if (answers && typeof answers === 'object') {
+      for (const question of assignment.questions) {
+        const studentAnswer = answers[question._id];
+        if (studentAnswer !== undefined && studentAnswer !== null) {
+          answerData.push({
+            questionId: question._id,
+            studentAnswer,
+            score: 0,
+            confidence: 1.0,
+            aiFeedback: ''
+          });
+        }
+      }
+    }
+
+    // Megkeressük, van-e már draft ehhez a dolgozathoz
+    const studentUser = await User.findById(studentId);
+    const existingDraftIndex = studentUser.assignments.findIndex(a => a.assignmentId.toString() === assignmentId);
+
+    if (existingDraftIndex !== -1) {
+      // Frissítjük a meglévő draftot
+      studentUser.assignments[existingDraftIndex].answers = answerData;
+      studentUser.assignments[existingDraftIndex].completedAt = new Date();
+      studentUser.assignments[existingDraftIndex].isDraft = true;
+    } else {
+      // Létrehozunk egy újat
+      studentUser.assignments.push({
+        assignmentId,
+        answers: answerData,
+        achievedPoints: 0,
+        suggestedGrade: null,
+        grade: null,
+        completedAt: new Date(),
+        isDraft: true
+      });
+    }
+
+    await studentUser.save();
+    res.status(200).json({ message: 'Piszkozat sikeresen mentve (autosave).' });
+  } catch (error) {
+    console.error('[Autosave Error]', error);
+    res.status(500).json({ message: 'Hiba a piszkozat mentése során.' });
+  }
+});
+
 // Dolgozat kitöltése a diák által
 router.post('/student/submit/:assignmentId', authenticateStudent, async (req, res) => {
   try {
@@ -529,8 +598,13 @@ router.post('/student/submit/:assignmentId', authenticateStudent, async (req, re
       return res.status(404).json({ message: 'Dolgozat nem található.' });
     }
 
-    // Ellenőrizzük, hogy a diák már kitöltötte-e a dolgozatot
-    const student = await User.findOne({ _id: studentId, "assignments.assignmentId": assignmentId });
+    // Ellenőrizzük, hogy a diák már kitöltötte-e a dolgozatot véglegesen
+    const student = await User.findOne({
+      _id: studentId,
+      assignments: {
+        $elemMatch: { assignmentId, isDraft: false }
+      }
+    });
     if (student) {
       return res.status(400).json({ message: 'Már kitöltötte ezt a dolgozatot.' });
     }
@@ -638,18 +712,32 @@ router.post('/student/submit/:assignmentId', authenticateStudent, async (req, re
     else if (percentage >= 50) suggestedGrade = 2;
     else suggestedGrade = 1;
 
-    // A diák adatainak frissítése a kitöltött dolgozattal
-    await User.findByIdAndUpdate(studentId, {
-      $push: {
-        assignments: {
-          assignmentId,
-          answers: answerData,
-          achievedPoints,
-          suggestedGrade,
-          completedAt: new Date()
-        }
-      }
-    });
+    // A diák adatainak frissítése a kitöltött dolgozattal (draft felülírása vagy új hozzáadása)
+    const userDoc = await User.findById(studentId);
+    const existingIndex = userDoc.assignments.findIndex(a => a.assignmentId.toString() === assignmentId);
+
+    if (existingIndex !== -1) {
+      userDoc.assignments[existingIndex] = {
+        assignmentId,
+        answers: answerData,
+        achievedPoints,
+        suggestedGrade,
+        grade: null,
+        completedAt: new Date(),
+        isDraft: false
+      };
+    } else {
+      userDoc.assignments.push({
+        assignmentId,
+        answers: answerData,
+        achievedPoints,
+        suggestedGrade,
+        grade: null,
+        completedAt: new Date(),
+        isDraft: false
+      });
+    }
+    await userDoc.save();
 
     // Dolgozat completedCount növelése
     assignment.completedCount = (assignment.completedCount || 0) + 1;

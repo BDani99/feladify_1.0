@@ -10,12 +10,33 @@ const authenticateUser = require('../middleware/authenticateUser');
 // Regisztráció végpont
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, role, subjects, className } = req.body;
+    const { name, email, password, role, subjects, className, childEmails } = req.body;
 
     // Ellenőrzi, hogy az email cím már használatban van-e
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'Ez az e-mail cím már használatban van.' });
+    }
+
+    // Szülő esetén gyermekek e-mail címeinek keresése és validálása
+    let childIds = [];
+    if (role === 'parent' && childEmails) {
+      const emailsArray = typeof childEmails === 'string'
+        ? childEmails.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+        : (Array.isArray(childEmails) ? childEmails.map(e => String(e).trim().toLowerCase()).filter(Boolean) : []);
+
+      if (emailsArray.length > 0) {
+        const students = await User.find({ email: { $in: emailsArray }, role: 'student' });
+        const foundEmails = students.map(s => s.email.toLowerCase());
+
+        const missingEmails = emailsArray.filter(e => !foundEmails.includes(e));
+        if (missingEmails.length > 0) {
+          return res.status(400).json({
+            message: `A következő diák e-mail címmel nem található aktív diák: ${missingEmails.join(', ')}. Kérjük, ellenőrizze a helyesírást, vagy győződjön meg róla, hogy a diák már regisztrált.`
+          });
+        }
+        childIds = students.map(s => s._id);
+      }
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -28,6 +49,13 @@ router.post('/register', async (req, res) => {
       role,
       subjects: role === 'teacher' ? (subjects || []) : [],
       className: role === 'student' ? className : null,
+      children: role === 'parent' ? childIds : [],
+      parentSettings: role === 'parent' ? {
+        notifyLowGrade: false,
+        lowGradeThreshold: 3,
+        notifyUpcomingDeadline: false,
+        deadlineThresholdHours: 24
+      } : undefined,
       createdAt: new Date()
     });
 
