@@ -175,7 +175,7 @@ const SubjectSelectPage = () => {
               <div className="xp-stat-label">Tanulási sorozat</div>
               <div className="streak-dots">
                 {[...Array(7)].map((_, i) => (
-                  <div key={i} className={`streak-dot${i < stats.streak % 8 ? ' active' : ''}`} />
+                  <div key={i} className={`streak-dot${i < (stats.streak > 0 ? ((stats.streak % 7) || 7) : 0) ? ' active' : ''}`} />
                 ))}
               </div>
               <div className="xp-stat-footer">

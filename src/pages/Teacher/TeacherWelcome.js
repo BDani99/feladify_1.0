@@ -201,7 +201,7 @@ const TeacherWelcome = () => {
                     </div>
                     <div className="phb-text">
                         <h1 className="phb-title">Üdv, {userName || 'Tanár'}!</h1>
-                        <p className="phb-subtitle">Miben segíthetek ma?</p>
+                        <p className="phb-subtitle">{currentDate}</p>
                     </div>
                     <div className="chat-header-actions" style={{ marginLeft: 'auto' }}>
                         <button

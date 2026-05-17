@@ -52,4 +52,24 @@ router.put('/:id/read', authMiddleware, async (req, res) => {
   }
 });
 
+// DELETE /api/notifications/all
+router.delete('/all', authMiddleware, async (req, res) => {
+  try {
+    await Notification.deleteMany({ userId: req.userId });
+    res.json({ message: 'Összes értesítés törölve' });
+  } catch {
+    res.status(500).json({ message: 'Hiba' });
+  }
+});
+
+// DELETE /api/notifications/:id
+router.delete('/:id', authMiddleware, async (req, res) => {
+  try {
+    await Notification.deleteOne({ _id: req.params.id, userId: req.userId });
+    res.json({ message: 'Értesítés törölve' });
+  } catch {
+    res.status(500).json({ message: 'Hiba' });
+  }
+});
+
 module.exports = router;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { FaBell, FaCheck, FaClipboardList, FaTrophy } from 'react-icons/fa';
+import { FaBell, FaCheck, FaClipboardList, FaTrophy, FaTrash } from 'react-icons/fa';
 import { API_BASE_URL } from '../api/config';
 import '../styles/NotificationBell.css';
 
@@ -79,6 +79,34 @@ const NotificationBell = () => {
     } catch {}
   };
 
+  const deleteOne = async (id, e) => {
+    e.stopPropagation();
+    const token = sessionStorage.getItem('AccessToken');
+    try {
+      await fetch(`${API_BASE_URL}/notifications/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications(prev => {
+        const n = prev.find(n => n._id === id);
+        if (n && !n.read) setUnreadCount(c => Math.max(0, c - 1));
+        return prev.filter(n => n._id !== id);
+      });
+    } catch {}
+  };
+
+  const deleteAll = async () => {
+    const token = sessionStorage.getItem('AccessToken');
+    try {
+      await fetch(`${API_BASE_URL}/notifications/all`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch {}
+  };
+
   return (
     <div className="notif-wrapper" ref={ref}>
       <button
@@ -96,11 +124,18 @@ const NotificationBell = () => {
         <div className="notif-dropdown">
           <div className="notif-header">
             <span className="notif-title">Értesítések</span>
-            {unreadCount > 0 && (
-              <button className="notif-mark-all" onClick={markAllRead}>
-                Összes olvasva
-              </button>
-            )}
+            <div className="notif-header-actions">
+              {unreadCount > 0 && (
+                <button className="notif-mark-all" onClick={markAllRead}>
+                  Összes olvasva
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button className="notif-delete-all" onClick={deleteAll} title="Összes törlése">
+                  <FaTrash />
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="notif-list">
@@ -127,6 +162,13 @@ const NotificationBell = () => {
                       <span className="notif-time">{timeAgo(n.createdAt)}</span>
                     </div>
                     {!n.read && <div className="notif-dot" />}
+                    <button
+                      className="notif-delete-btn"
+                      onClick={(e) => deleteOne(n._id, e)}
+                      title="Törlés"
+                    >
+                      <FaTrash />
+                    </button>
                   </div>
                 );
               })

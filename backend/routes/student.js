@@ -131,7 +131,7 @@ router.get('/progress', authMiddleware, async (req, res) => {
     res.json({
       progress: progress.subjectProgress,
       totalXP: progress.totalXP,
-      streak: progress.streak
+      streak: progress.getEffectiveStreak()
     });
   } catch (error) {
     console.error('[Student API] Error in /progress:', error);
@@ -172,7 +172,7 @@ router.get('/progress/:subject', authMiddleware, async (req, res) => {
     res.json({
       ...subjectData.toObject ? subjectData.toObject() : subjectData,
       totalXP: progress.totalXP,
-      streak: progress.streak
+      streak: progress.getEffectiveStreak()
     });
   } catch (error) {
     console.error('[Student API] Error in /progress/:subject:', error);
@@ -1423,7 +1423,7 @@ router.get('/roadmap/:subject', authMiddleware, async (req, res) => {
       checkpoints: subjectData.checkpoints || [],
       totalXP: progress.totalXP,
       subjectXP: subjectData.subjectXP || 0,
-      streak: progress.streak,
+      streak: progress.getEffectiveStreak(),
       subject,
       status: subjectData.status,
       currentLevel: subjectData.currentLevel || 1
@@ -1437,8 +1437,10 @@ router.get('/roadmap/:subject', authMiddleware, async (req, res) => {
 // GET /api/student/statistics
 router.get('/statistics', authMiddleware, async (req, res) => {
   try {
-    const student = await User.findById(req.user._id)
-      .populate('assignments.assignmentId', 'title totalPoints subject');
+    const [student, progress] = await Promise.all([
+      User.findById(req.user._id).populate('assignments.assignmentId', 'title totalPoints subject'),
+      StudentProgress.findOne({ studentId: req.user._id })
+    ]);
 
     if (!student) return res.status(404).json({ message: 'Diák nem található.' });
 
@@ -1479,6 +1481,8 @@ router.get('/statistics', authMiddleware, async (req, res) => {
       ? Math.round((totalAchieved / totalPossible) * 100)
       : 0;
 
+    assignmentsStatistics.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+
     const topicStatsArray = Object.entries(topicStats).map(([topic, data]) => ({
       topic,
       averageScore: Math.round(data.scores.reduce((a, b) => a + b, 0) / data.count)
@@ -1500,7 +1504,9 @@ router.get('/statistics', authMiddleware, async (req, res) => {
       averageScore,
       assignmentsStatistics,
       strengths,
-      weaknesses
+      weaknesses,
+      totalXP: progress?.totalXP || 0,
+      streak: progress ? progress.getEffectiveStreak() : 0
     });
   } catch (error) {
     console.error('[Student API] Statistics error:', error);
@@ -1518,7 +1524,7 @@ router.get('/practice-statistics', authMiddleware, async (req, res) => {
     }).sort({ completedAt: -1 }).lean();
 
     const totalXP = progress?.totalXP || 0;
-    const streak = progress?.streak || 0;
+    const streak = progress ? progress.getEffectiveStreak() : 0;
     const badges = progress?.badges || [];
     const subjectProgressArr = progress?.subjectProgress || [];
 

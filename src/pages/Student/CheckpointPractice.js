@@ -166,11 +166,17 @@ const CheckpointPractice = () => {
 
   const handleSkipQuestion = () => {
     setQuestionStatuses(prev => ({ ...prev, [questions[currentIndex].questionId]: 'skipped' }));
+
+    // Szeparátort csak akkor adunk hozzá, ha a felhasználó írt valamit a chatbe (volt interakció)
+    const lastSepIdx = chatMessages.map(m => m.role).lastIndexOf('separator');
+    const hadUserInteraction = chatMessages.slice(lastSepIdx + 1).some(m => m.role === 'user');
+
     if (currentIndex < questions.length - 1) {
       const nextIndex = currentIndex + 1;
       setCurrentIndex(nextIndex);
       setScoreError(null);
-      addSeparatorMessage(nextIndex);
+      if (hadUserInteraction) addSeparatorMessage(nextIndex);
+      else setChatQuestionIndex(nextIndex);
     } else {
       completeCheckpoint();
     }

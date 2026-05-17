@@ -140,6 +140,17 @@ studentProgressSchema.methods.addXP = function(amount) {
   return this.totalXP;
 };
 
+// Aktuális (érvényes) streak lekérése – 0-t ad ha a sorozat megszakadt
+studentProgressSchema.methods.getEffectiveStreak = function() {
+  if (!this.lastActiveDate || this.streak === 0) return 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const lastActive = new Date(this.lastActiveDate);
+  lastActive.setHours(0, 0, 0, 0);
+  const diffDays = Math.floor((today - lastActive) / (1000 * 60 * 60 * 24));
+  return diffDays <= 1 ? this.streak : 0;
+};
+
 // Metódus kitűzők ellenőrzésére (kibővíthető)
 studentProgressSchema.methods.checkBadges = function() {
   const newBadges = [];

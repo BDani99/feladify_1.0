@@ -717,11 +717,12 @@
 
 .chat-msg.bot {
     align-self: flex-start;
-    background: transparent;
+    background: var(--bg-form-group, rgba(255,255,255,0.04));
     color: var(--color-text);
-    padding: 4px 0;
+    padding: 10px 14px;
+    border-radius: 4px 16px 16px 16px;
     max-width: 100%;
-    border: none;
+    border: 1px solid var(--border-color);
 }
 
 .chat-msg.user {

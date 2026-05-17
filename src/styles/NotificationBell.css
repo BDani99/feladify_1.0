@@ -35,13 +35,17 @@
   top: calc(100% + 12px);
   right: 0;
   width: 340px;
-  background: var(--bg-card);
+  background: var(--notif-bg, #0f1829);
   border: 1px solid var(--border-color-strong);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
   z-index: 1100;
   overflow: hidden;
   animation: notif-slide-in 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+[data-theme="light"] .notif-dropdown {
+  --notif-bg: #ffffff;
 }
 
 @keyframes notif-slide-in {
@@ -63,6 +67,12 @@
   color: var(--color-text);
 }
 
+.notif-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .notif-mark-all {
   background: none;
   border: none;
@@ -76,6 +86,40 @@
 }
 
 .notif-mark-all:hover { opacity: 0.7; }
+
+.notif-delete-all {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.notif-delete-all:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+
+.notif-delete-btn {
+  background: none;
+  border: none;
+  color: transparent;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: color var(--transition-fast), background var(--transition-fast);
+  margin-left: auto;
+  align-self: center;
+}
+
+.notif-item:hover .notif-delete-btn { color: var(--color-text-muted); }
+.notif-delete-btn:hover { color: #ef4444 !important; background: rgba(239,68,68,0.1); }
 
 /* ─── List ─── */
 

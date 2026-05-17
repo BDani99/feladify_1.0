@@ -556,7 +556,22 @@
   gap: 10px;
   color: var(--color-text-dim);
   font-size: 0.88rem;
-  padding: 20px 0;
+  padding: 16px 0;
+}
+
+.q-analysis-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-color-strong);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: q-spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes q-spin {
+  to { transform: rotate(360deg); }
 }
 
 .q-analysis-section {
@@ -598,13 +613,13 @@
 }
 
 .result-actions .btn-primary {
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), #6366f1);
   color: white;
 }
 
 .result-actions .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(20, 120, 226, 0.4);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
 }
 
 .result-actions .btn-secondary {

@@ -34,7 +34,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                 {userRole === 'teacher' && (
                     <>
                         <li className="new-chat-li">
-                            <button className="new-chat-btn" onClick={() => handleNavigation('/')}>
+                            <button className={`new-chat-btn${isActiveLink('/ai-asszisztens') ? ' active' : ''}`} onClick={() => handleNavigation('/ai-asszisztens')}>
                                 <FaChalkboardTeacher /> AI Asszisztens
                             </button>
                         </li>
@@ -69,7 +69,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                 {userRole === 'student' && (
                     <>
                         <li className="new-chat-li">
-                            <button className="new-chat-btn" onClick={() => handleNavigation('/')}>
+                            <button className={`new-chat-btn${isActiveLink('/ai-mentor') ? ' active' : ''}`} onClick={() => handleNavigation('/ai-mentor')}>
                                 <FaGraduationCap /> AI Mentor
                             </button>
                         </li>

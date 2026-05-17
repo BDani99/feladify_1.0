@@ -94,7 +94,7 @@ const TeacherDashboard = () => {
                     <div className="phb-icon"><FaTachometerAlt /></div>
                     <div className="phb-text">
                         <h1 className="phb-title">{greeting}, {user?.name?.split(' ')[0] || 'Tanár'}!</h1>
-                        <p className="phb-subtitle">{today}</p>
+                        <p className="phb-subtitle">Kövesd nyomon az osztályaid teljesítményét</p>
                     </div>
                     <div className="dash-greeting-right" style={{ marginLeft: 'auto' }}>
                         {(user?.subjects || []).map(s => (

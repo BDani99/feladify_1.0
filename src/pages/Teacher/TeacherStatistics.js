@@ -81,7 +81,7 @@ const TeacherStatistics = () => {
                 <div className="page-header-banner">
                     <div className="phb-icon"><FaChartBar /></div>
                     <div className="phb-text">
-                        <h1 className="phb-title">Statisztikák</h1>
+                        <h1 className="phb-title">Statisztikák és Elemzések</h1>
                         <p className="phb-subtitle">Tekintsd át a diákok teljesítményét és az osztályok haladását</p>
                     </div>
                 </div>

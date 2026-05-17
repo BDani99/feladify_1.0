@@ -100,16 +100,6 @@ const StudentDashboard = () => {
                         <h1 className="phb-title">{greeting}, {firstName}!</h1>
                         <p className="phb-subtitle">Üdvözlünk újra a Feladify-ban! Jó tanulást mára.</p>
                     </div>
-                    <div className="dash-greeting-right" style={{ marginLeft: 'auto' }}>
-                        {stats?.streak > 0 && (
-                            <span className="dash-streak-badge">
-                                <FaFire /> {stats.streak} napos sorozat
-                            </span>
-                        )}
-                        {stats?.totalXP > 0 && (
-                            <span className="dash-xp-badge">⚡ {stats.totalXP} XP</span>
-                        )}
-                    </div>
                 </div>
 
                 <div className="dash-stats-row">

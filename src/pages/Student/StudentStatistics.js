@@ -45,13 +45,16 @@ const AssignmentTab = ({ data }) => {
 
   const hasAssignments = assignmentsStatistics && assignmentsStatistics.length > 0;
 
+  // A lista newest-first sorrendben van (backend rendezi), a charthoz fordítjuk hogy időrendben legyen (régebbi balra)
+  const chartAssignments = assignmentsStatistics ? [...assignmentsStatistics].reverse() : [];
+
   const lineData = {
-    labels: assignmentsStatistics?.map((_, i) => `${i + 1}.`) || [],
+    labels: chartAssignments.map((_, i) => `${i + 1}.`),
     datasets: [{
       label: 'Pontszám (%)',
-      data: assignmentsStatistics?.map(s =>
+      data: chartAssignments.map(s =>
         s.totalPoints > 0 ? Math.round((s.achievedPoints / s.totalPoints) * 100) : 0
-      ) || [],
+      ),
       borderColor: '#3b82f6',
       backgroundColor: 'rgba(59,130,246,0.08)',
       tension: 0.4,

@@ -100,7 +100,7 @@ const QuestionCard = ({ item, index, subject }) => {
           {analysisOpen && (
             <div className="q-analysis-result">
               {analysisLoading ? (
-                <div className="q-analysis-loading"><LoadingSpinner /><span>Elemzés generálása...</span></div>
+                <div className="q-analysis-loading"><span className="q-analysis-spinner" /><span>Elemzés generálása...</span></div>
               ) : analysis ? (
                 <>
                   <div className="q-analysis-section">
@@ -380,7 +380,6 @@ const DiagnosticResult = () => {
           <button
             className="btn btn-primary"
             onClick={() => navigate(`/egyeni-gyakorlas/${subject}/roadmap`)}
-            style={{ backgroundColor: subjectColor }}
           >
             <FaHome /> Tanulási térkép megtekintése
           </button>
