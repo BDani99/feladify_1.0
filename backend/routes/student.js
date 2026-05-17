@@ -8,7 +8,7 @@ const Assignment = require('../models/Assignment');
 const Class = require('../models/Class');
 const DiagnosticTest = require('../models/DiagnosticTest');
 const DiagnosticResult = require('../models/DiagnosticResult');
-const groqService = require('../services/groqService');
+const groqService = require('../services/aiService');
 const { sendError } = require('../utils/errorResponse');
 
 // Middleware to verify JWT token and get user
@@ -904,6 +904,7 @@ FONTOS SZABÁLYOK:
     }
 
     const streamMode = req.body.stream || req.query.stream === 'true';
+    const modelOverride = req.body.modelOverride || null;
 
     if (streamMode) {
       res.writeHead(200, {
@@ -915,13 +916,16 @@ FONTOS SZABÁLYOK:
       console.log('[Student API] Chat send - Kezdődik a válasz streaming...');
       let fullResponse = '';
 
-      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true)) {
+      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride)) {
         fullResponse += chunk;
         res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
       }
 
-      chatDoc.addMessage('assistant', fullResponse);
-      await chatDoc.save();
+      const isErrorMsg = fullResponse.startsWith('Az AI szolgáltatás');
+      if (fullResponse.trim() && !isErrorMsg) {
+        chatDoc.addMessage('assistant', fullResponse);
+        await chatDoc.save();
+      }
 
       res.write(`data: ${JSON.stringify({ done: true, sessionId: chatDoc.currentSessionId })}\n\n`);
       res.end();
@@ -929,7 +933,7 @@ FONTOS SZABÁLYOK:
     }
 
     console.log('[Student API] Chat send - Groq API hívása előtt');
-    const aiResponse = await groqService.generateResponse(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true);
+    const aiResponse = await groqService.generateResponse(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride);
     console.log('[Student API] Chat send - AI válasz hossza:', aiResponse.length, 'Első 100 char:', aiResponse.substring(0, 100));
 
     chatDoc.addMessage('assistant', aiResponse);
@@ -938,8 +942,9 @@ FONTOS SZABÁLYOK:
     res.json({ message: aiResponse, sessionId: chatDoc.currentSessionId });
   } catch (err) {
     console.error('[Student API] Chat send error:', err.message);
-    console.error('[Student API] Chat send error stack:', err.stack);
-    res.status(500).json({ message: 'Hiba az üzenet feldolgozásakor', error: err.message });
+    if (res.headersSent) return;
+    const isAI = err.message?.includes('nem elérhető');
+    res.status(isAI ? 503 : 500).json({ message: isAI ? err.message : 'Hiba az üzenet feldolgozásakor', aiUnavailable: isAI });
   }
 });
 

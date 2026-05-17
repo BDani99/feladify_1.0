@@ -144,6 +144,10 @@ const CheckpointPractice = () => {
           const hintText = data.hint ? `\n\n💡 *${data.hint}*` : '';
           addBotMessage(`❌ ${data.aiMessage}${hintText}\n\nPróbáld meg újra! 💪`);
         }
+      } else if (res.status === 503) {
+        addBotMessage('⚠️ Az AI mentor jelenleg nem elérhető. Kérjük, próbáld újra később!');
+      } else {
+        addBotMessage('⚠️ Hiba az ellenőrzéskor. Próbáld újra!');
       }
     } catch (err) {
       console.error('Hiba a válasz ellenőrzésekor:', err);
@@ -257,6 +261,10 @@ const CheckpointPractice = () => {
       if (res.ok) {
         const data = await res.json();
         addBotMessage(data.hint || 'Próbáld meg más megközelítésből!');
+      } else if (res.status === 503) {
+        addBotMessage('⚠️ Az AI mentor jelenleg nem elérhető. Próbáld meg később!');
+      } else {
+        addBotMessage('Hiba történt. Próbáld újra!');
       }
     } catch (err) {
       addBotMessage('Hiba történt. Próbáld újra!');

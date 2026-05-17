@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken'); // Importáljuk a JWT-t a token kezeléséh
 const Assignment = require('../models/Assignment');
 const User = require('../models/User');
 const Class = require('../models/Class');
-const { generateText, generateChat, generateChatWithHistory } = require('../services/groq');
-const groqService = require('../services/groqService');
+const { generateText, generateChat, generateChatWithHistory } = require('../services/ai');
+const groqService = require('../services/aiService');
 const Notification = require('../models/Notification');
 
 async function notify(userId, type, title, message, data = {}) {
@@ -170,7 +170,8 @@ router.post('/teacher/preview', authenticateTeacher, async (req, res) => {
     res.status(200).json({ questions });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: error.message || 'Hiba történt a generálás során.' });
+    const isAI = error.message?.includes('nem elérhető');
+    res.status(isAI ? 503 : 500).json({ message: error.message || 'Hiba történt a generálás során.', aiUnavailable: isAI });
   }
 });
 
@@ -252,7 +253,8 @@ router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
     res.status(201).json({ message: 'Feladatsor sikeresen generálva és hozzárendelve a kiválasztott osztály diákjaihoz', assignment });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: error.message || 'Hiba történt a feladatsor generálása közben.' });
+    const isAI = error.message?.includes('nem elérhető');
+    res.status(isAI ? 503 : 500).json({ message: error.message || 'Hiba történt a feladatsor generálása közben.', aiUnavailable: isAI });
   }
 });
 
@@ -472,6 +474,8 @@ router.get('/student/completed-assignments', authenticateStudent, async (req, re
             score: answer.score,
             maxPoints: question ? question.points : 1,
             flagged: answer.flagged ?? false,
+            flagResponse: answer.flagResponse || '',
+            flagRejected: answer.flagRejected ?? false,
           };
           // Helyes válasz és kérdéstípus csak értékelés után látható
           if (isGraded) {
@@ -1147,6 +1151,7 @@ Szabályok:
     ];
 
     const streamMode = req.body.stream || req.query.stream === 'true';
+    const modelOverride = req.body.modelOverride || null;
 
     if (streamMode) {
       res.writeHead(200, {
@@ -1158,13 +1163,16 @@ Szabályok:
       console.log('[Teacher Chat] Kezdődik a válasz streaming...');
       let fullResponse = '';
 
-      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true)) {
+      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride)) {
         fullResponse += chunk;
         res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
       }
 
-      chatDoc.addMessage('assistant', fullResponse);
-      await chatDoc.save();
+      const isErrorMsg = fullResponse.startsWith('Az AI szolgáltatás');
+      if (fullResponse.trim() && !isErrorMsg) {
+        chatDoc.addMessage('assistant', fullResponse);
+        await chatDoc.save();
+      }
 
       res.write(`data: ${JSON.stringify({ done: true, sessionId: chatDoc.currentSessionId })}\n\n`);
       res.end();
@@ -1179,7 +1187,9 @@ Szabályok:
     res.json({ message: aiResponse, sessionId: chatDoc.currentSessionId });
   } catch (err) {
     console.error('[Teacher Chat] Send error:', err.message);
-    res.status(500).json({ message: 'Hiba az üzenet feldolgozásakor', error: err.message });
+    if (res.headersSent) return;
+    const isAI = err.message?.includes('nem elérhető');
+    res.status(isAI ? 503 : 500).json({ message: isAI ? err.message : 'Hiba az üzenet feldolgozásakor', aiUnavailable: isAI });
   }
 });
 

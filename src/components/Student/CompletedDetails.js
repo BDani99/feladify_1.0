@@ -11,7 +11,10 @@ import {
     FaArrowLeft,
     FaExclamationTriangle,
     FaHourglassHalf,
-    FaLock
+    FaLock,
+    FaFlag,
+    FaBan,
+    FaReply,
 } from 'react-icons/fa';
 import { flagAnswer } from '../../api/Student/FlagAnswer';
 import { getAnswerExplanation } from '../../api/Student/TutorChat';
@@ -218,6 +221,26 @@ const CompletedDetails = () => {
                                                             <p className="ai-explain-text">{explanation}</p>
                                                         </>
                                                     )}
+                                                </div>
+                                            )}
+
+                                            {/* Tanár reklamáció-válasza */}
+                                            {answer.flagRejected && (
+                                                <div className="teacher-flag-response rejected">
+                                                    <FaBan className="tfr-icon" />
+                                                    <div>
+                                                        <span className="tfr-label">A tanár elutasította a reklamációt</span>
+                                                        <p className="tfr-text">A tanár megvizsgálta és fenntartja az eredeti értékelést.</p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {!answer.flagRejected && answer.flagResponse && (
+                                                <div className="teacher-flag-response answered">
+                                                    <FaReply className="tfr-icon" />
+                                                    <div>
+                                                        <span className="tfr-label">Tanár válasza a reklamációra</span>
+                                                        <p className="tfr-text">{answer.flagResponse}</p>
+                                                    </div>
                                                 </div>
                                             )}
                                         </>

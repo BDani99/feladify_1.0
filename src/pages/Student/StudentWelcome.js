@@ -6,7 +6,7 @@ import { useChat } from '../../context/ChatContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Welcome.css';
 import logo from '../../assets/logo-400.png';
-import { FaPaperPlane, FaPlus, FaHistory, FaTrash, FaPen, FaExclamationCircle, FaGraduationCap } from 'react-icons/fa';
+import { FaPaperPlane, FaPlus, FaHistory, FaTrash, FaPen, FaExclamationCircle, FaGraduationCap, FaRobot } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import ConfirmModal from '../../components/ConfirmModal';
 
@@ -22,8 +22,30 @@ const StudentWelcome = () => {
   const [renamingSessionId, setRenamingSessionId] = useState(null);
   const [renamingTitle, setRenamingTitle] = useState('');
   const [confirmDeleteModal, setConfirmDeleteModal] = useState({ isOpen: false, sessionId: null });
+  const [selectedModel, setSelectedModel] = useState({ provider: 'qwen', model: 'qwen/qwen3-32b' });
+  const [showModelPicker, setShowModelPicker] = useState(false);
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
+  const modelPickerRef = useRef(null);
+
+  const ALL_MODELS = [
+    { label: 'Qwen3 32B',     value: 'qwen/qwen3-32b',                            provider: 'qwen',   badge: 'Qwen' },
+    { label: 'GPT-OSS 120B',  value: 'openai/gpt-oss-120b',                       provider: 'openai', badge: 'OpenAI' },
+    { label: 'GPT-OSS 20B',   value: 'openai/gpt-oss-20b',                        provider: 'openai', badge: 'OpenAI' },
+    { label: 'Llama 3.3 70B', value: 'llama-3.3-70b-versatile',                   provider: 'meta',   badge: 'Meta' },
+    { label: 'Llama 4 Scout', value: 'meta-llama/llama-4-scout-17b-16e-instruct', provider: 'meta',   badge: 'Meta' },
+    { label: 'Llama 3.1 8B',  value: 'llama-3.1-8b-instant',                      provider: 'meta',   badge: 'Meta' },
+  ];
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (modelPickerRef.current && !modelPickerRef.current.contains(e.target)) {
+        setShowModelPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const quickPrompts = [
     "Milyen dolgozataim lesznek a héten?",
@@ -103,7 +125,7 @@ const StudentWelcome = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`
         },
-        body: JSON.stringify({ message: userMsg, stream: true })
+        body: JSON.stringify({ message: userMsg, stream: true, modelOverride: selectedModel })
       });
 
       if (!response.ok) {
@@ -458,7 +480,30 @@ const StudentWelcome = () => {
 
         {/* Input Area */}
         <form onSubmit={handleChatSubmit} className="chat-input-form">
-          <div className="chat-input-wrapper">
+          <div className="chat-input-wrapper" ref={modelPickerRef}>
+            {showModelPicker && (
+              <div className="model-picker-popup">
+                {ALL_MODELS.map((m, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`model-picker-item ${selectedModel?.model === m.value ? 'active' : ''}`}
+                    onClick={() => { setSelectedModel({ provider: m.provider, model: m.value }); setShowModelPicker(false); }}
+                  >
+                    {m.badge && <span className={`model-badge model-badge-${m.provider}`}>{m.badge}</span>}
+                    <span className="model-name">{m.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              className={`model-picker-btn ${showModelPicker ? 'model-open' : ''}`}
+              onClick={() => setShowModelPicker(v => !v)}
+              title={selectedModel.model}
+            >
+              <FaRobot />
+            </button>
             <textarea
               ref={inputRef}
               value={chatInput}
@@ -478,6 +523,7 @@ const StudentWelcome = () => {
               <FaPaperPlane />
             </button>
           </div>
+          <p className="model-active-note">Modell: <strong>{ALL_MODELS.find(m => m.value === selectedModel.model)?.label || selectedModel.model}</strong></p>
           <p className="chat-footer-note">A Feladify AI hibázhat. Ellenőrizd a fontos információkat.</p>
         </form>
 
