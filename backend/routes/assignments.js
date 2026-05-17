@@ -188,8 +188,16 @@ router.post('/teacher/save', authenticateTeacher, async (req, res) => {
     const classData = await Class.findOne({ name: className });
     if (!classData) return res.status(400).json({ message: 'Az adott osztály nem található.' });
 
-    const students = await User.find({ role: 'student', className: classData.name }).select('_id');
-    if (students.length === 0) return res.status(400).json({ message: 'Nincs diák az adott osztályban.' });
+    const classStudents = await User.find({ role: 'student', className: classData.name }).select('_id');
+    if (classStudents.length === 0) return res.status(400).json({ message: 'Nincs diák az adott osztályban.' });
+
+    let students = classStudents;
+    if (Array.isArray(req.body.studentIds) && req.body.studentIds.length > 0) {
+      students = classStudents.filter(s => req.body.studentIds.includes(s._id.toString()));
+      if (students.length === 0) {
+        return res.status(400).json({ message: 'A megadott diákok egyike sem található az osztályban.' });
+      }
+    }
 
     const cleanQuestions = normalizeAndValidateQuestions(questions);
 
@@ -234,8 +242,16 @@ router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
     const classData = await Class.findOne({ name: className });
     if (!classData) return res.status(400).json({ message: 'Az adott osztály nem található.' });
 
-    const students = await User.find({ role: 'student', className: classData.name }).select('_id');
-    if (students.length === 0) return res.status(400).json({ message: 'Nincs diák az adott osztályban.' });
+    const classStudents = await User.find({ role: 'student', className: classData.name }).select('_id');
+    if (classStudents.length === 0) return res.status(400).json({ message: 'Nincs diák az adott osztályban.' });
+
+    let students = classStudents;
+    if (Array.isArray(req.body.studentIds) && req.body.studentIds.length > 0) {
+      students = classStudents.filter(s => req.body.studentIds.includes(s._id.toString()));
+      if (students.length === 0) {
+        return res.status(400).json({ message: 'A megadott diákok egyike sem található az osztályban.' });
+      }
+    }
 
     const questions = await generateQuestions(subject, title, diffDesc, validTypes);
 

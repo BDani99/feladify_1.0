@@ -10,7 +10,8 @@ import {
     FaCalendarAlt, 
     FaTrophy,
     FaExclamationCircle,
-    FaArrowRight
+    FaArrowRight,
+    FaChevronDown
 } from 'react-icons/fa';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Student/CompletedAssignments.css';
@@ -20,6 +21,7 @@ const CompletedAssignments = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('graded');
+    const [collapsedSubjects, setCollapsedSubjects] = useState({});
 
     useEffect(() => {
         const getAssignments = async () => {
@@ -35,10 +37,29 @@ const CompletedAssignments = () => {
         getAssignments();
     }, []);
 
+    const toggleSubject = (subject) => {
+        setCollapsedSubjects(prev => ({
+            ...prev,
+            [subject]: !prev[subject]
+        }));
+    };
+
     const gradedAssignments = assignments.filter(a => a.grade !== null && a.grade !== undefined);
     const pendingAssignments = assignments.filter(a => a.grade === null || a.grade === undefined);
 
     const displayList = activeTab === 'graded' ? gradedAssignments : pendingAssignments;
+
+    const groupAssignmentsBySubject = (list) => {
+        const orderedList = list.slice().reverse();
+        return orderedList.reduce((acc, a) => {
+            const sub = a.subject || 'Egyéb';
+            if (!acc[sub]) acc[sub] = [];
+            acc[sub].push(a);
+            return acc;
+        }, {});
+    };
+
+    const grouped = groupAssignmentsBySubject(displayList);
 
     return (
         <div id='content'>
@@ -91,56 +112,84 @@ const CompletedAssignments = () => {
                     </button>
                 </div>
 
-                <div className="completed-grid">
+                <div className="completed-groups-container">
                     {displayList.length === 0 ? (
                         <div className="empty-state-completed">
                             <FaHourglassHalf />
                             <p>Nincsenek dolgozatok ebben a kategóriában.</p>
                         </div>
                     ) : (
-                        displayList.slice().reverse().map((a) => (
-                            <Link 
-                                key={a.assignmentId} 
-                                to={`/megoldott-dolgozatok/${a.assignmentId}`} 
-                                className="completed-card-link"
-                                state={{ assignment: a }}
-                            >
-                                <div className="completed-card">
-                                    <div className="card-side-accent"></div>
-                                    <div className="card-main">
-                                        <div className="card-header-row">
-                                            <div className="subject-tag">{a.subject}</div>
-                                            <div className="date-tag">
-                                                <FaCalendarAlt /> {format(new Date(a.completedAt), 'yyyy.MM.dd')}
-                                            </div>
-                                            <div className={`status-badge ${a.grade ? 'graded' : 'pending'}`}>
-                                                {a.grade ? 'ÉRTÉKELVE' : 'JAVÍTÁS ALATT'}
-                                            </div>
-                                        </div>
-                                        
-                                        <h3 className="card-title">{a.title}</h3>
-                                        
-                                        <div className="card-details-row">
-                                            {a.grade ? (
-                                                <>
-                                                    <div className="points-box">
-                                                        <span className="label">Pontszám</span>
-                                                        <span className="val">{a.achievedPoints} / {a.totalPoints}</span>
-                                                    </div>
-                                                    <div className="grade-box">
-                                                        <span className="label">Osztályzat</span>
-                                                        <span className={`val grade-${a.grade}`}>{a.grade}</span>
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <span className="pending-score-msg">Az eredmény a tanári értékelés után lesz látható.</span>
-                                            )}
+                        Object.keys(grouped).map((subject) => {
+                            const subjectList = grouped[subject];
+                            const isCollapsed = !!collapsedSubjects[subject];
+                            return (
+                                <div key={subject} className="subject-section">
+                                    <div 
+                                        className={`subject-section-header ${isCollapsed ? 'collapsed' : ''}`}
+                                        onClick={() => toggleSubject(subject)}
+                                    >
+                                        <FaBook />
+                                        <h2 className="subject-section-title">{subject}</h2>
+                                        <div className="subject-header-right">
+                                            <span className="subject-count-badge">
+                                                {subjectList.length} {activeTab === 'graded' ? 'értékelt' : 'javítás alatt'}
+                                            </span>
+                                            <span className="chevron-icon">
+                                                <FaChevronDown />
+                                            </span>
                                         </div>
                                     </div>
-                                    <div className="card-arrow"><FaArrowRight /></div>
+
+                                    {!isCollapsed && (
+                                        <div className="completed-grid">
+                                            {subjectList.map((a) => (
+                                                <Link 
+                                                    key={a.assignmentId} 
+                                                    to={`/megoldott-dolgozatok/${a.assignmentId}`} 
+                                                    className="completed-card-link"
+                                                    state={{ assignment: a }}
+                                                >
+                                                    <div className="completed-card">
+                                                        <div className="card-side-accent"></div>
+                                                        <div className="card-main">
+                                                            <div className="card-header-row">
+                                                                <div className="subject-tag">{a.subject}</div>
+                                                                <div className="date-tag">
+                                                                    <FaCalendarAlt /> {format(new Date(a.completedAt), 'yyyy.MM.dd')}
+                                                                </div>
+                                                                <div className={`status-badge ${a.grade ? 'graded' : 'pending'}`}>
+                                                                    {a.grade ? 'ÉRTÉKELVE' : 'JAVÍTÁS ALATT'}
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <h3 className="card-title">{a.title}</h3>
+                                                            
+                                                            <div className="card-details-row">
+                                                                {a.grade ? (
+                                                                    <>
+                                                                        <div className="points-box">
+                                                                            <span className="label">Pontszám</span>
+                                                                            <span className="val">{a.achievedPoints} / {a.totalPoints}</span>
+                                                                        </div>
+                                                                        <div className="grade-box">
+                                                                            <span className="label">Osztályzat</span>
+                                                                            <span className={`val grade-${a.grade}`}>{a.grade}</span>
+                                                                        </div>
+                                                                    </>
+                                                                ) : (
+                                                                    <span className="pending-score-msg">Az eredmény a tanári értékelés után lesz látható.</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="card-arrow"><FaArrowRight /></div>
+                                                    </div>
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                            </Link>
-                        ))
+                            );
+                        })
                     )}
                 </div>
                 </>

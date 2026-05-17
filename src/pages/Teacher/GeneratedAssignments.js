@@ -14,6 +14,7 @@ import {
     FaArrowRight,
     FaExclamationTriangle,
     FaFlag,
+    FaChevronDown,
 } from 'react-icons/fa';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Teacher/GeneratedAssignments.css';
@@ -26,6 +27,7 @@ const GeneratedAssignments = () => {
 
     const [flaggedData, setFlaggedData] = useState(null);
     const [flaggedLoading, setFlaggedLoading] = useState(false);
+    const [collapsedSubjects, setCollapsedSubjects] = useState({});
 
     useEffect(() => {
         const fetchData = async () => {
@@ -59,6 +61,13 @@ const GeneratedAssignments = () => {
         if (tab === 'flagged') loadFlagged();
     };
 
+    const toggleSubject = (subject) => {
+        setCollapsedSubjects(prev => ({
+            ...prev,
+            [subject]: !prev[subject]
+        }));
+    };
+
     const totalPendingFlags = flaggedData?.reduce(
         (sum, item) => sum + item.flaggedSubmissions.reduce(
             (s2, sub) => s2 + sub.flaggedAnswers.filter(a => !a.flagResponse && !a.flagRejected).length, 0
@@ -72,6 +81,29 @@ const GeneratedAssignments = () => {
         if (activeTab === 'pending') return completed === 0;
         return true;
     });
+
+    const groupAssignmentsBySubject = (list) => {
+        const orderedList = list.slice().reverse();
+        return orderedList.reduce((acc, a) => {
+            const sub = a.subject || 'Egyéb';
+            if (!acc[sub]) acc[sub] = [];
+            acc[sub].push(a);
+            return acc;
+        }, {});
+    };
+
+    const groupFlaggedBySubject = (list) => {
+        if (!list) return {};
+        return list.reduce((acc, item) => {
+            const sub = item.subject || 'Egyéb';
+            if (!acc[sub]) acc[sub] = [];
+            acc[sub].push(item);
+            return acc;
+        }, {});
+    };
+
+    const groupedNormal = groupAssignmentsBySubject(filteredAssignments);
+    const groupedFlagged = groupFlaggedBySubject(flaggedData);
 
     return (
         <div id="content">
@@ -137,7 +169,7 @@ const GeneratedAssignments = () => {
 
                 {/* Normál dolgozat lista */}
                 {activeTab !== 'flagged' && (
-                    <div className="assignments-grid">
+                    <div className="completed-groups-container">
                         {filteredAssignments.length === 0 ? (
                             <div className="empty-state">
                                 <FaBookOpen />
@@ -145,44 +177,72 @@ const GeneratedAssignments = () => {
                                 <Link to="/dolgozat-generalas" className="create-btn">Új dolgozat létrehozása</Link>
                             </div>
                         ) : (
-                            filteredAssignments.slice().reverse().map((a) => {
-                                const total = a.studentIds?.length || 0;
-                                const completed = a.completedCount || 0;
-                                const pct = total > 0 ? (completed / total) * 100 : 0;
-
+                            Object.keys(groupedNormal).map((subject) => {
+                                const subjectList = groupedNormal[subject];
+                                const isCollapsed = !!collapsedSubjects[subject];
                                 return (
-                                    <div key={a._id} className="assignment-card-premium">
-                                        <div className="card-header">
-                                            <div className="subject-tag">{a.subject}</div>
-                                            <div className={`difficulty-tag ${a.difficulty}`}>{a.difficulty}</div>
-                                        </div>
-                                        <h3 className="assignment-title">{a.title}</h3>
-
-                                        <div className="card-details">
-                                            <div className="detail-item"><FaUsers /> <span>{total} diák hozzárendelve</span></div>
-                                            <div className="detail-item"><FaChartLine /> <span>{completed} / {total} kitöltve</span></div>
-                                            <div className="detail-item"><FaHourglassHalf /> <span>{format(new Date(a.createdAt), 'yyyy.MM.dd')}</span></div>
-                                        </div>
-
-                                        <div className="progress-container">
-                                            <div className="progress-label">
-                                                <span>Haladás</span>
-                                                <span>{Math.round(pct)}%</span>
-                                            </div>
-                                            <div className="progress-bar-bg">
-                                                <div className="progress-bar-fill" style={{ width: `${pct}%` }}></div>
+                                    <div key={subject} className="subject-section">
+                                        <div 
+                                            className={`subject-section-header ${isCollapsed ? 'collapsed' : ''}`}
+                                            onClick={() => toggleSubject(subject)}
+                                        >
+                                            <FaBookOpen />
+                                            <h2 className="subject-section-title">{subject}</h2>
+                                            <div className="subject-header-right">
+                                                <span className="subject-count-badge">
+                                                    {subjectList.length} dolgozat
+                                                </span>
+                                                <span className="chevron-icon">
+                                                    <FaChevronDown />
+                                                </span>
                                             </div>
                                         </div>
 
-                                        <div className="card-actions">
-                                            <Link
-                                                to={`/generalt-dolgozatok/${a._id}`}
-                                                state={{ assignment: a }}
-                                                className="view-btn"
-                                            >
-                                                Kezelés <FaArrowRight />
-                                            </Link>
-                                        </div>
+                                        {!isCollapsed && (
+                                            <div className="assignments-grid">
+                                                {subjectList.map((a) => {
+                                                    const total = a.studentIds?.length || 0;
+                                                    const completed = a.completedCount || 0;
+                                                    const pct = total > 0 ? (completed / total) * 100 : 0;
+
+                                                    return (
+                                                        <div key={a._id} className="assignment-card-premium">
+                                                            <div className="card-header">
+                                                                <div className="subject-tag">{a.subject}</div>
+                                                                <div className={`difficulty-tag ${a.difficulty}`}>{a.difficulty}</div>
+                                                            </div>
+                                                            <h3 className="assignment-title">{a.title}</h3>
+
+                                                            <div className="card-details">
+                                                                <div className="detail-item"><FaUsers /> <span>{total} diák hozzárendelve</span></div>
+                                                                <div className="detail-item"><FaChartLine /> <span>{completed} / {total} kitöltve</span></div>
+                                                                <div className="detail-item"><FaHourglassHalf /> <span>{format(new Date(a.createdAt), 'yyyy.MM.dd')}</span></div>
+                                                            </div>
+
+                                                            <div className="progress-container">
+                                                                <div className="progress-label">
+                                                                    <span>Haladás</span>
+                                                                    <span>{Math.round(pct)}%</span>
+                                                                </div>
+                                                                <div className="progress-bar-bg">
+                                                                    <div className="progress-bar-fill" style={{ width: `${pct}%` }}></div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="card-actions">
+                                                                <Link
+                                                                    to={`/generalt-dolgozatok/${a._id}`}
+                                                                    state={{ assignment: a }}
+                                                                    className="view-btn"
+                                                                >
+                                                                    Kezelés <FaArrowRight />
+                                                                </Link>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })
@@ -192,7 +252,7 @@ const GeneratedAssignments = () => {
 
                 {/* Reklamációk lista */}
                 {activeTab === 'flagged' && (
-                    <div className="flagged-assignments-list">
+                    <div className="completed-groups-container">
                         {flaggedLoading && <LoadingSpinner />}
 
                         {!flaggedLoading && flaggedData?.length === 0 && (
@@ -202,55 +262,83 @@ const GeneratedAssignments = () => {
                             </div>
                         )}
 
-                        {!flaggedLoading && flaggedData?.map(item => {
-                            const assignment = assignments.find(a => String(a._id) === String(item.assignmentId));
-                            const pendingCount = item.flaggedSubmissions.reduce(
-                                (sum, s) => sum + s.flaggedAnswers.filter(a => !a.flagResponse && !a.flagRejected).length, 0
-                            );
-                            const totalFlagCount = item.flaggedSubmissions.reduce(
-                                (sum, s) => sum + s.flaggedAnswers.length, 0
-                            );
-
+                        {!flaggedLoading && Object.keys(groupedFlagged).map((subject) => {
+                            const subjectList = groupedFlagged[subject];
+                            const isCollapsed = !!collapsedSubjects[`flagged-${subject}`];
                             return (
-                                <div key={String(item.assignmentId)} className="flagged-assignment-card">
-                                    <div className="flagged-asgn-header">
-                                        <div className="flagged-asgn-info">
-                                            <div className="subject-tag">{item.subject}</div>
-                                            <h3 className="flagged-asgn-title">{item.assignmentTitle}</h3>
-                                            <div className="flagged-asgn-meta">
-                                                <span className="flagged-count-chip">
-                                                    <FaFlag /> {totalFlagCount} reklamáció
-                                                </span>
-                                                {pendingCount > 0 && (
-                                                    <span className="pending-count-chip">
-                                                        {pendingCount} megválaszolatlan
-                                                    </span>
-                                                )}
-                                            </div>
+                                <div key={subject} className="subject-section">
+                                    <div 
+                                        className={`subject-section-header ${isCollapsed ? 'collapsed' : ''}`}
+                                        onClick={() => toggleSubject(`flagged-${subject}`)}
+                                    >
+                                        <FaFlag />
+                                        <h2 className="subject-section-title">{subject}</h2>
+                                        <div className="subject-header-right">
+                                            <span className="subject-count-badge">
+                                                {subjectList.length} reklamáció
+                                            </span>
+                                            <span className="chevron-icon">
+                                                <FaChevronDown />
+                                            </span>
                                         </div>
-                                        <Link
-                                            to={`/generalt-dolgozatok/${item.assignmentId}`}
-                                            state={{ assignment: assignment || { _id: item.assignmentId, title: item.assignmentTitle, subject: item.subject, questions: [], completedCount: 0 } }}
-                                            className="view-btn"
-                                        >
-                                            Reklamációk kezelése <FaArrowRight />
-                                        </Link>
                                     </div>
 
-                                    <div className="flagged-students-summary">
-                                        {item.flaggedSubmissions.map(sub => {
-                                            const subPending = sub.flaggedAnswers.filter(a => !a.flagResponse && !a.flagRejected).length;
-                                            return (
-                                                <div key={String(sub.studentId)} className="flagged-student-chip">
-                                                    <span className="avatar-sm">{sub.studentName.charAt(0)}</span>
-                                                    <span>{sub.studentName}</span>
-                                                    <span className={`sub-flag-count ${subPending > 0 ? 'pending' : 'done'}`}>
-                                                        {subPending > 0 ? `${subPending} nyitott` : 'kezelve'}
-                                                    </span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                    {!isCollapsed && (
+                                        <div className="flagged-assignments-list">
+                                            {subjectList.map(item => {
+                                                const assignment = assignments.find(a => String(a._id) === String(item.assignmentId));
+                                                const pendingCount = item.flaggedSubmissions.reduce(
+                                                    (sum, s) => sum + s.flaggedAnswers.filter(a => !a.flagResponse && !a.flagRejected).length, 0
+                                                );
+                                                const totalFlagCount = item.flaggedSubmissions.reduce(
+                                                    (sum, s) => sum + s.flaggedAnswers.length, 0
+                                                );
+
+                                                return (
+                                                    <div key={String(item.assignmentId)} className="flagged-assignment-card">
+                                                        <div className="flagged-asgn-header">
+                                                            <div className="flagged-asgn-info">
+                                                                <div className="subject-tag">{item.subject}</div>
+                                                                <h3 className="flagged-asgn-title">{item.assignmentTitle}</h3>
+                                                                <div className="flagged-asgn-meta">
+                                                                    <span className="flagged-count-chip">
+                                                                        <FaFlag /> {totalFlagCount} reklamáció
+                                                                    </span>
+                                                                    {pendingCount > 0 && (
+                                                                        <span className="pending-count-chip">
+                                                                            {pendingCount} megválaszolatlan
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                            <Link
+                                                                to={`/generalt-dolgozatok/${item.assignmentId}`}
+                                                                state={{ assignment: assignment || { _id: item.assignmentId, title: item.assignmentTitle, subject: item.subject, questions: [], completedCount: 0 } }}
+                                                                className="view-btn"
+                                                            >
+                                                                Reklamációk kezelése <FaArrowRight />
+                                                            </Link>
+                                                        </div>
+
+                                                        <div className="flagged-students-summary">
+                                                            {item.flaggedSubmissions.map(sub => {
+                                                                const subPending = sub.flaggedAnswers.filter(a => !a.flagResponse && !a.flagRejected).length;
+                                                                return (
+                                                                    <div key={String(sub.studentId)} className="flagged-student-chip">
+                                                                        <span className="avatar-sm">{sub.studentName.charAt(0)}</span>
+                                                                        <span>{sub.studentName}</span>
+                                                                        <span className={`sub-flag-count ${subPending > 0 ? 'pending' : 'done'}`}>
+                                                                            {subPending > 0 ? `${subPending} nyitott` : 'kezelve'}
+                                                                        </span>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}

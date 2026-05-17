@@ -104,11 +104,17 @@
     margin-bottom: 15px;
 }
 
-.subject-tag {
-    font-size: 0.75rem;
-    font-weight: 800;
+.completed-assignments-wrapper .subject-tag {
+    background: var(--accent-glow);
     color: var(--accent);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 0.72rem;
+    font-weight: 800;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
 }
 
 .date-tag {
@@ -211,4 +217,88 @@
     font-size: 40px;
     margin-bottom: 20px;
     opacity: 0.3;
+}
+
+/* ── Subject Grouping Styles ── */
+.completed-groups-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    animation: fadeIn var(--transition-normal);
+}
+
+.subject-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.subject-section-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 18px 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    user-select: none;
+    transition: all var(--transition-bounce);
+    backdrop-filter: var(--blur-sm);
+    -webkit-backdrop-filter: var(--blur-sm);
+}
+
+.subject-section-header:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.subject-section-header svg {
+    color: var(--accent);
+    font-size: 1.25rem;
+}
+
+.subject-section-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--color-text);
+    margin: 0;
+    flex: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.subject-header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.subject-count-badge {
+    background: var(--accent-glow);
+    color: var(--accent);
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+}
+
+.chevron-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-dim);
+    font-size: 0.9rem;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.subject-section-header.collapsed .chevron-icon {
+    transform: rotate(-90deg);
+}
+
+.subject-section-header.collapsed {
+    opacity: 0.85;
 }

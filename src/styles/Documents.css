@@ -365,7 +365,7 @@
     max-width: 220px;
 }
 
-.details-header {
+.details-panel-card .details-header {
     display: flex;
     align-items: center;
     justify-content: space-between;

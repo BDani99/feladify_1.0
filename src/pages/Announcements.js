@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useUser } from '../context/UserContext';
 import { API_BASE_URL } from '../api/config';
 import { 
@@ -10,11 +10,61 @@ import {
   FaUserGraduate, 
   FaCalendarAlt, 
   FaClock,
-  FaBell
+  FaBell,
+  FaChevronDown
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import LoadingSpinner from '../components/LoadingSpinner';
 import '../styles/Announcements.css';
+
+const CustomSelect = ({ value, onChange, options, placeholder, icon }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (containerRef.current && !containerRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const selectedOption = options.find(opt => opt.value === value);
+
+    return (
+        <div className="custom-select-container" ref={containerRef}>
+            <div 
+                className={`custom-select-trigger ${isOpen ? 'open' : ''} ${value ? 'has-value' : ''}`}
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <div className="trigger-content">
+                    {icon && <span className="select-icon">{icon}</span>}
+                    <span>{selectedOption ? selectedOption.label : placeholder}</span>
+                </div>
+                <FaChevronDown className="select-chevron" />
+            </div>
+            
+            {isOpen && (
+                <div className="custom-select-options">
+                    {options.map((opt) => (
+                        <div 
+                            key={opt.value} 
+                            className={`custom-select-option ${value === opt.value ? 'selected' : ''}`}
+                            onClick={() => {
+                                onChange(opt.value);
+                                setIsOpen(false);
+                            }}
+                        >
+                            {opt.label}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
 
 const Announcements = () => {
   const { user } = useUser() || {};
@@ -259,15 +309,13 @@ const Announcements = () => {
                     <form onSubmit={handlePostAnnouncement} className="ann-form">
                       <div className="ann-field">
                         <label className="ann-label">Célosztály</label>
-                        <select
+                        <CustomSelect
                           value={selectedClassId}
-                          onChange={(e) => setSelectedClassId(e.target.value)}
-                          className="ann-select"
-                        >
-                          {classes.map(c => (
-                            <option key={c._id} value={c._id}>{c.name}</option>
-                          ))}
-                        </select>
+                          onChange={setSelectedClassId}
+                          options={classes.map(c => ({ value: c._id, label: c.name }))}
+                          placeholder="Válassz osztályt"
+                          icon={<FaChalkboard />}
+                        />
                       </div>
 
                       <div className="ann-field">
@@ -311,15 +359,13 @@ const Announcements = () => {
 
                     <div className="ann-field">
                       <label className="ann-label">Válassz osztályt</label>
-                      <select
+                      <CustomSelect
                         value={selectedRosterClassId}
-                        onChange={(e) => setSelectedRosterClassId(e.target.value)}
-                        className="ann-select"
-                      >
-                        {teacherClassesData.map(c => (
-                          <option key={c._id} value={c._id}>{c.name} ({c.studentIds?.length || 0} fő)</option>
-                        ))}
-                      </select>
+                        onChange={setSelectedRosterClassId}
+                        options={teacherClassesData.map(c => ({ value: c._id, label: `${c.name} (${c.studentIds?.length || 0} fő)` }))}
+                        placeholder="Válassz osztályt"
+                        icon={<FaUserGraduate />}
+                      />
                     </div>
 
                     <div className="ann-roster-list">
