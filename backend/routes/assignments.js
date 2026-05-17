@@ -684,6 +684,22 @@ router.patch('/student/flag-answer', authenticateStudent, async (req, res) => {
     if (result.modifiedCount === 0) {
       return res.status(404).json({ message: 'Válasz nem található.' });
     }
+
+    // Tanár értesítése
+    const assignment = await Assignment.findById(assignmentId).select('teacherId title');
+    const student = await User.findById(studentId).select('name');
+    if (assignment && student) {
+      const question = assignment.questions?.find(q => q._id.equals(qId));
+      const questionText = question?.questionText || 'kérdés';
+      await notify(
+        assignment.teacherId,
+        'answer_flagged',
+        'Diák reklamációt nyújtott be',
+        `${student.name} nem érti a javítást – "${assignment.title}" – "${questionText.substring(0, 60)}${questionText.length > 60 ? '…' : ''}"`,
+        { assignmentId, studentId, questionId }
+      );
+    }
+
     res.json({ message: 'Jelzés elküldve.' });
   } catch (error) {
     console.error(error);
@@ -727,6 +743,8 @@ router.get('/teacher/assignment-submissions/:assignmentId', authenticateTeacher,
             confidence: answer.confidence ?? null,
             aiFeedback: answer.aiFeedback || '',
             flagged: answer.flagged ?? false,
+            flagResponse: answer.flagResponse || '',
+            flagRejected: answer.flagRejected ?? false,
           };
         }),
       };
@@ -1238,6 +1256,153 @@ router.put('/teacher/finalize-grade', authenticateTeacher, async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Hiba az osztályzat véglegesítésekor.' });
+  }
+});
+
+// Tanár: reklamáció megválaszolása vagy elutasítása
+router.put('/teacher/resolve-flag', authenticateTeacher, async (req, res) => {
+  try {
+    const teacherId = req.userId;
+    const { studentId, assignmentId, questionId, response, rejected } = req.body;
+    if (!studentId || !assignmentId || !questionId) {
+      return res.status(400).json({ message: 'studentId, assignmentId és questionId megadása kötelező.' });
+    }
+
+    const assignment = await Assignment.findOne({ _id: assignmentId, teacherId });
+    if (!assignment) return res.status(403).json({ message: 'Nincs jogosultsága ehhez a dolgozathoz.' });
+
+    const aId = new mongoose.Types.ObjectId(assignmentId);
+    const qId = new mongoose.Types.ObjectId(questionId);
+
+    const updateFields = {};
+    if (rejected) {
+      updateFields['assignments.$[a].answers.$[ans].flagRejected'] = true;
+      updateFields['assignments.$[a].answers.$[ans].flagResponse'] = '';
+    } else {
+      updateFields['assignments.$[a].answers.$[ans].flagResponse'] = response || '';
+      updateFields['assignments.$[a].answers.$[ans].flagRejected'] = false;
+    }
+
+    const result = await User.updateOne(
+      { _id: studentId },
+      { $set: updateFields },
+      { arrayFilters: [{ 'a.assignmentId': aId }, { 'ans.questionId': qId }] }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ message: 'Válasz nem található.' });
+    }
+
+    // Diák értesítése
+    const student = await User.findById(studentId).select('name');
+    const question = assignment.questions?.find(q => q._id.equals(qId));
+    const questionText = question?.questionText || 'kérdés';
+    const notifMsg = rejected
+      ? `A tanár elutasította a reklamációdat – "${assignment.title}" – "${questionText.substring(0, 50)}${questionText.length > 50 ? '…' : ''}"`
+      : `A tanár válaszolt a reklamációdra – "${assignment.title}" – "${questionText.substring(0, 50)}${questionText.length > 50 ? '…' : ''}"`;
+    await notify(studentId, 'assignment_graded', rejected ? 'Reklamáció elutasítva' : 'Tanár válaszolt a reklamációra', notifMsg, { assignmentId, questionId });
+
+    res.json({ message: 'Reklamáció sikeresen kezelve.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Hiba a reklamáció kezelésekor.' });
+  }
+});
+
+// Tanár: összes jelzett válasz lekérése a tanár dolgozataihoz
+router.get('/teacher/flagged-answers', authenticateTeacher, async (req, res) => {
+  try {
+    const teacherId = req.userId;
+    const assignments = await Assignment.find({ teacherId }).lean();
+    if (assignments.length === 0) return res.json({ flaggedByAssignment: [] });
+
+    const assignmentIds = assignments.map(a => a._id);
+    const students = await User.find({
+      'assignments.assignmentId': { $in: assignmentIds }
+    }).select('name assignments').lean();
+
+    const result = [];
+
+    for (const assignment of assignments) {
+      const flaggedSubmissions = [];
+
+      for (const student of students) {
+        const submission = student.assignments?.find(a => String(a.assignmentId) === String(assignment._id));
+        if (!submission) continue;
+
+        const flaggedAnswers = submission.answers?.filter(ans => ans.flagged) || [];
+        if (flaggedAnswers.length === 0) continue;
+
+        flaggedSubmissions.push({
+          studentId: student._id,
+          studentName: student.name,
+          flaggedAnswers: flaggedAnswers.map(ans => {
+            const question = assignment.questions?.find(q => String(q._id) === String(ans.questionId));
+            return {
+              questionId: ans.questionId,
+              questionText: question?.questionText || '',
+              questionType: question?.questionType || 'short_answer',
+              studentAnswer: ans.studentAnswer,
+              correctAnswer: question?.correctAnswer ?? null,
+              score: ans.score,
+              maxPoints: question?.points ?? 1,
+              flagResponse: ans.flagResponse || '',
+              flagRejected: ans.flagRejected ?? false,
+            };
+          }),
+        });
+      }
+
+      if (flaggedSubmissions.length > 0) {
+        result.push({
+          assignmentId: assignment._id,
+          assignmentTitle: assignment.title,
+          subject: assignment.subject,
+          flaggedSubmissions,
+        });
+      }
+    }
+
+    res.json({ flaggedByAssignment: result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Hiba a jelzett válaszok lekérésekor.' });
+  }
+});
+
+// Tanár: kérdés szerkesztése egy már mentett dolgozatban
+router.put('/teacher/update-question', authenticateTeacher, async (req, res) => {
+  try {
+    const teacherId = req.userId;
+    const { assignmentId, questionId, questionText, options, pairs, items, correctAnswer, points } = req.body;
+    if (!assignmentId || !questionId) {
+      return res.status(400).json({ message: 'assignmentId és questionId megadása kötelező.' });
+    }
+
+    const assignment = await Assignment.findOne({ _id: assignmentId, teacherId });
+    if (!assignment) return res.status(403).json({ message: 'Nincs jogosultsága ehhez a dolgozathoz.' });
+
+    const qId = new mongoose.Types.ObjectId(questionId);
+    const question = assignment.questions.id(qId);
+    if (!question) return res.status(404).json({ message: 'Kérdés nem található.' });
+
+    if (questionText !== undefined) question.questionText = questionText;
+    if (options !== undefined) question.options = options;
+    if (pairs !== undefined) question.pairs = pairs;
+    if (items !== undefined) question.items = items;
+    if (correctAnswer !== undefined) question.correctAnswer = correctAnswer;
+    if (points !== undefined) {
+      const newPoints = Math.max(1, Number(points));
+      const oldPoints = question.points || 1;
+      question.points = newPoints;
+      assignment.totalPoints = (assignment.totalPoints || 0) - oldPoints + newPoints;
+    }
+
+    await assignment.save();
+    res.json({ message: 'Kérdés sikeresen frissítve.', question: question.toObject() });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Hiba a kérdés frissítésekor.' });
   }
 });
 

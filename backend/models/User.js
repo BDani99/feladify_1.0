@@ -9,7 +9,9 @@ const assignmentAnswerSchema = new mongoose.Schema({
       score: { type: Number, default: 0 },
       confidence: { type: Number, default: null },
       aiFeedback: { type: String, default: '' },
-      flagged: { type: Boolean, default: false }
+      flagged: { type: Boolean, default: false },
+      flagResponse: { type: String, default: '' },
+      flagRejected: { type: Boolean, default: false }
     }
   ],
   achievedPoints: { type: Number, default: 0 },
