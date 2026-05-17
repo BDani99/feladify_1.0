@@ -1,8 +1,9 @@
 import { API_BASE_URL } from '../config';
+import { handleApiError } from '../../utils/apiErrorHandler';
 
 const getAuthHeaders = () => ({
   'Content-Type': 'application/json',
-  'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`
+  'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`
 });
 
 export const startDiagnosticTest = async (subject) => {
@@ -10,11 +11,8 @@ export const startDiagnosticTest = async (subject) => {
     method: 'GET',
     headers: getAuthHeaders()
   });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Hiba történt a teszt indításakor');
-  }
-  return await response.json();
+  if (!response.ok) await handleApiError(response);
+  return response.json();
 };
 
 export const submitDiagnosticAnswers = async (testId, answers) => {
@@ -23,11 +21,8 @@ export const submitDiagnosticAnswers = async (testId, answers) => {
     headers: getAuthHeaders(),
     body: JSON.stringify({ testId, answers })
   });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Hiba történt a beküldéskor');
-  }
-  return await response.json();
+  if (!response.ok) await handleApiError(response);
+  return response.json();
 };
 
 export const getDiagnosticResult = async (resultId) => {
@@ -35,11 +30,8 @@ export const getDiagnosticResult = async (resultId) => {
     method: 'GET',
     headers: getAuthHeaders()
   });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Hiba történt az eredmény lekérésekor');
-  }
-  return await response.json();
+  if (!response.ok) await handleApiError(response);
+  return response.json();
 };
 
 export const getDiagnosticStatus = async (subject) => {
@@ -47,11 +39,8 @@ export const getDiagnosticStatus = async (subject) => {
     method: 'GET',
     headers: getAuthHeaders()
   });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Hiba történt a státusz lekérésekor');
-  }
-  return await response.json();
+  if (!response.ok) await handleApiError(response);
+  return response.json();
 };
 
 export const getAllDiagnosticStatuses = async () => {
@@ -59,9 +48,6 @@ export const getAllDiagnosticStatuses = async () => {
     method: 'GET',
     headers: getAuthHeaders()
   });
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Hiba történt a státuszok lekérésekor');
-  }
-  return await response.json();
+  if (!response.ok) await handleApiError(response);
+  return response.json();
 };

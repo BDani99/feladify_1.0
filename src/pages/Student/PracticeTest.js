@@ -37,7 +37,7 @@ const PracticeTest = () => {
 
   const startNewTest = async () => {
     try {
-      const token = sessionStorage.getItem('AccessToken');
+      const token = localStorage.getItem('AccessToken');
       const response = await fetch(`${API_BASE_URL}/student/diagnostic/start`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -118,7 +118,7 @@ const PracticeTest = () => {
         }
       });
 
-      const token = sessionStorage.getItem('AccessToken');
+      const token = localStorage.getItem('AccessToken');
       const response = await fetch(`${API_BASE_URL}/student/diagnostic/submit`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },

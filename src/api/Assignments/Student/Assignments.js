@@ -1,45 +1,26 @@
 import { API_BASE_URL } from '../../config';
+import { handleApiError } from '../../../utils/apiErrorHandler';
 
 export const fetchAvailableAssignments = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/assignments/student/available-assignments`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Hiba történt a dolgozatok lekérésekor');
-    }
-
-    const data = await response.json();
-    return data.assignments;
-  } catch (error) {
-    console.error('Fetch error:', error);
-    throw error;
-  }
+  const response = await fetch(`${API_BASE_URL}/assignments/student/available-assignments`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`,
+    },
+  });
+  if (!response.ok) await handleApiError(response);
+  return (await response.json()).assignments;
 };
 
 export const fetchCompletedAssignments = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/assignments/student/completed-assignments`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.assignments;
-  } catch (error) {
-    console.error('Error fetching completed assignments:', error);
-    throw error;
-  }
-}
+  const response = await fetch(`${API_BASE_URL}/assignments/student/completed-assignments`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`,
+    },
+  });
+  if (!response.ok) await handleApiError(response);
+  return (await response.json()).assignments;
+};

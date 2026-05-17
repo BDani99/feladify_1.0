@@ -1,5 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { fetchUserData } from '../api/Auth/ProfileData';
+import { isTokenExpired } from '../utils/tokenUtils';
+import { handleSessionExpiry } from '../utils/apiErrorHandler';
 
 const UserContext = createContext();
 
@@ -16,21 +18,30 @@ export const UserProvider = ({ children }) => {
 
     useEffect(() => {
         const fetchData = async () => {
+            const token = localStorage.getItem('AccessToken');
+
+            if (!token || isTokenExpired(token)) {
+                handleSessionExpiry();
+                return;
+            }
+
             try {
                 const data = await fetchUserData();
                 setUser(data.user);
-                sessionStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('isLoggedIn', 'true');
             } catch (error) {
-                sessionStorage.removeItem('isLoggedIn');
+                if (error.message !== 'SESSION_EXPIRED' && error.message !== 'UNAUTHORIZED') {
+                    localStorage.removeItem('isLoggedIn');
+                }
             }
         };
 
-        if (sessionStorage.getItem('AccessToken')) {
+        if (localStorage.getItem('AccessToken')) {
             fetchData();
         }
     }, []);
 
-    const isLoggedIn = !!sessionStorage.getItem('isLoggedIn');
+    const isLoggedIn = !!localStorage.getItem('isLoggedIn');
 
     const toggleTheme = () => {
         setTheme(prev => prev === 'dark' ? 'light' : 'dark');

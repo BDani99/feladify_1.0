@@ -14,7 +14,7 @@ const Login = ({ onLoginSuccess }) => {
         e.preventDefault();
         try {
             const data = await login(email, password);
-            sessionStorage.setItem('AccessToken', data.token);
+            localStorage.setItem('AccessToken', data.token);
             onLoginSuccess(data.token);
             window.location.reload();
         } catch (error) {

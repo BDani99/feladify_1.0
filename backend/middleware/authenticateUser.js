@@ -1,9 +1,12 @@
 const jwt = require('jsonwebtoken');
+const { sendError } = require('../utils/errorResponse');
 
 const authenticateUser = (req, res, next) => {
-  const token = req.header('Authorization')?.split(' ')[1];
+  const authHeader = req.header('Authorization');
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
   if (!token) {
-    return res.status(401).json({ message: 'Nincs token. Hozzáférés megtagadva.' });
+    return sendError(res, 401, 'Nincs token. Hozzáférés megtagadva.', 'NO_TOKEN');
   }
 
   try {
@@ -12,7 +15,10 @@ const authenticateUser = (req, res, next) => {
     req.userRole = decoded.role;
     next();
   } catch (error) {
-    res.status(400).json({ message: 'Érvénytelen token.' });
+    if (error.name === 'TokenExpiredError') {
+      return sendError(res, 401, 'A munkamenet lejárt. Kérjük, jelentkezzen be újra.', 'TOKEN_EXPIRED');
+    }
+    return sendError(res, 401, 'Érvénytelen token.', 'TOKEN_INVALID');
   }
 };
 

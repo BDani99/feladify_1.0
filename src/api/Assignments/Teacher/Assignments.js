@@ -1,23 +1,14 @@
 import { API_BASE_URL } from '../../config';
+import { handleApiError } from '../../../utils/apiErrorHandler';
 
 export const fetchAssignments = async () => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/assignments/teacher/list`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`,
-                'Content-Type': 'application/json',
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('A dolgozatok lekérdezése nem sikerült');
-        }
-
-        const data = await response.json();
-        return data.assignments;
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
+    const response = await fetch(`${API_BASE_URL}/assignments/teacher/list`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`,
+            'Content-Type': 'application/json',
+        },
+    });
+    if (!response.ok) await handleApiError(response);
+    return (await response.json()).assignments;
 };

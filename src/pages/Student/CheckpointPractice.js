@@ -9,7 +9,7 @@ import '../../styles/Student/CheckpointPractice.css';
 const API_BASE = `${API_BASE_URL}/student/checkpoint`;
 const getAuthHeaders = () => ({
   'Content-Type': 'application/json',
-  'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`
+  'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`
 });
 
 const CheckpointPractice = () => {

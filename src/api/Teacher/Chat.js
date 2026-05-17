@@ -1,23 +1,17 @@
 import { API_BASE_URL } from '../config';
+import { handleApiError } from '../../utils/apiErrorHandler';
 
 const getAuthHeaders = () => ({
   'Content-Type': 'application/json',
-  'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`
+  'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`
 });
-
-const handleUnauthorized = () => {
-  sessionStorage.removeItem('AccessToken');
-  sessionStorage.removeItem('isLoggedIn');
-  window.location.href = '/bejelentkezes';
-};
 
 export const fetchChatHistory = async () => {
   const response = await fetch(`${API_BASE_URL}/assignments/teacher/chat/history`, {
     method: 'GET',
     headers: getAuthHeaders()
   });
-  if (response.status === 401) { handleUnauthorized(); return; }
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (!response.ok) await handleApiError(response);
   return response.json();
 };
 
@@ -27,11 +21,7 @@ export const sendChatMessage = async (message) => {
     headers: getAuthHeaders(),
     body: JSON.stringify({ message })
   });
-  if (response.status === 401) { handleUnauthorized(); return; }
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.message || `HTTP ${response.status}`);
-  }
+  if (!response.ok) await handleApiError(response);
   return response.json();
 };
 
@@ -41,8 +31,7 @@ export const loadChatSession = async (sessionId) => {
     headers: getAuthHeaders(),
     body: JSON.stringify({ sessionId })
   });
-  if (response.status === 401) { handleUnauthorized(); return; }
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (!response.ok) await handleApiError(response);
   return response.json();
 };
 
@@ -51,8 +40,7 @@ export const deleteSession = async (sessionId) => {
     method: 'DELETE',
     headers: getAuthHeaders()
   });
-  if (response.status === 401) { handleUnauthorized(); return; }
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (!response.ok) await handleApiError(response);
   return response.json();
 };
 
@@ -62,8 +50,7 @@ export const renameSession = async (sessionId, title) => {
     headers: getAuthHeaders(),
     body: JSON.stringify({ title })
   });
-  if (response.status === 401) { handleUnauthorized(); return; }
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (!response.ok) await handleApiError(response);
   return response.json();
 };
 
@@ -72,7 +59,6 @@ export const startNewSession = async () => {
     method: 'POST',
     headers: getAuthHeaders()
   });
-  if (response.status === 401) { handleUnauthorized(); return; }
-  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  if (!response.ok) await handleApiError(response);
   return response.json();
 };

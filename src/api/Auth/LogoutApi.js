@@ -6,16 +6,16 @@ export const logoutUser = async () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`,
+                'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`,
             },
         });
+
+        localStorage.removeItem('AccessToken');
+        localStorage.removeItem('isLoggedIn');
 
         if (!response.ok) {
             throw new Error(`Logout failed with status: ${response.status}`);
         }
-
-        sessionStorage.removeItem('AccessToken');
-        sessionStorage.removeItem('isLoggedIn');
 
         const data = await response.json();
         return data;

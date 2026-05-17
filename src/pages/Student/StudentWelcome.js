@@ -130,7 +130,7 @@ const StudentWelcome = () => {
       await fetch(`${API_BASE_URL}/student/chat/new-session`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`
+          'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`
         }
       });
     } catch (err) {

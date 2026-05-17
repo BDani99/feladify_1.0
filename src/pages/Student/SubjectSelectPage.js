@@ -30,7 +30,7 @@ const SubjectSelectPage = () => {
 
   const fetchProgressData = async () => {
     try {
-      const token = sessionStorage.getItem('AccessToken');
+      const token = localStorage.getItem('AccessToken');
       // Fetch student progress for all subjects
       const response = await fetch(`${API_BASE_URL}/student/progress`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -72,7 +72,7 @@ const SubjectSelectPage = () => {
     if (!window.confirm('Biztosan törlöd AZ ÖSSZES tantárgy egyéni gyakorlás adatát? Ez visszafordíthatatlan!')) return;
     setResetting({ __all: true });
     try {
-      const token = sessionStorage.getItem('AccessToken');
+      const token = localStorage.getItem('AccessToken');
       const res = await fetch(`${API_BASE_URL}/student/progress/reset`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -94,7 +94,7 @@ const SubjectSelectPage = () => {
     if (!window.confirm(`Biztosan törlöd a(z) "${subject}" tantárgy összes adatát?`)) return;
     setResetting(prev => ({ ...prev, [subject]: true }));
     try {
-      const token = sessionStorage.getItem('AccessToken');
+      const token = localStorage.getItem('AccessToken');
       const res = await fetch(`${API_BASE_URL}/student/progress/reset/${encodeURIComponent(subject)}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }

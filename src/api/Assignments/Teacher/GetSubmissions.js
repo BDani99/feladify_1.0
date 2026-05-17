@@ -1,13 +1,13 @@
 import { API_BASE_URL } from '../../config';
+import { handleApiError } from '../../../utils/apiErrorHandler';
 
 export const fetchAssignmentSubmissions = async (assignmentId) => {
     const response = await fetch(`${API_BASE_URL}/assignments/teacher/assignment-submissions/${assignmentId}`, {
         method: 'GET',
         headers: {
-            'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`,
+            'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`,
         },
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Hiba a beküldések lekérésekor.');
-    return data;
+    if (!response.ok) await handleApiError(response);
+    return response.json();
 };

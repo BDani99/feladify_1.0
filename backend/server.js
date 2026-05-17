@@ -49,6 +49,19 @@ app.use('/api/assignments', assignmentRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/notifications', notificationRoutes);
 
+const { sendError } = require('./utils/errorResponse');
+
+app.use((req, res) => {
+  sendError(res, 404, 'A kért végpont nem található.', 'NOT_FOUND');
+});
+
+app.use((err, req, res, next) => {
+  console.error('[Global Error Handler]', err);
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || 'Váratlan szerverhiba történt.';
+  sendError(res, status, message, err.code || 'SERVER_ERROR');
+});
+
 if (require.main === module) {
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 }

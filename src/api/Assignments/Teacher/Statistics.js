@@ -1,23 +1,14 @@
 import { API_BASE_URL } from '../../config';
+import { handleApiError } from '../../../utils/apiErrorHandler';
 
 export const fetchTeacherStatistics = async () => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/assignments/teacher/statistics`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`,
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch statistics');
-        }
-
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching statistics:', error);
-        throw error;
-    }
+    const response = await fetch(`${API_BASE_URL}/assignments/teacher/statistics`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`,
+        },
+    });
+    if (!response.ok) await handleApiError(response);
+    return response.json();
 };

@@ -1,23 +1,14 @@
 import { API_BASE_URL } from '../../config';
+import { handleApiError } from '../../../utils/apiErrorHandler';
 
 export const fetchTeacherClasses = async () => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/teacher/classes`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`,
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Hiba történt az osztályok lekérése során');
-        }
-
-        const data = await response.json();
-        return data.classes;
-    } catch (error) {
-        console.error(error);
-        throw new Error('Hiba történt az osztályok lekérése során');
-    }
+    const response = await fetch(`${API_BASE_URL}/teacher/classes`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`,
+        },
+    });
+    if (!response.ok) await handleApiError(response);
+    return (await response.json()).classes;
 };

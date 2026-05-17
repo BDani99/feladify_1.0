@@ -9,30 +9,40 @@ const Class = require('../models/Class');
 const DiagnosticTest = require('../models/DiagnosticTest');
 const DiagnosticResult = require('../models/DiagnosticResult');
 const groqService = require('../services/groqService');
+const { sendError } = require('../utils/errorResponse');
 
 // Middleware to verify JWT token and get user
 const authMiddleware = async (req, res, next) => {
   console.log('[Student API] Auth middleware for:', req.path);
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
     if (!token) {
       console.log('[Student API] No token provided');
-      return res.status(401).json({ message: 'Nincs jogosultság - nincs token' });
+      return sendError(res, 401, 'Nincs jogosultság - nincs token', 'NO_TOKEN');
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (jwtError) {
+      if (jwtError.name === 'TokenExpiredError') {
+        return sendError(res, 401, 'A munkamenet lejárt. Kérjük, jelentkezzen be újra.', 'TOKEN_EXPIRED');
+      }
+      return sendError(res, 401, 'Érvényes token szükséges', 'TOKEN_INVALID');
+    }
+
     const user = await User.findById(decoded.userId);
-    
     if (!user || user.role !== 'student') {
-      return res.status(403).json({ message: 'Csak diákok férhetnek hozzá' });
+      return sendError(res, 403, 'Csak diákok férhetnek hozzá', 'FORBIDDEN');
     }
 
     req.user = user;
     next();
   } catch (error) {
     console.error('[Student API] Auth error:', error.message);
-    res.status(401).json({ message: 'Érvényes token szükséges' });
+    return sendError(res, 500, 'Belső hiba az autentikáció során.', 'SERVER_ERROR');
   }
 };
 

@@ -1,17 +1,17 @@
 import { API_BASE_URL } from '../../config';
+import { handleApiError } from '../../../utils/apiErrorHandler';
 
 export const previewAssignment = async (title, subject, difficulty, className, questionTypes) => {
     const response = await fetch(`${API_BASE_URL}/assignments/teacher/preview`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`,
+            'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`,
         },
         body: JSON.stringify({ title, subject, difficulty, className, questionTypes }),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Hiba a generálás során.');
-    return data;
+    if (!response.ok) await handleApiError(response);
+    return response.json();
 };
 
 export const saveAssignment = async (title, subject, difficulty, className, questions, timeLimit, startDate, dueDate) => {
@@ -19,11 +19,10 @@ export const saveAssignment = async (title, subject, difficulty, className, ques
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`,
+            'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`,
         },
         body: JSON.stringify({ title, subject, difficulty, className, questions, timeLimit, startDate, dueDate }),
     });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'Hiba a mentés során.');
-    return data;
+    if (!response.ok) await handleApiError(response);
+    return response.json();
 };

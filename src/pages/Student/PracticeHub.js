@@ -27,7 +27,7 @@ const PracticeHub = () => {
 
   const fetchSubjectStatus = async () => {
     try {
-      const token = sessionStorage.getItem('AccessToken');
+      const token = localStorage.getItem('AccessToken');
       const res = await fetch(`${API_BASE_URL}/student/progress/${subject}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -55,7 +55,7 @@ const PracticeHub = () => {
     if (startingDiagnostic) return;
     setStartingDiagnostic(true);
     try {
-      const token = sessionStorage.getItem('AccessToken');
+      const token = localStorage.getItem('AccessToken');
       const res = await fetch(`${API_BASE_URL}/student/diagnostic/start`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },

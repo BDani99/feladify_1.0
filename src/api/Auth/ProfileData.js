@@ -1,18 +1,14 @@
 import { API_BASE_URL } from '../config';
+import { handleApiError } from '../../utils/apiErrorHandler';
 
 export const fetchUserData = async () => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/auth/data`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`,
-            },
-        });
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching user data:', error);
-        throw error;
-    }
+    const response = await fetch(`${API_BASE_URL}/auth/data`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`,
+        },
+    });
+    if (!response.ok) await handleApiError(response);
+    return response.json();
 };

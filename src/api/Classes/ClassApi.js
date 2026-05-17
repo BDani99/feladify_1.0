@@ -1,20 +1,15 @@
 import { API_BASE_URL } from '../config';
+import { handleApiError } from '../../utils/apiErrorHandler';
 
 const getAuthHeaders = () => ({
   'Content-Type': 'application/json',
-  'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`,
+  'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`,
 });
 
 export const fetchAllClasses = async () => {
-  const response = await fetch(`${API_BASE_URL}/classes`, {
-    headers: getAuthHeaders(),
-  });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Hiba az osztályok lekérésekor.');
-  }
-  const data = await response.json();
-  return data.classes;
+  const response = await fetch(`${API_BASE_URL}/classes`, { headers: getAuthHeaders() });
+  if (!response.ok) await handleApiError(response);
+  return (await response.json()).classes;
 };
 
 export const createClass = async (name) => {
@@ -23,12 +18,8 @@ export const createClass = async (name) => {
     headers: getAuthHeaders(),
     body: JSON.stringify({ name }),
   });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Hiba az osztály létrehozásakor.');
-  }
-  const data = await response.json();
-  return data;
+  if (!response.ok) await handleApiError(response);
+  return response.json();
 };
 
 export const updateTeacherClasses = async (classIds) => {
@@ -37,10 +28,6 @@ export const updateTeacherClasses = async (classIds) => {
     headers: getAuthHeaders(),
     body: JSON.stringify({ classIds }),
   });
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Hiba az osztályok frissítésekor.');
-  }
-  const data = await response.json();
-  return data;
+  if (!response.ok) await handleApiError(response);
+  return response.json();
 };

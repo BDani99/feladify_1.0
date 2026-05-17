@@ -24,7 +24,7 @@ const NotificationBell = () => {
   const ref = useRef(null);
 
   const fetchNotifications = useCallback(async () => {
-    const token = sessionStorage.getItem('AccessToken');
+    const token = localStorage.getItem('AccessToken');
     if (!token) return;
     try {
       const res = await fetch(`${API_BASE_URL}/notifications`, {
@@ -56,7 +56,7 @@ const NotificationBell = () => {
   };
 
   const markAllRead = async () => {
-    const token = sessionStorage.getItem('AccessToken');
+    const token = localStorage.getItem('AccessToken');
     try {
       await fetch(`${API_BASE_URL}/notifications/read-all`, {
         method: 'PUT',
@@ -68,7 +68,7 @@ const NotificationBell = () => {
   };
 
   const markRead = async (id) => {
-    const token = sessionStorage.getItem('AccessToken');
+    const token = localStorage.getItem('AccessToken');
     try {
       await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
         method: 'PUT',
@@ -81,7 +81,7 @@ const NotificationBell = () => {
 
   const deleteOne = async (id, e) => {
     e.stopPropagation();
-    const token = sessionStorage.getItem('AccessToken');
+    const token = localStorage.getItem('AccessToken');
     try {
       await fetch(`${API_BASE_URL}/notifications/${id}`, {
         method: 'DELETE',
@@ -96,7 +96,7 @@ const NotificationBell = () => {
   };
 
   const deleteAll = async () => {
-    const token = sessionStorage.getItem('AccessToken');
+    const token = localStorage.getItem('AccessToken');
     try {
       await fetch(`${API_BASE_URL}/notifications/all`, {
         method: 'DELETE',

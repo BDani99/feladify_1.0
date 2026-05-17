@@ -30,7 +30,7 @@ const RoadmapView = () => {
 
   const fetchRoadmap = async () => {
     try {
-      const token = sessionStorage.getItem('AccessToken');
+      const token = localStorage.getItem('AccessToken');
       const response = await fetch(`${API_BASE_URL}/student/roadmap/${subject}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });

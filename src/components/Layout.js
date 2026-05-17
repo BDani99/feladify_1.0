@@ -31,7 +31,7 @@ import StudentDashboard from '../pages/Student/StudentDashboard';
 const Layout = ({ onLoginSuccess }) => {
     const { user } = useUser() || {};
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
 
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);

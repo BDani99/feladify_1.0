@@ -15,7 +15,7 @@ const SUBJECT_COLORS = {
 
 const getAuthHeaders = () => ({
   'Content-Type': 'application/json',
-  'Authorization': `Bearer ${sessionStorage.getItem('AccessToken')}`
+  'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`
 });
 
 const formatAnswer = (answer, questionType) => {
