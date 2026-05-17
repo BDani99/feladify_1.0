@@ -141,7 +141,23 @@ const PracticeTest = () => {
     }
   };
 
-  if (loading) return <div id="content"><LoadingSpinner /></div>;
+  if (loading) {
+    return (
+      <div id="content">
+        <div className="practice-test">
+          <div className="page-top-bar">
+            <button className="back-btn" onClick={() => navigate(`/egyeni-gyakorlas/${subject}`)}>
+              <FaArrowLeft /> Vissza
+            </button>
+          </div>
+          <div className="test-header">
+            <h1>{subject} Szintfelmérő</h1>
+          </div>
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
 
   if (!questions || questions.length === 0) {
     return (

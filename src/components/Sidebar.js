@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaTachometerAlt, FaChalkboardTeacher, FaBrain, FaClipboard, FaChartBar, FaCog, FaGraduationCap, FaTasks, FaCompass, FaClipboardList, FaCheckCircle } from 'react-icons/fa';
+import { FaTachometerAlt, FaChalkboardTeacher, FaBrain, FaClipboard, FaChartBar, FaCog, FaGraduationCap, FaTasks, FaCompass, FaClipboardList, FaCheckCircle, FaFolderOpen, FaChalkboard } from 'react-icons/fa';
 import '../styles/Sidebar.css';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
@@ -54,6 +54,16 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                             </a>
                         </li>
                         <li>
+                            <a tabIndex={0} className={isActiveLink('/dokumentumok') ? 'active-link' : ''} onClick={() => handleNavigation('/dokumentumok')}>
+                                <FaFolderOpen className="icon" /> Dokumentumok
+                            </a>
+                        </li>
+                        <li>
+                            <a tabIndex={0} className={isActiveLink('/osztalyterem') ? 'active-link' : ''} onClick={() => handleNavigation('/osztalyterem')}>
+                                <FaChalkboard className="icon" /> Osztályterem
+                            </a>
+                        </li>
+                        <li>
                             <a tabIndex={0} className={isActiveLink('/statisztika') ? 'active-link' : ''} onClick={() => handleNavigation('/statisztika')}>
                                 <FaChartBar className="icon" /> Statisztika
                             </a>
@@ -91,6 +101,16 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                         <li>
                             <a tabIndex={0} className={isActiveLink('/megoldott-dolgozatok') ? 'active-link' : ''} onClick={() => handleNavigation('/megoldott-dolgozatok')}>
                                 <FaCheckCircle className="icon" /> Eredmények
+                            </a>
+                        </li>
+                        <li>
+                            <a tabIndex={0} className={isActiveLink('/dokumentumok') ? 'active-link' : ''} onClick={() => handleNavigation('/dokumentumok')}>
+                                <FaFolderOpen className="icon" /> Dokumentumok
+                            </a>
+                        </li>
+                        <li>
+                            <a tabIndex={0} className={isActiveLink('/osztalyterem') ? 'active-link' : ''} onClick={() => handleNavigation('/osztalyterem')}>
+                                <FaChalkboard className="icon" /> Osztályterem
                             </a>
                         </li>
                         <li>

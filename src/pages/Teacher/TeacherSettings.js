@@ -119,14 +119,6 @@ const TeacherSettings = () => {
         }
     };
 
-    if (isLoading) {
-        return (
-            <div id="content">
-                <LoadingSpinner />
-            </div>
-        );
-    }
-
     const tabs = [
         { id: 'account', label: 'Fiók & Profil', icon: FaUser },
         { id: 'appearance', label: 'Megjelenés', icon: FaPalette },
@@ -145,6 +137,9 @@ const TeacherSettings = () => {
                     </div>
                 </div>
 
+                {isLoading ? (
+                    <LoadingSpinner />
+                ) : (
                 <div className="settings-layout">
                     {/* Sidebar Tabs */}
                     <div className="settings-sidebar">
@@ -310,6 +305,7 @@ const TeacherSettings = () => {
                         </div>
                     </div>
                 </div>
+                )}
             </div>
         </div>
     );

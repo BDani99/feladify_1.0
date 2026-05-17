@@ -42,6 +42,18 @@ router.post('/register', async (req, res) => {
         classDoc.studentIds.push(user._id);
         await classDoc.save();
 
+        // Értesítés a tanár(ok)nak valós időben
+        const realtimeService = require('../services/realtimeService');
+        realtimeService.notifyClassTeachers(classDoc._id, 'student_joined', {
+          classId: classDoc._id,
+          className: classDoc.name,
+          student: {
+            _id: user._id,
+            name: user.name,
+            email: user.email
+          }
+        });
+
         // Diák hozzáadása az osztály dolgozataihoz
         await Assignment.updateMany(
           { className: className }, // Csak az adott osztályhoz tartozó dolgozatok

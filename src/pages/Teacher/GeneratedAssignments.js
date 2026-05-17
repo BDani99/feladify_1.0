@@ -59,9 +59,6 @@ const GeneratedAssignments = () => {
         if (tab === 'flagged') loadFlagged();
     };
 
-    if (loading) return <div id="content"><LoadingSpinner /></div>;
-    if (error) return <div id="content" className="error-container"><FaExclamationTriangle /> {error}</div>;
-
     const totalPendingFlags = flaggedData?.reduce(
         (sum, item) => sum + item.flaggedSubmissions.reduce(
             (s2, sub) => s2 + sub.flaggedAnswers.filter(a => !a.flagResponse && !a.flagRejected).length, 0
@@ -87,6 +84,12 @@ const GeneratedAssignments = () => {
                     </div>
                 </div>
 
+                {loading ? (
+                    <LoadingSpinner />
+                ) : error ? (
+                    <div className="error-container"><FaExclamationTriangle /> {error}</div>
+                ) : (
+                <>
                 <div className="stats-overview">
                     <div className="stat-card">
                         <div className="stat-icon blue"><FaClipboardList /></div>
@@ -252,6 +255,8 @@ const GeneratedAssignments = () => {
                             );
                         })}
                     </div>
+                )}
+                </>
                 )}
             </div>
         </div>

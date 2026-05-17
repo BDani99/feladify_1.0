@@ -20,7 +20,9 @@ import {
     FaSave,
     FaBan,
     FaReply,
+    FaDownload,
 } from 'react-icons/fa';
+import { API_BASE_URL } from '../../api/config';
 import { fetchAssignmentSubmissions } from '../../api/Assignments/Teacher/GetSubmissions';
 import { overrideScore } from '../../api/Assignments/Teacher/OverrideScore';
 import { finalizeGrade } from '../../api/Assignments/Teacher/FinalizeGrade';
@@ -554,6 +556,31 @@ const AssignmentDetailsPage = () => {
     const [subLoading, setSubLoading] = useState(false);
     const [subError, setSubError] = useState('');
     const [subView, setSubView] = useState('pending'); // 'pending' | 'graded' | 'flagged'
+    const [exporting, setExporting] = useState(false);
+
+    const handleExportCSV = async () => {
+        setExporting(true);
+        try {
+            const token = localStorage.getItem('AccessToken');
+            const response = await fetch(`${API_BASE_URL}/assignments/teacher/export-submissions/${assignment._id}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.message || 'Sikertelen exportálás.');
+            }
+
+            alert('Sikeres exportálás! A CSV fájl elmentve a Dokumentumokba (gyökérkönyvtárba).');
+        } catch (err) {
+            alert(err.message || 'Hiba történt az exportálás során.');
+        } finally {
+            setExporting(false);
+        }
+    };
 
     const [flaggedData, setFlaggedData] = useState(null);
     const [flaggedLoading, setFlaggedLoading] = useState(false);
@@ -724,6 +751,39 @@ const AssignmentDetailsPage = () => {
                                     Reklamációk
                                     {pendingFlagCount > 0 && <span className="flag-tab-badge">{pendingFlagCount}</span>}
                                 </button>
+
+                                {submissions && submissions.length > 0 && (
+                                    <button 
+                                        className="export-csv-btn animate-fade-in"
+                                        onClick={handleExportCSV}
+                                        disabled={exporting}
+                                        style={{
+                                            marginLeft: 'auto',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            padding: '8px 16px',
+                                            background: 'rgba(16, 185, 129, 0.15)',
+                                            color: '#34d399',
+                                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                                            borderRadius: '6px',
+                                            fontSize: '0.85rem',
+                                            cursor: 'pointer',
+                                            fontWeight: '600',
+                                            transition: 'all 0.2s ease-in-out'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.target.style.background = 'rgba(16, 185, 129, 0.25)';
+                                            e.target.style.transform = 'translateY(-1px)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.target.style.background = 'rgba(16, 185, 129, 0.15)';
+                                            e.target.style.transform = 'translateY(0)';
+                                        }}
+                                    >
+                                        <FaDownload /> {exporting ? 'Exportálás...' : 'Eredmények exportálása'}
+                                    </button>
+                                )}
                             </div>
 
                             <div className="submissions-list">

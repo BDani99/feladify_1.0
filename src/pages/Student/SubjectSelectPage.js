@@ -5,6 +5,8 @@ import { useUser } from '../../context/UserContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { FaStar, FaFire, FaBolt, FaCalculator, FaBookOpen, FaGlobeAmericas, FaLeaf, FaChevronDown, FaChevronUp, FaTrash, FaCompass } from 'react-icons/fa';
 import '../../styles/Student/SubjectSelectPage.css';
+import ConfirmModal from '../../components/ConfirmModal';
+import { toast } from 'react-toastify';
 
 const XP_PER_LEVEL = 50;
 
@@ -16,6 +18,7 @@ const SubjectSelectPage = () => {
   const [stats, setStats] = useState({ totalXP: 0, streak: 0 });
   const [resetOpen, setResetOpen] = useState(false);
   const [resetting, setResetting] = useState({});
+  const [confirmResetModal, setConfirmResetModal] = useState({ isOpen: false, type: 'all', subjectName: null, message: '' });
 
   const subjectList = [
     { name: 'Matematika', icon: <FaCalculator />, subject: 'Matematika', color: '#a5b4fc' },
@@ -68,53 +71,83 @@ const SubjectSelectPage = () => {
     navigate(`/egyeni-gyakorlas/${subject}`);
   };
 
-  const handleResetAll = async () => {
-    if (!window.confirm('Biztosan törlöd AZ ÖSSZES tantárgy egyéni gyakorlás adatát? Ez visszafordíthatatlan!')) return;
-    setResetting({ __all: true });
-    try {
-      const token = localStorage.getItem('AccessToken');
-      const res = await fetch(`${API_BASE_URL}/student/progress/reset`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        setResetOpen(false);
-        await fetchProgressData();
-      } else {
-        alert('Hiba a reset során.');
-      }
-    } catch (err) {
-      alert('Hiba: ' + err.message);
-    } finally {
-      setResetting({});
-    }
+  const handleResetAll = () => {
+    setConfirmResetModal({
+      isOpen: true,
+      type: 'all',
+      subjectName: null,
+      message: 'Biztosan törlöd AZ ÖSSZES tantárgy egyéni gyakorlás adatát? Ez visszafordíthatatlan!'
+    });
   };
 
-  const handleResetSubject = async (subject) => {
-    if (!window.confirm(`Biztosan törlöd a(z) "${subject}" tantárgy összes adatát?`)) return;
-    setResetting(prev => ({ ...prev, [subject]: true }));
-    try {
-      const token = localStorage.getItem('AccessToken');
-      const res = await fetch(`${API_BASE_URL}/student/progress/reset/${encodeURIComponent(subject)}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        await fetchProgressData();
-      } else {
-        alert('Hiba a reset során.');
+  const handleResetSubject = (subject) => {
+    setConfirmResetModal({
+      isOpen: true,
+      type: 'subject',
+      subjectName: subject,
+      message: `Biztosan törlöd a(z) "${subject}" tantárgy összes adatát?`
+    });
+  };
+
+  const executeReset = async () => {
+    const { type, subjectName } = confirmResetModal;
+    setConfirmResetModal({ isOpen: false, type: 'all', subjectName: null, message: '' });
+
+    if (type === 'all') {
+      setResetting({ __all: true });
+      try {
+        const token = localStorage.getItem('AccessToken');
+        const res = await fetch(`${API_BASE_URL}/student/progress/reset`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          setResetOpen(false);
+          await fetchProgressData();
+          toast.success('Összes tantárgy adatai sikeresen törölve.');
+        } else {
+          toast.error('Hiba történt a reset során.');
+        }
+      } catch (err) {
+        toast.error('Hiba: ' + err.message);
+      } finally {
+        setResetting({});
       }
-    } catch (err) {
-      alert('Hiba: ' + err.message);
-    } finally {
-      setResetting(prev => ({ ...prev, [subject]: false }));
+    } else if (type === 'subject' && subjectName) {
+      setResetting(prev => ({ ...prev, [subjectName]: true }));
+      try {
+        const token = localStorage.getItem('AccessToken');
+        const res = await fetch(`${API_BASE_URL}/student/progress/reset/${encodeURIComponent(subjectName)}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          await fetchProgressData();
+          toast.success(`"${subjectName}" adatai sikeresen törölve.`);
+        } else {
+          toast.error('Hiba történt a reset során.');
+        }
+      } catch (err) {
+        toast.error('Hiba: ' + err.message);
+      } finally {
+        setResetting(prev => ({ ...prev, [subjectName]: false }));
+      }
     }
   };
 
   if (loading) {
     return (
       <div id="content">
-        <LoadingSpinner />
+        <div className="subject-select-page">
+          <div className="page-header-banner">
+            <div className="phb-icon"><FaCompass /></div>
+            <div className="phb-text">
+              <h1 className="phb-title">Egyéni Gyakorlás</h1>
+              <p className="phb-subtitle">Fejleszd tudásodat tárgyankénti szintfelmérőkkel és kihívásokkal</p>
+            </div>
+          </div>
+          <LoadingSpinner />
+        </div>
       </div>
     );
   }
@@ -286,6 +319,17 @@ const SubjectSelectPage = () => {
             </div>
           );
         })}
+        {/* Custom Reusable Confirm Modal */}
+        <ConfirmModal 
+            isOpen={confirmResetModal.isOpen}
+            title="Haladás visszaállítása"
+            message={confirmResetModal.message}
+            confirmText="Visszaállítás"
+            cancelText="Mégse"
+            type="danger"
+            onConfirm={executeReset}
+            onCancel={() => setConfirmResetModal({ isOpen: false, type: 'all', subjectName: null, message: '' })}
+        />
       </div>
     </div>
     </div>

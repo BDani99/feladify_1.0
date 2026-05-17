@@ -704,7 +704,22 @@ const StudentStatistics = () => {
     load();
   }, []);
 
-  if (loading) return <div id="content"><LoadingSpinner /></div>;
+  if (loading) {
+    return (
+      <div id="content">
+        <div className="sts-page">
+          <div className="page-header-banner">
+            <div className="phb-icon"><FaChartBar /></div>
+            <div className="phb-text">
+              <h1 className="phb-title">Statisztikák és Elemzések</h1>
+              <p className="phb-subtitle">Elemezd fejlődésedet és teljesítményedet részletes grafikonokkal</p>
+            </div>
+          </div>
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
   if (error) return <div id="content"><p style={{ padding: 24, color: 'var(--color-text-dim)' }}>{error}</p></div>;
 
   return (

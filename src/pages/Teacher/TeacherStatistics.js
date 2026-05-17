@@ -36,7 +36,20 @@ const TeacherStatistics = () => {
     }, []);
 
     if (isLoading) {
-        return <div id="content"><LoadingSpinner /></div>;
+        return (
+            <div id="content">
+                <div className="statistics-container">
+                    <div className="page-header-banner">
+                        <div className="phb-icon"><FaChartBar /></div>
+                        <div className="phb-text">
+                            <h1 className="phb-title">Statisztikák és Elemzések</h1>
+                            <p className="phb-subtitle">Tekintsd át a diákok teljesítményét és az osztályok haladását</p>
+                        </div>
+                    </div>
+                    <LoadingSpinner />
+                </div>
+            </div>
+        );
     }
 
     if (error) {

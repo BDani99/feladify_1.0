@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { fetchUserData } from '../../api/Auth/ProfileData';
+import { API_BASE_URL } from '../../api/config';
 import { fetchChatHistory, sendChatMessage, startNewSession } from '../../api/Teacher/Chat';
 import { useTeacherChat } from '../../context/TeacherChatContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -7,6 +8,7 @@ import '../../styles/Welcome.css';
 import logo from '../../assets/logo-400.png';
 import { FaPaperPlane, FaPlus, FaHistory, FaTrash, FaPen, FaExclamationCircle, FaChalkboardTeacher } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const quickPrompts = [
     "Melyik diákom teljesít a legjobban az osztályban?",
@@ -35,6 +37,7 @@ const TeacherWelcome = () => {
     const [showSessionHistory, setShowSessionHistory] = useState(false);
     const [renamingSessionId, setRenamingSessionId] = useState(null);
     const [renamingTitle, setRenamingTitle] = useState('');
+    const [confirmDeleteModal, setConfirmDeleteModal] = useState({ isOpen: false, sessionId: null });
     const chatEndRef = useRef(null);
     const inputRef = useRef(null);
 
@@ -93,28 +96,91 @@ const TeacherWelcome = () => {
         setIsBotTyping(true);
 
         try {
-            const response = await sendChatMessage(userMsg);
             setMessages(prev => [...(prev || []), {
                 role: 'assistant',
-                content: response.message,
+                content: '',
                 timestamp: new Date()
             }]);
-            if (response.sessionId && !currentSessionId) {
-                setCurrentSessionId(response.sessionId);
-                setSessions(prev => {
-                    const exists = prev.some(s => s.sessionId === response.sessionId);
-                    if (!exists) {
-                        return [{ sessionId: response.sessionId, title: 'Jelenlegi beszélgetés', updatedAt: new Date() }, ...prev];
+
+            const response = await fetch(`${API_BASE_URL}/assignments/teacher/chat/send`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`
+                },
+                body: JSON.stringify({ message: userMsg, stream: true })
+            });
+
+            if (!response.ok) {
+                throw new Error('Hálózati hiba történt.');
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let done = false;
+            let buffer = '';
+
+            // Turn off thinking bubble as soon as streaming starts
+            let startedStreaming = false;
+
+            while (!done) {
+                const { value, done: doneReading } = await reader.read();
+                done = doneReading;
+                buffer += decoder.decode(value, { stream: !done });
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    const cleaned = line.trim();
+                    if (!cleaned) continue;
+                    if (cleaned.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(cleaned.slice(6));
+                            if (data.chunk) {
+                                if (!startedStreaming) {
+                                    startedStreaming = true;
+                                    setIsBotTyping(false); // Hide thinking bubble once chunks start arriving
+                                }
+                                setMessages(prev => {
+                                    const copy = [...prev];
+                                    const lastMsg = copy[copy.length - 1];
+                                    if (lastMsg && lastMsg.role === 'assistant') {
+                                        lastMsg.content += data.chunk;
+                                    }
+                                    return copy;
+                                });
+                            } else if (data.done) {
+                                if (data.sessionId && !currentSessionId) {
+                                    setCurrentSessionId(data.sessionId);
+                                    setSessions(prev => {
+                                        const exists = prev.some(s => s.sessionId === data.sessionId);
+                                        if (!exists) {
+                                            return [{ sessionId: data.sessionId, title: 'Jelenlegi beszélgetés', updatedAt: new Date() }, ...prev];
+                                        }
+                                        return prev;
+                                    });
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Hiba a stream chunk feldolgozásakor:', err);
+                        }
                     }
-                    return prev;
-                });
+                }
             }
         } catch (err) {
-            setMessages(prev => [...(prev || []), {
-                role: 'assistant',
-                content: 'Hiba történt a válasz generálása során.',
-                timestamp: new Date()
-            }]);
+            console.error(err);
+            setMessages(prev => {
+                const copy = [...prev];
+                const lastMsg = copy[copy.length - 1];
+                if (lastMsg && lastMsg.role === 'assistant' && !lastMsg.content) {
+                    copy.pop();
+                }
+                return [...copy, {
+                    role: 'assistant',
+                    content: 'Hiba történt a válasz generálása során.',
+                    timestamp: new Date()
+                }];
+            });
         } finally {
             setIsBotTyping(false);
         }
@@ -146,9 +212,15 @@ const TeacherWelcome = () => {
         }
     };
 
-    const handleDeleteSession = async (sessionId, e) => {
+    const handleDeleteSession = (sessionId, e) => {
         e.stopPropagation();
-        if (!window.confirm('Biztosan törölni szeretnéd ezt a beszélgetést?')) return;
+        setConfirmDeleteModal({ isOpen: true, sessionId });
+    };
+
+    const executeDeleteSession = async () => {
+        const sessionId = confirmDeleteModal.sessionId;
+        setConfirmDeleteModal({ isOpen: false, sessionId: null });
+        if (!sessionId) return;
         try {
             await deleteSession(sessionId);
             if (currentSessionId === sessionId) {
@@ -393,6 +465,17 @@ const TeacherWelcome = () => {
                     <p className="chat-footer-note">A Feladify AI hibázhat. Ellenőrizd a fontos információkat.</p>
                 </form>
 
+                {/* Custom Reusable Confirm Modal */}
+                <ConfirmModal 
+                    isOpen={confirmDeleteModal.isOpen}
+                    title="Beszélgetés törlése"
+                    message="Biztosan törölni szeretnéd ezt a beszélgetést?"
+                    confirmText="Törlés"
+                    cancelText="Mégse"
+                    type="danger"
+                    onConfirm={executeDeleteSession}
+                    onCancel={() => setConfirmDeleteModal({ isOpen: false, sessionId: null })}
+                />
             </div>
         </div>
     );

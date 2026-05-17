@@ -918,6 +918,31 @@ FONTOS SZABÁLYOK:
       console.log('[Student API] Chat send - Speciális kezelés aktiválva');
     }
 
+    const streamMode = req.body.stream || req.query.stream === 'true';
+
+    if (streamMode) {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      });
+
+      console.log('[Student API] Chat send - Kezdődik a válasz streaming...');
+      let fullResponse = '';
+
+      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 })) {
+        fullResponse += chunk;
+        res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+      }
+
+      chatDoc.addMessage('assistant', fullResponse);
+      await chatDoc.save();
+
+      res.write(`data: ${JSON.stringify({ done: true, sessionId: chatDoc.currentSessionId })}\n\n`);
+      res.end();
+      return;
+    }
+
     console.log('[Student API] Chat send - Groq API hívása előtt');
     const aiResponse = await groqService.generateResponse(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 });
     console.log('[Student API] Chat send - AI válasz hossza:', aiResponse.length, 'Első 100 char:', aiResponse.substring(0, 100));

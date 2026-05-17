@@ -265,7 +265,29 @@ const CheckpointPractice = () => {
     }
   };
 
-  if (loading) return <div id="content"><LoadingSpinner /></div>;
+  if (loading) {
+    return (
+      <div id="content">
+        <div className="checkpoint-practice">
+          <div className="page-top-bar">
+            <button className="back-btn" onClick={() => navigate(`/egyeni-gyakorlas/${subject}/roadmap`)}>
+              <FaArrowLeft /> Vissza a térképre
+            </button>
+          </div>
+          <div className="practice-wrapper">
+            <div className="practice-left">
+              <div className="question-header">
+                <div className="question-meta">
+                  <span className="question-count">{checkpointTitle || 'Fejezet betöltése'}</span>
+                </div>
+              </div>
+              <LoadingSpinner />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!questions || questions.length === 0) {
     return (

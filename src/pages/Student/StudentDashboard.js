@@ -64,9 +64,6 @@ const StudentDashboard = () => {
         load();
     }, []);
 
-    if (loading) return <div id="content"><LoadingSpinner /></div>;
-    if (error) return <div id="content" className="error-state"><FaExclamationCircle /> {error}</div>;
-
     const now = new Date();
     const today = now.toLocaleDateString('hu-HU', {
         year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
@@ -102,6 +99,12 @@ const StudentDashboard = () => {
                     </div>
                 </div>
 
+                {loading ? (
+                    <LoadingSpinner />
+                ) : error ? (
+                    <div className="error-state"><FaExclamationCircle /> {error}</div>
+                ) : (
+                <>
                 <div className="dash-stats-row">
                     <div className="dash-stat-card">
                         <div className="dash-stat-icon orange"><FaFire /></div>
@@ -280,6 +283,8 @@ const StudentDashboard = () => {
                         </button>
                     </div>
                 </div>
+                </>
+                )}
 
             </div>
         </div>

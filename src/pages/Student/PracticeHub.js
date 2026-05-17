@@ -75,7 +75,29 @@ const PracticeHub = () => {
     }
   };
 
-  if (loading) return <div id="content"><LoadingSpinner /></div>;
+  if (loading) {
+    return (
+      <div id="content">
+        <div className="practice-hub practice-hub--full">
+          <div className="page-top-bar">
+            <button className="back-btn" onClick={() => navigate('/egyeni-gyakorlas')}>
+              <FaArrowLeft /> Vissza
+            </button>
+          </div>
+          <div className="diag-layout">
+            <div className="diag-info">
+              <div className="diag-subject-badge">
+                <FaBook />
+                <span>{subject}</span>
+              </div>
+              <h1 className="diag-title">Szintfelmérő</h1>
+            </div>
+          </div>
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
 
   const needsDiagnostic = status === 'not_started' || status === 'requires_diagnostic';
   const isLevelComplete = status === 'level_complete';

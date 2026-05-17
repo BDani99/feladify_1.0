@@ -43,8 +43,6 @@ const AvailableAssignments = () => {
         loadAssignments();
     }, []);
 
-    if (loading) return <div id="content"><LoadingSpinner /></div>;
-
     return (
         <div id="content">
             <div className="available-assignments-wrapper">
@@ -58,6 +56,9 @@ const AvailableAssignments = () => {
 
                 {error && <div className="error-box"><FaExclamationCircle /> {error}</div>}
 
+                {loading ? (
+                    <LoadingSpinner />
+                ) : (
                 <div className="student-assignment-grid">
                     {assignments.length > 0 ? (
                         assignments.map((a) => {
@@ -105,6 +106,7 @@ const AvailableAssignments = () => {
                         </div>
                     )}
                 </div>
+                )}
             </div>
         </div>
     );

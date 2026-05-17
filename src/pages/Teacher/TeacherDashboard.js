@@ -60,9 +60,6 @@ const TeacherDashboard = () => {
         load();
     }, []);
 
-    if (loading) return <div id="content"><LoadingSpinner /></div>;
-    if (error) return <div id="content" className="error-state"><FaExclamationCircle /> {error}</div>;
-
     const now = new Date();
     const today = now.toLocaleDateString('hu-HU', {
         year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
@@ -104,6 +101,12 @@ const TeacherDashboard = () => {
                     </div>
                 </div>
 
+                {loading ? (
+                    <LoadingSpinner />
+                ) : error ? (
+                    <div className="error-state"><FaExclamationCircle /> {error}</div>
+                ) : (
+                <>
                 <div className="dash-stats-row">
                     <div className="dash-stat-card">
                         <div className="dash-stat-icon blue"><FaClipboard /></div>
@@ -248,6 +251,8 @@ const TeacherDashboard = () => {
                         </button>
                     </div>
                 </div>
+                </>
+                )}
 
             </div>
         </div>

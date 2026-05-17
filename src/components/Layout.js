@@ -27,6 +27,8 @@ import CheckpointPractice from '../pages/Student/CheckpointPractice';
 import DiagnosticResult from '../pages/Student/DiagnosticResult';
 import TeacherDashboard from '../pages/Teacher/TeacherDashboard';
 import StudentDashboard from '../pages/Student/StudentDashboard';
+import DocumentsPage from '../pages/Documents';
+import AnnouncementsPage from '../pages/Announcements';
 
 const Layout = ({ onLoginSuccess }) => {
     const { user } = useUser() || {};
@@ -77,6 +79,8 @@ const Layout = ({ onLoginSuccess }) => {
                         <Route path="/statisztika" element={<TeacherStatisticsPage />} />
                         <Route path="/generalt-dolgozatok/:id" element={<AssignmentDetails />} />
                         <Route path="/tanar-beallitasok" element={<TeacherSettings />} />
+                        <Route path="/dokumentumok" element={<DocumentsPage />} />
+                        <Route path="/osztalyterem" element={<AnnouncementsPage />} />
                     </>
                 )}
 
@@ -96,6 +100,8 @@ const Layout = ({ onLoginSuccess }) => {
                         <Route path="/egyeni-gyakorlas/:subject/roadmap" element={<RoadmapView />} />
                         <Route path="/egyeni-gyakorlas/:subject/checkpoint/:checkpointId" element={<CheckpointPractice />} />
                         <Route path="/egyeni-gyakorlas/:subject/eredmeny" element={<DiagnosticResult />} />
+                        <Route path="/dokumentumok" element={<DocumentsPage />} />
+                        <Route path="/osztalyterem" element={<AnnouncementsPage />} />
                     </>
                 )}
             </Routes>

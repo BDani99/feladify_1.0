@@ -8,6 +8,9 @@ const assignmentRoutes = require('./routes/assignments');
 const classRoutes = require('./routes/classes');
 const studentRoutes = require('./routes/student');
 const notificationRoutes = require('./routes/notifications');
+const documentRoutes = require('./routes/documents');
+const realtimeRoutes = require('./routes/realtime');
+const announcementRoutes = require('./routes/announcements');
 
 const app = express();
 app.use(cors());
@@ -17,11 +20,14 @@ const PORT = process.env.PORT || 5000;
 
 // Vercel serverless-kompatibilis MongoDB kapcsolat
 let connectionPromise = null;
+
 const connectDB = async () => {
   if (mongoose.connection.readyState === 1) return;
   if (!connectionPromise) {
     connectionPromise = mongoose.connect(process.env.MONGO_URI)
-      .then(() => { console.log('Connected to MongoDB'); })
+      .then(() => { 
+        console.log('Connected to MongoDB'); 
+      })
       .catch(err => { connectionPromise = null; throw err; });
   }
   await connectionPromise;
@@ -48,6 +54,9 @@ app.use('/api/auth', authRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/realtime', realtimeRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 const { sendError } = require('./utils/errorResponse');
 

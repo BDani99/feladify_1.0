@@ -152,6 +152,70 @@ class GroqService {
     }
   }
 
+  async *generateResponseStream(prompt, messages = [], options = {}, useReasoning = false) {
+    if (!this.apiKey) {
+      console.warn('[GroqService] FIGYELMEZTETÉS: API kulcs nincs beállítva!');
+      yield "Hiba: Az API kulcs nincs beállítva.";
+      return;
+    }
+
+    const allMessages = [{ role: 'system', content: prompt }, ...messages];
+    const primaryModel = useReasoning ? this.reasoningModel : this.fastModel;
+
+    try {
+      const payload = {
+        model: primaryModel,
+        messages: allMessages,
+        temperature: options.temperature || 0.7,
+        max_tokens: options.max_tokens || 2048,
+        top_p: options.top_p || 1,
+        stream: true
+      };
+
+      console.log(`[GroqService] Stream API hívás → ${primaryModel}`);
+      const response = await axios.post(
+        `${this.apiBase}/chat/completions`,
+        payload,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          responseType: 'stream',
+          timeout: 45000
+        }
+      );
+
+      const stream = response.data;
+      let buffer = '';
+
+      for await (const chunk of stream) {
+        buffer += chunk.toString();
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          const cleaned = line.trim();
+          if (!cleaned || cleaned === 'data: [DONE]') continue;
+          if (cleaned.startsWith('data: ')) {
+            try {
+              const parsed = JSON.parse(cleaned.slice(6));
+              const delta = parsed.choices?.[0]?.delta?.content || '';
+              if (delta) {
+                yield delta;
+              }
+            } catch (e) {
+              // ignore malformed lines
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[GroqService] Stream error:', error.message);
+      yield "Hiba történt a generálás során.";
+    }
+  }
+
 
   async analyzeDiagnosticTest(testResult, questions) {
     const prompt = `Te egy tapasztalt pedagógus és oktatási szakértő vagy. Elemezd egy diák diagnosztikai tesztjének eredményét, és készíts belőle egy személyre szabott tanulási útvonalat (checkpointokat) az "Egyéni Gyakorlás" modulhoz.

@@ -55,7 +55,17 @@ const RoadmapView = () => {
   if (loading) {
     return (
       <div id="content">
-        <LoadingSpinner />
+        <div className="roadmap-view">
+          <div className="page-top-bar">
+            <button className="back-btn" onClick={() => navigate('/egyeni-gyakorlas')}>
+              <FaArrowLeft /> Vissza
+            </button>
+          </div>
+          <div className="roadmap-header">
+            <h1>{subject} Tanulási Út</h1>
+          </div>
+          <LoadingSpinner />
+        </div>
       </div>
     );
   }

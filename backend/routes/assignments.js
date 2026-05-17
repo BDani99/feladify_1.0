@@ -757,6 +757,108 @@ router.get('/teacher/assignment-submissions/:assignmentId', authenticateTeacher,
   }
 });
 
+// Tanár: Dolgozat eredmények exportálása CSV fájlba a saját Dokumentumokba
+router.post('/teacher/export-submissions/:assignmentId', authenticateTeacher, async (req, res) => {
+  try {
+    const { assignmentId } = req.params;
+    const teacherId = req.userId;
+
+    const assignment = await Assignment.findOne({ _id: assignmentId, teacherId });
+    if (!assignment) {
+      return res.status(404).json({ message: 'Dolgozat nem található vagy nincs jogosultsága.' });
+    }
+
+    const students = await User.find({ 'assignments.assignmentId': assignmentId }).select('name className assignments');
+
+    const submissions = students.map(student => {
+      const submission = student.assignments.find(a => a.assignmentId.equals(assignmentId));
+      if (!submission) return null;
+      return {
+        studentName: student.name,
+        className: student.className || 'Nincs osztály',
+        achievedPoints: submission.achievedPoints,
+        totalPoints: assignment.totalPoints,
+        suggestedGrade: submission.suggestedGrade,
+        grade: submission.grade,
+        completedAt: submission.completedAt,
+      };
+    }).filter(Boolean);
+
+    if (submissions.length === 0) {
+      return res.status(400).json({ message: 'Nincsenek beküldött dolgozatok az exportáláshoz.' });
+    }
+
+    // CSV generálása (BOM + pontosvessző elválasztóval a magyar Excelhez)
+    let csvContent = '\uFEFF';
+    csvContent += 'Diák neve;Osztály;Elért pont;Max pont;Százalék;Javasolt jegy;Beírt jegy;Beadási idő\n';
+
+    submissions.forEach(sub => {
+      const pct = assignment.totalPoints > 0 ? Math.round((sub.achievedPoints / assignment.totalPoints) * 100) : 0;
+      const dateStr = sub.completedAt ? new Date(sub.completedAt).toLocaleString('hu-HU') : 'n/a';
+      const gradeStr = sub.grade !== undefined && sub.grade !== null ? sub.grade : 'nincs beírva';
+      
+      const cleanName = sub.studentName.replace(/;/g, ' ');
+      const cleanClass = sub.className.replace(/;/g, ' ');
+
+      csvContent += `"${cleanName}";"${cleanClass}";${sub.achievedPoints};${sub.totalPoints};"${pct}%";${sub.suggestedGrade};"${gradeStr}";"${dateStr}"\n`;
+    });
+
+    const fileName = `${assignment.title.replace(/[\\/:*?"<>|]/g, '_')} - Eredmények.csv`;
+
+    const mongoose = require('mongoose');
+    const { GridFSBucket } = require('mongodb');
+    const { Readable } = require('stream');
+    const File = require('../models/File');
+
+    if (!mongoose.connection.db) {
+      throw new Error('Adatbázis kapcsolat nem aktív.');
+    }
+    const bucket = new GridFSBucket(mongoose.connection.db, {
+      bucketName: 'documents'
+    });
+
+    const uploadStream = bucket.openUploadStream(fileName, {
+      contentType: 'text/csv'
+    });
+
+    const buffer = Buffer.from(csvContent, 'utf-8');
+    const bufferStream = Readable.from(buffer);
+
+    bufferStream.pipe(uploadStream)
+      .on('error', (err) => {
+        console.error('[CSV Export Stream Error]', err);
+        return res.status(500).json({ message: 'Hiba a fájl mentése közben.' });
+      })
+      .on('finish', async () => {
+        try {
+          const fileDoc = new File({
+            name: fileName,
+            folder: null,
+            user: teacherId,
+            gridFSId: uploadStream.id,
+            size: buffer.length,
+            mimeType: 'text/csv'
+          });
+
+          await fileDoc.save();
+          
+          res.json({
+            success: true,
+            message: 'Eredmények sikeresen exportálva és elmentve a Dokumentumokba.',
+            file: fileDoc
+          });
+        } catch (saveError) {
+          console.error('[CSV File Metadata Save Error]', saveError);
+          res.status(500).json({ message: 'Hiba történt a fájl mentésekor a Dokumentumok között.' });
+        }
+      });
+
+  } catch (error) {
+    console.error('[Export submissions error]', error);
+    res.status(500).json({ message: 'Hiba az exportálás során.', error: error.message });
+  }
+});
+
 // Tanár: pontszám felülírása
 router.put('/teacher/override-score', authenticateTeacher, async (req, res) => {
   try {
@@ -1043,6 +1145,31 @@ Szabályok:
       ...historyMessages.map(m => ({ role: m.role, content: m.content })),
       { role: 'user', content: message }
     ];
+
+    const streamMode = req.body.stream || req.query.stream === 'true';
+
+    if (streamMode) {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      });
+
+      console.log('[Teacher Chat] Kezdődik a válasz streaming...');
+      let fullResponse = '';
+
+      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 })) {
+        fullResponse += chunk;
+        res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+      }
+
+      chatDoc.addMessage('assistant', fullResponse);
+      await chatDoc.save();
+
+      res.write(`data: ${JSON.stringify({ done: true, sessionId: chatDoc.currentSessionId })}\n\n`);
+      res.end();
+      return;
+    }
 
     const aiResponse = await generateChatWithHistory(systemPrompt, messagesForAI);
 

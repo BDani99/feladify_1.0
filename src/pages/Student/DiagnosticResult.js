@@ -162,9 +162,17 @@ const DiagnosticResult = () => {
   if (loading) {
     return (
       <div id="content">
-        <div className="loading-container">
+        <div className="diagnostic-result-container">
+          <div className="result-header">
+            <div className="score-circle">
+              <span className="score-label">Eredmény</span>
+            </div>
+            <div className="result-info">
+              <h1>{subject} Diagnosztika</h1>
+              <p className="result-subtitle">Az eredmények betöltése...</p>
+            </div>
+          </div>
           <LoadingSpinner />
-          <p className="loading-text">Az eredmények betöltése...</p>
         </div>
       </div>
     );

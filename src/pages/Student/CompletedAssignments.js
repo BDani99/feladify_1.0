@@ -35,9 +35,6 @@ const CompletedAssignments = () => {
         getAssignments();
     }, []);
 
-    if (loading) return <div id="content"><LoadingSpinner /></div>;
-    if (error) return <div id="content" className="error-box"><FaExclamationCircle /> {error}</div>;
-
     const gradedAssignments = assignments.filter(a => a.grade !== null && a.grade !== undefined);
     const pendingAssignments = assignments.filter(a => a.grade === null || a.grade === undefined);
 
@@ -54,6 +51,12 @@ const CompletedAssignments = () => {
                     </div>
                 </div>
 
+                {loading ? (
+                    <LoadingSpinner />
+                ) : error ? (
+                    <div className="error-box"><FaExclamationCircle /> {error}</div>
+                ) : (
+                <>
                 <div className="stats-mini-grid">
                     <div className="mini-stat">
                         <div className="stat-label">Átlag osztályzat</div>
@@ -140,6 +143,8 @@ const CompletedAssignments = () => {
                         ))
                     )}
                 </div>
+                </>
+                )}
             </div>
         </div>
     );
