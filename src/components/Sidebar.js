@@ -157,6 +157,11 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                                 <FaChalkboard className="icon" /> Osztályterem
                             </a>
                         </li>
+                        <li>
+                            <a tabIndex={0} className={isActiveLink('/szulo-statisztika') ? 'active-link' : ''} onClick={() => handleNavigation('/szulo-statisztika')}>
+                                <FaChartBar className="icon" /> Statisztikák
+                            </a>
+                        </li>
                         <li className="settings-link">
                             <a id="settings-link" tabIndex={0} className={isActiveLink('/szulo-beallitasok') ? 'settings-active' : ''} onClick={() => handleNavigation('/szulo-beallitasok', { activeTab: 'appearance' })}>
                                 <FaCog className="settings-icon" /> Beállítások

@@ -6,7 +6,8 @@
 }
 
 #content.teacher-welcome,
-#content.student-welcome {
+#content.student-welcome,
+#content.parent-welcome {
   padding: 0;
   overflow: hidden;
   display: flex;
@@ -660,7 +661,8 @@
 
 @media (max-width: 1024px) {
   #content.teacher-welcome,
-  #content.student-welcome {
+  #content.student-welcome,
+  #content.parent-welcome {
     left: 0;
   }
 }

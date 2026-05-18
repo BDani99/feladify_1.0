@@ -1,6 +1,63 @@
 import React, { useState, useEffect } from 'react';
-import { FaCompass, FaLock, FaLockOpen, FaCheckCircle, FaStar, FaChartPie, FaExclamationCircle } from 'react-icons/fa';
+import {
+    FaCompass, FaLock, FaLockOpen, FaCheckCircle,
+    FaChartPie, FaFire, FaTrophy, FaCalendarAlt,
+    FaStar, FaExclamationCircle, FaThumbsUp, FaArrowUp
+} from 'react-icons/fa';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import ParentChildSelector from '../../components/ParentChildSelector';
+import '../../styles/Parent/ParentGlobal.css';
+import '../../styles/Parent/ParentRoadmap.css';
+import '../../styles/Student/RoadmapView.css';
 import '../../styles/Student/StudentDashboard.css';
+
+const XP_PER_LEVEL = 50;
+
+const RadarChart = ({ data }) => {
+    if (!data || data.length === 0) return (
+        <div className="parent-radar-empty">
+            <FaChartPie className="parent-radar-empty-icon" />
+            <p>Nincs elég adat a diagram kirajzolásához.</p>
+        </div>
+    );
+    const width = 300, height = 300, cx = 150, cy = 150, r = 100;
+    const axes = data.map((d, i) => {
+        const angle = (Math.PI * 2 / data.length) * i - Math.PI / 2;
+        const sr = r * (d.score / 100);
+        return {
+            label: d.category, angle,
+            xMax: cx + r * Math.cos(angle), yMax: cy + r * Math.sin(angle),
+            xVal: cx + sr * Math.cos(angle), yVal: cy + sr * Math.sin(angle)
+        };
+    });
+    const gridPolygons = [0.2, 0.4, 0.6, 0.8, 1].map(level =>
+        axes.map(a => `${cx + r * level * Math.cos(a.angle)},${cy + r * level * Math.sin(a.angle)}`).join(' ')
+    );
+    return (
+        <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }}>
+            {gridPolygons.map((pts, i) => (
+                <polygon key={i} points={pts} fill="none" stroke="var(--border-color)" strokeWidth="1" />
+            ))}
+            {axes.map((a, i) => (
+                <line key={i} x1={cx} y1={cy} x2={a.xMax} y2={a.yMax} stroke="var(--border-color)" strokeWidth="1" />
+            ))}
+            <polygon points={axes.map(a => `${a.xVal},${a.yVal}`).join(' ')} fill="var(--accent-glow)" stroke="var(--accent)" strokeWidth="2.5" />
+            {axes.map((a, i) => (
+                <circle key={i} cx={a.xVal} cy={a.yVal} r="4.5" fill="var(--accent)" stroke="white" strokeWidth="1.5" />
+            ))}
+            {axes.map((a, i) => {
+                const xl = cx + r * 1.26 * Math.cos(a.angle);
+                const yl = cy + r * 1.26 * Math.sin(a.angle) + 4;
+                const anchor = Math.cos(a.angle) > 0.1 ? 'start' : Math.cos(a.angle) < -0.1 ? 'end' : 'middle';
+                return (
+                    <text key={i} x={xl} y={yl} fontSize="9" fontWeight="600" fill="currentColor" textAnchor={anchor} style={{ opacity: 0.9 }}>
+                        {a.label.length > 15 ? `${a.label.substring(0, 13)}...` : a.label}
+                    </text>
+                );
+            })}
+        </svg>
+    );
+};
 
 const ParentRoadmap = () => {
     const [children, setChildren] = useState([]);
@@ -21,34 +78,37 @@ const ParentRoadmap = () => {
                 const data = await res.json();
                 if (data.children && data.children.length > 0) {
                     setChildren(data.children);
-                    if (!selectedChildId || !data.children.some(c => c._id === selectedChildId)) {
+                    const stored = localStorage.getItem('parent-selected-child');
+                    if (!stored || !data.children.some(c => c._id === stored)) {
                         setSelectedChildId(data.children[0]._id);
+                        localStorage.setItem('parent-selected-child', data.children[0]._id);
                     }
+                } else {
+                    setLoading(false);
                 }
             } catch (err) {
                 console.error(err);
-                setError('Hiba történt a gyermekek betöltésekor.');
+                setLoading(false);
             }
         };
         fetchChildren();
-    }, [selectedChildId]);
+    }, []);
 
     useEffect(() => {
         if (!selectedChildId || !subject) return;
         const fetchRoadmap = async () => {
             setLoading(true);
+            setError('');
             try {
                 const res = await fetch(`/api/parent/child/${selectedChildId}/roadmap/${subject}`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('AccessToken')}` }
                 });
                 if (res.ok) {
-                    const data = await res.json();
-                    setRoadmap(data);
+                    setRoadmap(await res.json());
                 } else {
-                    setError('Nem sikerült betölteni az útvonalat.');
+                    setError('Nem sikerült betölteni a fejlődési térképet.');
                 }
             } catch (err) {
-                console.error(err);
                 setError('Hiba a fejlődési térkép lekérésekor.');
             } finally {
                 setLoading(false);
@@ -57,274 +117,311 @@ const ParentRoadmap = () => {
         fetchRoadmap();
     }, [selectedChildId, subject]);
 
-    const handleChildChange = (e) => {
-        const id = e.target.value;
+    const handleChildChange = (id) => {
         setSelectedChildId(id);
         localStorage.setItem('parent-selected-child', id);
     };
 
-    // PURE REACT SVG RADAR CHART COMPONENT
-    const RenderRadarChart = ({ data }) => {
-        if (!data || data.length === 0) {
-            return (
-                <div className="text-center py-4 text-muted">
-                    <FaChartPie className="mb-2" style={{ fontSize: '2.5rem' }} />
-                    <p className="mb-0 small">Nincs elég adat a radar-diagram kirajzolásához.</p>
-                </div>
-            );
-        }
-
-        const width = 300;
-        const height = 300;
-        const cx = width / 2;
-        const cy = height / 2;
-        const r = 100;
-        const numAxes = data.length;
-
-        // Számoljuk ki az egyes kategóriák szögét és pontjait
-        const axes = data.map((d, i) => {
-            const angle = (Math.PI * 2 / numAxes) * i - Math.PI / 2;
-            const xMax = cx + r * Math.cos(angle);
-            const yMax = cy + r * Math.sin(angle);
-            const scoreRadius = r * (d.score / 100);
-            const xVal = cx + scoreRadius * Math.cos(angle);
-            const yVal = cy + scoreRadius * Math.sin(angle);
-            return { label: d.category, xMax, yMax, xVal, yVal, angle };
-        });
-
-        // Hálózat (concentric circles)
-        const levels = [0.2, 0.4, 0.6, 0.8, 1];
-        const gridPolygons = levels.map(level => {
-            return axes.map(axis => {
-                const levelRadius = r * level;
-                const x = cx + levelRadius * Math.cos(axis.angle);
-                const y = cy + levelRadius * Math.sin(axis.angle);
-                return `${x},${y}`;
-            }).join(' ');
-        });
-
-        // Érték pontok összekötve (polygon)
-        const valuePointsString = axes.map(axis => `${axis.xVal},${axis.yVal}`).join(' ');
-
-        return (
-            <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }}>
-                {/* Hálós gyűrűk */}
-                {gridPolygons.map((points, idx) => (
-                    <polygon 
-                        key={idx} 
-                        points={points} 
-                        fill="none" 
-                        stroke="var(--card-border, rgba(255,255,255,0.08))" 
-                        strokeWidth="1" 
-                    />
-                ))}
-
-                {/* Szint körök háttér szövegek */}
-                {levels.map((level, idx) => (
-                    <text 
-                        key={idx}
-                        x={cx}
-                        y={cy - r * level + 10}
-                        fontSize="8"
-                        fill="rgba(255,255,255,0.25)"
-                        textAnchor="middle"
-                    >
-                        {level * 100}%
-                    </text>
-                ))}
-
-                {/* Tengely vonalak */}
-                {axes.map((axis, idx) => (
-                    <line 
-                        key={idx}
-                        x1={cx}
-                        y1={cy}
-                        x2={axis.xMax}
-                        y2={axis.yMax}
-                        stroke="var(--card-border, rgba(255,255,255,0.1))"
-                        strokeWidth="1"
-                    />
-                ))}
-
-                {/* Kitöltött érték-poligon */}
-                <polygon 
-                    points={valuePointsString}
-                    fill="rgba(59, 130, 246, 0.25)"
-                    stroke="rgba(59, 130, 246, 1)"
-                    strokeWidth="2.5"
-                />
-
-                {/* Érték pontok a csúcsokon */}
-                {axes.map((axis, idx) => (
-                    <circle 
-                        key={idx}
-                        cx={axis.xVal}
-                        cy={axis.yVal}
-                        r="4.5"
-                        fill="var(--primary-color, #3b82f6)"
-                        stroke="#fff"
-                        strokeWidth="1.5"
-                    />
-                ))}
-
-                {/* Tengely feliratok */}
-                {axes.map((axis, idx) => {
-                    const offsetMultiplier = 1.25;
-                    const xLabel = cx + (r * offsetMultiplier) * Math.cos(axis.angle);
-                    const yLabel = cy + (r * offsetMultiplier) * Math.sin(axis.angle) + 4;
-                    const anchor = Math.cos(axis.angle) > 0.1 ? 'start' : Math.cos(axis.angle) < -0.1 ? 'end' : 'middle';
-                    return (
-                        <text 
-                            key={idx}
-                            x={xLabel}
-                            y={yLabel}
-                            fontSize="9"
-                            fontWeight="600"
-                            fill="currentColor"
-                            textAnchor={anchor}
-                            style={{ opacity: 0.9 }}
-                        >
-                            {axis.label.length > 15 ? `${axis.label.substring(0, 13)}...` : axis.label}
-                        </text>
-                    );
-                })}
-            </svg>
-        );
-    };
-
     if (children.length === 0 && !loading) {
         return (
-            <div id='content' className="d-flex flex-column align-items-center justify-content-center text-center p-5" style={{ minHeight: '80vh' }}>
-                <div className="glass-card p-5 text-center shadow-lg" style={{ maxWidth: '600px', borderRadius: '24px' }}>
-                    <FaCompass className="text-primary mb-4" style={{ fontSize: '4rem' }} />
-                    <h2 className="mb-3">Nincs még összekapcsolt gyermek</h2>
-                    <p className="text-muted mb-4">A fejlődési térképek megtekintéséhez adj hozzá egy gyermeket a Beállítások menüben.</p>
+            <div id="content">
+                <div className="dashboard-container">
+                    <div className="dash-section-card" style={{ textAlign: 'center', padding: '60px 40px' }}>
+                        <FaCompass style={{ fontSize: '3.5rem', color: 'var(--accent)', marginBottom: 24 }} />
+                        <h2 style={{ fontWeight: 700, marginBottom: 12 }}>Nincs még összekapcsolt gyermek</h2>
+                        <p style={{ color: 'var(--color-text-dim)' }}>A fejlődési térképek megtekintéséhez adj hozzá egy gyermeket a Beállítások menüben.</p>
+                    </div>
                 </div>
             </div>
         );
     }
 
+    const checkpoints = roadmap?.checkpoints || [];
+    const completedCps = checkpoints.filter(cp => cp.status === 'completed');
+    const unlockedCps = checkpoints.filter(cp => cp.status === 'unlocked');
+    const totalCount = checkpoints.length;
+    const completedCount = completedCps.length;
+    const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+    const avgScore = completedCps.length > 0
+        ? Math.round(completedCps.reduce((s, cp) => s + (cp.score || 0), 0) / completedCps.length)
+        : null;
+    const subjectXP = roadmap?.subjectXP || 0;
+    const xpLevel = Math.floor(subjectXP / XP_PER_LEVEL) + 1;
+    const xpInLevel = subjectXP % XP_PER_LEVEL;
+    const levelProgress = (xpInLevel / XP_PER_LEVEL) * 100;
+    const xpToNext = XP_PER_LEVEL - xpInLevel;
+    const strengths = roadmap?.aiAnalysis?.strengths || [];
+    const weaknesses = roadmap?.aiAnalysis?.weaknesses || [];
+    const notStarted = totalCount === 0 && !(roadmap?.radarData?.length > 0);
+
     return (
-        <div id="content" className="container py-4">
-            <div className="d-flex flex-wrap align-items-center justify-content-between mb-5 gap-3">
-                <div>
-                    <h1 className="main-title text-start mb-1">Fejlődési Térkép</h1>
-                    <p className="text-muted">Kövesd nyomon gyermeked tantárgy-specifikus haladását és erősségeit.</p>
-                </div>
-
-                <div className="d-flex align-items-center gap-2 glass-card px-3 py-2" style={{ borderRadius: '16px' }}>
-                    <span className="text-muted me-2" style={{ fontSize: '0.9rem' }}>Gyermek:</span>
-                    <select className="form-select border-0 bg-transparent text-primary" value={selectedChildId} onChange={handleChildChange} style={{ fontWeight: '600', cursor: 'pointer', outline: 'none' }}>
-                        {children.map(c => (
-                            <option key={c._id} value={c._id}>{c.name}</option>
-                        ))}
-                    </select>
-                </div>
-            </div>
-
-            {/* Tantárgy Választó */}
-            <div className="d-flex flex-wrap gap-2 mb-5 justify-content-start">
-                {subjectsList.map(sub => (
-                    <button 
-                        key={sub} 
-                        className={`btn rounded-pill px-4 ${subject === sub ? 'btn-primary' : 'btn-outline-secondary bg-transparent'}`} 
-                        onClick={() => setSubject(sub)}
-                    >
-                        {sub}
-                    </button>
-                ))}
-            </div>
-
-            {loading ? (
-                <div className="text-center py-5">
-                    <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Betöltés...</span>
+        <div id="content">
+            <div className="dashboard-container">
+                <div className="page-header-banner">
+                    <div className="phb-icon"><FaCompass /></div>
+                    <div className="phb-text">
+                        <h1 className="phb-title">Fejlődési Térkép</h1>
+                        <p className="phb-subtitle">Kövesd nyomon gyermeked egyéni gyakorlásának haladását és eredményeit.</p>
                     </div>
+                    {children.length > 0 && (
+                        <ParentChildSelector
+                            childrenList={children}
+                            selectedId={selectedChildId}
+                            onChange={handleChildChange}
+                        />
+                    )}
                 </div>
-            ) : error ? (
-                <div className="alert alert-danger glass-card" role="alert">{error}</div>
-            ) : roadmap && (
-                <div className="row g-4 text-start">
-                    {/* Radar diagram és AI Elemzés */}
-                    <div className="col-12 col-lg-5">
-                        <div className="glass-card p-4 mb-4" style={{ borderRadius: '24px', height: '100%' }}>
-                            <h4 className="mb-4" style={{ fontWeight: '700' }}>Erősségek és Kategóriák</h4>
-                            <div className="d-flex align-items-center justify-content-center mb-4" style={{ height: '260px' }}>
-                                {roadmap.radarData && roadmap.radarData.length > 0 ? (
-                                    <RenderRadarChart data={roadmap.radarData} />
-                                ) : (
-                                    <div className="text-center text-muted">
-                                        <FaCompass style={{ fontSize: '3rem' }} className="mb-3" />
-                                        <p className="mb-0">Még nem áll rendelkezésre kitöltött diagnosztikai felmérő.</p>
+
+                <div className="parent-subject-tabs">
+                    {subjectsList.map(sub => (
+                        <button
+                            key={sub}
+                            className={`parent-filter-btn${subject === sub ? ' active' : ''}`}
+                            onClick={() => setSubject(sub)}
+                        >
+                            {sub}
+                        </button>
+                    ))}
+                </div>
+
+                {loading ? (
+                    <LoadingSpinner />
+                ) : error ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#ef4444', padding: '16px 0' }}>
+                        <FaExclamationCircle /> {error}
+                    </div>
+                ) : notStarted ? (
+                    <div className="glass-card" style={{ textAlign: 'center', padding: '56px 40px' }}>
+                        <FaCompass style={{ fontSize: '3rem', color: 'var(--color-text-dim)', opacity: 0.25, marginBottom: 16 }} />
+                        <h3 style={{ fontWeight: 700, marginBottom: 8 }}>Még nem kezdte el ezt a tantárgyat</h3>
+                        <p style={{ color: 'var(--color-text-dim)', fontSize: '0.9rem', maxWidth: 420, margin: '0 auto' }}>
+                            Gyermeked még nem töltötte ki a <strong>{subject}</strong> szintfelmérőt.
+                            Az egyéni gyakorlás megkezdése után itt jelenik meg a teljes haladása.
+                        </p>
+                    </div>
+                ) : (
+                    <>
+                        {/* ── Stats sor ── */}
+                        <div className="roadmap-stats" style={{ marginBottom: 28 }}>
+                            <div className="stat-card xp-card">
+                                <div className="stat-card-icon">⭐</div>
+                                <div className="stat-card-body">
+                                    <div className="stat-card-value xp-value">{subjectXP} XP</div>
+                                    <div className="stat-card-label">{subject} – tapasztalati pont</div>
+                                    <div className="level-bar-wrap">
+                                        <div className="level-bar-fill" style={{ width: `${levelProgress}%` }} />
+                                    </div>
+                                    <div className="level-bar-info">
+                                        <span className="level-badge"><FaFire /> {xpLevel}. szint</span>
+                                        <span className="level-next">{xpToNext} XP következőhöz</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="stat-card chapters-card">
+                                <div className="stat-card-icon">🎯</div>
+                                <div className="stat-card-body">
+                                    <div className="stat-card-value">
+                                        {completedCount}<span className="stat-total">/{totalCount}</span>
+                                    </div>
+                                    <div className="stat-card-label">Fejezet teljesítve</div>
+                                    <div className="level-bar-wrap">
+                                        <div className="level-bar-fill chapters" style={{ width: `${progress}%` }} />
+                                    </div>
+                                    <div className="level-bar-info">
+                                        <span className="progress-pct">{progress}% kész</span>
+                                        {unlockedCps.length > 0 && (
+                                            <span style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 700 }}>
+                                                {unlockedCps.length} aktív
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {avgScore !== null ? (
+                                <div className="stat-card score-card">
+                                    <div className="stat-card-icon"><FaTrophy /></div>
+                                    <div className="stat-card-body">
+                                        <div className={`stat-card-value score-value ${avgScore >= 80 ? 'good' : 'low'}`}>{avgScore}%</div>
+                                        <div className="stat-card-label">Átlag pontszám</div>
+                                        <div className="score-bar-wrap">
+                                            <div className="score-bar-fill" style={{
+                                                width: `${avgScore}%`,
+                                                background: avgScore >= 80
+                                                    ? 'linear-gradient(90deg,#10b981,#059669)'
+                                                    : 'linear-gradient(90deg,#f59e0b,#d97706)'
+                                            }} />
+                                        </div>
+                                        <div className="level-bar-info">
+                                            <span className={`score-badge ${avgScore >= 80 ? 'good' : 'low'}`}>
+                                                {avgScore >= 80 ? '✓ Jó teljesítmény' : '↑ Van hova fejlődni'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="stat-card score-card empty">
+                                    <div className="stat-card-icon"><FaTrophy /></div>
+                                    <div className="stat-card-body">
+                                        <div className="stat-card-value empty-value">—</div>
+                                        <div className="stat-card-label">Átlag pontszám</div>
+                                        <div className="empty-hint">Teljesített fejezet után jelenik meg</div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ── Radar + AI elemzés ── */}
+                        <div className="parent-roadmap-grid" style={{ marginBottom: 28 }}>
+                            <div className="glass-card parent-radar-card">
+                                <h4 className="parent-radar-title">Diagnosztikai Térkép</h4>
+                                <div className="parent-radar-svg-wrapper">
+                                    <RadarChart data={roadmap?.radarData} />
+                                </div>
+                                {roadmap?.aiAnalysis?.feedback && (
+                                    <div className="parent-radar-feedback">
+                                        {roadmap.aiAnalysis.feedback}
                                     </div>
                                 )}
                             </div>
 
-                            {/* Visszajelzés */}
-                            <div className="p-3 bg-secondary bg-opacity-10 text-muted rounded-4 mb-3" style={{ fontSize: '0.88rem' }}>
-                                <p className="mb-0">{roadmap.aiAnalysis.feedback}</p>
+                            <div className="glass-card parent-checkpoints-card">
+                                <div className="parent-checkpoints-header">
+                                    <h4 className="parent-checkpoints-title">AI Elemzés</h4>
+                                    <span className="parent-level-badge">{roadmap?.currentLevel || 1}. szint</span>
+                                </div>
+
+                                {strengths.length === 0 && weaknesses.length === 0 ? (
+                                    <div className="parent-checkpoints-empty">
+                                        <FaChartPie className="parent-checkpoints-empty-icon" />
+                                        <p>Az AI elemzés a szintfelmérő kitöltése után jelenik meg.</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {strengths.length > 0 && (
+                                            <div className="pr-analysis-section">
+                                                <div className="pr-analysis-label pr-strength-label">
+                                                    <FaThumbsUp /> Erősségek
+                                                </div>
+                                                {strengths.map((s, i) => (
+                                                    <div key={i} className="pr-analysis-item pr-strength-item">
+                                                        <div className="pr-analysis-category">{s.category}</div>
+                                                        <div className="pr-analysis-desc">{s.description}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {weaknesses.length > 0 && (
+                                            <div className="pr-analysis-section">
+                                                <div className="pr-analysis-label pr-weakness-label">
+                                                    <FaArrowUp /> Fejlesztendő területek
+                                                </div>
+                                                {weaknesses.map((w, i) => (
+                                                    <div key={i} className="pr-analysis-item pr-weakness-item">
+                                                        <div className="pr-analysis-category">{w.category}</div>
+                                                        <div className="pr-analysis-desc">{w.description}</div>
+                                                        {w.recommendedPractice > 0 && (
+                                                            <div className="pr-practice-hint">
+                                                                Javasolt: {w.recommendedPractice} óra gyakorlás
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
                             </div>
                         </div>
-                    </div>
 
-                    {/* Checkpoint Roadmap lista */}
-                    <div className="col-12 col-lg-7">
-                        <div className="glass-card p-4" style={{ borderRadius: '24px', height: '100%' }}>
-                            <div className="d-flex justify-content-between align-items-center mb-4">
-                                <h4 className="mb-0" style={{ fontWeight: '700' }}>Fejezetek és Mérföldkövek</h4>
-                                <span className="badge bg-primary bg-opacity-10 text-primary px-3 py-2" style={{ borderRadius: '12px', fontWeight: '700' }}>
-                                    Szint: {roadmap.currentLevel}
-                                </span>
+                        {/* ── Fejezetek timeline ── */}
+                        <div className="glass-card" style={{ padding: 28 }}>
+                            <div className="parent-checkpoints-header" style={{ marginBottom: 24 }}>
+                                <h4 className="parent-checkpoints-title">Fejezetek és Haladás</h4>
+                                <span className="parent-level-badge">{completedCount}/{totalCount} teljesítve</span>
                             </div>
 
-                            {roadmap.checkpoints.length === 0 ? (
-                                <div className="text-center py-5 text-muted">
-                                    <FaExclamationCircle className="mb-3" style={{ fontSize: '2.5rem' }} />
+                            {checkpoints.length === 0 ? (
+                                <div className="parent-checkpoints-empty">
+                                    <FaExclamationCircle className="parent-checkpoints-empty-icon" />
                                     <p>Ebben a tantárgyban még nem indult el a tanulási útvonal.</p>
                                 </div>
                             ) : (
-                                <div className="d-flex flex-column gap-3">
-                                    {roadmap.checkpoints.map((cp, idx) => (
-                                        <div 
-                                            key={cp.checkpointId} 
-                                            className="p-3 d-flex align-items-center justify-content-between rounded-4 transition-card"
-                                            style={{ 
-                                                border: '1px solid rgba(255,255,255,0.06)',
-                                                backgroundColor: cp.status === 'locked' ? 'rgba(255,255,255,0.02)' : 'rgba(255,255,255,0.05)'
-                                            }}
-                                        >
-                                            <div className="d-flex align-items-center gap-3">
-                                                <div 
-                                                    className="p-2.5 rounded-3 d-flex align-items-center justify-content-center"
-                                                    style={{ 
-                                                        backgroundColor: cp.status === 'completed' ? 'rgba(40, 167, 69, 0.1)' : cp.status === 'unlocked' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255,255,255,0.05)',
-                                                        color: cp.status === 'completed' ? '#28a745' : cp.status === 'unlocked' ? '#3b82f6' : '#6c757d'
-                                                    }}
-                                                >
-                                                    {cp.status === 'completed' ? <FaCheckCircle /> : cp.status === 'unlocked' ? <FaLockOpen /> : <FaLock />}
+                                <div className="pr-checkpoints-timeline">
+                                    {checkpoints.map((cp, i) => (
+                                        <div key={cp.checkpointId} className={`pr-timeline-item ${cp.status}`}>
+                                            <div className="pr-timeline-icon-col">
+                                                <div className={`pr-timeline-dot ${cp.status}`}>
+                                                    {cp.status === 'completed'
+                                                        ? <FaCheckCircle />
+                                                        : cp.status === 'unlocked'
+                                                            ? <FaLockOpen />
+                                                            : <FaLock />}
                                                 </div>
-                                                <div>
-                                                    <h6 className="mb-0" style={{ fontWeight: '700', color: cp.status === 'locked' ? 'var(--text-muted, #6c757d)' : 'inherit' }}>{cp.topic}</h6>
-                                                    <div className="d-flex gap-2 text-muted mt-1" style={{ fontSize: '0.8rem' }}>
-                                                        <span className="d-flex align-items-center gap-0.5"><FaStar className="text-warning" /> Nehézség: {cp.difficulty}/5</span>
-                                                        {cp.attempts > 0 && <span>• Kísérletek: {cp.attempts} db</span>}
-                                                    </div>
-                                                </div>
+                                                {i < checkpoints.length - 1 && <div className="pr-timeline-line" />}
                                             </div>
 
-                                            {cp.status === 'completed' && (
-                                                <span className="badge bg-success bg-opacity-10 text-success px-2.5 py-1.5" style={{ borderRadius: '10px', fontSize: '0.75rem', fontWeight: '700' }}>
-                                                    Sikeres: {cp.score}%
-                                                </span>
-                                            )}
+                                            <div className="pr-timeline-content">
+                                                <div className="pr-timeline-header">
+                                                    <span className="pr-cp-index">{i + 1}.</span>
+                                                    <span className="pr-cp-topic">{cp.topic || 'Gyakorlás'}</span>
+                                                    <div className="pr-cp-difficulty">
+                                                        {Array.from({ length: 5 }, (_, k) => (
+                                                            <FaStar key={k} style={{
+                                                                color: k < (cp.difficulty || 3) ? '#f59e0b' : 'var(--border-color-2)',
+                                                                fontSize: '0.65rem'
+                                                            }} />
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                {cp.status === 'completed' && (
+                                                    <div className="pr-cp-completed-info">
+                                                        <div className="pr-cp-score-row">
+                                                            <div className="pr-score-bar-wrap">
+                                                                <div
+                                                                    className="pr-score-bar-fill"
+                                                                    style={{
+                                                                        width: `${cp.score}%`,
+                                                                        background: cp.score >= 80
+                                                                            ? 'linear-gradient(90deg,#10b981,#059669)'
+                                                                            : cp.score >= 60
+                                                                                ? 'linear-gradient(90deg,#3b82f6,#2563eb)'
+                                                                                : 'linear-gradient(90deg,#f59e0b,#d97706)'
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                            <span className={`pr-score-pct ${cp.score >= 80 ? 'good' : cp.score >= 60 ? 'ok' : 'low'}`}>
+                                                                {cp.score}%
+                                                            </span>
+                                                        </div>
+                                                        <div className="pr-cp-meta">
+                                                            {cp.attempts > 0 && <span>{cp.attempts} kísérlet</span>}
+                                                            {cp.completedAt && (
+                                                                <span>
+                                                                    <FaCalendarAlt style={{ fontSize: '0.65rem', opacity: 0.7 }} />{' '}
+                                                                    {new Date(cp.completedAt).toLocaleDateString('hu-HU')}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {cp.status === 'unlocked' && (
+                                                    <span className="pr-cp-status-badge unlocked">Megnyitva – folyamatban</span>
+                                                )}
+                                                {cp.status === 'locked' && (
+                                                    <span className="pr-cp-status-badge locked">Zárolva – előző fejezet szükséges</span>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             )}
                         </div>
-                    </div>
-                </div>
-            )}
+                    </>
+                )}
+            </div>
         </div>
     );
 };

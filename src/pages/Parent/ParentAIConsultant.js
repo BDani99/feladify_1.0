@@ -1,397 +1,595 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaGraduationCap, FaPlus, FaTrash, FaPen, FaPaperPlane, FaRobot, FaUser, FaComments, FaHistory, FaCheck, FaExclamationCircle } from 'react-icons/fa';
-import '../../styles/Welcome.css'; // Reuses AI Chat layout
+import { fetchUserData } from '../../api/Auth/ProfileData';
+import LoadingSpinner from '../../components/LoadingSpinner';
+import '../../styles/Welcome.css';
+import logo from '../../assets/logo-400.png';
+import { FaPaperPlane, FaPlus, FaHistory, FaTrash, FaPen, FaExclamationCircle, FaRobot, FaGraduationCap, FaChevronDown } from 'react-icons/fa';
+import ReactMarkdown from 'react-markdown';
+import ConfirmModal from '../../components/ConfirmModal';
 
 const ParentAIConsultant = () => {
-    const [children, setChildren] = useState([]);
-    const [selectedChildId, setSelectedChildId] = useState(() => localStorage.getItem('parent-selected-child') || '');
-    const [sessions, setSessions] = useState([]);
-    const [currentSessionId, setCurrentSessionId] = useState(null);
-    const [messages, setMessages] = useState([]);
-    const [input, setInput] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [sending, setSending] = useState(false);
-    const [editingSessionId, setEditingSessionId] = useState(null);
-    const [editTitleInput, setEditTitleInput] = useState('');
-    const [error, setError] = useState('');
+  const [children, setChildren] = useState([]);
+  const [selectedChildId, setSelectedChildId] = useState(() => localStorage.getItem('parent-selected-child') || '');
+  const [sessions, setSessions] = useState([]);
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [userName, setUserName] = useState('');
+  const [currentDate, setCurrentDate] = useState('');
+  const [chatInput, setChatInput] = useState('');
+  const [isBotTyping, setIsBotTyping] = useState(false);
+  const [showSessionHistory, setShowSessionHistory] = useState(false);
+  const [renamingSessionId, setRenamingSessionId] = useState(null);
+  const [renamingTitle, setRenamingTitle] = useState('');
+  const [confirmDeleteModal, setConfirmDeleteModal] = useState({ isOpen: false, sessionId: null });
+  const [selectedModel, setSelectedModel] = useState({ provider: 'qwen', model: 'qwen/qwen3-32b' });
+  const [showModelPicker, setShowModelPicker] = useState(false);
+  const [childSelectOpen, setChildSelectOpen] = useState(false);
+  const chatEndRef = useRef(null);
+  const inputRef = useRef(null);
+  const modelPickerRef = useRef(null);
+  const childSelectRef = useRef(null);
 
-    const messagesEndRef = useRef(null);
+  const ALL_MODELS = [
+    { label: 'Qwen3 32B',     value: 'qwen/qwen3-32b',                            provider: 'qwen',   badge: 'Qwen' },
+    { label: 'GPT-OSS 120B',  value: 'openai/gpt-oss-120b',                       provider: 'openai', badge: 'OpenAI' },
+    { label: 'GPT-OSS 20B',   value: 'openai/gpt-oss-20b',                        provider: 'openai', badge: 'OpenAI' },
+    { label: 'Llama 3.3 70B', value: 'llama-3.3-70b-versatile',                   provider: 'meta',   badge: 'Meta' },
+    { label: 'Llama 4 Scout', value: 'meta-llama/llama-4-scout-17b-16e-instruct', provider: 'meta',   badge: 'Meta' },
+    { label: 'Llama 3.1 8B',  value: 'llama-3.1-8b-instant',                      provider: 'meta',   badge: 'Meta' },
+  ];
 
-    useEffect(() => {
-        const fetchChildren = async () => {
-            try {
-                const res = await fetch('/api/parent/children', {
-                    headers: { 'Authorization': `Bearer ${localStorage.getItem('AccessToken')}` }
-                });
-                const data = await res.json();
-                if (data.children && data.children.length > 0) {
-                    setChildren(data.children);
-                    if (!selectedChildId || !data.children.some(c => c._id === selectedChildId)) {
-                        setSelectedChildId(data.children[0]._id);
-                    }
-                }
-            } catch (err) {
-                console.error(err);
-                setError('Hiba történt a gyermekek betöltésekor.');
-            }
-        };
-        fetchChildren();
-    }, [selectedChildId]);
+  const quickPrompts = [
+    "Hol tart most gyermekem a tanulásban?",
+    "Magyarázd el az összeadást és kivonást otthoni példákkal!",
+    "Hogyan tudok segíteni a fejlesztendő területeken?",
+    "Adj ötleteket játékos matek gyakorláshoz otthon!",
+    "Hogyan segíthetek az olvasás fejlesztésében?",
+    "Írj egy heti otthoni gyakorlási tervet!"
+  ];
 
-    const loadChatHistory = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/parent/chat/history', {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('AccessToken')}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setMessages(data.messages || []);
-                setSessions(data.sessions || []);
-                setCurrentSessionId(data.currentSessionId);
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
+  useEffect(() => {
+    const handler = (e) => {
+      if (modelPickerRef.current && !modelPickerRef.current.contains(e.target)) {
+        setShowModelPicker(false);
+      }
+      if (childSelectRef.current && !childSelectRef.current.contains(e.target)) {
+        setChildSelectOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const [profileRes, childrenRes] = await Promise.all([
+          fetchUserData(),
+          fetch('/api/parent/children', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('AccessToken')}` }
+          })
+        ]);
+
+        if (profileRes.message === 'Felhasználó adatai sikeresen lekérve') {
+          setUserName(profileRes.user.name);
         }
-    };
+        const date = new Date();
+        setCurrentDate(date.toLocaleDateString('hu-HU', {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        }));
 
-    useEffect(() => {
-        loadChatHistory();
-    }, []);
-
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
-
-    const handleChildChange = (e) => {
-        const id = e.target.value;
-        setSelectedChildId(id);
-        localStorage.setItem('parent-selected-child', id);
-    };
-
-    const handleNewSession = async () => {
-        try {
-            const res = await fetch('/api/parent/chat/new-session', {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('AccessToken')}` }
-            });
-            if (res.ok) {
-                await loadChatHistory();
+        if (childrenRes.ok) {
+          const data = await childrenRes.json();
+          if (data.children && data.children.length > 0) {
+            setChildren(data.children);
+            const stored = localStorage.getItem('parent-selected-child');
+            if (!stored || !data.children.some(c => c._id === stored)) {
+              setSelectedChildId(data.children[0]._id);
+              localStorage.setItem('parent-selected-child', data.children[0]._id);
             }
-        } catch (err) {
-            console.error(err);
+          }
         }
+      } catch (err) {
+        setError('Nem sikerült betölteni az adatokat.');
+      } finally {
+        setLoading(false);
+      }
     };
+    init();
+  }, []);
 
-    const handleLoadSession = async (sessionId) => {
-        try {
-            const res = await fetch('/api/parent/chat/load-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`
-                },
-                body: JSON.stringify({ sessionId })
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setMessages(data.messages || []);
-                setSessions(data.sessions || []);
-                setCurrentSessionId(sessionId);
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    };
+  useEffect(() => {
+    loadChatHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    const handleDeleteSession = async (e, sessionId) => {
-        e.stopPropagation();
-        if (!window.confirm('Biztosan törölni szeretnéd ezt a konzultációs előzményt?')) return;
-        try {
-            const res = await fetch(`/api/parent/chat/session/${sessionId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('AccessToken')}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setSessions(data.sessions || []);
-                if (currentSessionId === sessionId) {
-                    setMessages([]);
-                    setCurrentSessionId(null);
-                }
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    };
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isBotTyping]);
 
-    const handleStartRename = (e, s) => {
-        e.stopPropagation();
-        setEditingSessionId(s.sessionId);
-        setEditTitleInput(s.title);
-    };
-
-    const handleSaveRename = async (e, sessionId) => {
-        e.stopPropagation();
-        if (!editTitleInput.trim()) return;
-        try {
-            const res = await fetch(`/api/parent/chat/session/${sessionId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`
-                },
-                body: JSON.stringify({ title: editTitleInput.trim() })
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setSessions(data.sessions || []);
-                setEditingSessionId(null);
-            }
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-    const handleSend = async (e) => {
-        e.preventDefault();
-        if (!input.trim() || sending || !selectedChildId) return;
-
-        const userMsg = input.trim();
-        setInput('');
-        setSending(true);
-
-        // Add local user message instantly
-        setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
-
-        try {
-            const res = await fetch('/api/parent/chat/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`
-                },
-                body: JSON.stringify({
-                    message: userMsg,
-                    childId: selectedChildId,
-                    stream: true
-                })
-            });
-
-            if (!res.ok) {
-                throw new Error('Hiba történt a válasz fogadásakor.');
-            }
-
-            const reader = res.body.getReader();
-            const decoder = new TextDecoder();
-            let aiResponse = '';
-
-            // Add placeholder assistant message
-            setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n');
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-                            if (data.chunk) {
-                                aiResponse += data.chunk;
-                                setMessages(prev => {
-                                    const copy = [...prev];
-                                    copy[copy.length - 1].content = aiResponse;
-                                    return copy;
-                                });
-                            }
-                            if (data.done) {
-                                setCurrentSessionId(data.sessionId);
-                            }
-                        } catch (parseErr) {
-                            // Ignore line parses
-                        }
-                    }
-                }
-            }
-            await loadChatHistory();
-        } catch (err) {
-            console.error(err);
-            setError(err.message || 'Valami nem sikerült. Próbáld újra.');
-        } finally {
-            setSending(false);
-        }
-    };
-
-    if (children.length === 0 && !loading) {
-        return (
-            <div id='content' className="d-flex flex-column align-items-center justify-content-center text-center p-5" style={{ minHeight: '80vh' }}>
-                <div className="glass-card p-5 text-center shadow-lg" style={{ maxWidth: '600px', borderRadius: '24px' }}>
-                    <FaGraduationCap className="text-primary mb-4" style={{ fontSize: '4rem' }} />
-                    <h2 className="mb-3">Nincs még összekapcsolt gyermek</h2>
-                    <p className="text-muted mb-4">Az AI tanácsadó használatához adj hozzá egy gyermeket a Beállítások menüben.</p>
-                </div>
-            </div>
-        );
+  const loadChatHistory = async () => {
+    try {
+      const res = await fetch('/api/parent/chat/history', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('AccessToken')}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data.messages || []);
+        setSessions(data.sessions || []);
+        setCurrentSessionId(data.currentSessionId);
+      }
+    } catch (err) {
+      console.error(err);
     }
+  };
 
+  const handleChildChange = (id) => {
+    setSelectedChildId(id);
+    localStorage.setItem('parent-selected-child', id);
+    setChildSelectOpen(false);
+  };
+
+  const handleChatSubmit = async (e) => {
+    e.preventDefault();
+    if (!chatInput.trim() || !selectedChildId) return;
+
+    const userMsg = chatInput;
+    setChatInput('');
+    setMessages(prev => [...(prev || []), { role: 'user', content: userMsg, timestamp: new Date() }]);
+    setIsBotTyping(true);
+
+    try {
+      setMessages(prev => [...(prev || []), { role: 'assistant', content: '', timestamp: new Date() }]);
+
+      const response = await fetch('/api/parent/chat/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`
+        },
+        body: JSON.stringify({ message: userMsg, childId: selectedChildId, stream: true, modelOverride: selectedModel })
+      });
+
+      if (!response.ok) throw new Error('Hálózati hiba történt.');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let done = false;
+      let buffer = '';
+      let startedStreaming = false;
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        buffer += decoder.decode(value, { stream: !done });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          const cleaned = line.trim();
+          if (!cleaned) continue;
+          if (cleaned.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(cleaned.slice(6));
+              if (data.chunk) {
+                if (!startedStreaming) {
+                  startedStreaming = true;
+                  setIsBotTyping(false);
+                }
+                setMessages(prev => {
+                  const copy = [...prev];
+                  const lastMsg = copy[copy.length - 1];
+                  if (lastMsg && lastMsg.role === 'assistant') {
+                    copy[copy.length - 1] = { ...lastMsg, content: lastMsg.content + data.chunk };
+                  }
+                  return copy;
+                });
+              } else if (data.done) {
+                if (data.sessionId && !currentSessionId) {
+                  setCurrentSessionId(data.sessionId);
+                  setSessions(prev => {
+                    const exists = prev.some(s => s.sessionId === data.sessionId);
+                    if (!exists) {
+                      return [{ sessionId: data.sessionId, title: 'Jelenlegi konzultáció', updatedAt: new Date() }, ...prev];
+                    }
+                    return prev;
+                  });
+                }
+              }
+            } catch (err) { /* ignore */ }
+          }
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      setMessages(prev => {
+        const copy = [...prev];
+        const lastMsg = copy[copy.length - 1];
+        if (lastMsg && lastMsg.role === 'assistant' && !lastMsg.content) copy.pop();
+        return [...copy, { role: 'assistant', content: 'Hiba történt a válasz generálása során.', timestamp: new Date() }];
+      });
+    } finally {
+      setIsBotTyping(false);
+    }
+  };
+
+  const handleQuickPrompt = (prompt) => {
+    setChatInput(prompt);
+    inputRef.current?.focus();
+  };
+
+  const handleNewChat = async () => {
+    setMessages([]);
+    setCurrentSessionId(null);
+    setShowSessionHistory(false);
+    try {
+      await fetch('/api/parent/chat/new-session', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('AccessToken')}` }
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleLoadSession = async (sessionId) => {
+    setShowSessionHistory(false);
+    if (sessionId === currentSessionId) return;
+    try {
+      const res = await fetch('/api/parent/chat/load-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`
+        },
+        body: JSON.stringify({ sessionId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMessages(data.messages || []);
+        setSessions(data.sessions || []);
+        setCurrentSessionId(sessionId);
+      }
+    } catch (err) {
+      setError('Hiba az előzmény betöltésekor.');
+    }
+  };
+
+  const handleDeleteSession = (sessionId, e) => {
+    e.stopPropagation();
+    setConfirmDeleteModal({ isOpen: true, sessionId });
+  };
+
+  const executeDeleteSession = async () => {
+    const sessionId = confirmDeleteModal.sessionId;
+    setConfirmDeleteModal({ isOpen: false, sessionId: null });
+    if (!sessionId) return;
+    try {
+      const res = await fetch(`/api/parent/chat/session/${sessionId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('AccessToken')}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSessions(data.sessions || []);
+        if (currentSessionId === sessionId) {
+          setMessages([]);
+          setCurrentSessionId(null);
+        }
+      }
+    } catch (err) {
+      setError('Hiba a session törlése során.');
+    }
+  };
+
+  const handleStartRename = (session, e) => {
+    e.stopPropagation();
+    setRenamingSessionId(session.sessionId);
+    setRenamingTitle(session.title);
+  };
+
+  const handleRenameSession = async (sessionId, e) => {
+    e.stopPropagation();
+    if (!renamingTitle.trim()) {
+      setRenamingSessionId(null);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/parent/chat/session/${sessionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`
+        },
+        body: JSON.stringify({ title: renamingTitle.trim() })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSessions(data.sessions || []);
+        setRenamingSessionId(null);
+      }
+    } catch (err) {
+      setError('Hiba a session név módosítása során.');
+    }
+  };
+
+  const handleRenameKeyPress = (sessionId, e) => {
+    if (e.key === 'Enter') handleRenameSession(sessionId, e);
+    else if (e.key === 'Escape') setRenamingSessionId(null);
+  };
+
+  if (loading) {
     return (
-        <div id="content" className="container py-4">
-            <div className="row g-4 text-start" style={{ minHeight: '82vh' }}>
-                {/* Chat előzmények sáv */}
-                <div className="col-12 col-md-4 col-lg-3">
-                    <div className="glass-card p-3 d-flex flex-column" style={{ borderRadius: '24px', height: '100%', minHeight: '400px' }}>
-                        <button className="main-button w-100 py-2.5 px-3 mb-4 d-flex align-items-center justify-content-center gap-2" onClick={handleNewSession}>
-                            <FaPlus /> Új konzultáció
-                        </button>
-                        
-                        <h6 className="text-muted mb-3 d-flex align-items-center gap-2 px-2" style={{ fontWeight: '700', fontSize: '0.82rem' }}>
-                            <FaHistory /> Konzulációs előzmények
-                        </h6>
-
-                        <div className="d-flex flex-column gap-2 overflow-y-auto flex-grow-1 pe-1" style={{ maxHeight: '420px' }}>
-                            {sessions.length === 0 ? (
-                                <div className="text-center py-4 text-muted small">Nincsenek korábbi beszélgetések.</div>
-                            ) : (
-                                sessions.map(s => (
-                                    <div 
-                                        key={s.sessionId} 
-                                        className={`p-2.5 rounded-3 d-flex align-items-center justify-content-between gap-2 interactive ${currentSessionId === s.sessionId ? 'bg-primary bg-opacity-10 border border-primary text-primary' : 'bg-secondary bg-opacity-5'}`}
-                                        onClick={() => handleLoadSession(s.sessionId)}
-                                        style={{ cursor: 'pointer', transition: 'all 0.2s', border: '1px solid transparent' }}
-                                    >
-                                        <div className="d-flex align-items-center gap-2 overflow-hidden flex-grow-1">
-                                            <FaComments className="flex-shrink-0 text-muted" />
-                                            {editingSessionId === s.sessionId ? (
-                                                <input 
-                                                    type="text" 
-                                                    className="form-control form-control-sm border-primary text-white bg-transparent py-0 px-1" 
-                                                    value={editTitleInput} 
-                                                    onChange={(e) => setEditTitleInput(e.target.value)}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    maxLength="100"
-                                                    style={{ fontSize: '0.8rem' }}
-                                                />
-                                            ) : (
-                                                <span className="text-truncate" style={{ fontSize: '0.82rem', fontWeight: '600' }}>{s.title}</span>
-                                            )}
-                                        </div>
-                                        <div className="d-flex align-items-center gap-1">
-                                            {editingSessionId === s.sessionId ? (
-                                                <button className="btn btn-sm p-1 text-success border-0 bg-transparent" onClick={(e) => handleSaveRename(e, s.sessionId)}><FaCheck style={{ fontSize: '0.75rem' }} /></button>
-                                            ) : (
-                                                <button className="btn btn-sm p-1 text-muted border-0 bg-transparent" onClick={(e) => handleStartRename(e, s)}><FaPen style={{ fontSize: '0.72rem' }} /></button>
-                                            )}
-                                            <button className="btn btn-sm p-1 text-muted hover-danger border-0 bg-transparent" onClick={(e) => handleDeleteSession(e, s.sessionId)}><FaTrash style={{ fontSize: '0.72rem' }} /></button>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Fő csevegő felület */}
-                <div className="col-12 col-md-8 col-lg-9 d-flex flex-column">
-                    <div className="glass-card p-4 d-flex flex-column flex-grow-1" style={{ borderRadius: '24px', height: '100%', minHeight: '520px' }}>
-                        {/* Felül: Választott gyermek és AI bemutatkozás */}
-                        <div className="d-flex flex-wrap align-items-center justify-content-between border-bottom border-white border-opacity-10 pb-3 mb-4 gap-3">
-                            <div className="d-flex align-items-center gap-3">
-                                <div className="p-2.5 bg-primary bg-opacity-10 text-primary rounded-3">
-                                    <FaRobot style={{ fontSize: '1.6rem' }} />
-                                </div>
-                                <div>
-                                    <h5 className="mb-0" style={{ fontWeight: '800' }}>AI Pedagógiai Tanácsadó</h5>
-                                    <span className="badge bg-success bg-opacity-10 text-success px-2 py-0.5 mt-1" style={{ fontSize: '0.7rem' }}>Aktív Konzulens</span>
-                                </div>
-                            </div>
-
-                            <div className="d-flex align-items-center gap-2 glass-card px-2.5 py-1.5" style={{ borderRadius: '12px', fontSize: '0.85rem' }}>
-                                <span className="text-muted">Aktuális gyermek kontextus:</span>
-                                <select className="form-select border-0 bg-transparent text-primary py-0" value={selectedChildId} onChange={handleChildChange} style={{ fontWeight: '600', width: 'auto', boxShadow: 'none' }}>
-                                    {children.map(c => (
-                                        <option key={c._id} value={c._id}>{c.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        {error && (
-                            <div className="alert alert-danger d-flex align-items-center gap-2 mb-3 py-2" role="alert">
-                                <FaExclamationCircle /> {error}
-                            </div>
-                        )}
-
-                        {/* Üzenetek zónája */}
-                        <div className="flex-grow-1 overflow-y-auto px-1 mb-4 d-flex flex-column gap-3" style={{ maxHeight: '440px', minHeight: '300px' }}>
-                            {messages.length === 0 ? (
-                                <div className="d-flex flex-column align-items-center justify-content-center text-center m-auto text-muted p-4" style={{ maxWidth: '480px' }}>
-                                    <FaRobot className="mb-3 text-primary bg-primary bg-opacity-5 p-3 rounded-circle" style={{ fontSize: '4.5rem' }} />
-                                    <h5 style={{ fontWeight: '700' }}>Pedagógiai AI Tanácsadó</h5>
-                                    <p className="small">
-                                        Kérdezz bátran gyermeked fejlődéséről, kérj ötleteket játékos konyhai matek feladatokhoz, közös angol tanuláshoz, vagy hogyan motiválhatnád a házi feladatok megoldására!
-                                    </p>
-                                </div>
-                            ) : (
-                                messages.map((msg, idx) => (
-                                    <div key={idx} className={`d-flex gap-3 text-start ${msg.role === 'user' ? 'justify-content-end' : 'justify-content-start'}`}>
-                                        {msg.role !== 'user' && (
-                                            <div className="p-2 bg-primary bg-opacity-10 text-primary rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px' }}>
-                                                <FaRobot />
-                                            </div>
-                                        )}
-                                        <div 
-                                            className={`p-3 rounded-4 message-bubble ${msg.role === 'user' ? 'bg-primary text-white' : 'bg-secondary bg-opacity-5'}`}
-                                            style={{ 
-                                                maxWidth: '75%', 
-                                                borderRadius: msg.role === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
-                                                fontSize: '0.92rem',
-                                                lineHeight: '1.5',
-                                                whiteSpace: 'pre-wrap'
-                                            }}
-                                        >
-                                            {msg.content}
-                                        </div>
-                                        {msg.role === 'user' && (
-                                            <div className="p-2 bg-secondary bg-opacity-15 text-muted rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center" style={{ width: '36px', height: '36px' }}>
-                                                <FaUser />
-                                            </div>
-                                        )}
-                                    </div>
-                                ))
-                            )}
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                        {/* Beviteli mező */}
-                        <form className="d-flex align-items-center position-relative" onSubmit={handleSend}>
-                            <input 
-                                type="text"
-                                className="form-control rounded-pill ps-4 pe-5 bg-opacity-10 bg-secondary"
-                                placeholder="Írd le a kérdésed a gyermeked tanulásával kapcsolatban..."
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                disabled={sending}
-                                style={{ border: '1px solid rgba(255,255,255,0.1)', height: '48px', color: 'inherit' }}
-                            />
-                            <button 
-                                type="submit"
-                                className="btn position-absolute end-0 me-2 p-2 text-primary border-0 bg-transparent"
-                                disabled={sending || !input.trim()}
-                                style={{ top: '50%', transform: 'translateY(-50%)' }}
-                            >
-                                <FaPaperPlane style={{ fontSize: '1.2rem' }} />
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+      <div id="content">
+        <LoadingSpinner />
+      </div>
     );
+  }
+
+  if (children.length === 0) {
+    return (
+      <div id="content">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '70vh' }}>
+          <div style={{ textAlign: 'center', maxWidth: 480 }}>
+            <FaGraduationCap style={{ fontSize: '3.5rem', color: 'var(--accent)', marginBottom: 24 }} />
+            <h2 style={{ fontWeight: 700, marginBottom: 12 }}>Nincs még összekapcsolt gyermek</h2>
+            <p style={{ color: 'var(--color-text-dim)' }}>Az AI tanácsadó használatához adj hozzá egy gyermeket a Beállítások menüben.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div id="content" className="parent-welcome">
+      <div className="welcome-container" style={{ position: 'relative' }}>
+
+        {/* Header */}
+        <div className="page-header-banner" style={{ margin: '18px 40px 12px 40px', background: 'transparent', boxShadow: 'none', border: 'none', padding: 0 }}>
+          <div className="phb-icon" style={{ width: 48, height: 48, padding: 0, overflow: 'hidden', background: 'none', border: 'none' }}>
+            <img src={logo} alt="Feladify" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          </div>
+          <div className="phb-text">
+            <h1 className="phb-title">Szia, {userName || 'Szülő'}!</h1>
+            <p className="phb-subtitle">{currentDate}</p>
+          </div>
+          <div className="chat-header-actions" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
+            {/* Child selector */}
+            {children.length > 0 && (
+              <div ref={childSelectRef} style={{ position: 'relative', minWidth: 150 }}>
+                <div
+                  className={`custom-select-trigger has-value${childSelectOpen ? ' open' : ''}`}
+                  style={{ height: 36, padding: '0 12px', fontSize: '0.9rem' }}
+                  onClick={() => setChildSelectOpen(!childSelectOpen)}
+                >
+                  <div className="trigger-content">
+                    <span style={{ fontWeight: 700 }}>
+                      {children.find(c => c._id === selectedChildId)?.name || 'Gyermek'}
+                    </span>
+                  </div>
+                  <FaChevronDown className="select-chevron" />
+                </div>
+                {childSelectOpen && (
+                  <div className="custom-select-options" style={{ width: 'max-content', maxWidth: 280 }}>
+                    {children.map(c => (
+                      <div
+                        key={c._id}
+                        className={`custom-select-option${c._id === selectedChildId ? ' selected' : ''}`}
+                        style={{ whiteSpace: 'nowrap' }}
+                        onClick={() => handleChildChange(c._id)}
+                      >
+                        {c.name}{c.className ? ` (${c.className})` : ''}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            <button className="header-btn" onClick={() => setShowSessionHistory(!showSessionHistory)} title="Előzmények">
+              <FaHistory />
+            </button>
+            <button className="header-btn primary" onClick={handleNewChat} title="Új konzultáció">
+              <FaPlus /> Új konzultáció
+            </button>
+          </div>
+        </div>
+
+        {error && <p className="error-message"><FaExclamationCircle />{error}</p>}
+
+        {/* Session History Panel */}
+        {showSessionHistory && (
+          <>
+            <div style={{ position: 'fixed', inset: 0, zIndex: 199 }} onClick={() => setShowSessionHistory(false)} />
+            <div className="session-history-panel">
+              <div className="session-panel-header">
+                <h3>Korábbi konzultációk</h3>
+              </div>
+              <div className="session-panel-body">
+                {sessions.length === 0 ? (
+                  <p className="session-panel-empty">Nincsenek korábbi konzultációk</p>
+                ) : (
+                  sessions.map((session) => (
+                    <li
+                      key={session.sessionId}
+                      onClick={() => handleLoadSession(session.sessionId)}
+                      className={`session-item${session.sessionId === currentSessionId ? ' active' : ''}`}
+                    >
+                      <div className="session-item-header">
+                        <div className="session-item-title-row">
+                          {renamingSessionId === session.sessionId ? (
+                            <input
+                              type="text"
+                              value={renamingTitle}
+                              onChange={(e) => setRenamingTitle(e.target.value)}
+                              onBlur={(e) => handleRenameSession(session.sessionId, e)}
+                              onKeyDown={(e) => handleRenameKeyPress(session.sessionId, e)}
+                              onClick={(e) => e.stopPropagation()}
+                              autoFocus
+                              className="session-rename-input"
+                            />
+                          ) : (
+                            <>
+                              <span className="session-item-title">{session.title}</span>
+                              {session.sessionId === currentSessionId && (
+                                <span className="session-current-badge">Jelenlegi</span>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        <div className="session-item-actions">
+                          <button onClick={(e) => handleStartRename(session, e)} className="session-action-btn" title="Átnevezés">
+                            <FaPen />
+                          </button>
+                          <button onClick={(e) => handleDeleteSession(session.sessionId, e)} className="session-action-btn danger" title="Törlés">
+                            <FaTrash />
+                          </button>
+                        </div>
+                      </div>
+                      <span className="session-item-date">
+                        {new Date(session.updatedAt).toLocaleDateString('hu-HU', {
+                          year: 'numeric', month: 'short', day: 'numeric'
+                        })}
+                      </span>
+                    </li>
+                  ))
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Chat Body */}
+        <div className="chat-body">
+          {(!messages || messages.length === 0) && !isBotTyping && (
+            <div className="welcome-screen">
+              <div className="welcome-avatar">
+                <img src={logo} alt="AI Tanácsadó" />
+              </div>
+              <h2>AI Tanár – {children.find(c => c._id === selectedChildId)?.name || 'Gyermeked'} oktatója</h2>
+              <p>Kérdezz a gyermeked tanulási haladásáról, kérj magyarázatot egy tantárgyhoz, vagy ötleteket otthoni gyakorláshoz!</p>
+              <div className="quick-prompts">
+                <p>Gyors kérdések:</p>
+                <div className="prompts-grid">
+                  {quickPrompts.map((prompt, index) => (
+                    <button key={index} className="quick-prompt-btn" onClick={() => handleQuickPrompt(prompt)}>
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {((messages && messages.length > 0) || isBotTyping) && (
+            <div className="chat-history">
+              {messages && messages.map((chat, index) => {
+                if (isBotTyping && chat.role === 'assistant' && chat.content === '') return null;
+                return (
+                  <div key={index} className={`chat-message ${chat.role === 'user' ? 'user' : 'bot'}`}>
+                    {chat.role === 'assistant' && (
+                      <img src={logo} alt="AI" className="chat-logo" />
+                    )}
+                    <div className="message-bubble-wrapper">
+                      <div className="message-content">
+                        {chat.role === 'assistant' ? (
+                          <div className="markdown-content">
+                            <ReactMarkdown>{chat.content}</ReactMarkdown>
+                          </div>
+                        ) : (
+                          <span>{chat.content}</span>
+                        )}
+                      </div>
+                      {chat.role === 'user' && (
+                        <span className="message-time">
+                          {new Date(chat.timestamp).toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {isBotTyping && (
+                <div className="chat-message bot">
+                  <img src={logo} alt="Logo" className="chat-logo" />
+                  <div className="message-bubble-wrapper">
+                    <div className="message-content thinking-bubble">
+                      <span className="thinking-label">Gondolkodom</span>
+                      <div className="typing-dots">
+                        <span></span><span></span><span></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+          )}
+        </div>
+
+        {/* Input Area */}
+        <form onSubmit={handleChatSubmit} className="chat-input-form">
+          <div className="chat-input-wrapper" ref={modelPickerRef}>
+            {showModelPicker && (
+              <div className="model-picker-popup">
+                {ALL_MODELS.map((m, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`model-picker-item ${selectedModel?.model === m.value ? 'active' : ''}`}
+                    onClick={() => { setSelectedModel({ provider: m.provider, model: m.value }); setShowModelPicker(false); }}
+                  >
+                    {m.badge && <span className={`model-badge model-badge-${m.provider}`}>{m.badge}</span>}
+                    <span className="model-name">{m.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              className={`model-picker-btn ${showModelPicker ? 'model-open' : ''}`}
+              onClick={() => setShowModelPicker(v => !v)}
+              title={selectedModel.model}
+            >
+              <FaRobot />
+            </button>
+            <textarea
+              ref={inputRef}
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              placeholder="Írd le a kérdésed gyermeked tanulásával kapcsolatban..."
+              className="chat-input"
+              disabled={isBotTyping}
+              rows={1}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleChatSubmit(e);
+                }
+              }}
+            />
+            <button type="submit" className="chat-submit" disabled={isBotTyping || !chatInput.trim()}>
+              <FaPaperPlane />
+            </button>
+          </div>
+          <p className="model-active-note">Modell: <strong>{ALL_MODELS.find(m => m.value === selectedModel.model)?.label || selectedModel.model}</strong></p>
+          <p className="chat-footer-note">A Feladify AI hibázhat. Ellenőrizd a fontos információkat.</p>
+        </form>
+
+        <ConfirmModal
+          isOpen={confirmDeleteModal.isOpen}
+          title="Konzultáció törlése"
+          message="Biztosan törölni szeretnéd ezt a konzultációt?"
+          confirmText="Törlés"
+          cancelText="Mégse"
+          type="danger"
+          onConfirm={executeDeleteSession}
+          onCancel={() => setConfirmDeleteModal({ isOpen: false, sessionId: null })}
+        />
+      </div>
+    </div>
+  );
 };
 
 export default ParentAIConsultant;

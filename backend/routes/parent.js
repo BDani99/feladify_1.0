@@ -337,6 +337,172 @@ router.get('/child/:childId/roadmap/:subject', authenticateParent, async (req, r
   }
 });
 
+// GET /api/parent/child/:childId/statistics
+router.get('/child/:childId/statistics', authenticateParent, async (req, res) => {
+  const { childId } = req.params;
+  const parent = req.parentUser;
+  if (!parent.children.includes(childId)) {
+    return res.status(403).json({ message: 'Nincs jogosultsága ehhez a gyermekhez.' });
+  }
+  try {
+    const [child, progress] = await Promise.all([
+      User.findById(childId).populate('assignments.assignmentId', 'title totalPoints subject'),
+      StudentProgress.findOne({ studentId: childId })
+    ]);
+
+    if (!child) return res.status(404).json({ message: 'Gyermek nem található.' });
+
+    const validAssignments = child.assignments.filter(a => a.assignmentId != null);
+    const gradedAssignments = validAssignments.filter(a => a.grade != null);
+
+    const totalAssignments = validAssignments.length;
+    const completedAssignments = gradedAssignments.length;
+
+    let totalAchieved = 0;
+    let totalPossible = 0;
+    const topicStats = {};
+
+    const assignmentsStatistics = gradedAssignments.map(a => {
+      const points = a.assignmentId.totalPoints || 0;
+      const achieved = a.achievedPoints || 0;
+      totalAchieved += achieved;
+      totalPossible += points;
+
+      const subject = a.assignmentId.subject;
+      if (subject) {
+        if (!topicStats[subject]) topicStats[subject] = { scores: [], count: 0 };
+        topicStats[subject].scores.push(points > 0 ? (achieved / points) * 100 : 0);
+        topicStats[subject].count++;
+      }
+
+      return {
+        title: a.assignmentId.title,
+        subject,
+        achievedPoints: achieved,
+        totalPoints: points,
+        completedAt: a.completedAt,
+        grade: a.grade ?? null,
+      };
+    });
+
+    const averageScore = totalPossible > 0
+      ? Math.round((totalAchieved / totalPossible) * 100)
+      : 0;
+
+    assignmentsStatistics.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+
+    const topicStatsArray = Object.entries(topicStats).map(([topic, data]) => ({
+      topic,
+      averageScore: Math.round(data.scores.reduce((a, b) => a + b, 0) / data.count)
+    }));
+
+    const strengths = [...topicStatsArray]
+      .sort((a, b) => b.averageScore - a.averageScore)
+      .slice(0, 3)
+      .filter(t => t.averageScore >= 60);
+
+    const weaknesses = [...topicStatsArray]
+      .sort((a, b) => a.averageScore - b.averageScore)
+      .slice(0, 3)
+      .filter(t => t.averageScore < 80);
+
+    res.json({
+      totalAssignments,
+      completedAssignments,
+      averageScore,
+      assignmentsStatistics,
+      strengths,
+      weaknesses,
+      totalXP: progress?.totalXP || 0,
+      streak: progress ? progress.getEffectiveStreak() : 0
+    });
+  } catch (error) {
+    console.error('[Parent API] Child statistics error:', error);
+    res.status(500).json({ message: 'Hiba a statisztikák lekérésekor.' });
+  }
+});
+
+// GET /api/parent/child/:childId/practice-statistics
+router.get('/child/:childId/practice-statistics', authenticateParent, async (req, res) => {
+  const { childId } = req.params;
+  const parent = req.parentUser;
+  if (!parent.children.includes(childId)) {
+    return res.status(403).json({ message: 'Nincs jogosultsága ehhez a gyermekhez.' });
+  }
+  try {
+    const progress = await StudentProgress.findOne({ studentId: childId });
+    const diagnosticResults = await DiagnosticResult.find({
+      studentId: childId,
+      status: { $in: ['completed', 'analyzed'] }
+    }).sort({ completedAt: -1 }).lean();
+
+    const totalXP = progress?.totalXP || 0;
+    const streak = progress ? progress.getEffectiveStreak() : 0;
+    const badges = progress?.badges || [];
+    const subjectProgressArr = progress?.subjectProgress || [];
+
+    const subjectStats = subjectProgressArr.map(sp => {
+      const checkpoints = sp.checkpoints || [];
+      const completed = checkpoints.filter(c => c.status === 'completed');
+      const avgScore = completed.length > 0
+        ? Math.round(completed.reduce((s, c) => s + (c.score || 0), 0) / completed.length)
+        : 0;
+      const bestScore = completed.length > 0
+        ? Math.max(...completed.map(c => c.score || 0))
+        : 0;
+      const checkpointDetails = checkpoints
+        .map((c, i) => ({ idx: i, score: c.score || 0, status: c.status, difficulty: c.difficulty || 3, attempts: c.attempts || 1, completedAt: c.completedAt }))
+        .filter(c => c.status === 'completed');
+
+      return {
+        subject: sp.subject,
+        status: sp.status || 'not_started',
+        currentLevel: sp.currentLevel || 1,
+        subjectXP: sp.subjectXP || 0,
+        totalCheckpoints: checkpoints.length,
+        completedCheckpoints: completed.length,
+        avgScore,
+        bestScore,
+        checkpointDetails
+      };
+    });
+
+    const diagnosticMap = {};
+    diagnosticResults.forEach(dr => {
+      if (!diagnosticMap[dr.subject]) {
+        diagnosticMap[dr.subject] = {
+          subject: dr.subject,
+          scorePercentage: dr.scorePercentage || 0,
+          categoryAnalysis: dr.categoryAnalysis || [],
+          aiAnalysis: dr.aiAnalysis || null,
+          completedAt: dr.completedAt,
+          totalQuestions: dr.totalQuestions || 0,
+          correctAnswers: dr.correctAnswers || 0
+        };
+      }
+    });
+
+    const totalCheckpointsCompleted = subjectStats.reduce((s, sub) => s + sub.completedCheckpoints, 0);
+    const activeSubs = subjectStats.filter(s => s.completedCheckpoints > 0);
+    const overallAvgScore = activeSubs.length > 0
+      ? Math.round(activeSubs.reduce((s, sub) => s + sub.avgScore, 0) / activeSubs.length)
+      : 0;
+
+    res.json({
+      totalXP,
+      streak,
+      badges,
+      subjectStats,
+      diagnosticBySubject: Object.values(diagnosticMap),
+      totalCheckpointsCompleted,
+      overallAvgScore
+    });
+  } catch (error) {
+    console.error('[Parent API] Child practice statistics error:', error);
+    res.status(500).json({ message: 'Hiba az egyéni gyakorlás statisztikák lekérésekor.' });
+  }
+});
+
 // POST /api/parent/settings/notifications - Szülői értesítési beállítások módosítása
 router.post('/settings/notifications', authenticateParent, async (req, res) => {
   try {
@@ -502,10 +668,10 @@ router.put('/chat/session/:sessionId', authenticateParent, async (req, res) => {
   }
 });
 
-// POST /api/parent/chat/send - AI Advisor üzenet küldése (Socrates-i coaching, streaming opció)
+// POST /api/parent/chat/send - AI tanár üzenet küldése (streaming, modelOverride támogatással)
 router.post('/chat/send', authenticateParent, async (req, res) => {
   try {
-    const { message, childId, stream } = req.body;
+    const { message, childId, stream, modelOverride } = req.body;
     if (!message) return res.status(400).json({ message: 'Az üzenet megadása kötelező.' });
     if (!childId) return res.status(400).json({ message: 'A gyermek kiválasztása kötelező a kontextushoz.' });
 
@@ -517,30 +683,55 @@ router.post('/chat/send', authenticateParent, async (req, res) => {
     const child = await User.findById(childId);
     if (!child) return res.status(404).json({ message: 'A gyermek nem található.' });
 
-    // Megkeressük a gyermek fejlődési statisztikáit és gyengeségeit
-    const progress = await StudentProgress.findOne({ studentId: childId });
-    const diagnostics = await DiagnosticResult.find({ studentId: childId, status: 'analyzed' });
+    const [progress, diagnostics] = await Promise.all([
+      StudentProgress.findOne({ studentId: childId }),
+      DiagnosticResult.find({ studentId: childId, status: 'analyzed' })
+    ]);
 
-    let diagnosticContext = '';
-    diagnostics.forEach(d => {
-      const weaknesses = d.aiAnalysis?.weaknesses?.map(w => w.category).join(', ') || 'Nincsenek kiemelt gyengeségek';
-      diagnosticContext += `\n- ${d.subject}: ${d.scorePercentage.toFixed(0)}% szintfelmérő eredmény. Fejlesztendő területek: ${weaknesses}`;
+    // Összegyűjtjük a tantárgyi haladást
+    const subjectProgress = progress?.subjectProgress || [];
+    let progressContext = '';
+    subjectProgress.forEach(sp => {
+      const completed = (sp.checkpoints || []).filter(c => c.status === 'completed').length;
+      const total = (sp.checkpoints || []).length;
+      const avgScore = completed > 0
+        ? Math.round((sp.checkpoints || []).filter(c => c.status === 'completed').reduce((s, c) => s + (c.score || 0), 0) / completed)
+        : 0;
+      if (total > 0) {
+        progressContext += `\n- ${sp.subject}: ${completed}/${total} fejezet teljesítve, átlag ${avgScore}%, szint ${sp.currentLevel || 1}, ${sp.subjectXP || 0} XP`;
+      }
     });
 
-    // ChatGPT/Groq Pedagogical Advisor rendszer-prompt
-    const systemPrompt = `Te egy rendkívül képzett, barátságos és támogató pedagógiai AI tanácsadó vagy a Feladify rendszerben.
-    Feladatod, hogy segíts a szülőknek megérteni gyermekük fejlődési útvonalát, erősségeit és gyengeségeit.
-    Amikor a szülő tanácsot vagy segítséget kér, a válaszaidat az alábbi elvek mentén fogalmazd meg:
-    1. Alkalmazz Szókratészi kérdezéstechnikát és építő visszajelzéseket ahelyett, hogy kész válaszokat adnál.
-    2. Adj gyakorlatias, könnyen érthető ötleteket játékos tanulási technikákhoz (pl. mindennapi élethelyzetekből vett példák, konyhai matek játékok, közös olvasás, angol szavak keresése a szobában).
-    3. Mindig maradj türelmes, támogató, empátiás és gyermekközpontú.
-    4. Használj barátságos magyar nyelvet, és formázd a szöveget könnyen olvashatóan (pl. bekezdésekkel, felsorolásokkal, fontos kifejezések félkövér kiemelésével).
-    
-    A tanácsadás alanya (gyermek):
-    - Név: ${child.name}
-    - Osztály: ${child.className}
-    ${diagnosticContext ? `\nGyermek jelenlegi teljesítménye és diagnosztikai elemzése:${diagnosticContext}` : ''}
-    ${progress ? `\nGyermek összegyűjtött pontszáma (XP): ${progress.totalXP} XP, Aktív széria: ${progress.getEffectiveStreak()} nap.` : ''}`;
+    // Szintfelmérő eredmények és AI elemzések
+    let diagnosticContext = '';
+    diagnostics.forEach(d => {
+      const strengths = d.aiAnalysis?.strengths?.map(s => s.category).join(', ') || '';
+      const weaknesses = d.aiAnalysis?.weaknesses?.map(w => w.category).join(', ') || '';
+      diagnosticContext += `\n- ${d.subject} szintfelmérő: ${d.scorePercentage.toFixed(0)}%`;
+      if (strengths) diagnosticContext += `, erősségek: ${strengths}`;
+      if (weaknesses) diagnosticContext += `, fejlesztendő: ${weaknesses}`;
+    });
+
+    const systemPrompt = `Te a Feladify rendszer AI tanára vagy. Kettős szerepet töltesz be:
+
+**1. A gyermek személyes oktatója**: Amikor a szülő egy tantárgyhoz vagy feladathoz kér segítséget, úgy magyarázol, hogy a szülő ezt közvetlenül átadhassa a gyermeknek – életkori szinthez igazított magyarázatokkal, otthon elvégezhető gyakorlatokkal, szemléletes példákkal.
+
+**2. A szülő tanulási partnerje**: Segítesz a szülőnek megérteni és nyomon követni, hogyan halad a gyermek a Feladify rendszerben – az XP pontokat, a teljesített fejezeteket, a szintfelmérő eredményeket és a fejlesztendő területeket.
+
+**Elveid:**
+- Mindig a gyermek tényleges haladási adataihoz igazítsd a válaszokat – hivatkozz konkrét eredményekre, ha releváns.
+- Adj megvalósítható, játékos ötleteket otthoni gyakorláshoz (mindennapi helyzetek, konyhai matek, közös olvasás, stb.).
+- Emeld ki az erősségeket, a fejlesztendő területeket lehetőségként mutasd be.
+- Pozitív, bátorító, türelmes hangnemben kommunikálj.
+- Formázd válaszaidat áttekinthetően: bekezdések, felsorolások, **félkövér** kiemelések.
+- Válaszolj kizárólag magyarul.
+
+**A tanuló:**
+- Név: ${child.name}
+- Osztály: ${child.className || 'nincs megadva'}
+${progress ? `- Összes XP: ${progress.totalXP}, tanulási sorozat: ${progress.getEffectiveStreak()} nap` : ''}
+${progressContext ? `\n**Egyéni gyakorlás haladása:**${progressContext}` : ''}
+${diagnosticContext ? `\n**Szintfelmérő eredmények:**${diagnosticContext}` : ''}`;
 
     const chatDoc = await getChatDoc(parent._id);
     chatDoc.addMessage('user', message);
@@ -559,7 +750,7 @@ router.post('/chat/send', authenticateParent, async (req, res) => {
       });
 
       let fullResponse = '';
-      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.7, max_tokens: 2048 })) {
+      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride)) {
         fullResponse += chunk;
         res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
       }
@@ -574,7 +765,7 @@ router.post('/chat/send', authenticateParent, async (req, res) => {
       return;
     }
 
-    const aiResponse = await groqService.generateResponse(systemPrompt, messagesForAI, { temperature: 0.7, max_tokens: 2048 });
+    const aiResponse = await groqService.generateResponse(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride);
     chatDoc.addMessage('assistant', aiResponse);
     await chatDoc.save();
 

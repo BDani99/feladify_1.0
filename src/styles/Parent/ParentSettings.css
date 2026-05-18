@@ -1,0 +1,248 @@
+/* ─── Parent Settings Page ─── */
+
+.parent-settings-card {
+    display: flex;
+    overflow: hidden;
+    padding: 0;
+}
+
+/* Left tab panel */
+.parent-settings-tabs {
+    width: 220px;
+    flex-shrink: 0;
+    padding: 20px 12px;
+    border-right: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.01);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.parent-settings-tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: none;
+    background: transparent;
+    color: var(--color-text-dim);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+}
+
+.parent-settings-tab-btn:hover {
+    background: var(--bg-input);
+    color: var(--color-text);
+}
+
+.parent-settings-tab-btn.active {
+    background: var(--accent-glow);
+    color: var(--accent);
+    border-left: 3px solid var(--accent);
+    padding-left: 9px;
+}
+
+.parent-settings-tab-btn svg { font-size: 1rem; flex-shrink: 0; }
+
+/* Right content panel */
+.parent-settings-content {
+    flex: 1;
+    padding: 28px 32px;
+    min-width: 0;
+}
+
+.parent-settings-section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 24px;
+}
+
+/* Child add form */
+.parent-add-child-form {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+}
+
+.parent-add-child-input {
+    flex: 1;
+    min-width: 220px;
+    height: 44px;
+    padding: 0 16px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-pill);
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.parent-add-child-input::placeholder { color: var(--color-text-dim); opacity: 0.7; }
+
+.parent-add-child-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* Children list */
+.parent-children-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.parent-child-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    background: var(--bg-glass-light);
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.parent-child-item:hover {
+    background: var(--bg-input);
+    border-color: var(--border-color-strong);
+}
+
+.parent-child-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 2px;
+}
+
+.parent-child-detail {
+    font-size: 0.8rem;
+    color: var(--color-text-dim);
+    margin: 0;
+}
+
+.parent-child-remove-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    background: rgba(239, 68, 68, 0.06);
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+    font-size: 0.8rem;
+}
+
+.parent-child-remove-btn:hover {
+    background: #ef4444;
+    color: #fff;
+    border-color: #ef4444;
+}
+
+.parent-children-empty {
+    padding: 20px;
+    text-align: center;
+    color: var(--color-text-dim);
+    font-size: 0.88rem;
+    border: 1px dashed var(--border-color-strong);
+    border-radius: var(--radius-md);
+}
+
+/* Notification setting blocks */
+.parent-notif-block {
+    padding: 18px 20px;
+    background: var(--bg-glass-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+}
+
+.parent-notif-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.parent-notif-label {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.parent-notif-desc {
+    font-size: 0.82rem;
+    color: var(--color-text-dim);
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.parent-threshold-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.parent-threshold-label {
+    font-size: 0.82rem;
+    color: var(--color-text-dim);
+}
+
+.parent-threshold-select {
+    padding: 5px 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    font-size: 0.84rem;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.parent-threshold-select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* Appearance */
+.parent-appearance-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--bg-glass-light);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.parent-appearance-label {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+    .parent-settings-card { flex-direction: column; }
+    .parent-settings-tabs { width: 100%; flex-direction: row; overflow-x: auto; padding: 12px; border-right: none; border-bottom: 1px solid var(--border-color); }
+    .parent-settings-tab-btn { white-space: nowrap; flex-shrink: 0; }
+    .parent-settings-tab-btn.active { border-left: none; border-bottom: 3px solid var(--accent); padding-left: 12px; padding-bottom: 7px; }
+    .parent-settings-content { padding: 20px; }
+}

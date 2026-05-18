@@ -1,0 +1,133 @@
+/* ─── Shared Parent Role Utilities ─── */
+
+.glass-card {
+    background: var(--bg-card);
+    backdrop-filter: var(--blur-md);
+    -webkit-backdrop-filter: var(--blur-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-soft);
+    transition: border-color var(--transition-fast);
+}
+
+.main-title {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--color-text);
+    margin: 0;
+    line-height: 1.1;
+}
+
+.transition-card {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.3s ease,
+                border-color 0.3s ease;
+}
+
+.transition-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-color-strong);
+    box-shadow: var(--shadow-hover);
+}
+
+/* ─── Empty / No Children State ─── */
+.parent-empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    padding: 32px;
+}
+
+.parent-empty-card {
+    max-width: 560px;
+    width: 100%;
+    text-align: center;
+    padding: 48px 40px;
+}
+
+/* ─── Page Header Row ─── */
+.parent-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 36px;
+}
+
+.parent-page-header-left h1 {
+    margin-bottom: 4px;
+}
+
+.parent-page-header-left p {
+    margin: 0;
+    color: var(--color-text-dim);
+    font-size: 0.92rem;
+}
+
+/* ─── Child Selector Pill ─── */
+.parent-child-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border-radius: var(--radius-md);
+}
+
+.parent-child-selector label {
+    color: var(--color-text-dim);
+    font-size: 0.88rem;
+    white-space: nowrap;
+    margin: 0;
+}
+
+.parent-child-selector select {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    outline: none;
+    box-shadow: none;
+    font-family: inherit;
+}
+
+.parent-child-selector select option {
+    background: var(--bg-card);
+    color: var(--color-text);
+}
+
+/* ─── Shared Filter / Tab Button ─── */
+.parent-filter-btn {
+    padding: 7px 18px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--color-text-dim);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+}
+
+.parent-filter-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-glow);
+}
+
+.parent-filter-btn.active {
+    background: var(--accent-gradient);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 3px 10px var(--accent-glow);
+}
+
+@media (max-width: 640px) {
+    .main-title { font-size: 1.6rem; }
+    .parent-page-header { flex-direction: column; align-items: flex-start; }
+}

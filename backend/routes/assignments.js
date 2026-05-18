@@ -217,9 +217,12 @@ router.post('/teacher/save', authenticateTeacher, async (req, res) => {
 
     await assignment.save();
 
-    // Értesítés minden diáknak
+    // Értesítés minden diáknak és szüleiknek
     const notifMsg = `Új dolgozat érkezett: "${title}" – ${subject}`;
     students.forEach(s => notify(s._id, 'new_assignment', 'Új dolgozat kiírva', notifMsg, { assignmentId: assignment._id }));
+    User.find({ role: 'parent', children: { $in: students.map(s => s._id) } }).select('_id').lean().then(parents => {
+      parents.forEach(p => notify(p._id, 'new_assignment', 'Gyermeked új dolgozatot kapott', notifMsg, { assignmentId: assignment._id }));
+    }).catch(() => {});
 
     res.status(201).json({ message: 'Feladatsor sikeresen mentve és hozzárendelve az osztály diákjaihoz.', assignment });
   } catch (error) {
@@ -262,9 +265,12 @@ router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
     });
     await assignment.save();
 
-    // Értesítés minden diáknak
+    // Értesítés minden diáknak és szüleiknek
     const genNotifMsg = `Új dolgozat érkezett: "${title}" – ${subject}`;
     students.forEach(s => notify(s._id, 'new_assignment', 'Új dolgozat kiírva', genNotifMsg, { assignmentId: assignment._id }));
+    User.find({ role: 'parent', children: { $in: students.map(s => s._id) } }).select('_id').lean().then(parents => {
+      parents.forEach(p => notify(p._id, 'new_assignment', 'Gyermeked új dolgozatot kapott', genNotifMsg, { assignmentId: assignment._id }));
+    }).catch(() => {});
 
     res.status(201).json({ message: 'Feladatsor sikeresen generálva és hozzárendelve a kiválasztott osztály diákjaihoz', assignment });
   } catch (error) {
@@ -1482,8 +1488,8 @@ router.put('/teacher/finalize-grade', authenticateTeacher, async (req, res) => {
       { $set: { 'assignments.$.grade': Number(grade) } }
     );
 
-    // Értesítés a diáknak
-    Assignment.findById(assignmentId).select('title subject').then(asgn => {
+    // Értesítés a diáknak és szüleinek
+    Assignment.findById(assignmentId).select('title subject').then(async asgn => {
       notify(
         studentId,
         'assignment_graded',
@@ -1491,6 +1497,18 @@ router.put('/teacher/finalize-grade', authenticateTeacher, async (req, res) => {
         `"${asgn?.title || 'Dolgozat'}" – Osztályzat: ${grade}`,
         { assignmentId, grade }
       );
+      // Szülők értesítése
+      const parents = await User.find({ role: 'parent', children: studentId }).select('_id').lean();
+      const student = await User.findById(studentId).select('name').lean();
+      for (const parent of parents) {
+        notify(
+          parent._id,
+          'assignment_graded',
+          'Gyermeked dolgozata értékelve',
+          `${student?.name || 'Gyermeked'} – "${asgn?.title || 'Dolgozat'}" – Osztályzat: ${grade}`,
+          { assignmentId, grade, studentId }
+        );
+      }
     }).catch(() => {});
 
     res.json({ message: 'Osztályzat sikeresen rögzítve.' });

@@ -35,6 +35,8 @@ import ParentResults from '../pages/Parent/ParentResults';
 import ParentRoadmap from '../pages/Parent/ParentRoadmap';
 import ParentAIConsultant from '../pages/Parent/ParentAIConsultant';
 import ParentSettings from '../pages/Parent/ParentSettings';
+import ParentAnnouncements from '../pages/Parent/ParentAnnouncements';
+import ParentStatistics from '../pages/Parent/ParentStatistics';
 
 const Layout = ({ onLoginSuccess }) => {
     const { user } = useUser() || {};
@@ -122,9 +124,10 @@ const Layout = ({ onLoginSuccess }) => {
                         <Route path="/szulo-eredmenyek" element={<ParentResults />} />
                         <Route path="/szulo-eredmenyek/:id" element={<CompletedDetails />} />
                         <Route path="/szulo-roadmap" element={<ParentRoadmap />} />
+                        <Route path="/szulo-statisztika" element={<ParentStatistics />} />
                         <Route path="/szulo-ai-tanacsado" element={<ParentAIConsultant />} />
                         <Route path="/szulo-beallitasok" element={<ParentSettings />} />
-                        <Route path="/szulo-osztalyterem" element={<AnnouncementsPage />} />
+                        <Route path="/szulo-osztalyterem" element={<ParentAnnouncements />} />
                     </>
                 )}
             </Routes>
