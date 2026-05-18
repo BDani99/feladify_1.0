@@ -27,6 +27,7 @@ import CheckpointPractice from '../pages/Student/CheckpointPractice';
 import DiagnosticResult from '../pages/Student/DiagnosticResult';
 import TeacherDashboard from '../pages/Teacher/TeacherDashboard';
 import StudentDashboard from '../pages/Student/StudentDashboard';
+import StudentGoals from '../pages/Student/StudentGoals';
 import DocumentsPage from '../pages/Documents';
 import AnnouncementsPage from '../pages/Announcements';
 import ParentDashboard from '../pages/Parent/ParentDashboard';
@@ -100,6 +101,7 @@ const Layout = ({ onLoginSuccess }) => {
                     <>
                         <Route path="/ai-mentor" element={<StudentWelcome />} />
                         <Route path="/teendoim" element={<StudentDashboard />} />
+                        <Route path="/szulo-celok" element={<StudentGoals />} />
                         <Route path="/elerheto-dolgozatok" element={<AvailableAssignments />} />
                         <Route path="/megoldott-dolgozatok" element={<SolvedAssignments />} />
                         <Route path="/megoldott-dolgozatok/:id" element={<CompletedDetails />} />

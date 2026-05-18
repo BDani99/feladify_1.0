@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { FaBell, FaBullhorn, FaCheck, FaClipboardList, FaTrophy, FaTrash } from 'react-icons/fa';
+import { FaBell, FaBullhorn, FaCheck, FaClipboardList, FaTrophy, FaTrash, FaBullseye } from 'react-icons/fa';
 import { API_BASE_URL } from '../api/config';
 
 import '../styles/NotificationBell.css';
@@ -9,6 +9,7 @@ const TYPE_CONFIG = {
   assignment_submitted:{ icon: <FaCheck />,         color: '#10b981', label: 'Beküldés' },
   assignment_graded:   { icon: <FaTrophy />,        color: '#f59e0b', label: 'Értékelés' },
   announcement:        { icon: <FaBullhorn />,      color: '#8b5cf6', label: 'Faliújság' },
+  new_goal:            { icon: <FaBullseye />,      color: '#f43f5e', label: 'Célkitűzés' },
 };
 
 function timeAgo(dateStr) {
@@ -62,6 +63,22 @@ const NotificationBell = () => {
           type: 'announcement',
           title: 'Új faliújság bejegyzés',
           message: `${data.teacherName} új bejegyzést írt: "${data.title}"`,
+          read: false,
+          createdAt: new Date().toISOString()
+        };
+        setNotifications(prev => [newNotif, ...prev]);
+        setUnreadCount(prev => prev + 1);
+      } catch {}
+    });
+
+    es.addEventListener('new_goal', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        const newNotif = {
+          _id: `sse-${Date.now()}`,
+          type: 'new_goal',
+          title: 'Új szülői célkitűzés',
+          message: data.message,
           read: false,
           createdAt: new Date().toISOString()
         };

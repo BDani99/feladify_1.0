@@ -89,6 +89,11 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                             </a>
                         </li>
                         <li>
+                            <a tabIndex={0} className={isActiveLink('/szulo-celok') ? 'active-link' : ''} onClick={() => handleNavigation('/szulo-celok')}>
+                                <FaBullseye className="icon" /> Célkitűzések
+                            </a>
+                        </li>
+                        <li>
                             <a tabIndex={0} className={isActiveLink('/egyeni-gyakorlas') ? 'active-link' : ''} onClick={() => handleNavigation('/egyeni-gyakorlas')}>
                                 <FaCompass className="icon" /> Egyéni Gyakorlás
                             </a>

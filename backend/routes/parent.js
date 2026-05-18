@@ -10,6 +10,8 @@ const DiagnosticResult = require('../models/DiagnosticResult');
 const ParentGoal = require('../models/ParentGoal');
 const groqService = require('../services/aiService');
 const authenticateUser = require('../middleware/authenticateUser');
+const Notification = require('../models/Notification');
+const realtimeService = require('../services/realtimeService');
 
 // Szülői jogosultság ellenőrzése middleware
 const authenticateParent = [
@@ -680,6 +682,27 @@ router.post('/child/:childId/goals', authenticateParent, async (req, res) => {
 
     goalDoc.goals.push(newGoal);
     await goalDoc.save();
+
+    const addedGoal = goalDoc.goals[goalDoc.goals.length - 1];
+    const parentName = parent.name || 'A szülőd';
+    const notificationMessage = `${parentName} új célkitűzést állított be neked: "${addedGoal.title}"`;
+    try {
+      await Notification.create({
+        userId: childId,
+        type: 'new_goal',
+        title: 'Új szülői célkitűzés',
+        message: notificationMessage,
+        data: { goalId: String(addedGoal._id) }
+      });
+
+      realtimeService.sendToUser(
+        String(childId),
+        'new_goal',
+        { message: notificationMessage, goalId: String(addedGoal._id) }
+      );
+    } catch (notifErr) {
+      console.error('[Parent API] Goal notification error:', notifErr.message);
+    }
 
     res.status(201).json({ message: 'Cél sikeresen hozzáadva.' });
   } catch (error) {

@@ -10,6 +10,7 @@ const DiagnosticTest = require('../models/DiagnosticTest');
 const DiagnosticResult = require('../models/DiagnosticResult');
 const groqService = require('../services/aiService');
 const { sendError } = require('../utils/errorResponse');
+const ParentGoal = require('../models/ParentGoal');
 
 // Middleware to verify JWT token and get user
 const authMiddleware = async (req, res, next) => {
@@ -1613,6 +1614,88 @@ router.get('/practice-statistics', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error('[Student API] Practice statistics error:', error);
     res.status(500).json({ message: 'Hiba az egyéni gyakorlás statisztikák lekérésekor', error: error.message });
+  }
+});
+
+// GET /api/student/goals - Szülő által felállított célkitűzések lekérése haladással
+router.get('/goals', authMiddleware, async (req, res) => {
+  try {
+    const studentId = req.user._id;
+    const [goalDocs, childData, progressData] = await Promise.all([
+      ParentGoal.find({ childId: studentId }).populate('parentId', 'name'),
+      User.findById(studentId).populate('assignments.assignmentId', 'subject totalPoints'),
+      StudentProgress.findOne({ studentId })
+    ]);
+
+    const streak = progressData ? progressData.getEffectiveStreak() : 0;
+    const totalXP = progressData?.totalXP || 0;
+    const subjectProgress = progressData?.subjectProgress || [];
+
+    const allGoals = [];
+
+    for (const doc of goalDocs) {
+      const parentName = doc.parentId?.name || 'Szülő';
+      for (const goal of doc.goals) {
+        let current = 0, target = 1, unit = '', count = null;
+
+        if (goal.type === 'assignment_avg') {
+          const since = new Date(Date.now() - (goal.periodDays || 7) * 864e5);
+          const relevant = (childData?.assignments || []).filter(a => {
+            if (!a.assignmentId || a.grade == null) return false;
+            if (goal.subject !== 'all' && a.assignmentId.subject !== goal.subject) return false;
+            return a.completedAt && new Date(a.completedAt) >= since;
+          });
+          count = relevant.length;
+          target = goal.targetPercent || 1;
+          if (count > 0) {
+            current = Math.round(
+              relevant.reduce((s, a) => {
+                const pts = a.assignmentId.totalPoints || 0;
+                return s + (pts > 0 ? (a.achievedPoints / pts) * 100 : 0);
+              }, 0) / count
+            );
+          }
+          unit = '%';
+        } else if (goal.type === 'practice_xp') {
+          target = goal.targetXP || 1;
+          let delta;
+          if (goal.subject === 'all') {
+            delta = Math.max(0, totalXP - (goal.startTotalXP || 0));
+          } else {
+            const sp = subjectProgress.find(s => s.subject === goal.subject);
+            delta = Math.max(0, (sp?.subjectXP || 0) - (goal.startSubjectXP || 0));
+          }
+          current = Math.min(delta, target);
+          unit = 'XP';
+        } else if (goal.type === 'practice_streak') {
+          target = goal.targetStreak || 1;
+          current = Math.min(streak, target);
+          unit = 'nap';
+        }
+
+        const pct = target > 0 ? Math.min(Math.round((current / target) * 100), 100) : 0;
+
+        allGoals.push({
+          goalId: goal._id.toString(),
+          type: goal.type,
+          subject: goal.subject,
+          title: goal.title,
+          targetPercent: goal.targetPercent,
+          periodDays: goal.periodDays,
+          targetXP: goal.targetXP,
+          targetStreak: goal.targetStreak,
+          deadline: goal.deadline,
+          createdAt: goal.createdAt,
+          parentName,
+          progress: { current, target, unit, pct, count }
+        });
+      }
+    }
+
+    res.json({ goals: allGoals });
+  } catch (error) {
+    console.error('[Student API] Get goals error:', error);
+    res.status(500).json({ message: 'Hiba a célkitűzések lekérésekor.' });
   }
 });
 

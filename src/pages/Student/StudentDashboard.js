@@ -7,8 +7,9 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import {
     FaTasks, FaFire, FaClock, FaArrowRight, FaBook,
     FaCheckCircle, FaHourglassHalf, FaExclamationCircle,
-    FaGraduationCap, FaChartBar, FaCompass, FaTrophy
+    FaGraduationCap, FaChartBar, FaCompass, FaTrophy, FaBullseye
 } from 'react-icons/fa';
+import { API_BASE_URL } from '../../api/config';
 import '../../styles/Student/StudentDashboard.css';
 
 const getDaysUntil = (d) => {
@@ -41,20 +42,26 @@ const StudentDashboard = () => {
     const [available, setAvailable] = useState([]);
     const [completed, setCompleted] = useState([]);
     const [stats, setStats] = useState(null);
+    const [goals, setGoals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
         const load = async () => {
             try {
-                const [avail, comp, st] = await Promise.all([
+                const token = localStorage.getItem('AccessToken');
+                const [avail, comp, st, goalsRes] = await Promise.all([
                     fetchAvailableAssignments(),
                     fetchCompletedAssignments(),
                     fetchStudentStatistics(),
+                    token ? fetch(`${API_BASE_URL}/student/goals`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }).then(r => r.ok ? r.json() : { goals: [] }).catch(() => ({ goals: [] })) : { goals: [] }
                 ]);
                 setAvailable(Array.isArray(avail) ? avail : []);
                 setCompleted(Array.isArray(comp) ? comp : []);
                 setStats(st);
+                setGoals(goalsRes?.goals || []);
             } catch (err) {
                 setError(err.message || 'Hiba a betöltés során.');
             } finally {
@@ -82,6 +89,7 @@ const StudentDashboard = () => {
     });
 
     const underReview = completed.filter(a => a.grade == null);
+    const activeGoals = goals.filter(g => g.progress.pct < 100);
     const recentGraded = completed
         .filter(a => a.grade != null)
         .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
@@ -182,6 +190,89 @@ const StudentDashboard = () => {
                             })}
                         </div>
                     )}
+                </div>
+
+                <div className="dash-section-card" style={{ marginBottom: 30 }}>
+                  <div className="dash-section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 15 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <FaBullseye style={{ color: '#f43f5e' }} /> Célkitűzések
+                    </span>
+                    <span className="dash-count-badge">{activeGoals.length}</span>
+                  </div>
+
+                  {activeGoals.length === 0 ? (
+                    <div className="dash-empty" style={{ padding: '30px 20px' }}>
+                      <span className="dash-empty-emoji">🎯</span>
+                      <p>Nincsenek aktív szülői célkitűzéseid.</p>
+                      <span className="dash-empty-sub">Szólj a szüleidnek, hogy tűzzenek ki neked motivációs célokat!</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+                      {activeGoals.slice(0, 3).map(goal => {
+                        const pct = goal.progress?.pct ?? 0;
+                        const fillClass = pct >= 100 ? '#10b981' : pct >= 60 ? '#3b82f6' : '#f59e0b';
+                        const displaySub = goal.subject === 'all' ? 'Összes tantárgy' : goal.subject;
+                        const displayType = goal.type === 'assignment_avg' ? 'Dolgozat Átlag' : goal.type === 'practice_xp' ? 'XP Célpont' : 'Sorozat';
+                        return (
+                          <div 
+                            key={goal.goalId} 
+                            style={{ 
+                              background: 'var(--bg-input)', 
+                              border: '1px solid var(--border-color)', 
+                              borderRadius: 'var(--radius-lg)', 
+                              padding: 16,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 10
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <span 
+                                style={{ 
+                                  fontSize: '0.7rem', 
+                                  fontWeight: 800, 
+                                  background: 'var(--accent-glow)', 
+                                  color: 'var(--accent)', 
+                                  padding: '2px 8px', 
+                                  borderRadius: 'var(--radius-pill)',
+                                  border: '1px solid rgba(59, 130, 246, 0.15)'
+                                }}
+                              >
+                                {displaySub}
+                              </span>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--color-text-dim)' }}>
+                                {displayType}
+                              </span>
+                            </div>
+                            
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-text)', minHeight: 40, lineHeight: 1.4 }}>
+                              {goal.title}
+                            </div>
+                            
+                            <div>
+                              <div style={{ height: 6, background: 'var(--bg-card)', borderRadius: 10, overflow: 'hidden', marginBottom: 6 }}>
+                                <div style={{ height: '100%', width: `${pct}%`, background: fillClass, borderRadius: 10, transition: 'width 0.5s' }} />
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700 }}>
+                                <span style={{ color: 'var(--color-text)' }}>{goal.progress?.current ?? 0}{goal.progress?.unit ?? ''} / {goal.progress?.target ?? 0}{goal.progress?.unit ?? ''}</span>
+                                <span style={{ color: fillClass }}>{pct}%</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 15 }}>
+                    <button 
+                      className="dash-secondary-action" 
+                      onClick={() => navigate('/szulo-celok')}
+                      style={{ padding: '6px 16px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: 6 }}
+                    >
+                      Összes célkitűzés <FaArrowRight />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="dash-two-col">

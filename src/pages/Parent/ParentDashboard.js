@@ -4,7 +4,7 @@ import { useUser } from '../../context/UserContext';
 import {
   FaUserPlus, FaTrophy, FaFire, FaChartLine, FaCheckCircle,
   FaHourglassHalf, FaArrowRight, FaExclamationCircle, FaClock,
-  FaChartBar, FaTasks
+  FaChartBar, FaTasks, FaBullseye
 } from 'react-icons/fa';
 import ParentChildSelector from '../../components/ParentChildSelector';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -43,6 +43,7 @@ const ParentDashboard = () => {
   const [selectedChildId, setSelectedChildId] = useState(() => localStorage.getItem('parent-selected-child') || '');
   const [overview, setOverview] = useState(null);
   const [assignments, setAssignments] = useState([]);
+  const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -83,11 +84,14 @@ const ParentDashboard = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [overviewRes, assignmentsRes] = await Promise.all([
+        const [overviewRes, assignmentsRes, goalsRes] = await Promise.all([
           fetch(`/api/parent/child/${selectedChildId}/overview`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('AccessToken')}` }
           }),
           fetch(`/api/parent/child/${selectedChildId}/assignments`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('AccessToken')}` }
+          }),
+          fetch(`/api/parent/child/${selectedChildId}/goals`, {
             headers: { 'Authorization': `Bearer ${localStorage.getItem('AccessToken')}` }
           })
         ]);
@@ -95,6 +99,10 @@ const ParentDashboard = () => {
         if (assignmentsRes.ok) {
           const aData = await assignmentsRes.json();
           setAssignments(aData.assignments || []);
+        }
+        if (goalsRes.ok) {
+          const gData = await goalsRes.json();
+          setGoals(gData.goals || []);
         }
       } catch (err) {
         setError('Hiba az adatok lekérésekor.');
@@ -124,6 +132,7 @@ const ParentDashboard = () => {
     .slice(0, 3);
 
   const inProgress = assignments.filter(a => a.status === 'started');
+  const activeGoals = goals.filter(g => g.progress.pct < 100);
 
   if (childrenLoaded && children.length === 0) {
     return (
@@ -240,7 +249,89 @@ const ParentDashboard = () => {
               )}
             </div>
 
-            {/* Recent grades + in progress */}
+            <div className="dash-section-card" style={{ marginBottom: 30 }}>
+              <div className="dash-section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 15 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <FaBullseye style={{ color: '#f43f5e' }} /> Gyermek Célkitűzések
+                </span>
+                <span className="dash-count-badge">{activeGoals.length}</span>
+              </div>
+
+              {activeGoals.length === 0 ? (
+                <div className="dash-empty" style={{ padding: '30px 20px' }}>
+                  <span className="dash-empty-emoji">🎯</span>
+                  <p>Nincsenek aktív célkitűzések kitűzve a gyermekednek.</p>
+                  <span className="dash-empty-sub">Tűzz ki új motivációs célokat a Célkitűzések menüpontban!</span>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+                  {activeGoals.slice(0, 3).map(goal => {
+                    const pct = goal.progress?.pct ?? 0;
+                    const fillClass = pct >= 100 ? '#10b981' : pct >= 60 ? '#3b82f6' : '#f59e0b';
+                    const displaySub = goal.subject === 'all' ? 'Összes tantárgy' : goal.subject;
+                    const displayType = goal.type === 'assignment_avg' ? 'Dolgozat Átlag' : goal.type === 'practice_xp' ? 'XP Célpont' : 'Sorozat';
+                    return (
+                      <div 
+                        key={goal.goalId || goal._id} 
+                        style={{ 
+                          background: 'var(--bg-input)', 
+                          border: '1px solid var(--border-color)', 
+                          borderRadius: 'var(--radius-lg)', 
+                          padding: 16,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 10
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <span 
+                            style={{ 
+                              fontSize: '0.7rem', 
+                              fontWeight: 800, 
+                              background: 'var(--accent-glow)', 
+                              color: 'var(--accent)', 
+                              padding: '2px 8px', 
+                              borderRadius: 'var(--radius-pill)',
+                              border: '1px solid rgba(59, 130, 246, 0.15)'
+                            }}
+                          >
+                            {displaySub}
+                          </span>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--color-text-dim)' }}>
+                            {displayType}
+                          </span>
+                        </div>
+                        
+                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-text)', minHeight: 40, lineHeight: 1.4 }}>
+                          {goal.title}
+                        </div>
+                        
+                        <div>
+                          <div style={{ height: 6, background: 'var(--bg-card)', borderRadius: 10, overflow: 'hidden', marginBottom: 6 }}>
+                            <div style={{ height: '100%', width: `${pct}%`, background: fillClass, borderRadius: 10, transition: 'width 0.5s' }} />
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700 }}>
+                            <span style={{ color: 'var(--color-text)' }}>{goal.progress?.current ?? 0}{goal.progress?.unit ?? ''} / {goal.progress?.target ?? 0}{goal.progress?.unit ?? ''}</span>
+                            <span style={{ color: fillClass }}>{pct}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 15 }}>
+                <button 
+                  className="dash-secondary-action" 
+                  onClick={() => navigate('/szulo-celok')}
+                  style={{ padding: '6px 16px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: 6 }}
+                >
+                  Összes célkitűzés <FaArrowRight />
+                </button>
+              </div>
+            </div>
+
             <div className="dash-two-col">
               <div className="dash-section-card">
                 <div className="dash-section-title"><FaTrophy /> Friss érdemjegyek</div>
