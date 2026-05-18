@@ -109,52 +109,145 @@
     object-fit: contain;
 }
 
-.subjects-group {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 20px;
-    background-color: var(--bg-input);
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-}
-
-.subjects-label {
-    font-weight: 700;
-    color: var(--color-text);
-    font-size: 1.05rem;
-    margin-bottom: 8px;
-}
-
-.subject-checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: var(--color-text);
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    padding: 8px 12px;
-    border-radius: 8px;
-    transition: background 0.2s;
-}
-
-.subject-checkbox-label:hover {
-    background: var(--bg-card);
-}
-
-.subject-checkbox-label input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    accent-color: var(--accent);
-    cursor: pointer;
-    margin: 0;
-}
 
 .login-container h1,
 .registration-container h1 {
     font-size: 1.8rem;
     margin: 0;
+}
+
+/* Form field wrapper */
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-dim);
+    letter-spacing: 0.01em;
+}
+
+/* Jelszó wrapper szem ikonnal */
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper .login-input,
+.password-wrapper input {
+    padding-right: 48px;
+    width: 100%;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    font-size: 1.1rem;
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.password-toggle:hover {
+    color: var(--accent);
+}
+
+/* Role tab választó */
+.role-tabs {
+    display: flex;
+    gap: 8px;
+    background: var(--bg-input);
+    padding: 6px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+}
+
+.role-tab {
+    flex: 1;
+    padding: 10px 8px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--color-text-dim);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.role-tab:hover:not(.active) {
+    background: var(--bg-card);
+    color: var(--color-text);
+}
+
+.role-tab.active {
+    background: var(--accent);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+}
+
+/* Toggle gomb grid (tantárgyak / osztályok) */
+.toggle-btn-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+}
+
+.toggle-btn {
+    padding: 10px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-card);
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    text-align: center;
+}
+
+.toggle-btn:hover {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+}
+
+.toggle-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.subjects-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-dim);
+    margin-bottom: 4px;
+    display: block;
+}
+
+/* Divider */
+.form-divider {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 4px 0;
 }
 
 @media screen and (max-width: 768px) {
@@ -165,5 +258,14 @@
     .login-container h1,
     .registration-container h1 {
         font-size: 1.4rem;
+    }
+
+    .subjects-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .role-tab {
+        font-size: 0.82rem;
+        padding: 9px 6px;
     }
 }

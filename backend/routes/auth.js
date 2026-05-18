@@ -10,7 +10,7 @@ const authenticateUser = require('../middleware/authenticateUser');
 // Regisztráció végpont
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, role, subjects, className, childEmails } = req.body;
+    const { name, email, password, role, subjects, className, childEmails, classIds } = req.body;
 
     // Ellenőrzi, hogy az email cím már használatban van-e
     const existingUser = await User.findOne({ email });
@@ -90,6 +90,14 @@ router.post('/register', async (req, res) => {
       } else {
         return res.status(400).json({ message: 'Az adott osztály nem található.' });
       }
+    }
+
+    // Tanárok esetén hozzáadjuk őket a kiválasztott osztályokhoz
+    if (role === 'teacher' && Array.isArray(classIds) && classIds.length > 0) {
+      await Class.updateMany(
+        { _id: { $in: classIds } },
+        { $addToSet: { teacherIds: user._id } }
+      );
     }
 
     res.status(201).json({ message: 'Felhasználó sikeresen regisztrálva.' });

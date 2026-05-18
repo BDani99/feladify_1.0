@@ -1,24 +1,37 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { registerUser } from '../api/Auth/RegisterApi';
 import { fetchAllClasses } from '../api/Classes/ClassApi';
-import { FaExclamationCircle, FaCheckCircle } from 'react-icons/fa';
+import CustomSelect from '../components/CustomSelect';
+import { FaExclamationCircle, FaEye, FaEyeSlash, FaUserGraduate, FaChalkboardTeacher, FaUserFriends } from 'react-icons/fa';
 import '../styles/Login.css';
 import logo from '../assets/logo-400.png';
-import name from '../assets/name.png';
+import nameImg from '../assets/name.png';
 
 const CANONICAL_SUBJECTS = ['Nyelvtan', 'Irodalom', 'Angol', 'Matematika', 'Környezetismeret'];
 
+const ROLES = [
+    { value: 'student', label: 'Diák', icon: <FaUserGraduate /> },
+    { value: 'teacher', label: 'Tanár', icon: <FaChalkboardTeacher /> },
+    { value: 'parent', label: 'Szülő', icon: <FaUserFriends /> },
+];
+
 const RegistrationForm = () => {
+    const navigate = useNavigate();
+
+    const [role, setRole] = useState('student');
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         password: '',
-        role: 'student',
+        confirmPassword: '',
         subjects: [],
+        classIds: [],
         className: '',
         childEmails: '',
     });
-    const [message, setMessage] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
     const [error, setError] = useState('');
     const [classes, setClasses] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,10 +40,10 @@ const RegistrationForm = () => {
         let isMounted = true;
         const loadClasses = async () => {
             try {
-                const fetchedClasses = await fetchAllClasses();
-                if (isMounted) setClasses(fetchedClasses);
+                const fetched = await fetchAllClasses();
+                if (isMounted) setClasses(fetched);
             } catch (err) {
-                if (isMounted) setError(err.message || 'Hiba történt az osztályok betöltése során.');
+                if (isMounted) setError(err.message || 'Hiba az osztályok betöltésekor.');
             }
         };
         loadClasses();
@@ -42,6 +55,18 @@ const RegistrationForm = () => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    const handleRoleChange = (newRole) => {
+        setRole(newRole);
+        setError('');
+        setFormData((prev) => ({
+            ...prev,
+            subjects: [],
+            classIds: [],
+            className: '',
+            childEmails: '',
+        }));
+    };
+
     const handleSubjectToggle = (subject) => {
         setFormData((prev) => ({
             ...prev,
@@ -51,28 +76,44 @@ const RegistrationForm = () => {
         }));
     };
 
+    const handleClassToggle = (classId) => {
+        setFormData((prev) => ({
+            ...prev,
+            classIds: prev.classIds.includes(classId)
+                ? prev.classIds.filter((id) => id !== classId)
+                : [...prev.classIds, classId],
+        }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (formData.role === 'teacher' && formData.subjects.length === 0) {
+        setError('');
+
+        if (formData.password !== formData.confirmPassword) {
+            setError('A két jelszó nem egyezik meg.');
+            return;
+        }
+        if (role === 'teacher' && formData.subjects.length === 0) {
             setError('Legalább egy tantárgyat kötelező kiválasztani.');
             return;
         }
+
         setIsSubmitting(true);
-        setError('');
-        setMessage('');
         try {
             const payload = {
                 name: formData.name,
                 email: formData.email,
                 password: formData.password,
-                role: formData.role,
-                ...(formData.role === 'teacher' ? { subjects: formData.subjects } : {}),
-                ...(formData.role === 'student' ? { className: formData.className } : {}),
-                ...(formData.role === 'parent' ? { childEmails: formData.childEmails } : {}),
+                role,
+                ...(role === 'teacher' ? {
+                    subjects: formData.subjects,
+                    classIds: formData.classIds,
+                } : {}),
+                ...(role === 'student' ? { className: formData.className } : {}),
+                ...(role === 'parent' ? { childEmails: formData.childEmails } : {}),
             };
-            const response = await registerUser(payload);
-            setMessage(response.message);
-            setFormData({ name: '', email: '', password: '', role: 'student', subjects: [], className: '', childEmails: '' });
+            await registerUser(payload);
+            navigate('/bejelentkezes', { state: { email: formData.email } });
         } catch (err) {
             setError(err.message);
         } finally {
@@ -80,93 +121,180 @@ const RegistrationForm = () => {
         }
     };
 
+    const classOptions = classes.map((c) => ({ value: c.name, label: c.name }));
+
     return (
         <div className="registration-container">
             <form className="registration-form" onSubmit={handleSubmit}>
-                <div className='login-images'>
-                    <img src={logo} alt='logo' className='login-logo' />
-                    <img src={name} alt='Feladify' className='login-name' />
+                <div className="login-images">
+                    <img src={logo} alt="logo" className="login-logo" />
+                    <img src={nameImg} alt="Feladify" className="login-name" />
                 </div>
                 <h2>Regisztráció</h2>
-                <input
-                    type="text"
-                    name="name"
-                    placeholder="Név"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                />
-                <input
-                    type="email"
-                    name="email"
-                    placeholder="E-mail"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                />
-                <input
-                    type="password"
-                    name="password"
-                    placeholder="Jelszó"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                />
-                <select name="role" value={formData.role} onChange={handleChange} required>
-                    <option value="student">Diák</option>
-                    <option value="teacher">Tanár</option>
-                    <option value="parent">Szülő</option>
-                </select>
 
-                {formData.role === 'teacher' && (
-                    <div className="subjects-group">
-                        <span className="subjects-label">Tantárgyak (legalább 1):</span>
-                        {CANONICAL_SUBJECTS.map((subject) => (
-                            <label key={subject} className="subject-checkbox-label">
-                                <input
-                                    type="checkbox"
-                                    checked={formData.subjects.includes(subject)}
-                                    onChange={() => handleSubjectToggle(subject)}
-                                />
-                                {subject}
-                            </label>
-                        ))}
-                    </div>
-                )}
+                <div className="role-tabs">
+                    {ROLES.map((r) => (
+                        <button
+                            key={r.value}
+                            type="button"
+                            className={`role-tab${role === r.value ? ' active' : ''}`}
+                            onClick={() => handleRoleChange(r.value)}
+                        >
+                            {r.icon}
+                            {r.label}
+                        </button>
+                    ))}
+                </div>
 
-                {formData.role === 'student' && (
-                    <select
-                        name="className"
-                        value={formData.className}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">Válassz osztályt</option>
-                        {classes.map((classItem) => (
-                            <option key={classItem._id} value={classItem.name}>
-                                {classItem.name}
-                            </option>
-                        ))}
-                    </select>
-                )}
+                <hr className="form-divider" />
 
-                {formData.role === 'parent' && (
+                <div className="form-field">
+                    <label className="form-label" htmlFor="reg-name">Teljes név</label>
                     <input
                         type="text"
-                        name="childEmails"
-                        placeholder="Gyermek(ek) e-mail címe (vesszővel elválasztva)"
-                        value={formData.childEmails}
+                        id="reg-name"
+                        name="name"
+                        placeholder="Pl. Kiss János"
+                        value={formData.name}
                         onChange={handleChange}
                         required
                     />
+                </div>
+
+                <div className="form-field">
+                    <label className="form-label" htmlFor="reg-email">E-mail cím</label>
+                    <input
+                        type="email"
+                        id="reg-email"
+                        name="email"
+                        placeholder="pelda@email.hu"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+
+                <div className="form-field">
+                    <label className="form-label" htmlFor="reg-password">Jelszó</label>
+                    <div className="password-wrapper">
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            id="reg-password"
+                            name="password"
+                            placeholder="Legalább 6 karakter"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="password-toggle"
+                            onClick={() => setShowPassword((v) => !v)}
+                            tabIndex={-1}
+                        >
+                            {showPassword ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                    </div>
+                </div>
+
+                <div className="form-field">
+                    <label className="form-label" htmlFor="reg-confirm">Jelszó megerősítése</label>
+                    <div className="password-wrapper">
+                        <input
+                            type={showConfirm ? 'text' : 'password'}
+                            id="reg-confirm"
+                            name="confirmPassword"
+                            placeholder="Írd be újra a jelszót"
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="password-toggle"
+                            onClick={() => setShowConfirm((v) => !v)}
+                            tabIndex={-1}
+                        >
+                            {showConfirm ? <FaEyeSlash /> : <FaEye />}
+                        </button>
+                    </div>
+                </div>
+
+                {role === 'student' && (
+                    <div className="form-field">
+                        <label className="form-label">Osztály</label>
+                        <CustomSelect
+                            value={formData.className}
+                            onChange={(val) => setFormData((prev) => ({ ...prev, className: val }))}
+                            options={classOptions}
+                            placeholder="Válassz osztályt"
+                        />
+                    </div>
+                )}
+
+                {role === 'teacher' && (
+                    <>
+                        <div className="form-field">
+                            <span className="form-label">Tantárgyak (legalább 1)</span>
+                            <div className="toggle-btn-grid">
+                                {CANONICAL_SUBJECTS.map((subject) => (
+                                    <button
+                                        key={subject}
+                                        type="button"
+                                        className={`toggle-btn${formData.subjects.includes(subject) ? ' active' : ''}`}
+                                        onClick={() => handleSubjectToggle(subject)}
+                                    >
+                                        {subject}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {classes.length > 0 && (
+                            <div className="form-field">
+                                <span className="form-label">Kezelt osztályok (opcionális)</span>
+                                <div className="toggle-btn-grid">
+                                    {classes.map((cls) => (
+                                        <button
+                                            key={cls._id}
+                                            type="button"
+                                            className={`toggle-btn${formData.classIds.includes(cls._id) ? ' active' : ''}`}
+                                            onClick={() => handleClassToggle(cls._id)}
+                                        >
+                                            {cls.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {role === 'parent' && (
+                    <div className="form-field">
+                        <label className="form-label" htmlFor="reg-children">Gyermek(ek) e-mail címe</label>
+                        <input
+                            type="text"
+                            id="reg-children"
+                            name="childEmails"
+                            placeholder="pelda@email.hu, masik@email.hu"
+                            value={formData.childEmails}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                )}
+
+                {error && (
+                    <p className="error-message">
+                        <FaExclamationCircle />
+                        {error}
+                    </p>
                 )}
 
                 <button type="submit" className="main-button" disabled={isSubmitting}>
                     {isSubmitting ? 'Regisztráció...' : 'Regisztráció'}
                 </button>
-
-                {message && <p className="success-message"><FaCheckCircle />{message}</p>}
-                {error && <p className="error-message"><FaExclamationCircle />{error}</p>}
 
                 <div className="login-link">
                     Már van fiókod?{' '}
