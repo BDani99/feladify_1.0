@@ -515,6 +515,60 @@ router.get('/student/completed-assignments', authenticateStudent, async (req, re
   }
 });
 
+// Megírt konkrét dolgozat részleteinek lekérdezése
+router.get('/student/completed-assignments/:assignmentId', authenticateStudent, async (req, res) => {
+  try {
+    const studentId = req.userId;
+    const { assignmentId } = req.params;
+
+    const student = await User.findById(studentId)
+      .populate({
+        path: 'assignments.assignmentId',
+        select: 'title subject totalPoints questions'
+      })
+      .select('assignments');
+
+    const assignmentSub = student.assignments.find(a => a.assignmentId && a.assignmentId._id.toString() === assignmentId.toString() && !a.isDraft);
+    if (!assignmentSub) {
+      return res.status(404).json({ message: 'A dolgozat nem található a megírtak között.' });
+    }
+
+    const isGraded = assignmentSub.grade != null;
+    const result = {
+      assignmentId: assignmentSub.assignmentId._id,
+      title: assignmentSub.assignmentId.title,
+      subject: assignmentSub.assignmentId.subject,
+      achievedPoints: assignmentSub.achievedPoints,
+      totalPoints: assignmentSub.assignmentId.totalPoints,
+      completedAt: assignmentSub.completedAt,
+      grade: assignmentSub.grade ?? null,
+      answers: assignmentSub.answers.map(answer => {
+        const question = assignmentSub.assignmentId.questions.find(q => q._id.equals(answer.questionId));
+        const base = {
+          questionId: answer.questionId,
+          questionText: question ? question.questionText : null,
+          questionType: question ? question.questionType : 'short_answer',
+          studentAnswer: answer.studentAnswer,
+          score: answer.score,
+          maxPoints: question ? question.points : 1,
+          flagged: answer.flagged ?? false,
+          flagResponse: answer.flagResponse || '',
+          flagRejected: answer.flagRejected ?? false,
+        };
+        if (isGraded) {
+          base.correctAnswer = question ? question.correctAnswer : null;
+        }
+        return base;
+      })
+    };
+
+    res.status(200).json({ assignment: result });
+  } catch (error) {
+    console.error('[Assignment API] Completed assignment detail error:', error);
+    res.status(500).json({ message: 'Hiba a megírt dolgozat részleteinek lekérdezése során.' });
+  }
+});
+
 // Dolgozat részleges mentése (Autosave) a diák által
 router.post('/student/autosave/:assignmentId', authenticateStudent, async (req, res) => {
   try {

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaTachometerAlt, FaChalkboardTeacher, FaBrain, FaClipboard, FaChartBar, FaCog, FaGraduationCap, FaTasks, FaCompass, FaClipboardList, FaCheckCircle, FaFolderOpen, FaChalkboard } from 'react-icons/fa';
+import { FaTachometerAlt, FaChalkboardTeacher, FaBrain, FaClipboard, FaChartBar, FaCog, FaGraduationCap, FaBullseye, FaTasks, FaCompass, FaClipboardList, FaCheckCircle, FaFolderOpen, FaChalkboard } from 'react-icons/fa';
 import '../styles/Sidebar.css';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
@@ -138,8 +138,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                             </a>
                         </li>
                         <li>
-                            <a tabIndex={0} className={isActiveLink('/szulo-teendok') ? 'active-link' : ''} onClick={() => handleNavigation('/szulo-teendok')}>
-                                <FaTasks className="icon" /> Gyermek Teendők
+                            <a tabIndex={0} className={isActiveLink('/szulo-celok') ? 'active-link' : ''} onClick={() => handleNavigation('/szulo-celok')}>
+                                <FaBullseye className="icon" /> Célkitűzések
                             </a>
                         </li>
                         <li>

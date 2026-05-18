@@ -464,6 +464,7 @@ const PracticeTab = ({ data }) => {
 ══════════════════════════════════════════════ */
 const ParentStatistics = () => {
   const [children, setChildren] = useState([]);
+  const [childrenLoaded, setChildrenLoaded] = useState(false);
   const [selectedChildId, setSelectedChildId] = useState(() => localStorage.getItem('parent-selected-child') || '');
   const [activeTab, setActiveTab] = useState('assignments');
   const [assignmentStats, setAssignmentStats] = useState(null);
@@ -491,6 +492,8 @@ const ParentStatistics = () => {
       } catch (err) {
         console.error(err);
         setLoading(false);
+      } finally {
+        setChildrenLoaded(true);
       }
     };
     fetchChildren();
@@ -528,7 +531,7 @@ const ParentStatistics = () => {
     localStorage.setItem('parent-selected-child', id);
   };
 
-  if (children.length === 0 && !loading) {
+  if (childrenLoaded && children.length === 0) {
     return (
       <div id="content">
         <div className="sts-page">
@@ -583,8 +586,8 @@ const ParentStatistics = () => {
         </div>
 
         <div className="sts-tab-content">
-          {loading ? (
-            <LoadingSpinner />
+          {(!childrenLoaded || loading) ? (
+            <div style={{ minHeight: 300 }}><LoadingSpinner /></div>
           ) : error ? (
             <div className="error-box"><FaExclamationCircle /> {error}</div>
           ) : (

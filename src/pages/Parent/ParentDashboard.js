@@ -7,6 +7,7 @@ import {
   FaChartBar, FaTasks
 } from 'react-icons/fa';
 import ParentChildSelector from '../../components/ParentChildSelector';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Parent/ParentGlobal.css';
 import '../../styles/Student/StudentDashboard.css';
 
@@ -38,6 +39,7 @@ const ParentDashboard = () => {
   const navigate = useNavigate();
   const { user } = useUser() || {};
   const [children, setChildren] = useState([]);
+  const [childrenLoaded, setChildrenLoaded] = useState(false);
   const [selectedChildId, setSelectedChildId] = useState(() => localStorage.getItem('parent-selected-child') || '');
   const [overview, setOverview] = useState(null);
   const [assignments, setAssignments] = useState([]);
@@ -69,6 +71,8 @@ const ParentDashboard = () => {
       } catch (err) {
         setError('Hiba történt a gyermekek betöltésekor.');
         setLoading(false);
+      } finally {
+        setChildrenLoaded(true);
       }
     };
     fetchChildren();
@@ -121,7 +125,7 @@ const ParentDashboard = () => {
 
   const inProgress = assignments.filter(a => a.status === 'started');
 
-  if (children.length === 0 && !loading) {
+  if (childrenLoaded && children.length === 0) {
     return (
       <div id="content">
         <div className="dashboard-container">
@@ -159,12 +163,8 @@ const ParentDashboard = () => {
           )}
         </div>
 
-        {loading ? (
-          <div className="text-center py-5">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Betöltés...</span>
-            </div>
-          </div>
+        {(!childrenLoaded || loading) ? (
+          <div style={{ minHeight: 300 }}><LoadingSpinner /></div>
         ) : error ? (
           <div className="error-state"><FaExclamationCircle /> {error}</div>
         ) : overview && (

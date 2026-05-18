@@ -12,6 +12,7 @@ import '../../styles/Student/CompletedAssignments.css';
 
 const ParentResults = () => {
     const [children, setChildren] = useState([]);
+    const [childrenLoaded, setChildrenLoaded] = useState(false);
     const [selectedChildId, setSelectedChildId] = useState(() => localStorage.getItem('parent-selected-child') || '');
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -38,6 +39,8 @@ const ParentResults = () => {
             } catch (err) {
                 console.error(err);
                 setLoading(false);
+            } finally {
+                setChildrenLoaded(true);
             }
         };
         fetchChildren();
@@ -90,7 +93,7 @@ const ParentResults = () => {
 
     const grouped = groupBySubject(gradedResults);
 
-    if (children.length === 0 && !loading) {
+    if (childrenLoaded && children.length === 0) {
         return (
             <div id="content">
                 <div className="completed-assignments-wrapper">
@@ -122,8 +125,8 @@ const ParentResults = () => {
                     )}
                 </div>
 
-                {loading ? (
-                    <LoadingSpinner />
+                {(!childrenLoaded || loading) ? (
+                    <div style={{ minHeight: 300 }}><LoadingSpinner /></div>
                 ) : error ? (
                     <div className="error-box"><FaExclamationCircle /> {error}</div>
                 ) : (
@@ -190,6 +193,7 @@ const ParentResults = () => {
                                                         <Link
                                                             key={r.assignmentId}
                                                             to={`/szulo-eredmenyek/${r.assignmentId}`}
+                                                            state={{ assignment: r }}
                                                             className="completed-card-link"
                                                         >
                                                             <div className="completed-card">

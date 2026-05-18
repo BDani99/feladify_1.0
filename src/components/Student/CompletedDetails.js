@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
+import { useUser } from '../../context/UserContext';
+import LoadingSpinner from '../LoadingSpinner';
 import {
     FaCheckCircle,
     FaTimesCircle,
@@ -32,12 +34,76 @@ const TYPE_LABELS = {
 
 const CompletedDetails = () => {
     const location = useLocation();
-    const { assignment } = location.state || {};
+    const { id } = useParams();
+    const { user } = useUser() || {};
+    const [assignment, setAssignment] = useState(location.state?.assignment || null);
+    const [loading, setLoading] = useState(!assignment);
+    const [error, setError] = useState(null);
     const [explanations, setExplanations] = useState({});
     const [loadingExplain, setLoadingExplain] = useState({});
     const [flaggedAnswers, setFlaggedAnswers] = useState({});
 
-    if (!assignment) return <div className="error-state">Adatok nem találhatók.</div>;
+    useEffect(() => {
+        if (assignment) return;
+
+        const fetchDetails = async () => {
+            try {
+                let url = '';
+                if (user?.role === 'parent') {
+                    const childId = localStorage.getItem('parent-selected-child');
+                    if (!childId) {
+                        setError('Kérjük, válassz ki egy gyermeket.');
+                        setLoading(false);
+                        return;
+                    }
+                    url = `/api/parent/child/${childId}/results/${id}`;
+                } else {
+                    url = `/api/assignments/student/completed-assignments/${id}`;
+                }
+
+                const res = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('AccessToken')}` }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    setAssignment(data.assignment);
+                } else {
+                    setError('A dolgozat részleteinek betöltése nem sikerült.');
+                }
+            } catch (err) {
+                console.error(err);
+                setError('Hiba történt a dolgozat részleteinek lekérésekor.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (id && user?.role) {
+            fetchDetails();
+        }
+    }, [id, assignment, user?.role]);
+
+    if (loading) {
+        return (
+            <div id="content">
+                <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <LoadingSpinner />
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !assignment) {
+        return (
+            <div id="content">
+                <div className="error-state" style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--color-text-dim)' }}>
+                    <FaExclamationTriangle style={{ fontSize: '3rem', color: '#ef4444', marginBottom: 20 }} />
+                    <p style={{ fontSize: '1.1rem', fontWeight: 600 }}>{error || 'Adatok nem találhatók.'}</p>
+                </div>
+            </div>
+        );
+    }
 
     const isGraded = assignment.grade != null;
 
@@ -192,22 +258,24 @@ const CompletedDetails = () => {
                                     {/* Gombok csak értékelés után és CSAK rossz válaszoknál */}
                                     {isGraded && !isCorrect && (
                                         <>
-                                            <div className="card-actions">
-                                                <button
-                                                    className={`tutor-btn ${explanation ? 'explained' : ''}`}
-                                                    onClick={() => handleAiExplain(answer.questionId, answer.questionText, answer.correctAnswer, answer.studentAnswer)}
-                                                    disabled={isLoadingExplain || !!explanation}
-                                                >
-                                                    {isLoadingExplain ? '⏳ Magyarázat betöltése...' : explanation ? '✓ AI magyarázat betöltve' : '🤖 Miért volt rossz?'}
-                                                </button>
-                                                <button
-                                                    className={`flag-btn ${isFlagged ? 'active' : ''}`}
-                                                    onClick={() => handleFlag(answer.questionId)}
-                                                    disabled={isFlagged}
-                                                >
-                                                    {isFlagged ? '✓ Jelezve a tanárnak' : '⚑ Nem értem a javítást'}
-                                                </button>
-                                            </div>
+                                            {user?.role !== 'parent' && (
+                                                <div className="card-actions">
+                                                    <button
+                                                        className={`tutor-btn ${explanation ? 'explained' : ''}`}
+                                                        onClick={() => handleAiExplain(answer.questionId, answer.questionText, answer.correctAnswer, answer.studentAnswer)}
+                                                        disabled={isLoadingExplain || !!explanation}
+                                                    >
+                                                        {isLoadingExplain ? '⏳ Magyarázat betöltése...' : explanation ? '✓ AI magyarázat betöltve' : '🤖 Miért volt rossz?'}
+                                                    </button>
+                                                    <button
+                                                        className={`flag-btn ${isFlagged ? 'active' : ''}`}
+                                                        onClick={() => handleFlag(answer.questionId)}
+                                                        disabled={isFlagged}
+                                                    >
+                                                        {isFlagged ? '✓ Jelezve a tanárnak' : '⚑ Nem értem a javítást'}
+                                                    </button>
+                                                </div>
+                                            )}
 
                                             {(isLoadingExplain || explanation) && (
                                                 <div className="ai-explanation-box">

@@ -7,6 +7,7 @@ const ParentChatHistory = require('../models/ParentChatHistory');
 const Assignment = require('../models/Assignment');
 const Class = require('../models/Class');
 const DiagnosticResult = require('../models/DiagnosticResult');
+const ParentGoal = require('../models/ParentGoal');
 const groqService = require('../services/aiService');
 const authenticateUser = require('../middleware/authenticateUser');
 
@@ -276,6 +277,59 @@ router.get('/child/:childId/results', authenticateParent, async (req, res) => {
   }
 });
 
+// GET /api/parent/child/:childId/results/:assignmentId - Gyermek egy konkrét lezárt eredménye
+router.get('/child/:childId/results/:assignmentId', authenticateParent, async (req, res) => {
+  try {
+    const { childId, assignmentId } = req.params;
+    const parent = req.parentUser;
+
+    if (!parent.children.includes(childId)) {
+      return res.status(403).json({ message: 'Nincs jogosultsága ehhez a gyermekhez.' });
+    }
+
+    const child = await User.findById(childId);
+    if (!child) return res.status(404).json({ message: 'Gyermek nem található.' });
+
+    const sub = child.assignments.find(a => a.assignmentId.toString() === assignmentId.toString() && !a.isDraft);
+    if (!sub) return res.status(404).json({ message: 'A megadott dolgozat nem található a gyermek befejezett dolgozatai között.' });
+
+    const match = await Assignment.findById(sub.assignmentId);
+    if (!match) return res.status(404).json({ message: 'A dolgozat sablonja nem található.' });
+
+    const result = {
+      assignmentId: sub.assignmentId,
+      title: match.title,
+      subject: match.subject,
+      totalPoints: match.totalPoints,
+      achievedPoints: sub.achievedPoints,
+      suggestedGrade: sub.suggestedGrade,
+      grade: sub.grade,
+      completedAt: sub.completedAt,
+      answers: sub.answers.map(ans => {
+        const questionMatch = match.questions.find(q => q._id.toString() === ans.questionId.toString());
+        return {
+          questionId: ans.questionId,
+          questionText: questionMatch ? questionMatch.questionText : 'Ismeretlen kérdés',
+          questionType: questionMatch ? questionMatch.questionType : 'short_answer',
+          studentAnswer: ans.studentAnswer,
+          correctAnswer: questionMatch ? questionMatch.correctAnswer : null,
+          score: ans.score,
+          maxPoints: questionMatch ? questionMatch.points : 0,
+          aiFeedback: ans.aiFeedback,
+          flagged: ans.flagged,
+          flagResponse: ans.flagResponse,
+          flagRejected: ans.flagRejected
+        };
+      })
+    };
+
+    res.json({ assignment: result });
+  } catch (error) {
+    console.error('[Parent API] Child result detail error:', error);
+    res.status(500).json({ message: 'Hiba a dolgozat részleteinek lekérésekor.' });
+  }
+});
+
 // GET /api/parent/child/:childId/roadmap/:subject - Diagnosztikai radar adatok & szülői roadmap
 router.get('/child/:childId/roadmap/:subject', authenticateParent, async (req, res) => {
   try {
@@ -500,6 +554,161 @@ router.get('/child/:childId/practice-statistics', authenticateParent, async (req
   } catch (error) {
     console.error('[Parent API] Child practice statistics error:', error);
     res.status(500).json({ message: 'Hiba az egyéni gyakorlás statisztikák lekérésekor.' });
+  }
+});
+
+// ==================== CÉLKITŰZÉSEK ====================
+
+// GET /api/parent/child/:childId/goals - Célok lekérése haladással
+router.get('/child/:childId/goals', authenticateParent, async (req, res) => {
+  const { childId } = req.params;
+  const parent = req.parentUser;
+  if (!parent.children.includes(childId)) {
+    return res.status(403).json({ message: 'Nincs jogosultsága ehhez a gyermekhez.' });
+  }
+  try {
+    const [goalDoc, childData, progressData] = await Promise.all([
+      ParentGoal.findOne({ parentId: parent._id, childId }),
+      User.findById(childId).populate('assignments.assignmentId', 'subject totalPoints'),
+      StudentProgress.findOne({ studentId: childId })
+    ]);
+
+    const goals = goalDoc?.goals || [];
+    const streak = progressData ? progressData.getEffectiveStreak() : 0;
+    const totalXP = progressData?.totalXP || 0;
+    const subjectProgress = progressData?.subjectProgress || [];
+
+    const goalsWithProgress = goals.map(goal => {
+      let current = 0, target = 1, unit = '', count = null;
+
+      if (goal.type === 'assignment_avg') {
+        const since = new Date(Date.now() - (goal.periodDays || 7) * 864e5);
+        const relevant = (childData?.assignments || []).filter(a => {
+          if (!a.assignmentId || a.grade == null) return false;
+          if (goal.subject !== 'all' && a.assignmentId.subject !== goal.subject) return false;
+          return a.completedAt && new Date(a.completedAt) >= since;
+        });
+        count = relevant.length;
+        target = goal.targetPercent || 1;
+        if (count > 0) {
+          current = Math.round(
+            relevant.reduce((s, a) => {
+              const pts = a.assignmentId.totalPoints || 0;
+              return s + (pts > 0 ? (a.achievedPoints / pts) * 100 : 0);
+            }, 0) / count
+          );
+        }
+        unit = '%';
+      } else if (goal.type === 'practice_xp') {
+        target = goal.targetXP || 1;
+        let delta;
+        if (goal.subject === 'all') {
+          delta = Math.max(0, totalXP - (goal.startTotalXP || 0));
+        } else {
+          const sp = subjectProgress.find(s => s.subject === goal.subject);
+          delta = Math.max(0, (sp?.subjectXP || 0) - (goal.startSubjectXP || 0));
+        }
+        current = Math.min(delta, target);
+        unit = 'XP';
+      } else if (goal.type === 'practice_streak') {
+        target = goal.targetStreak || 1;
+        current = Math.min(streak, target);
+        unit = 'nap';
+      }
+
+      const pct = target > 0 ? Math.min(Math.round((current / target) * 100), 100) : 0;
+
+      return {
+        goalId: goal._id.toString(),
+        type: goal.type,
+        subject: goal.subject,
+        title: goal.title,
+        targetPercent: goal.targetPercent,
+        periodDays: goal.periodDays,
+        targetXP: goal.targetXP,
+        targetStreak: goal.targetStreak,
+        deadline: goal.deadline,
+        createdAt: goal.createdAt,
+        progress: { current, target, unit, pct, count }
+      };
+    });
+
+    res.json({ goals: goalsWithProgress });
+  } catch (error) {
+    console.error('[Parent API] Get goals error:', error);
+    res.status(500).json({ message: 'Hiba a célkitűzések lekérésekor.' });
+  }
+});
+
+// POST /api/parent/child/:childId/goals - Új cél hozzáadása
+router.post('/child/:childId/goals', authenticateParent, async (req, res) => {
+  const { childId } = req.params;
+  const parent = req.parentUser;
+  if (!parent.children.includes(childId)) {
+    return res.status(403).json({ message: 'Nincs jogosultsága ehhez a gyermekhez.' });
+  }
+  try {
+    const { type, subject, title, targetPercent, periodDays, targetXP, targetStreak, deadline } = req.body;
+    if (!type || !subject || !title) {
+      return res.status(400).json({ message: 'Hiányzó kötelező mezők (type, subject, title).' });
+    }
+
+    let startTotalXP = 0, startSubjectXP = 0;
+    if (type === 'practice_xp') {
+      const progress = await StudentProgress.findOne({ studentId: childId });
+      if (progress) {
+        startTotalXP = progress.totalXP || 0;
+        if (subject !== 'all') {
+          const sp = (progress.subjectProgress || []).find(s => s.subject === subject);
+          startSubjectXP = sp?.subjectXP || 0;
+        }
+      }
+    }
+
+    let goalDoc = await ParentGoal.findOne({ parentId: parent._id, childId });
+    if (!goalDoc) goalDoc = new ParentGoal({ parentId: parent._id, childId, goals: [] });
+
+    const newGoal = {
+      type,
+      subject,
+      title: title.substring(0, 150),
+      ...(type === 'assignment_avg' && { targetPercent: Number(targetPercent), periodDays: Number(periodDays) || 7 }),
+      ...(type === 'practice_xp' && { targetXP: Number(targetXP), startTotalXP, startSubjectXP }),
+      ...(type === 'practice_streak' && { targetStreak: Number(targetStreak) }),
+      ...(deadline && { deadline: new Date(deadline) }),
+    };
+
+    goalDoc.goals.push(newGoal);
+    await goalDoc.save();
+
+    res.status(201).json({ message: 'Cél sikeresen hozzáadva.' });
+  } catch (error) {
+    console.error('[Parent API] Create goal error:', error);
+    res.status(500).json({ message: 'Hiba a cél létrehozásakor.' });
+  }
+});
+
+// DELETE /api/parent/child/:childId/goals/:goalId - Cél törlése
+router.delete('/child/:childId/goals/:goalId', authenticateParent, async (req, res) => {
+  const { childId, goalId } = req.params;
+  const parent = req.parentUser;
+  if (!parent.children.includes(childId)) {
+    return res.status(403).json({ message: 'Nincs jogosultsága ehhez a gyermekhez.' });
+  }
+  try {
+    const goalDoc = await ParentGoal.findOne({ parentId: parent._id, childId });
+    if (!goalDoc) return res.status(404).json({ message: 'Nincs célkitűzés dokumentum.' });
+
+    const idx = goalDoc.goals.findIndex(g => g._id.toString() === goalId);
+    if (idx === -1) return res.status(404).json({ message: 'A cél nem található.' });
+
+    goalDoc.goals.splice(idx, 1);
+    await goalDoc.save();
+
+    res.json({ message: 'Cél törölve.' });
+  } catch (error) {
+    console.error('[Parent API] Delete goal error:', error);
+    res.status(500).json({ message: 'Hiba a cél törlése során.' });
   }
 });
 

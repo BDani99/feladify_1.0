@@ -15,56 +15,9 @@ import {
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import LoadingSpinner from '../components/LoadingSpinner';
+import CustomSelect from '../components/CustomSelect';
 import '../styles/Announcements.css';
 
-const CustomSelect = ({ value, onChange, options, placeholder, icon }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const containerRef = useRef(null);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (containerRef.current && !containerRef.current.contains(event.target)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const selectedOption = options.find(opt => opt.value === value);
-
-    return (
-        <div className="custom-select-container" ref={containerRef}>
-            <div 
-                className={`custom-select-trigger ${isOpen ? 'open' : ''} ${value ? 'has-value' : ''}`}
-                onClick={() => setIsOpen(!isOpen)}
-            >
-                <div className="trigger-content">
-                    {icon && <span className="select-icon">{icon}</span>}
-                    <span>{selectedOption ? selectedOption.label : placeholder}</span>
-                </div>
-                <FaChevronDown className="select-chevron" />
-            </div>
-            
-            {isOpen && (
-                <div className="custom-select-options">
-                    {options.map((opt) => (
-                        <div 
-                            key={opt.value} 
-                            className={`custom-select-option ${value === opt.value ? 'selected' : ''}`}
-                            onClick={() => {
-                                onChange(opt.value);
-                                setIsOpen(false);
-                            }}
-                        >
-                            {opt.label}
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-};
 
 const Announcements = () => {
   const { user } = useUser() || {};

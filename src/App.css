@@ -604,6 +604,10 @@ input[type=number] { -moz-appearance: textfield; appearance: textfield; }
     animation: slideUpFade 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.custom-datetime-dropdown.date-only {
+    width: 290px;
+}
+
 .picker-split-layout {
     display: flex;
     gap: 16px;

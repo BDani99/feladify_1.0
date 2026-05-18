@@ -61,6 +61,7 @@ const RadarChart = ({ data }) => {
 
 const ParentRoadmap = () => {
     const [children, setChildren] = useState([]);
+    const [childrenLoaded, setChildrenLoaded] = useState(false);
     const [selectedChildId, setSelectedChildId] = useState(() => localStorage.getItem('parent-selected-child') || '');
     const [subject, setSubject] = useState('Matematika');
     const [roadmap, setRoadmap] = useState(null);
@@ -89,6 +90,8 @@ const ParentRoadmap = () => {
             } catch (err) {
                 console.error(err);
                 setLoading(false);
+            } finally {
+                setChildrenLoaded(true);
             }
         };
         fetchChildren();
@@ -122,20 +125,6 @@ const ParentRoadmap = () => {
         localStorage.setItem('parent-selected-child', id);
     };
 
-    if (children.length === 0 && !loading) {
-        return (
-            <div id="content">
-                <div className="dashboard-container">
-                    <div className="dash-section-card" style={{ textAlign: 'center', padding: '60px 40px' }}>
-                        <FaCompass style={{ fontSize: '3.5rem', color: 'var(--accent)', marginBottom: 24 }} />
-                        <h2 style={{ fontWeight: 700, marginBottom: 12 }}>Nincs még összekapcsolt gyermek</h2>
-                        <p style={{ color: 'var(--color-text-dim)' }}>A fejlődési térképek megtekintéséhez adj hozzá egy gyermeket a Beállítások menüben.</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     const checkpoints = roadmap?.checkpoints || [];
     const completedCps = checkpoints.filter(cp => cp.status === 'completed');
     const unlockedCps = checkpoints.filter(cp => cp.status === 'unlocked');
@@ -153,6 +142,20 @@ const ParentRoadmap = () => {
     const strengths = roadmap?.aiAnalysis?.strengths || [];
     const weaknesses = roadmap?.aiAnalysis?.weaknesses || [];
     const notStarted = totalCount === 0 && !(roadmap?.radarData?.length > 0);
+
+    if (childrenLoaded && children.length === 0) {
+        return (
+            <div id="content">
+                <div className="dashboard-container">
+                    <div className="dash-section-card" style={{ textAlign: 'center', padding: '60px 40px' }}>
+                        <FaCompass style={{ fontSize: '3.5rem', color: 'var(--accent)', marginBottom: 24 }} />
+                        <h2 style={{ fontWeight: 700, marginBottom: 12 }}>Nincs még összekapcsolt gyermek</h2>
+                        <p style={{ color: 'var(--color-text-dim)' }}>A fejlődési térképek megtekintéséhez adj hozzá egy gyermeket a Beállítások menüben.</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div id="content">
@@ -184,8 +187,8 @@ const ParentRoadmap = () => {
                     ))}
                 </div>
 
-                {loading ? (
-                    <LoadingSpinner />
+                {(!childrenLoaded || loading) ? (
+                    <div style={{ minHeight: 300 }}><LoadingSpinner /></div>
                 ) : error ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#ef4444', padding: '16px 0' }}>
                         <FaExclamationCircle /> {error}

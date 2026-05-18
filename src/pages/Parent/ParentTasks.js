@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaTasks, FaCalendarAlt, FaStar, FaChevronRight, FaFolderOpen } from 'react-icons/fa';
 import ParentChildSelector from '../../components/ParentChildSelector';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import '../../styles/Parent/ParentGlobal.css';
 import '../../styles/Parent/ParentTasks.css';
 import '../../styles/Student/StudentDashboard.css';
@@ -9,6 +10,7 @@ import '../../styles/Student/StudentDashboard.css';
 const ParentTasks = () => {
     const navigate = useNavigate();
     const [children, setChildren] = useState([]);
+    const [childrenLoaded, setChildrenLoaded] = useState(false);
     const [selectedChildId, setSelectedChildId] = useState(() => localStorage.getItem('parent-selected-child') || '');
     const [assignments, setAssignments] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -32,6 +34,8 @@ const ParentTasks = () => {
             } catch (err) {
                 console.error(err);
                 setError('Hiba történt a gyermekek betöltésekor.');
+            } finally {
+                setChildrenLoaded(true);
             }
         };
         fetchChildren();
@@ -85,7 +89,7 @@ const ParentTasks = () => {
         }
     };
 
-    if (children.length === 0 && !loading) {
+    if (childrenLoaded && children.length === 0) {
         return (
             <div id="content">
                 <div className="dashboard-container">
@@ -140,12 +144,8 @@ const ParentTasks = () => {
                 </div>
             )}
 
-            {loading ? (
-                <div className="text-center py-5">
-                    <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Betöltés...</span>
-                    </div>
-                </div>
+            {(!childrenLoaded || loading) ? (
+                <div style={{ minHeight: 300 }}><LoadingSpinner /></div>
             ) : error ? (
                 <div className="alert alert-danger" role="alert">{error}</div>
             ) : (

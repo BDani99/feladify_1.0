@@ -30,7 +30,7 @@ import StudentDashboard from '../pages/Student/StudentDashboard';
 import DocumentsPage from '../pages/Documents';
 import AnnouncementsPage from '../pages/Announcements';
 import ParentDashboard from '../pages/Parent/ParentDashboard';
-import ParentTasks from '../pages/Parent/ParentTasks';
+import ParentGoals from '../pages/Parent/ParentGoals';
 import ParentResults from '../pages/Parent/ParentResults';
 import ParentRoadmap from '../pages/Parent/ParentRoadmap';
 import ParentAIConsultant from '../pages/Parent/ParentAIConsultant';
@@ -120,7 +120,7 @@ const Layout = ({ onLoginSuccess }) => {
                 {user?.role === 'parent' && (
                     <>
                         <Route path="/szulo-iranyitopult" element={<ParentDashboard />} />
-                        <Route path="/szulo-teendok" element={<ParentTasks />} />
+                        <Route path="/szulo-celok" element={<ParentGoals />} />
                         <Route path="/szulo-eredmenyek" element={<ParentResults />} />
                         <Route path="/szulo-eredmenyek/:id" element={<CompletedDetails />} />
                         <Route path="/szulo-roadmap" element={<ParentRoadmap />} />
