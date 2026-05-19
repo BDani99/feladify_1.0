@@ -173,7 +173,7 @@ function sanitizeAssignmentForStudent(assignment) {
 // Előnézet generálása (DB írás nélkül)
 router.post('/teacher/preview', authenticateTeacher, async (req, res) => {
   try {
-    const { title, subject, difficulty, className, selectedTopics } = req.body;
+    const { title, subject, difficulty, className, selectedTopics, topicSpecification } = req.body;
     const missing = ['title','subject','difficulty','className'].filter(f => !req.body[f]);
     if (missing.length > 0) return res.status(400).json({ message: `Hiányzó mezők: ${missing.join(', ')}.` });
 
@@ -184,7 +184,11 @@ router.post('/teacher/preview', authenticateTeacher, async (req, res) => {
     const gradeMatch = className && className.match(/^(\d+)/);
     const grade = gradeMatch ? `${gradeMatch[1]}. osztály` : 'általános iskola';
 
-    const questions = await generateQuestions(subject, title, diffDesc, validTypes, grade, selectedTopics, req.userId);
+    const combinedTopic = topicSpecification
+      ? `${title} (Részletes specifikáció: ${topicSpecification})`
+      : title;
+
+    const questions = await generateQuestions(subject, combinedTopic, diffDesc, validTypes, grade, selectedTopics, req.userId);
 
     res.status(200).json({ questions });
   } catch (error) {
@@ -261,7 +265,7 @@ router.post('/teacher/save', authenticateTeacher, async (req, res) => {
 // Feladatsor generálása, csak tanároknak (legacy - közvetlen mentés)
 router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
   try {
-    const { title, subject, difficulty, className, selectedTopics } = req.body;
+    const { title, subject, difficulty, className, selectedTopics, topicSpecification } = req.body;
     const missing = ['title','subject','difficulty','className'].filter(f => !req.body[f]);
     if (missing.length > 0) return res.status(400).json({ message: `Hiányzó mezők: ${missing.join(', ')}.` });
 
@@ -286,7 +290,11 @@ router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
     const gradeMatch = className && className.match(/^(\d+)/);
     const grade = gradeMatch ? `${gradeMatch[1]}. osztály` : 'általános iskola';
 
-    const questions = await generateQuestions(subject, title, diffDesc, validTypes, grade, selectedTopics, req.userId);
+    const combinedTopic = topicSpecification
+      ? `${title} (Részletes specifikáció: ${topicSpecification})`
+      : title;
+
+    const questions = await generateQuestions(subject, combinedTopic, diffDesc, validTypes, grade, selectedTopics, req.userId);
 
     const assignment = new Assignment({
       teacherId: req.userId, title, subject, difficulty,

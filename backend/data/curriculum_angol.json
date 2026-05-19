@@ -1,0 +1,334 @@
+{
+  "5": [
+    {
+      "id": "personal_topics_5",
+      "name": "Personal topics and immediate environment (Személyes és környezeti témák)",
+      "recommendedHours": 32,
+      "learningOutcomes": "A tanuló megérti a családjával, otthonával és mindennapi hobbijaival kapcsolatos alapvető kifejezéseket, és képes egyszerű mondatokban bemutatkozni és beszélni róluk.",
+      "developmentalTasks": "Családfa és lakóhely bemutatása, kedvenc állatok és növények jellemzése egyszerű mondatokkal, alapszintű szókincs elmélyítése.",
+      "concepts": "Family members, rooms and furniture, hobbies, pets, domestic animals, numbers 1-100, basic adjectives.",
+      "suggestedActivities": "Családfa készítése és bemutatása képekkel, 'Ez vagyok én' scrapbook készítése."
+    },
+    {
+      "id": "classroom_activities_5",
+      "name": "Classroom activities and school (Iskolai és tanórai tevékenységek)",
+      "recommendedHours": 15,
+      "learningOutcomes": "A tanuló megérti az idegen nyelvű óravezetést, az alapvető tanári utasításokat, és képes egyszerű osztálytermi kérdések megfogalmazására.",
+      "developmentalTasks": "Tanórai utasítások követése, iskolai tantárgyak és órarend megbeszélése, írószerek megnevezése.",
+      "concepts": "School objects, subjects, days of the week, classroom commands, telling the time.",
+      "suggestedActivities": "Szerepjáték: 'Új tanuló az osztályban', saját órarend megtervezése és leírása angolul."
+    },
+    {
+      "id": "intercultural_topics_5",
+      "name": "Intercultural topics (Országismeret és kultúrák közötti kapcsolatok)",
+      "recommendedHours": 13,
+      "learningOutcomes": "A tanuló megismeri az angol nyelvű országok (főként az Egyesült Királyság) alapvető szokásait és legfontosabb ünnepeit, összevetve azokat a hazaival.",
+      "developmentalTasks": "Ünnepi szokások (Karácsony, Húsvét, Halloween) összehasonlítása, alapvető országismereti tények gyűjtése.",
+      "concepts": "Holidays, UK landmarks, traditional British food, greeting cards.",
+      "suggestedActivities": "Karácsonyi vagy halloweeni üdvözlőkártyák készítése, londoni nevezetességek képeinek gyűjtése."
+    },
+    {
+      "id": "entertainment_5",
+      "name": "Entertainment and playful learning (Szórakozás és játékos tanulás)",
+      "recommendedHours": 11,
+      "learningOutcomes": "A tanuló egyszerű dalokat, mondókákat értelmez és ad elő, bekapcsolódik játékos nyelvi vetélkedőkbe.",
+      "developmentalTasks": "Ritmusérzék és kiejtés fejlesztése dalok segítségével, szókincsfejlesztő társasjátékok játszása.",
+      "concepts": "Rhymes, songs, children's stories, board game vocabulary.",
+      "suggestedActivities": "Angol nyelvű gyermekdalok éneklése, szókártyás memóriajátékok csoportban."
+    },
+    {
+      "id": "public_matters_5",
+      "name": "Public matters and services (Közélet és szolgáltatások alapjai)",
+      "recommendedHours": 4,
+      "learningOutcomes": "A tanuló megérti az útbaigazítás és a vásárlás alapvető kifejezéseit egyszerű szituációkban.",
+      "developmentalTasks": "Tájékozódás gyakorlása térképen, egyszerű bolti párbeszédek szimulálása.",
+      "concepts": "Shops, places in town, simple directions (left, right, straight on), prices.",
+      "suggestedActivities": "Vásárlós szerepjáték játékpénzzel, egyszerű városrész-térkép rajzolása és útbaigazítás gyakorlása."
+    },
+    {
+      "id": "cross_curricular_5",
+      "name": "Cross-curricular topics (Tantárgyközi kapcsolatok)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló képes más tantárgyakban (pl. földrajz, természetismeret) szerzett ismereteket angolul is megfogalmazni egyszerű szinten.",
+      "developmentalTasks": "Térképészeti alapfogalmak, kontinensek és óceánok neveinek angol nyelvű elsajátítása.",
+      "concepts": "Continents, oceans, cardinal points, basic nature terms.",
+      "suggestedActivities": "Világtérkép vaktérképes kitöltése angolul csoportmunkában."
+    },
+    {
+      "id": "language_learning_5",
+      "name": "English and language learning (Az angol nyelv és a nyelvtanulás)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló megismeri az alapvető szótanulási módszereket, és képes betűzni a nevét angolul.",
+      "developmentalTasks": "Az ABC elsajátítása, betűzés gyakorlása (spelling), szótárhasználat alapjainak megismerése.",
+      "concepts": "Alphabet, spelling, bilingual dictionary, flashcards.",
+      "suggestedActivities": "Betűzőverseny (Spelling Bee), saját tanulókártyák készítése a héten tanult szavakból."
+    },
+    {
+      "id": "current_topics_5",
+      "name": "Current topics (Aktuális témák)",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló képes reagálni az őt körülvevő világ aktuális eseményeire és az időjárás változására.",
+      "developmentalTasks": "Időjárás-jelentés értelmezése, évszakok és ruházat kapcsolatának kifejezése.",
+      "concepts": "Weather types, seasons, clothing, daily news for kids.",
+      "suggestedActivities": "Napi időjárás-jelentő szerepjáték, évszakoknak megfelelő öltözködési kollázs készítése."
+    },
+    {
+      "id": "gaining_knowledge_5",
+      "name": "Gaining and sharing knowledge (Ismeretszerzés és tudásmegosztás)",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló egyszerű információkat keres és oszt meg képekkel vagy rajzokkal támogatott angol nyelvű forrásokból.",
+      "developmentalTasks": "Egyszerű internetes keresés végrehajtása irányítottan, rövid tények bemutatása.",
+      "concepts": "Simple search terms, basic facts, photo descriptions.",
+      "suggestedActivities": "Rövid projektmunka: egy választott egzotikus állat legfontosabb adatainak bemutatása képpel."
+    }
+  ],
+  "6": [
+    {
+      "id": "personal_topics_6",
+      "name": "Personal topics and immediate environment (Személyes és környezeti témák)",
+      "recommendedHours": 32,
+      "learningOutcomes": "A tanuló részletesebben beszél napirendjéről, házimunkákról és tágabb családjáról, egyszerű történeteket mesél el múlt időben.",
+      "developmentalTasks": "A múlt idejű cselekvések kifejezésének gyakorlása, a természetvédelem és a szelektív hulladékgyűjtés témakörének megbeszélése.",
+      "concepts": "Daily routine, household chores, family tree extension, recycling, past simple tense, irregular verbs.",
+      "suggestedActivities": "Naplóbejegyzés írása az előző hétvégéről, prezentáció készítése a környezetünk védelméről."
+    },
+    {
+      "id": "classroom_activities_6",
+      "name": "Classroom activities and school (Iskolai és tanórai tevékenységek)",
+      "recommendedHours": 15,
+      "learningOutcomes": "A tanuló összehasonlítja a magyar és a brit iskolarendszert, elmondja az iskolai szabályokat.",
+      "developmentalTasks": "A 'must', 'mustn't' és 'should' segédigék alkalmazása szabályok kifejezésére, iskolai események leírása.",
+      "concepts": "School rules, uniform, school festivals, extracurricular activities, modal verbs.",
+      "suggestedActivities": "Az álomiskola szabályzatának megalkotása csoportosan poszteren, brit-magyar iskolai különbségek táblázatba foglalása."
+    },
+    {
+      "id": "intercultural_topics_6",
+      "name": "Intercultural topics (Országismeret és kultúrák közötti kapcsolatok)",
+      "recommendedHours": 14,
+      "learningOutcomes": "A tanuló bővebb ismeretekkel rendelkezik az Egyesült Királyság és az USA nagyvárosairól, kultúrájáról és szokásairól.",
+      "developmentalTasks": "Kulturális sztereotípiák és valós tények vizsgálata, turisztikai látványosságok megismerése.",
+      "concepts": "London landmarks, New York, English-speaking countries, cultural habits.",
+      "suggestedActivities": "Képzeletbeli utazás megtervezése Londonba: látnivalók, közlekedés, napi program."
+    },
+    {
+      "id": "entertainment_6",
+      "name": "Entertainment and playful learning (Szórakozás és játékos tanulás)",
+      "recommendedHours": 11,
+      "learningOutcomes": "A tanuló megérti az egyszerűbb, könnyített olvasmányokat és rövid történeteket, és el tudja mondani a főbb fordulatokat.",
+      "developmentalTasks": "Olvasott szövegértés fejlesztése graded reader könyvekkel, kreatív szövegírás.",
+      "concepts": "Graded readers, storytelling, simple plot, characters.",
+      "suggestedActivities": "Közös könyvajánló videó vagy plakát készítése egy elolvasott könnyített olvasmányról."
+    },
+    {
+      "id": "public_matters_6",
+      "name": "Public matters and services (Közélet és szolgáltatások)",
+      "recommendedHours": 4,
+      "learningOutcomes": "A tanuló magabiztosan rendel ételt étteremben és vásárol jegyet múzeumba vagy tömegközlekedésre.",
+      "developmentalTasks": "Éttermi és utazási párbeszédek eljátszása, udvarias kérések kifejezése (Would you like, Could I have).",
+      "concepts": "Menu, ordering food, ticket booking, transport vocabulary.",
+      "suggestedActivities": "Szerepjáték: 'Az osztály az étteremben' - pincér és vendég dialógusok."
+    },
+    {
+      "id": "cross_curricular_6",
+      "name": "Cross-curricular topics (Tantárgyközi kapcsolatok)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló képes egyszerű tudományos kísérleteket leírni vagy matematikai műveleteket elmondani angolul.",
+      "developmentalTasks": "Alapvető biológiai és fizikai folyamatok megismerése angol nyelven.",
+      "concepts": "Water cycle, human body parts, basic arithmetic operations.",
+      "suggestedActivities": "Egyszerű növénycsíráztatási folyamat lépéseinek lejegyzése angolul."
+    },
+    {
+      "id": "language_learning_6",
+      "name": "English and language learning (Az angol nyelv és a nyelvtanulás)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló felismeri a saját tanulási stílusát és IKT eszközöket használ a szókincse bővítésére.",
+      "developmentalTasks": "Nyelvtanulási alkalmazások önálló használata, szókártyák digitális készítése.",
+      "concepts": "Language apps, learning strategies, digital vocabulary tools.",
+      "suggestedActivities": "Kvíz készítése a padtársnak online szótanuló platformon (pl. Quizlet mintára)."
+    },
+    {
+      "id": "current_topics_6",
+      "name": "Current topics (Aktuális témák)",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló egyszerű gyermekhíreket értelmez, beszél a kedvenc sportolóiról és az egészséges életmódról.",
+      "developmentalTasks": "Rövid internetes cikkek megértése, egészséges napirend összeállítása.",
+      "concepts": "Healthy lifestyle, sports, junior news, social media basics.",
+      "suggestedActivities": "Egészséges napi menü és edzésterv készítése angolul."
+    },
+    {
+      "id": "gaining_knowledge_6",
+      "name": "Gaining and sharing knowledge (Ismeretszerzés és tudásmegosztás)",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló önállóan gyűjt adatokat angol nyelvű weblapokról és képes azokból rövid bemutatót tartani.",
+      "developmentalTasks": "Információk kiszűrése és átfogalmazása egyszerű szavakkal, prezentációs készségek fejlesztése.",
+      "concepts": "Online search, paraphrasing, presentation slides.",
+      "suggestedActivities": "3 diás PPT bemutató egy híres feltalálóról vagy felfedezőről."
+    }
+  ],
+  "7": [
+    {
+      "id": "personal_topics_7",
+      "name": "Personal topics and relationships (Személyes témák és emberi kapcsolatok)",
+      "recommendedHours": 30,
+      "learningOutcomes": "A tanuló összetettebb módon beszél a barátságról, családi konfliktusokról, a jövőbeli terveiről és az érzelmeiről.",
+      "developmentalTasks": "A jövő idő (will, going to, present continuous for future) és a feltételes mód (First Conditional) használatának gyakorlása.",
+      "concepts": "Friendship, personality traits, youth culture, future plans, First Conditional, active/passive voice basics.",
+      "suggestedActivities": "Karakterjellemzés írása a legjobb barátról, jövőbeli tervek megvitatása párban."
+    },
+    {
+      "id": "classroom_activities_7",
+      "name": "Classroom activities and education (Tanulás és iskola)",
+      "recommendedHours": 11,
+      "learningOutcomes": "A tanuló véleményt nyilvánít a tantárgyak hasznosságáról, vitázik az iskolai követelményekről és vizsgákról.",
+      "developmentalTasks": "Érveléstechnika fejlesztése, véleménykifejező fordulatok használata (In my opinion, I strongly believe).",
+      "concepts": "School subjects, exam preparation, school stress, educational paths.",
+      "suggestedActivities": "Osztálytermi vita: 'Szükség van-e az iskolai egyenruhára?'"
+    },
+    {
+      "id": "intercultural_topics_7",
+      "name": "Intercultural topics and countries (Országismeret és kultúra)",
+      "recommendedHours": 12,
+      "learningOutcomes": "A tanuló ismeri az USA, Ausztrália és más angolszász országok földrajzát, történelmét és kulturális sajátosságait.",
+      "developmentalTasks": "Országok összehasonlítása, turisztikai prospektusok feldolgozása, kultúrák közötti különbségek elemzése.",
+      "concepts": "USA geography, Australian wildlife, historical facts, national symbols.",
+      "suggestedActivities": "Egyesült Államokbeli államok vagy Ausztrália bemutatása csoportmunkában készített plakáton."
+    },
+    {
+      "id": "entertainment_7",
+      "name": "Entertainment and youth media (Szórakozás és média)",
+      "recommendedHours": 12,
+      "learningOutcomes": "A tanuló megérti a fiataloknak szóló filmek, sorozatok és könyvek alaptémáit, képes azokról rövid recenziót írni.",
+      "developmentalTasks": "Kreatív írás fejlesztése film/könyvkritikán keresztül, cselekmény összefoglalása.",
+      "concepts": "Film genres, plot summary, reviews, music bands.",
+      "suggestedActivities": "Rövid ajánló (review) írása egy kedvenc filmről vagy könyvről."
+    },
+    {
+      "id": "public_matters_7",
+      "name": "Public matters and services (Közélet, vásárlás, szolgáltatások)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló képes panasszal élni üzletben hibás termék esetén, és információt kérni szolgáltatásokról.",
+      "developmentalTasks": "Panasztételi szituációk eljátszása, udvarias, de határozott érvelés elsajátítása.",
+      "concepts": "Complaining, returning goods, customer service, consumer rights.",
+      "suggestedActivities": "Szerepjáték: 'Hibás cipő visszavitele a boltba'."
+    },
+    {
+      "id": "cross_curricular_7",
+      "name": "Cross-curricular topics (Tantárgyközi kapcsolatok)",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló természettudományos és történelmi cikkeket dolgoz fel angolul, kiemelve a kulcsfontosságú összefüggéseket.",
+      "developmentalTasks": "Környezetvédelmi folyamatok (globális felmelegedés, megújuló energia) megértése angolul.",
+      "concepts": "Climate change, global warming, renewable energy, history facts.",
+      "suggestedActivities": "Rövid prezentáció a megújuló energiaforrások típusairól."
+    },
+    {
+      "id": "language_learning_7",
+      "name": "English and language learning (Az angol nyelv és a nyelvtanulás)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló felismeri az angol nyelv világnyelvi szerepét, és tudatosan készíti elő a nyelvvizsga/felvételi feladattípusokat.",
+      "developmentalTasks": "Nyelvtanulási napló vezetése, tesztmegoldási stratégiák megismerése.",
+      "concepts": "Global English, language certification, exam techniques.",
+      "suggestedActivities": "Egy korábbi felvételi vagy alapfokú nyelvvizsga mintafeladatsorának közös elemzése."
+    },
+    {
+      "id": "current_topics_7",
+      "name": "Current topics (Aktuális témák)",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló követi a napi híreket, megérti az internetbiztonság és a közösségi média veszélyeit.",
+      "developmentalTasks": "Kritikai gondolkodás fejlesztése, internetes biztonsági szabályok megfogalmazása angolul.",
+      "concepts": "Social media, cyberbullying, internet safety, fake news.",
+      "suggestedActivities": "Tízpontos internetbiztonsági kódex összeállítása angolul."
+    },
+    {
+      "id": "gaining_knowledge_7",
+      "name": "Gaining and sharing knowledge (Ismeretszerzés és tudásmegosztás)",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló képes önállóan kiselőadást tartani prezentációs szoftver segítségével egy választott tudományos témában.",
+      "developmentalTasks": "Prezentáció felépítése (bevezetés, tárgyalás, befejezés), kérdésekre való válaszadás.",
+      "concepts": "Presentation structure, transitions, visual aids, Q&A.",
+      "suggestedActivities": "5 perces egyéni kiselőadás tartása egy híres tudós életéről vagy egy találmányról."
+    }
+  ],
+  "8": [
+    {
+      "id": "personal_topics_8",
+      "name": "Personal topics and relationships (Személyes témák és emberi kapcsolatok)",
+      "recommendedHours": 30,
+      "learningOutcomes": "A tanuló képes kifejezni a véleményét bonyolultabb személyközi kapcsolatokról, a pályaválasztásról és az egyéni felelősségvállalásról.",
+      "developmentalTasks": "A befejezett jelen (Present Perfect) és a szenvedő szerkezet (Passive Voice) tudatos alkalmazása.",
+      "concepts": "Career choices, part-time jobs, future aspirations, peer pressure, Present Perfect, Passive Voice.",
+      "suggestedActivities": "Képzeletbeli állásinterjú lefolytatása (diákmunka), motivációs levél vázlatának megírása."
+    },
+    {
+      "id": "classroom_activities_8",
+      "name": "Classroom activities and education (Tanulás és iskola)",
+      "recommendedHours": 12,
+      "learningOutcomes": "A tanuló képes összefoglalni a középiskolai felvételi követelményeket és elmondani továbbtanulási elképzeléseit.",
+      "developmentalTasks": "Továbbtanulási tervek kifejezése, iskolatípusok összevetése.",
+      "concepts": "Secondary school types, entrance exam, lifelong learning.",
+      "suggestedActivities": "Prezentáció a választott középiskoláról és annak felvételi követelményeiről."
+    },
+    {
+      "id": "intercultural_topics_8",
+      "name": "Intercultural topics and countries (Országismeret és kultúra)",
+      "recommendedHours": 13,
+      "learningOutcomes": "A tanuló megérti az angolszász kultúra globális hatásait (zene, filmek, ünnepek), és képes bemutatni Magyarország nevezetességeit egy külföldinek.",
+      "developmentalTasks": "Idegenvezetői szerep gyakorlása, hazánk értékeinek és hagyományainak bemutatása angolul.",
+      "concepts": "Global English culture, Hungary's tourist sights, cultural exchange.",
+      "suggestedActivities": "Rövid útikalauz (brochure) készítése külföldi turistáknak Budapestről vagy a lakóhelyről."
+    },
+    {
+      "id": "entertainment_8",
+      "name": "Entertainment and youth media (Szórakozás és média)",
+      "recommendedHours": 11,
+      "learningOutcomes": "A tanuló kritikai szemmel értékeli a különböző online médiaformákat (vlogok, podcastok) és szórakoztató tartalmakat.",
+      "developmentalTasks": "Médiaműveltség fejlesztése, vélemények összehasonlítása.",
+      "concepts": "Vlogs, podcasts, online streaming, media consumption.",
+      "suggestedActivities": "Egy angol nyelvű podcast-epizód vagy rövid videó meghallgatása és összefoglalása."
+    },
+    {
+      "id": "public_matters_8",
+      "name": "Public matters and services (Közélet, utazás, ügyintézés)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló egyszerűbb hivatalos ügyeket intéz angolul (pl. szállásfoglalás módosítása, orvos felkeresése utazás során).",
+      "developmentalTasks": "Hivatalos e-mail írása, egészségügyi panaszok kifejezése szimulációkban.",
+      "concepts": "Formal emails, booking modifications, health problems, doctor-patient dialogue.",
+      "suggestedActivities": "Szállásfoglalást lemondó hivatalos levél megírása, orvosi rendelő szerepjáték."
+    },
+    {
+      "id": "cross_curricular_8",
+      "name": "Cross-curricular topics (Tantárgyközi kapcsolatok)",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló megérti az alapvető globális gazdasági és környezeti folyamatokat angol nyelvű cikkekből.",
+      "developmentalTasks": "Ökológiai lábnyom és fenntarthatóság témakörének feldolgozása.",
+      "concepts": "Ecological footprint, sustainability, global trade, consumerism.",
+      "suggestedActivities": "Az ökológiai lábnyom kiszámítása online angol teszttel, eredmények kiértékelése."
+    },
+    {
+      "id": "language_learning_8",
+      "name": "English and language learning (Az angol nyelv és a nyelvtanulás)",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló képes önállóan felmérni a nyelvi szintjét és tudatosan készül a továbbtanulásra szükséges nyelvtudásra.",
+      "developmentalTasks": "Önértékelési készségek fejlesztése, nyelvtani rendszerezés.",
+      "concepts": "Self-assessment, CEFR language levels, grammar review.",
+      "suggestedActivities": "Saját nyelvi portfólió összeállítása az elmúlt 4 év legjobb munkáiból."
+    },
+    {
+      "id": "current_topics_8",
+      "name": "Current topics (Aktuális témák)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló megvitat aktuális globális kihívásokat (pl. járványok, technológiai fejlődés, AI).",
+      "developmentalTasks": "Pro-kontra érvek ütköztetése, véleménynyilvánítás bonyolultabb kérdésekben.",
+      "concepts": "Artificial intelligence, technology advancement, global challenges.",
+      "suggestedActivities": "Kerekasztal-beszélgetés vagy vita: 'Az AI szerepe az oktatásban'."
+    },
+    {
+      "id": "gaining_knowledge_8",
+      "name": "Gaining and sharing knowledge (Ismeretszerzés és tudásmegosztás)",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló képes hosszabb projekteket önállóan kidolgozni, kutatni és azok eredményeit az osztály előtt professzionális módon prezentálni.",
+      "developmentalTasks": "Forráskritika, adatok rendszerezése és összefoglalása angolul.",
+      "concepts": "Project work, source evaluation, visual presentation, citation basics.",
+      "suggestedActivities": "Önálló kiselőadás bemutatóval egy szabadon választott globális vagy kulturális témában."
+    }
+  ]
+}

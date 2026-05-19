@@ -2,10 +2,11 @@ const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
 const costTracker = require('./costTracker');
+const TeacherCurriculum = require('../models/TeacherCurriculum');
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-function getCurriculumSnippet(subject, grade, selectedTopics) {
+async function getCurriculumSnippet(subject, grade, selectedTopics, userId = null) {
   if (!selectedTopics || !Array.isArray(selectedTopics) || selectedTopics.length === 0) return '';
   const normSubject = String(subject).trim().toLowerCase();
 
@@ -38,6 +39,12 @@ function getCurriculumSnippet(subject, grade, selectedTopics) {
   } else if (normSubject === 'földrajz' || normSubject === 'foldrajz') {
     fileName = 'curriculum_foldrajz.json';
     minGrade = 7; maxGrade = 8;
+  } else if (normSubject === 'angol') {
+    fileName = 'curriculum_angol.json';
+    minGrade = 5; maxGrade = 8;
+  } else if (normSubject === 'német' || normSubject === 'nemet') {
+    fileName = 'curriculum_nemet.json';
+    minGrade = 5; maxGrade = 8;
   }
 
   if (!fileName) return '';
@@ -46,12 +53,30 @@ function getCurriculumSnippet(subject, grade, selectedTopics) {
   const gradeNum = gradeMatch ? parseInt(gradeMatch[1], 10) : null;
   if (!gradeNum || gradeNum < minGrade || gradeNum > maxGrade) return '';
 
+  const key = String(gradeNum);
+
   try {
-    const curriculumPath = path.join(__dirname, '../data', fileName);
-    if (!fs.existsSync(curriculumPath)) return '';
-    const curriculum = JSON.parse(fs.readFileSync(curriculumPath, 'utf8'));
-    const key = (gradeNum === 5 || gradeNum === 6) ? '5-6' : '7-8';
-    const topics = curriculum[key] || [];
+    let topics = [];
+    let customFound = false;
+
+    if (userId) {
+      const customCurriculum = await TeacherCurriculum.findOne({
+        teacherId: userId,
+        subject: normSubject,
+        grade: String(gradeNum)
+      });
+      if (customCurriculum && customCurriculum.topics && customCurriculum.topics.length > 0) {
+        topics = customCurriculum.topics;
+        customFound = true;
+      }
+    }
+
+    if (!customFound) {
+      const curriculumPath = path.join(__dirname, '../data', fileName);
+      if (!fs.existsSync(curriculumPath)) return '';
+      const curriculum = JSON.parse(fs.readFileSync(curriculumPath, 'utf8'));
+      topics = curriculum[key] || [];
+    }
 
     const matchedTopics = topics.filter(t => selectedTopics.includes(t.id));
     if (matchedTopics.length === 0) return '';
@@ -59,10 +84,10 @@ function getCurriculumSnippet(subject, grade, selectedTopics) {
     let snippet = `\nSZIGORÚAN KÖTELEZŐ NEMZETI ALAPTANTERVI (NAT) KÖVETELMÉNYEK:\nA feladatoknak a(z) ${gradeNum}. osztályos ${subject} tantárgy alábbi témaköreit és előírásait kell lefedniük:\n`;
     matchedTopics.forEach(t => {
       snippet += `\nTémakör: ${t.name} (Ajánlott óraszám: ${t.recommendedHours} óra)\n`;
-      snippet += `- Tanulási eredmények: ${t.learningOutcomes}\n`;
-      snippet += `- Fejlesztési feladatok és ismeretek: ${t.developmentalTasks}\n`;
-      snippet += `- Fogalmak: ${t.concepts}\n`;
-      snippet += `- Javasolt tevékenységek: ${t.suggestedActivities}\n`;
+      snippet += `- Tanulási eredmények: ${t.learningOutcomes || ''}\n`;
+      snippet += `- Fejlesztési feladatok és ismeretek: ${t.developmentalTasks || ''}\n`;
+      snippet += `- Fogalmak: ${t.concepts || ''}\n`;
+      snippet += `- Javasolt tevékenységek: ${t.suggestedActivities || ''}\n`;
     });
     return snippet;
   } catch (err) {
@@ -499,9 +524,9 @@ class AIService {
         const curriculumPath = path.join(__dirname, '../data', fileName);
         if (fs.existsSync(curriculumPath)) {
           const curriculum = JSON.parse(fs.readFileSync(curriculumPath, 'utf8'));
-          const key = (gradeNum === 5 || gradeNum === 6) ? '5-6' : '7-8';
+          const key = String(gradeNum);
           const topics = curriculum[key] || [];
-          curriculumContext = `\nELÉRHETŐ NEMZETI KERETTANTERVI (NAT) TÉMAKÖRÖK (${testResult.subject} ${key} osztály):\n` +
+          curriculumContext = `\nELÉRHETŐ NEMZETI KERETTANTERVI (NAT) TÉMAKÖRÖK (${testResult.subject} ${key}. osztály):\n` +
             topics.map(t => `- ID: "${t.id}", Név: "${t.name}" (Tanulási eredmények: ${t.learningOutcomes || ''})`).join('\n') +
             `\nKÉRLEK, HOGY A recommendedCheckpoints ELEMEIT KIZÁRÓLAG A FENTI TÉMAKÖRÖK KÖZÜL VÁLASZD KI! A checkpoint "topic" mezője pontosan egyezzen meg a választott témakör "name" értékével, a "topicId" mező pedig pontosan egyezzen meg a választott témakör "id" értékével!\n`;
         }
@@ -636,7 +661,7 @@ SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\
       : `1. Kérdés (Alkalmazás). Altéma: Párolgás és lecsapódás. Szituáció: Reggeli pára lecsapódása az ablaküvegen.
 2. Kérdés (Értés). Altéma: ...`;
 
-    const curriculumSnippet = getCurriculumSnippet(subject, grade, selectedTopics);
+    const curriculumSnippet = await getCurriculumSnippet(subject, grade, selectedTopics, userId);
 
     const prompt = `Te egy tapasztalt magyar pedagógus-stratéga vagy. Készíts TÖMÖR, SIMA SZÖVEGES vázlatot (NEM JSON-t!) ${total} dolgozat-kérdéshez.
     Tantárgy: ${subject} | Témakör: "${topic}" | Évfolyam/Szint: ${grade} | Nehézség: ${diffDesc}
@@ -811,7 +836,7 @@ VÁLASZOLJ KIZÁRÓLAG ÉRVÉNYES JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!
     try {
       console.log('[AIService] 2. fázis: kérdések generálása AI chunkingban...');
       const fewShot = this._getFewShotExamples(subject);
-      const curriculumSnippet = getCurriculumSnippet(subject, grade, selectedTopics);
+      const curriculumSnippet = await getCurriculumSnippet(subject, grade, selectedTopics, userId);
       const rawQuestions = await this._generateQuestionsChunked(outline, subject, topic, diffDesc, typeSpecs, fewShot, grade, curriculumSnippet, userId);
 
       if (rawQuestions.length > 0) {
@@ -836,7 +861,7 @@ VÁLASZOLJ KIZÁRÓLAG ÉRVÉNYES JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!
     // === FALLBACK: egyfázisú Qwen generálás (eredeti módszer) ===
     console.log('[AIService] Fallback: egyfázisú generálás...');
     const total = typeSpecs.reduce((s, t) => s + t.count, 0);
-    const curriculumSnippet = getCurriculumSnippet(subject, grade, selectedTopics);
+    const curriculumSnippet = await getCurriculumSnippet(subject, grade, selectedTopics, userId);
     const typeDescriptions = {
       mcq: '"mcq": feleletválasztós. questionText = KÉRDŐ MONDAT (?-jel!), TILOS a questionText-be a helyes választ belefoglalni! 4 valódi szöveges lehetőség (NEM betűjelölők, NEM "A.", "B." előtagok!). PONTOSAN EGYETLEN helyes válasz! options: ["Első válasz szövege","Második válasz szövege","Harmadik válasz szövege","Negyedik válasz szövege"], correctAnswer: "Első válasz szövege" (az options tömb PONTOS szövege, betű-előtag nélkül!)',
       true_false: '"true_false": igaz/hamis. KÖTELEZŐ: a questionText KIJELENTŐ MONDAT legyen (pl. "A fotoszintézis során a növények CO2-t vesznek fel.") – TILOS kérdőmondat, összehasonlítás! options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"',
@@ -1093,6 +1118,12 @@ A pairs és items mező MINDEN kérdésnél szerepeljen (üres tömb, ha nem rel
     } else if (normSubject === 'földrajz' || normSubject === 'foldrajz') {
       fileName = 'curriculum_foldrajz.json';
       minGrade = 7; maxGrade = 8;
+    } else if (normSubject === 'angol') {
+      fileName = 'curriculum_angol.json';
+      minGrade = 5; maxGrade = 8;
+    } else if (normSubject === 'német' || normSubject === 'nemet') {
+      fileName = 'curriculum_nemet.json';
+      minGrade = 5; maxGrade = 8;
     }
 
     if (fileName) {
@@ -1103,7 +1134,7 @@ A pairs és items mező MINDEN kérdésnél szerepeljen (üres tömb, ha nem rel
           const curriculumPath = path.join(__dirname, '../data', fileName);
           if (fs.existsSync(curriculumPath)) {
             const curriculum = JSON.parse(fs.readFileSync(curriculumPath, 'utf8'));
-            const key = (gradeNum === 5 || gradeNum === 6) ? '5-6' : '7-8';
+            const key = String(gradeNum);
             const topics = curriculum[key] || [];
             
             const matched = topics.find(t => 
@@ -1126,7 +1157,7 @@ A pairs és items mező MINDEN kérdésnél szerepeljen (üres tömb, ha nem rel
   }
 
   async _generateDiagnosticOutline(subject, grade, count, selectedTopics = null, userId = null) {
-    const curriculumSnippet = getCurriculumSnippet(subject, grade, selectedTopics);
+    const curriculumSnippet = await getCurriculumSnippet(subject, grade, selectedTopics, userId);
     const prompt = `Te egy tapasztalt, a Nemzeti Alaptantervet (NAT) kiválóan ismerő magyar pedagógus-stratéga vagy.
 Tantárgy: ${subject} | Évfolyam/Szint: ${grade} | Kérdések száma: ${count}
 ${curriculumSnippet}
@@ -1270,7 +1301,7 @@ VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
     if (outline) {
       try {
         console.log('[AIService] Diagnosztika 2. fázis: kérdések generálása (AI chunking)...');
-        const diagCurriculumSnippet = getCurriculumSnippet(subject, grade, selectedTopics);
+        const diagCurriculumSnippet = await getCurriculumSnippet(subject, grade, selectedTopics, userId);
         const questions = await this._generateDiagnosticQuestionsChunked(outline, subject, grade, count, currentLevel, diagCurriculumSnippet, userId);
         if (questions.length >= Math.floor(count * 0.7)) {
           const subjectCategories = {
@@ -1278,6 +1309,7 @@ VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
             'Nyelvtan': ['Hangtan', 'Szófajok', 'Mondatelemzés', 'Helyesírás', 'Nyelvhelyesség'],
             'Irodalom': ['Népköltészet', 'Műfajok', 'Verselemzés', 'Szövegértés', 'Cselekmény és Karakterek'],
             'Angol': ['Grammar', 'Vocabulary', 'Reading', 'Writing', 'Comprehension', 'Communication'],
+            'Német': ['Grammatik', 'Wortschatz', 'Lesen', 'Schreiben', 'Verstehen', 'Kommunikation'],
             'Környezetismeret': ['Földrajz', 'Biológia', 'Fizika', 'Kémia', 'Társadalomismeret', 'Környezetvédelem']
           };
           const categories = subjectCategories[subject] || ['Általános'];
@@ -1308,6 +1340,7 @@ VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
       'Nyelvtan': ['Hangtan', 'Szófajok', 'Mondatelemzés', 'Helyesírás', 'Nyelvhelyesség'],
       'Irodalom': ['Népköltészet', 'Műfajok', 'Verselemzés', 'Szövegértés', 'Cselekmény és Karakterek'],
       'Angol': ['Grammar', 'Vocabulary', 'Reading', 'Writing', 'Comprehension', 'Communication'],
+      'Német': ['Grammatik', 'Wortschatz', 'Lesen', 'Schreiben', 'Verstehen', 'Kommunikation'],
       'Környezetismeret': ['Földrajz', 'Biológia', 'Fizika', 'Kémia', 'Társadalomismeret', 'Környezetvédelem']
     };
     const categories = subjectCategories[subject] || ['Általános'];
@@ -1930,6 +1963,13 @@ Adj JSON választ a következő szerkezetben:
         { topic: 'Szövegértés és olvasás', difficulty: 3, reason: 'Olvasott szöveg feldolgozása', learningObjective: 'Rövid szövegek tartalmát megérti' },
         { topic: 'Múlt és jövő idők', difficulty: 3, reason: 'Igeidő rendszer mélyítése', learningObjective: 'Múlt és jövő idejű mondatokat alkot helyesen' },
         { topic: 'Kommunikációs és levélírási feladatok', difficulty: 4, reason: 'Aktív nyelvhasználat', learningObjective: 'Rövid kommunikációs szövegeket ír' }
+      ],
+      'Német': [
+        { topic: 'Alapvető szókincs és kifejezések', difficulty: 1, reason: 'Szókincs bővítése', learningObjective: 'Ismeri és helyesen használja az alapvető szavakat' },
+        { topic: 'Jelen idők és igealakok (Präsens, Perfekt)', difficulty: 2, reason: 'Nyelvtani alap', learningObjective: 'Helyesen alkalmazza a jelen és befejezett múlt időket' },
+        { topic: 'Szövegértés és olvasás', difficulty: 3, reason: 'Olvasott szöveg megértése', learningObjective: 'Rövid német szövegek tartalmát megérti' },
+        { topic: 'Múlt és feltételes módok (Präteritum, Konjunktiv II)', difficulty: 3, reason: 'Nyelvtani ismeretek bővítése', learningObjective: 'Múlt idejű és feltételes mondatokat alkot' },
+        { topic: 'Kommunikáció és fogalmazás', difficulty: 4, reason: 'Aktív nyelvhasználat', learningObjective: 'Rövid párbeszédeket és leveleket ír németül' }
       ],
       'Környezetismeret': [
         { topic: 'Élőlények és életközösségek', difficulty: 1, reason: 'Természetismeret alapjai', learningObjective: 'Megnevezi és csoportosítja az alapvető élőlény-csoportokat' },

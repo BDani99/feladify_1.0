@@ -1,5 +1,5 @@
 {
-  "5-6": [
+  "5": [
     {
       "id": "szemelyes_tortenenelem",
       "name": "Személyes történelem",
@@ -44,7 +44,9 @@
       "developmentalTasks": "Álmos, Árpád, Szent István, Szent László, Könyves Kálmán, IV. Béla történelmi szerepének és a tatárjárás következményeinek megértése, a koronázási jelvények megismerése.",
       "concepts": "Hun-magyar eredetmonda, vérszerződés, kalandozások, vármegye, tized, ispán, Szent Korona, tatárjárás, Aranybulla, pozsonyi csata.",
       "suggestedActivities": "A koronázási jelvények (palást, jogar, országalma) rajzolása és szimbolikájának bemutatása, Szent László-freskók gyűjtése."
-    },
+    }
+  ],
+  "6": [
     {
       "id": "kozepkori_magyar_allam",
       "name": "Képek és portrék a középkori magyar állam virágkorából",
@@ -100,7 +102,7 @@
       "suggestedActivities": "A 12 pont elemzése és modern megfelelőinek megfogalmazása, március 15-i forradalom útvonalának térképe, Kossuth-nóta közös éneklése."
     }
   ],
-  "7-8": [
+  "7": [
     {
       "id": "modern_kor_szuletese",
       "name": "A modern kor születése",
@@ -154,7 +156,9 @@
       "developmentalTasks": "A doni katasztrófa, a német megszállás (1944. március 19.), a zsidóság és a romák gettósítása, deportálása és a fegyveres ellenállás megismerése.",
       "concepts": "Villámháború, tengelyhatalmak, szövetségesek, holokauszt (Soá), porajmos (roma holokauszt), gettó, sárga csillag, deportálás, nyilas uralom, Don-kanyar.",
       "suggestedActivities": "Emlékezés a magyarországi vészkorszak embermentőire (Sztehlo Gábor, Raoul Wallenberg), túlélők visszaemlékezéseinek feldolgozása."
-    },
+    }
+  ],
+  "8": [
     {
       "id": "megosztott_vilag_hideghaboru",
       "name": "A megosztott világ",

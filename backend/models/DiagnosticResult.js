@@ -70,7 +70,7 @@ const diagnosticResultSchema = new mongoose.Schema({
   subject: {
     type: String,
     required: true,
-    enum: ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Környezetismeret', 'Történelem']
+    enum: ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Környezetismeret', 'Történelem']
   },
   testId: {
     type: mongoose.Schema.Types.ObjectId,

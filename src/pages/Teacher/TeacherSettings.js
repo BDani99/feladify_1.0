@@ -10,7 +10,7 @@ import { useUser } from '../../context/UserContext';
 import { API_BASE_URL } from '../../api/config';
 import '../../styles/Settings.css';
 
-const CANONICAL_SUBJECTS = ['Nyelvtan', 'Irodalom', 'Angol', 'Matematika', 'Környezetismeret', 'Történelem', 'Fizika', 'Biológia', 'Földrajz'];
+const CANONICAL_SUBJECTS = ['Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Matematika', 'Környezetismeret', 'Történelem', 'Fizika', 'Biológia', 'Földrajz'];
 
 const TeacherSettings = () => {
     const { toggleTheme } = useUser() || {};

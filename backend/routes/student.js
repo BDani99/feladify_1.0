@@ -150,7 +150,7 @@ router.get('/progress', authMiddleware, async (req, res) => {
     }
 
     // Biztosítjuk, hogy minden tantárgy létezik
-    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Környezetismeret', 'Történelem'];
+    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Környezetismeret', 'Történelem'];
     for (const subject of validSubjects) {
       if (!progress.subjectProgress.find(sp => sp.subject === subject)) {
         progress.subjectProgress.push({
@@ -179,7 +179,7 @@ router.get('/progress', authMiddleware, async (req, res) => {
 router.get('/progress/:subject', authMiddleware, async (req, res) => {
   try {
     const { subject } = req.params;
-    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Környezetismeret', 'Történelem'];
+    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Környezetismeret', 'Történelem'];
     if (!validSubjects.includes(subject)) {
       return res.status(400).json({ message: 'Érvénytelen tantárgy' });
     }
@@ -343,7 +343,7 @@ router.post('/tutor/question-set', authMiddleware, async (req, res) => {
 router.post('/diagnostic/start', authMiddleware, async (req, res) => {
   try {
     const { subject, grade, selectedTopics } = req.body;
-    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Környezetismeret', 'Történelem'];
+    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Környezetismeret', 'Történelem'];
     if (!subject || !validSubjects.includes(subject)) {
       return res.status(400).json({ message: 'Érvénytelen vagy hiányzó tantárgy' });
     }
@@ -665,7 +665,7 @@ router.post('/tutor/check', authMiddleware, async (req, res) => {
 
 router.get('/diagnostic/statuses', authMiddleware, async (req, res) => {
   try {
-    const subjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Környezetismeret', 'Történelem'];
+    const subjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Környezetismeret', 'Történelem'];
     const statuses = {};
 
     for (const subject of subjects) {
@@ -745,6 +745,14 @@ async function createOrUpdatePracticePath(studentId, analyzedResultDoc, subjectN
       { topic: 'Múlt és jövő idők', difficulty: 3 },
       { topic: 'Kommunikációs feladatok', difficulty: 4 },
       { topic: 'Összetett grammatika', difficulty: 4 }
+    ],
+    'Német': [
+      { topic: 'Alapvető szókincs és kifejezések', difficulty: 1 },
+      { topic: 'Jelen idők és igealakok (Präsens, Perfekt)', difficulty: 2 },
+      { topic: 'Szövegértés', difficulty: 3 },
+      { topic: 'Múlt és jövő idők (Präteritum, Futur)', difficulty: 3 },
+      { topic: 'Kommunikáció és fogalmazás', difficulty: 4 },
+      { topic: 'Nyelvtani szerkezetek', difficulty: 4 }
     ],
     'Környezetismeret': [
       { topic: 'Élőlények és életközösségek', difficulty: 1 },

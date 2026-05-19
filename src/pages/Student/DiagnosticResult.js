@@ -11,6 +11,7 @@ const SUBJECT_COLORS = {
   'Nyelvtan': '#ef4444',
   'Irodalom': '#34d399',
   'Angol': '#10b981',
+  'Német': '#f39c12',
   'Környezetismeret': '#9b59b6',
   'Történelem': '#f43f5e',
   'Fizika': '#60a5fa',

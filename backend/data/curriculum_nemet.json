@@ -1,0 +1,334 @@
+{
+  "5": [
+    {
+      "id": "personal_topics_de_5",
+      "name": "Persönlicher Bereich und Umwelt (Személyes témák és környezetünk)",
+      "recommendedHours": 32,
+      "learningOutcomes": "A tanuló megérti a családjával, otthonával és mindennapi hobbijaival kapcsolatos alapvető német kifejezéseket, és képes egyszerű mondatokban bemutatkozni és beszélni róluk.",
+      "developmentalTasks": "Családfa és lakóhely bemutatása, kedvenc állatok és növények jellemzése egyszerű mondatokkal, alapszintű szókincs elmélyítése németül.",
+      "concepts": "Familie, Haus und Möbel, Hobbys, Haustiere, Zahlen 1-100, einfache Adjektive.",
+      "suggestedActivities": "Stammbaum zeichnen und präsentieren, 'Das bin ich' Steckbrief erstellen."
+    },
+    {
+      "id": "classroom_activities_de_5",
+      "name": "Klassenraum und Schule (Iskolai és tanórai tevékenységek)",
+      "recommendedHours": 15,
+      "learningOutcomes": "A tanuló megérti a német nyelvű óravezetést, az alapvető tanári utasításokat, és képes egyszerű osztálytermi kérdések megfogalmazására.",
+      "developmentalTasks": "Tanórai utasítások követése, iskolai tantárgyak és órarend megbeszélése, írószerek megnevezése németül.",
+      "concepts": "Schulsachen, Schulfächer, Wochentage, Anweisungen im Unterricht, Uhrzeit.",
+      "suggestedActivities": "Rollenspiel: 'Ein neuer Schüler in der Klasse', den eigenen Stundenplan auf Deutsch zeichnen."
+    },
+    {
+      "id": "intercultural_topics_de_5",
+      "name": "Interkulturelle Themen (Országismeret és kultúrák közötti kapcsolatok)",
+      "recommendedHours": 13,
+      "learningOutcomes": "A tanuló megismeri a német nyelvű országok (DACH) alapvető szokásait és legfontosabb ünnepeit, összevetve azokat a hazaiakkal.",
+      "developmentalTasks": "Ünnepi szokások (Weihnachten, Ostern, Sankt Martin) összehasonlítása, alapvető országismereti tények gyűjtése.",
+      "concepts": "Feiertage, DACH-Länder, Sehenswürdigkeiten, Grußkarten.",
+      "suggestedActivities": "Weihnachtskarten basteln, Bilder von deutschen Sehenswürdigkeiten sammeln."
+    },
+    {
+      "id": "entertainment_de_5",
+      "name": "Unterhaltung und spielerisches Lernen (Szórakozás és játékos tanulás)",
+      "recommendedHours": 11,
+      "learningOutcomes": "A tanuló egyszerű német dalokat, mondókákat értelmez és ad elő, bekapcsolódik játékos nyelvi vetélkedőkbe.",
+      "developmentalTasks": "Ritmusérzék és kiejtés fejlesztése dalok segítségével, szókincsfejlesztő társasjátékok játszása.",
+      "concepts": "Reime, Lieder, Märchen, Wortspiele.",
+      "suggestedActivities": "Deutsche Kinderlieder singen, Memory-Spiele mit Wortkarten in Gruppen spielen."
+    },
+    {
+      "id": "public_matters_de_5",
+      "name": "Öffentliches Leben (Közélet és szolgáltatások alapjai)",
+      "recommendedHours": 4,
+      "learningOutcomes": "A tanuló megérti az útbaigazítás és a vásárlás alapvető kifejezéseit egyszerű szituációkban.",
+      "developmentalTasks": "Tájékozódás gyakorlása térképen, egyszerű bolti párbeszédek szimulálása.",
+      "concepts": "Geschäfte, Orte in der Stadt, Wegbeschreibung (links, rechts, geradeaus), Preise.",
+      "suggestedActivities": "Einkaufsrollenspiel mit Spielgeld, einen einfachen Stadtplan zeichnen."
+    },
+    {
+      "id": "cross_curricular_de_5",
+      "name": "Fächerübergreifende Themen (Tantárgyközi kapcsolatok)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló képes más tantárgyakban (pl. földrajz, természetismeret) szerzett ismereteket németül is megfogalmazni egyszerű szinten.",
+      "developmentalTasks": "Térképészeti alapfogalmak, kontinensek és óceánok neveinek német nyelvű elsajátítása.",
+      "concepts": "Kontinente, Ozeane, Himmelsrichtungen, Naturerlebnisse.",
+      "suggestedActivities": "Weltkarte beschriften auf Deutsch in Gruppenarbeit."
+    },
+    {
+      "id": "language_learning_de_5",
+      "name": "Bezüge zur Zielsprache (A német nyelv és a nyelvtanulás)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló megismeri az alapvető szótanulási módszereket, és képes betűzni a nevét németül.",
+      "developmentalTasks": "Az ABC elsajátítása, betűzés gyakorlása (buchstabieren), szótárhasználat alapjainak megismerése.",
+      "concepts": "Alphabet, Buchstabieren, zweisprachiges Wörterbuch, Lernkarten.",
+      "suggestedActivities": "Buchstabierwettbewerb, eigene Vokabelkarten für die Woche erstellen."
+    },
+    {
+      "id": "current_topics_de_5",
+      "name": "Aktuelle Themen (Aktuális témák)",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló képes reagálni az őt körülvevő világ aktuális eseményeire és az időjárás változására.",
+      "developmentalTasks": "Időjárás-jelentés értelmezése, évszakok és ruházat kapcsolatának kifejezése.",
+      "concepts": "Wetter, Jahreszeiten, Kleidung, Kindernachrichten.",
+      "suggestedActivities": "Wetterbericht-Präsentation im Unterricht, Kleidungskollage erstellen."
+    },
+    {
+      "id": "gaining_knowledge_de_5",
+      "name": "Wissenserwerb (Ismeretszerzés és tudásmegosztás)",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló egyszerű információkat keres és oszt meg képekkel vagy rajzokkal támogatott német nyelvű forrásokból.",
+      "developmentalTasks": "Egyszerű internetes keresés végrehajtása irányítottan, rövid tények bemutatása.",
+      "concepts": "Suchbegriffe, Grundfakten, Bildbeschreibung.",
+      "suggestedActivities": "Kurzprojekt: Steckbrief eines Wildtieres mit Bild auf Deutsch erstellen."
+    }
+  ],
+  "6": [
+    {
+      "id": "personal_topics_de_6",
+      "name": "Persönlicher Bereich und Umwelt (Személyes témák és környezetünk)",
+      "recommendedHours": 32,
+      "learningOutcomes": "A tanuló részletesebben beszél napirendjéről, házimunkákról és tágabb családjáról, egyszerű történeteket mesél el múlt időben.",
+      "developmentalTasks": "A múlt idejű cselekvések kifejezésének gyakorlása (Perfekt mit haben/sein), a környezetvédelem témakörének megbeszélése.",
+      "concepts": "Tagesablauf, Hausarbeiten, Familienstammbaum, Perfekt, Hilfsverben, Umweltschutz.",
+      "suggestedActivities": "Tagebucheintrag über das Wochenende schreiben, Umweltschutzplakat entwerfen."
+    },
+    {
+      "id": "classroom_activities_de_6",
+      "name": "Klassenraum und Schule (Iskolai és tanórai tevékenységek)",
+      "recommendedHours": 15,
+      "learningOutcomes": "A tanuló összehasonlítja a magyar és a német iskolarendszert, elmondja az iskolai szabályokat.",
+      "developmentalTasks": "A 'müssen', 'dürfen' és 'sollen' módbeli segédigék alkalmazása szabályok kifejezésére.",
+      "concepts": "Schulregeln, Schuluniform, Schulfeste, Arbeitsgemeinschaften, Modalverben.",
+      "suggestedActivities": "Die Traumschulregeln formulieren, Unterschiede zwischen Schulen in Deutschland und Ungarn vergleichen."
+    },
+    {
+      "id": "intercultural_topics_de_6",
+      "name": "Interkulturelle Themen (Országismeret és kultúra)",
+      "recommendedHours": 14,
+      "learningOutcomes": "A tanuló bővebb ismeretekkel rendelkezik Németország, Ausztria és Svájc nagyvárosairól, kultúrájáról és szokásairól.",
+      "developmentalTasks": "Kulturális tények vizsgálata, turisztikai látványosságok megismerése a DACH országokban.",
+      "concepts": "Berlin, Wien, Schweiz, kulturelle Unterschiede, Geographie der Nachbarländer.",
+      "suggestedActivities": "Eine Reise nach Berlin planen: Routen, Sehenswürdigkeiten, Tagesprogramm."
+    },
+    {
+      "id": "entertainment_de_6",
+      "name": "Unterhaltung und spielerisches Lernen (Szórakozás és játékos tanulás)",
+      "recommendedHours": 11,
+      "learningOutcomes": "A tanuló megérti az egyszerűbb, könnyített német olvasmányokat és rövid történeteket, és el tudja mondani a főbb fordulatokat.",
+      "developmentalTasks": "Olvasott szövegértés fejlesztése könnyített olvasmányokkal, kreatív szövegírás.",
+      "concepts": "Leichte Lektüren, Geschichten erzählen, Handlungsablauf, Personenbeschreibung.",
+      "suggestedActivities": "Buchempfehlungsplakat für eine gelesene Lektüre in der Klasse aufhängen."
+    },
+    {
+      "id": "public_matters_de_6",
+      "name": "Öffentliches Leben (Közélet és szolgáltatások)",
+      "recommendedHours": 4,
+      "learningOutcomes": "A tanuló magabiztosan rendel ételt étteremben és vásárol jegyet múzeumba vagy tömegközlekedésre németül.",
+      "developmentalTasks": "Éttermi és utazási párbeszédek eljátszása, udvarias kérések kifejezése (Ich möchte, Könnte ich... haben).",
+      "concepts": "Speisekarte, Bestellung im Restaurant, Fahrkartenkauf, Verkehrsmittel.",
+      "suggestedActivities": "Rollenspiel: Im Restaurant bestellen, Fahrkarte am Automaten oder Schalter kaufen."
+    },
+    {
+      "id": "cross_curricular_de_6",
+      "name": "Fächerübergreifende Themen (Tantárgyközi kapcsolatok)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló képes egyszerű természettudományos folyamatokat leírni vagy matematikai műveleteket elmondani németül.",
+      "developmentalTasks": "Alapvető biológiai és fizikai folyamatok megismerése német nyelven.",
+      "concepts": "Wasserkreislauf, Körperteile, Rechenoperationen auf Deutsch.",
+      "suggestedActivities": "Experimentbeschreibung: Wie wächst eine Pflanze? Schritte auf Deutsch aufschreiben."
+    },
+    {
+      "id": "language_learning_de_6",
+      "name": "Bezüge zur Zielsprache (A német nyelv és a nyelvtanulás)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló felismeri a saját tanulási stílusát és digitális eszközöket használ a német szókincs bővítésére.",
+      "developmentalTasks": "Nyelvtanulási alkalmazások önálló használata, szókártyák digitális készítése.",
+      "concepts": "Lernapps, Lernstrategien, digitale Vokabeltrainer.",
+      "suggestedActivities": "Wortschatz-Quiz erstellen für den Partner über Online-Lernplattformen."
+    },
+    {
+      "id": "current_topics_de_6",
+      "name": "Aktuelle Themen (Aktuális témák)",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló egyszerű gyermekhíreket értelmez, beszél a kedvenc sportolóiról és az egészséges életmódról németül.",
+      "developmentalTasks": "Rövid internetes cikkek megértése, egészséges napirend összeállítása.",
+      "concepts": "Gesunder Lebensstil, Sportler, Kindernachrichten, soziale Medien.",
+      "suggestedActivities": "Gesunden Tagesplan auf Deutsch entwerfen."
+    },
+    {
+      "id": "gaining_knowledge_de_6",
+      "name": "Wissenserwerb (Ismeretszerzés és tudásmegosztás)",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló önállóan gyűjt adatokat német nyelvű weblapokról és képes azokból rövid bemutatót tartani.",
+      "developmentalTasks": "Információk kiszűrése és átfogalmazása egyszerű német szavakkal.",
+      "concepts": "Internetrecherche, Umschreibung, einfache Präsentation.",
+      "suggestedActivities": "Kurze 3-Folien-Präsentation über einen bekannten Erfinder (z.B. Gutenberg) halten."
+    }
+  ],
+  "7": [
+    {
+      "id": "personal_topics_de_7",
+      "name": "Persönlicher Bereich und Beziehungen (Személyes témák és kapcsolatok)",
+      "recommendedHours": 30,
+      "learningOutcomes": "A tanuló összetettebb módon beszél a barátságról, családi kapcsolatokról, jövőbeli terveiről és érzelmeiről németül.",
+      "developmentalTasks": "Jövő idő (Futur I) és a feltételes mód (Konjunktiv II - Konditionalis) használatának gyakorlása.",
+      "concepts": "Freundschaft, Charaktereigenschaften, Jugendkultur, Zukunftspläne, Konjunktiv II (würde-Form).",
+      "suggestedActivities": "Einen Brief an den besten Freund schreiben, Zukunftsträume besprechen."
+    },
+    {
+      "id": "classroom_activities_de_7",
+      "name": "Klassenraum und Ausbildung (Tanulás és iskola)",
+      "recommendedHours": 11,
+      "learningOutcomes": "A tanuló véleményt nyilvánít a tantárgyakról, vitázik a német/magyar iskolai követelményekről.",
+      "developmentalTasks": "Érveléstechnika fejlesztése, német véleménykifejező fordulatok használata (Meiner Meinung nach, Ich finde...).",
+      "concepts": "Schulleben, Prüfungsvorbereitung, Schulstress, Notensystem.",
+      "suggestedActivities": "Debatte über das Thema: 'Brauchen wir Noten in der Schule?'"
+    },
+    {
+      "id": "intercultural_topics_de_7",
+      "name": "Interkulturelle Themen (Országismeret és kultúra)",
+      "recommendedHours": 12,
+      "learningOutcomes": "A tanuló ismeri a német nyelvű országok szövetségi rendszerét, földrajzát, történelmét és kulturális sajátosságait.",
+      "developmentalTasks": "Tartományok összehasonlítása, turisztikai kiadványok feldolgozása, kultúrák közötti különbségek elemzése.",
+      "concepts": "Bundesländer, deutsche Geschichte, Kulturunterschiede, Nationalfeiertage.",
+      "suggestedActivities": "Ein Plakat über ein deutsches Bundesland in Gruppenarbeit erstellen."
+    },
+    {
+      "id": "entertainment_de_7",
+      "name": "Unterhaltung und Medien (Szórakozás és média)",
+      "recommendedHours": 12,
+      "learningOutcomes": "A tanuló megérti a fiataloknak szóló filmek, sorozatok és könyvek alaptémáit, képes azokról rövid recenziót írni németül.",
+      "developmentalTasks": "Kreatív írás fejlesztése film/könyvkritikán keresztül, cselekmény összefoglalása németül.",
+      "concepts": "Filmgenres, Inhaltsangabe, Rezension, Lieblingsbands.",
+      "suggestedActivities": "Eine Rezension über einen deutschen Film oder ein Buch schreiben."
+    },
+    {
+      "id": "public_matters_de_7",
+      "name": "Öffentliches Leben und Dienstleistungen (Közélet és szolgáltatások)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló képes reklamációt megfogalmazni üzletben hibás áru esetén, és információt kérni szolgáltatásokról.",
+      "developmentalTasks": "Panasztételi szituációk eljátszása németül, udvarias érvelés elsajátítása.",
+      "concepts": "Reklamation, Umtausch, Kundenservice, Verbraucherrechte.",
+      "suggestedActivities": "Rollenspiel: 'Ein fehlerhaftes T-Shirt im Laden umtauschen'."
+    },
+    {
+      "id": "cross_curricular_de_7",
+      "name": "Fächerübergreifende Themen (Tantárgyközi kapcsolatok)",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló természettudományos és történelmi cikkeket dolgoz fel németül, kiemelve a kulcsfontosságú összefüggéseket.",
+      "developmentalTasks": "Környezetvédelmi folyamatok (globális felmelegedés, megújuló energia) megértése németül.",
+      "concepts": "Klimawandel, globale Erwärmung, erneuerbare Energien, historische Fakten.",
+      "suggestedActivities": "Kurzpräsentation über erneuerbare Energiequellen auf Deutsch."
+    },
+    {
+      "id": "language_learning_de_7",
+      "name": "Bezüge zur Zielsprache (A német nyelv és a nyelvtanulás)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló felismeri a német nyelv európai és világnyelvi szerepét, és tudatosan készíti elő a nyelvvizsga feladattípusait.",
+      "developmentalTasks": "Nyelvtanulási napló vezetése, tesztmegoldási stratégiák megismerése németül.",
+      "concepts": "Deutsch in Europa, Sprachzertifikate, Prüfungstechniken.",
+      "suggestedActivities": "Eine Musterprüfung (z.B. Goethe-Zertifikat A2) analysieren und trainieren."
+    },
+    {
+      "id": "current_topics_de_7",
+      "name": "Aktuelle Themen (Aktuális témák)",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló követi a napi híreket, megérti az internetbiztonság és a közösségi média veszélyeit németül.",
+      "developmentalTasks": "Kritikai gondolkodás fejlesztése, internetes biztonsági szabályok megfogalmazása.",
+      "concepts": "Soziale Medien, Cybermobbing, Internetsicherheit, Fake News.",
+      "suggestedActivities": "Regeln für sichere Internetnutzung auf Deutsch formulieren."
+    },
+    {
+      "id": "gaining_knowledge_de_7",
+      "name": "Wissenserwerb (Ismeretszerzés és tudásmegosztás)",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló képes önállóan kiselőadást tartani prezentációs szoftver segítségével németül.",
+      "developmentalTasks": "Prezentáció felépítése, kérdésekre való válaszadás németül.",
+      "concepts": "Präsentationsstruktur, Übergänge, visuelle Hilfsmittel, Q&A.",
+      "suggestedActivities": "5-minütige Präsentation über das Leben eines deutschen Wissenschaftlers (z.B. Albert Einstein)."
+    }
+  ],
+  "8": [
+    {
+      "id": "personal_topics_de_8",
+      "name": "Persönlicher Bereich und Beziehungen (Személyes témák és kapcsolatok)",
+      "recommendedHours": 30,
+      "learningOutcomes": "A tanuló képes kifejezni a véleményét bonyolultabb személyközi kapcsolatokról, a pályaválasztásról és az egyéni felelősségvállalásról németül.",
+      "developmentalTasks": "A befejezett múlt (Präteritum/Plusquamperfekt) és a passzív szerkezet (Passiv) tudatos alkalmazása.",
+      "concepts": "Berufswahl, Nebenjobs, Zukunftspläne, Gruppenzwang, Präteritum, Passiv-Struktur.",
+      "suggestedActivities": "Bewerbungsgespräch simulieren, Lebenslauf auf Deutsch skizzieren."
+    },
+    {
+      "id": "classroom_activities_de_8",
+      "name": "Klassenraum und Ausbildung (Tanulás és iskola)",
+      "recommendedHours": 12,
+      "learningOutcomes": "A tanuló képes összefoglalni a középiskolai felvételi követelményeket és elmondani továbbtanulási elképzeléseit németül.",
+      "developmentalTasks": "Továbbtanulási tervek kifejezése, iskolatípusok összevetése.",
+      "concepts": "Weiterführende Schulen, Aufnahmeprüfung, lebenslanges Lernen.",
+      "suggestedActivities": "Präsentation über die gewünschte Oberschule und ihre Anforderungen."
+    },
+    {
+      "id": "intercultural_topics_de_8",
+      "name": "Interkulturelle Themen (Országismeret és kultúra)",
+      "recommendedHours": 13,
+      "learningOutcomes": "A tanuló megérti a német nyelvű kultúra hatásait, és képes bemutatni Magyarország nevezetességeit egy németül beszélő külföldinek.",
+      "developmentalTasks": "Idegenvezetői szerep gyakorlása németül, hazánk értékeinek és hagyományainak bemutatása.",
+      "concepts": "DACH-Kultur, Ungarnreisen, Kultur-Austausch, Sehenswürdigkeiten in Ungarn.",
+      "suggestedActivities": "Einen kleinen Reiseführer über Budapest oder die Heimatstadt auf Deutsch schreiben."
+    },
+    {
+      "id": "entertainment_de_8",
+      "name": "Unterhaltung und Medien (Szórakozás és média)",
+      "recommendedHours": 11,
+      "learningOutcomes": "A tanuló kritikai szemmel értékeli a különböző online német médiaformákat (vlogok, podcastok).",
+      "developmentalTasks": "Médiaműveltség fejlesztése, német média megértése.",
+      "concepts": "Vlogs, Podcasts, Streaming-Dienste, Medienkonsum.",
+      "suggestedActivities": "Einen kurzen deutschen Podcast anhören und in der Klasse zusammenfassen."
+    },
+    {
+      "id": "public_matters_de_8",
+      "name": "Öffentliches Leben und Dienstleistungen (Közélet, utazás, ügyintézés)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló egyszerűbb hivatalos ügyeket intéz németül (pl. szállásfoglalás módosítása, orvos felkeresése utazás során).",
+      "developmentalTasks": "Hivatalos e-mail írása németül, egészségügyi panaszok kifejezése.",
+      "concepts": "Formelle E-Mails, Reservierungsänderung, Gesundheitsprobleme, Arzt-Patient-Gespräch.",
+      "suggestedActivities": "E-Mail an ein Hotel schreiben (Buchung ändern), Rollenspiel: Beim Arzt."
+    },
+    {
+      "id": "cross_curricular_de_8",
+      "name": "Fächerübergreifende Themen (Tantárgyközi kapcsolatok)",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló megérti az alapvető globális gazdasági és környezeti folyamatokat német nyelvű cikkekből.",
+      "developmentalTasks": "Ökológiai lábnyom és fenntarthatóság témakörének feldolgozása németül.",
+      "concepts": "Ökologischer Fußabdruck, Nachhaltigkeit, Globalisierung, Konsumgesellschaft.",
+      "suggestedActivities": "Diskussion über Umweltschutz und eigene Beiträge zur Nachhaltigkeit."
+    },
+    {
+      "id": "language_learning_de_8",
+      "name": "Bezüge zur Zielsprache (A német nyelv és a nyelvtanulás)",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló képes önállóan felmérni a nyelvi szintjét és tudatosan készül a továbbtanulásra szükséges német nyelvtudásra.",
+      "developmentalTasks": "Önértékelés fejlesztése, nyelvtani rendszerezés németül.",
+      "concepts": "Selbsteinschätzung, GER-Sprachniveaus, Grammatikwiederholung.",
+      "suggestedActivities": "Eigenes Sprachen-Portfolio mit den besten deutschen Arbeiten zusammenstellen."
+    },
+    {
+      "id": "current_topics_de_8",
+      "name": "Aktuelle Themen (Aktuális témák)",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló megvitat aktuális globális kihívásokat németül (pl. technológiai fejlődés, mesterséges intelligencia).",
+      "developmentalTasks": "Pro-kontra érvek ütköztetése németül, véleménynyilvánítás.",
+      "concepts": "Künstliche Intelligenz, technologischer Fortschritt, globale Herausforderungen.",
+      "suggestedActivities": "Klassendebatte: Vor- und Nachteile von KI in der Schule."
+    },
+    {
+      "id": "gaining_knowledge_de_8",
+      "name": "Wissenserwerb (Ismeretszerzés és tudásmegosztás)",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló képes hosszabb német projekteket önállóan kidolgozni és bemutatni.",
+      "developmentalTasks": "Forráskritika, adatok rendszerezése és összefoglalása németül.",
+      "concepts": "Projektarbeit, Informationsstrukturierung, Präsentation auf Deutsch.",
+      "suggestedActivities": "Eigene Projektarbeit zu einem landeskundlichen Thema erstellen und präsentieren."
+    }
+  ]
+}

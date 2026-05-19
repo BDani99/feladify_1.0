@@ -1,5 +1,5 @@
 {
-  "5-6": [
+  "5": [
     {
       "id": "halmazok",
       "name": "Halmazok",
@@ -37,15 +37,6 @@
       "suggestedActivities": "Vásárlási szituációk modellezése, hibás írásbeli számítások javítása."
     },
     {
-      "id": "egesz_szamok",
-      "name": "Egész számok",
-      "recommendedHours": 18,
-      "learningOutcomes": "A tanuló értelmezi a negatív számokat a hőmérséklet, tengerszint feletti magasság stb. kontextusában. Összead, kivon egész számokat, szoroz és oszt egész számot természetes számmal.",
-      "developmentalTasks": "Az egész számok elhelyezése a számegyenesen. Ellentett és abszolút érték fogalmának elmélyítése.",
-      "concepts": "Negatív szám, egész szám, ellentett, abszolút érték, számegyenes.",
-      "suggestedActivities": "Hőmérséklet-változások nyomon követése, adósság-vagyon játékok."
-    },
-    {
       "id": "rac_tizedes_szamok",
       "name": "Közönséges és tizedes törtek, racionális számok",
       "recommendedHours": 18,
@@ -53,6 +44,53 @@
       "developmentalTasks": "Törtek értelmezése, bővítése, egyszerűsítése. Törtek összehasonlítása, elhelyezése a számegyenesen.",
       "concepts": "Számláló, nevező, törtvonal, valódi tört, áltört, vegyes szám, tizedes tört, tizedesjegyek.",
       "suggestedActivities": "Csokoládé és pizza osztásos játékok, mérőszalag használata."
+    },
+    {
+      "id": "szoveges_feladatok",
+      "name": "Egyszerű szöveges feladatok",
+      "recommendedHours": 20,
+      "learningOutcomes": "A tanuló értelmezi a szöveges feladatokat, adatokat gyűjt, tervet készít, megoldja és ellenőrzi az eredményt a szöveg alapján.",
+      "developmentalTasks": "Szövegértés fejlesztése, matematikai modellek alkotása (egyenletek előkészítése lebontogatással vagy szakaszos ábrázolással).",
+      "concepts": "Adatok, feltételek, összefüggések, modell, ellenőrzés.",
+      "suggestedActivities": "Életszerű történetek megoldása, saját szöveges feladatok írása társaknak."
+    },
+    {
+      "id": "meres_mertekegyseg",
+      "name": "Mérés és mértékegységek",
+      "recommendedHours": 16,
+      "learningOutcomes": "A tanuló magabiztosan váltja át a hosszúság, tömeg, űrtartalom, idő és terület mértékegységeit. Érti a mértékegységrendszer tízes alapú felépítését.",
+      "developmentalTasks": "Mérőeszközök használata. Becslés. Átváltások gyakorlása a gyakorlati életből vett példákkal.",
+      "concepts": "Mérőszám, mértékegység, hosszúság, tömeg, űrtartalom, terület, idő.",
+      "suggestedActivities": "Osztálytermi tárgyak lemérése, főzési hozzávalók átszámolása."
+    },
+    {
+      "id": "sikbeli_alakzatok",
+      "name": "Síkbeli alakzatok",
+      "recommendedHours": 18,
+      "learningOutcomes": "A tanuló csoportosítja a háromszögeket, négyszögeket tulajdonságaik (oldalak, szögek) szerint. Kiszámítja a téglalap, négyzet kerületét és területét.",
+      "developmentalTasks": "Geometriai fogalmak megkülönböztetése. Kerület és terület fogalmi elkülönítése.",
+      "concepts": "Pont, egyenes, szakasz, félegyenes, szög, merőleges, párhuzamos, sokszög, téglalap, négyzet, kerület, terület.",
+      "suggestedActivities": "Tangram-játékok, terület-lefedések egységnégyzetekkel."
+    },
+    {
+      "id": "transzformaciok_szerkesztes",
+      "name": "Transzformációk, szerkesztések",
+      "recommendedHours": 20,
+      "learningOutcomes": "A tanuló felismeri a tengelyes szimmetriát a környezetében és a geometriai alakzatoknál. Egyszerűbb alakzatokat tükröz tengelyesen.",
+      "developmentalTasks": "Tükrös formák keresése természetben, betűknél. Tükörkép szerkesztése négyzethálón és szerkesztőeszközökkel.",
+      "concepts": "Tengelyes szimmetria, szimmetriatengely, tükörkép, távolság.",
+      "suggestedActivities": "Papírkivágások készítése szimmetrikusan, festéktükrözések."
+    }
+  ],
+  "6": [
+    {
+      "id": "egesz_szamok",
+      "name": "Egész számok",
+      "recommendedHours": 18,
+      "learningOutcomes": "A tanuló értelmezi a negatív számokat a hőmérséklet, tengerszint feletti magasság stb. kontextusában. Összead, kivon egész számokat, szoroz és oszt egész számot természetes számmal.",
+      "developmentalTasks": "Az egész számok elhelyezése a számegyenesen. Ellentett és abszolút érték fogalmának elmélyítése.",
+      "concepts": "Negatív szám, egész szám, ellentett, abszolút érték, számegyenes.",
+      "suggestedActivities": "Hőmérséklet-változások nyomon követése, adósság-vagyon játékok."
     },
     {
       "id": "muveletek_kozoseges",
@@ -82,15 +120,6 @@
       "suggestedActivities": "Térkép-méretarányok vizsgálata, áruházi kedvezmények kiszámolása."
     },
     {
-      "id": "szoveges_feladatok",
-      "name": "Egyszerű szöveges feladatok",
-      "recommendedHours": 20,
-      "learningOutcomes": "A tanuló értelmezi a szöveges feladatokat, adatokat gyűjt, tervet készít, megoldja és ellenőrzi az eredményt a szöveg alapján.",
-      "developmentalTasks": "Szövegértés fejlesztése, matematikai modellek alkotása (egyenletek előkészítése lebontogatással vagy szakaszos ábrázolással).",
-      "concepts": "Adatok, feltételek, összefüggések, modell, ellenőrzés.",
-      "suggestedActivities": "Életszerű történetek megoldása, saját szöveges feladatok írása társaknak."
-    },
-    {
       "id": "fuggvenyek_elokeszitese",
       "name": "A függvény fogalmának előkészítése",
       "recommendedHours": 10,
@@ -107,33 +136,6 @@
       "developmentalTasks": "Sorozatok szabályának felismerése növekvő vagy csökkenő mintáknál. Szabálykövetés.",
       "concepts": "Sorozat, tag, képzési szabály, különbség.",
       "suggestedActivities": "Szín- és alakzat-mintázatok folytatása, Fibonaccival való játékos ismerkedés."
-    },
-    {
-      "id": "meres_mertekegyseg",
-      "name": "Mérés és mértékegységek",
-      "recommendedHours": 16,
-      "learningOutcomes": "A tanuló magabiztosan váltja át a hosszúság, tömeg, űrtartalom, idő és terület mértékegységeit. Érti a mértékegységrendszer tízes alapú felépítését.",
-      "developmentalTasks": "Mérőeszközök használata. Becslés. Átváltások gyakorlása a gyakorlati életből vett példákkal.",
-      "concepts": "Mérőszám, mértékegység, hosszúság, tömeg, űrtartalom, terület, idő.",
-      "suggestedActivities": "Osztálytermi tárgyak lemérése, főzési hozzávalók átszámolása."
-    },
-    {
-      "id": "sikbeli_alakzatok",
-      "name": "Síkbeli alakzatok",
-      "recommendedHours": 18,
-      "learningOutcomes": "A tanuló csoportosítja a háromszögeket, négyszögeket tulajdonságaik (oldalak, szögek) szerint. Kiszámítja a téglalap, négyzet kerületét és területét.",
-      "developmentalTasks": "Geometriai fogalmak megkülönböztetése. Kerület és terület fogalmi elkülönítése.",
-      "concepts": "Pont, egyenes, szakasz, félegyenes, szög, merőleges, párhuzamos, sokszög, téglalap, négyzet, kerület, terület.",
-      "suggestedActivities": "Tangram-játékok, terület-lefedések egységnégyzetekkel."
-    },
-    {
-      "id": "transzformaciok_szerkesztes",
-      "name": "Transzformációk, szerkesztések",
-      "recommendedHours": 20,
-      "learningOutcomes": "A tanuló felismeri a tengelyes szimmetriát a környezetében és a geometriai alakzatoknál. Egyszerűbb alakzatokat tükröz tengelyesen.",
-      "developmentalTasks": "Tükrös formák keresése természetben, betűknél. Tükörkép szerkesztése négyzethálón és szerkesztőeszközökkel.",
-      "concepts": "Tengelyes szimmetria, szimmetriatengely, tükörkép, távolság.",
-      "suggestedActivities": "Papírkivágások készítése szimmetrikusan, festéktükrözések."
     },
     {
       "id": "tergeometria",
@@ -163,7 +165,7 @@
       "suggestedActivities": "Kockadobásos játékok, statisztika gyűjtése 100 dobásból."
     }
   ],
-  "7-8": [
+  "7": [
     {
       "id": "halmazok_szamhalmazok",
       "name": "Halmazok, számhalmazok",
@@ -210,15 +212,6 @@
       "suggestedActivities": "Kitalálós számjátékok leírása egyenlettel."
     },
     {
-      "id": "szoveges_feladatok_78",
-      "name": "Szöveges feladatok",
-      "recommendedHours": 22,
-      "learningOutcomes": "A tanuló összetett, életszerű szöveges feladatokat (keverési, munkavégzési, mozgási és számjegyekkel kapcsolatos feladatok) egyenletek felírásával old meg és ellenőriz.",
-      "developmentalTasks": "Szöveg matematikai nyelvre fordítása, egyenlet felírása, megoldása és a kapott gyökök ellenőrzése a szöveg feltételei szerint.",
-      "concepts": "Modellalkotás, keverési feladat, munkavégzési feladat, mozgási feladat, egyenletrendszer előkészítése.",
-      "suggestedActivities": "Kémiai oldatok hígításának kiszámolása, utazási tervek készítése sebesség-idő grafikonnal."
-    },
-    {
       "id": "fuggvenyek_elokeszitese_78",
       "name": "A függvény fogalmának mélyítése",
       "recommendedHours": 12,
@@ -226,6 +219,17 @@
       "developmentalTasks": "Függvény hozzárendelési szabályának felírása. Meredekség értelmezése. Értéktáblázat készítése és koordináták ábrázolása.",
       "concepts": "Függvény, lineáris függvény, meredekség (m), y-tengelymetszet (b), zérushely, értelmezési tartomány, értékkészlet.",
       "suggestedActivities": "Mobiltelefon-előfizetések havidíjainak ábrázolása grafikonon."
+    }
+  ],
+  "8": [
+    {
+      "id": "szoveges_feladatok_78",
+      "name": "Szöveges feladatok",
+      "recommendedHours": 22,
+      "learningOutcomes": "A tanuló összetett, életszerű szöveges feladatokat (keverési, munkavégzési, mozgási és számjegyekkel kapcsolatos feladatok) egyenletek felírásával old meg és ellenőriz.",
+      "developmentalTasks": "Szöveg matematikai nyelvre fordítása, egyenlet felírása, megoldása és a kapott gyökök ellenőrzése a szöveg feltételei szerint.",
+      "concepts": "Modellalkotás, keverési feladat, munkavégzési feladat, mozgási feladat, egyenletrendszer előkészítése.",
+      "suggestedActivities": "Kémiai oldatok hígításának kiszámolása, utazási tervek készítése sebesség-idő grafikonnal."
     },
     {
       "id": "sikbeli_alakzatok_78",

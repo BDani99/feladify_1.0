@@ -1,5 +1,7 @@
 {
-  "7-8": [
+  "5": [],
+  "6": [],
+  "7": [
     {
       "id": "biologia_tudomanya",
       "name": "A biológia tudományának céljai és vizsgálati módszerei",
@@ -71,7 +73,9 @@
       "developmentalTasks": "A biológiai sokféleség beszűkülését előidéző okok és lehetséges veszélyek felismerése. Az emberi populáció növekedésével járó hatások elemzése. A fogyasztói létforma és a Föld véges erőforrásai közötti ellentmondás. Ökológiai gazdálkodás és génmegőrzés. Éghajlatváltozási modellek és a megelőzés, hatáscsökkentés módjai.",
       "concepts": "biológiai sokféleség, fajgazdagság, fajtanemesítés, génmegőrzés, globális probléma, éghajlatváltozás, monokultúra, biogazdálkodás, tájgazdálkodás, fenntarthatóság",
       "suggestedActivities": "Információgyűjtés az iskola és a település jellegzetes gazdálkodási tevékenységeiről; a helyi szinttől a globális szintig átívelő természetvédelmi esetek keresése és összefüggéseik feltárása."
-    },
+    }
+  ],
+  "8": [
     {
       "id": "emberi_szervezet_1",
       "name": "Az emberi szervezet I. – Testkép, testalkat, mozgásképesség",

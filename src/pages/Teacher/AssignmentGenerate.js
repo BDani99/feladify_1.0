@@ -20,6 +20,7 @@ import {
     FaEye,
     FaSync,
     FaChevronDown,
+    FaChevronUp,
     FaUsers,
     FaChevronLeft,
     FaChevronRight,
@@ -48,6 +49,8 @@ const QUESTION_TYPES = [
 
 const AssignmentGenerate = ({ token }) => {
     const [title, setTitle] = useState('');
+    const [topicSpecification, setTopicSpecification] = useState('');
+    const [topicsOpen, setTopicsOpen] = useState(true);
     const [subject, setSubject] = useState('');
     const [difficulty, setDifficulty] = useState('Normál');
     const [className, setClassName] = useState('');
@@ -124,7 +127,7 @@ const AssignmentGenerate = ({ token }) => {
                 if (!sub) return false;
                 const s = sub.toLowerCase();
                 return ['matematika', 'nyelvtan', 'irodalom', 'történelem', 'környezetismeret',
-                        'fizika', 'biológia', 'biologia', 'földrajz', 'foldrajz'].includes(s);
+                        'fizika', 'biológia', 'biologia', 'földrajz', 'foldrajz', 'angol', 'német', 'nemet'].includes(s);
             };
 
             if (subject && isCurriculumSupported(subject) && className) {
@@ -203,7 +206,7 @@ const AssignmentGenerate = ({ token }) => {
         }
 
         try {
-            const data = await previewAssignment(title, subject, difficulty, className, questionTypes, selectedTopics);
+            const data = await previewAssignment(title, subject, difficulty, className, questionTypes, selectedTopics, topicSpecification);
             setPreviewQuestions(data.questions);
             setLastPreviewQuestions(data.questions);
             setShowModal(true);
@@ -253,6 +256,7 @@ const AssignmentGenerate = ({ token }) => {
 
     const resetForm = () => {
         setTitle('');
+        setTopicSpecification('');
         setClassName('');
         setDifficulty('Normál');
         setTimeLimit('');
@@ -370,56 +374,110 @@ const AssignmentGenerate = ({ token }) => {
                                 </div>
                             )}
 
-                            {subject && ['matematika', 'nyelvtan', 'irodalom', 'történelem', 'környezetismeret'].includes(subject.toLowerCase()) && className && (
-                                <div className="nat-topics-container">
-                                    <label className="nat-topics-label"><FaBrain /> Nemzeti Alaptantervi (NAT) Témakörök</label>
-                                    {loadingTopics ? (
-                                        <div className="nat-topics-loading">NAT témakörök betöltése...</div>
-                                    ) : natTopics.length === 0 ? (
-                                        <div className="nat-topics-empty">Ehhez a tantárgyhoz és évfolyamhoz jelenleg nem áll rendelkezésre a részletes nemzeti kerettanterv.</div>
-                                    ) : (
-                                        <div className="nat-topics-grid">
-                                            {natTopics.map(topicItem => {
-                                                const isSelected = selectedTopics.includes(topicItem.id);
-                                                return (
-                                                    <div 
-                                                        key={topicItem.id} 
-                                                        className={`nat-topic-chip ${isSelected ? 'selected' : ''}`}
-                                                        onClick={() => {
-                                                            setSelectedTopics(prev => {
-                                                                const updated = prev.includes(topicItem.id)
-                                                                    ? prev.filter(id => id !== topicItem.id)
-                                                                    : [...prev, topicItem.id];
-                                                                
-                                                                const selectedNames = natTopics
-                                                                    .filter(t => updated.includes(t.id))
-                                                                    .map(t => t.name);
-                                                                setTitle(selectedNames.join(', '));
-                                                                
-                                                                return updated;
-                                                            });
-                                                        }}
-                                                    >
-                                                        <div className="nat-chip-check">
-                                                            {isSelected && <FaCheck />}
-                                                        </div>
-                                                        <div className="nat-chip-name">{topicItem.name}</div>
-                                                    </div>
-                                                );
-                                            })}
+                            {subject && ['matematika', 'nyelvtan', 'irodalom', 'történelem', 'környezetismeret', 'fizika', 'biológia', 'biologia', 'földrajz', 'foldrajz', 'angol', 'német', 'nemet'].includes(subject.toLowerCase()) && className && (
+                                <div className="nat-topics-container" style={{ marginBottom: '20px' }}>
+                                    <div 
+                                        className={`topics-selector-trigger ${topicsOpen ? 'open' : ''}`}
+                                        onClick={() => setTopicsOpen(!topicsOpen)}
+                                        style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            cursor: 'pointer',
+                                            padding: '10px 0',
+                                            borderBottom: topicsOpen ? '1px solid rgba(255,255,255,0.1)' : 'none',
+                                            marginBottom: topicsOpen ? '15px' : '0'
+                                        }}
+                                    >
+                                        <label className="nat-topics-label" style={{ cursor: 'pointer', margin: 0 }}>
+                                            <FaBrain /> Témakörök
+                                        </label>
+                                        <div className="chevron-icon-wrapper" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                                            {topicsOpen ? <FaChevronUp /> : <FaChevronDown />}
                                         </div>
+                                    </div>
+                                    
+                                    {topicsOpen && (
+                                        <>
+                                            {loadingTopics ? (
+                                                <div className="nat-topics-loading">Témakörök betöltése...</div>
+                                            ) : natTopics.length === 0 ? (
+                                                <div className="nat-topics-empty">Ehhez a tantárgyhoz és évfolyamhoz jelenleg nem állnak rendelkezésre témakörök.</div>
+                                            ) : (
+                                                <div className="nat-topics-grid">
+                                                    {natTopics.map(topicItem => {
+                                                        const isSelected = selectedTopics.includes(topicItem.id);
+                                                        return (
+                                                            <div 
+                                                                key={topicItem.id} 
+                                                                className={`nat-topic-chip ${isSelected ? 'selected' : ''}`}
+                                                                onClick={() => {
+                                                                    setSelectedTopics(prev => {
+                                                                        const updated = prev.includes(topicItem.id)
+                                                                            ? prev.filter(id => id !== topicItem.id)
+                                                                            : [...prev, topicItem.id];
+                                                                        
+                                                                        const selectedNames = natTopics
+                                                                            .filter(t => updated.includes(t.id))
+                                                                            .map(t => t.name);
+                                                                        
+                                                                        const oldSelectedNames = natTopics
+                                                                            .filter(t => prev.includes(t.id))
+                                                                            .map(t => t.name);
+                                                                        const oldTitleSuggestion = oldSelectedNames.join(', ');
+                                                                        
+                                                                        if (!title || title === oldTitleSuggestion) {
+                                                                            setTitle(selectedNames.join(', '));
+                                                                        }
+                                                                        
+                                                                        return updated;
+                                                                    });
+                                                                }}
+                                                            >
+                                                                <div className="nat-chip-check">
+                                                                    {isSelected && <FaCheck />}
+                                                                </div>
+                                                                <div className="nat-chip-name">{topicItem.name}</div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             )}
 
                             <div className="form-group">
-                                <label>Témakör</label>
+                                <label>Dolgozat címe</label>
                                 <input
                                     type="text"
-                                    placeholder='Pl. Szorzás és osztás, Petőfi Sándor élete...'
+                                    placeholder='Pl. Matematika dolgozat, Októberi röpdolgozat...'
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     required
+                                />
+                            </div>
+
+                            <div className="form-group" style={{ marginTop: '15px' }}>
+                                <label>Témakör specifikálása (opcionális)</label>
+                                <textarea
+                                    placeholder='Pl. Adj meg plusz dolgokat, vagy írd le, mi ne legyen benne (pl: "szorzás 10-zel ne legyen benne, de törtek összeadása igen")'
+                                    value={topicSpecification}
+                                    onChange={(e) => setTopicSpecification(e.target.value)}
+                                    rows={3}
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        color: '#fff',
+                                        fontFamily: 'inherit',
+                                        fontSize: '14px',
+                                        resize: 'vertical',
+                                        marginTop: '5px'
+                                    }}
                                 />
                             </div>
 

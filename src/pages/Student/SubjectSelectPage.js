@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../api/config';
 import { useUser } from '../../context/UserContext';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { FaStar, FaFire, FaBolt, FaCalculator, FaBookOpen, FaGlobeAmericas, FaLeaf, FaChevronDown, FaChevronUp, FaTrash, FaCompass, FaHistory, FaAtom, FaDna, FaMapMarkedAlt } from 'react-icons/fa';
+import { FaStar, FaFire, FaBolt, FaCalculator, FaBookOpen, FaGlobeAmericas, FaGlobeEurope, FaLeaf, FaChevronDown, FaChevronUp, FaTrash, FaCompass, FaHistory, FaAtom, FaDna, FaMapMarkedAlt } from 'react-icons/fa';
 import '../../styles/Student/SubjectSelectPage.css';
 import ConfirmModal from '../../components/ConfirmModal';
 import { toast } from 'react-toastify';
@@ -24,6 +24,7 @@ const SubjectSelectPage = () => {
     { name: 'Nyelvtan', icon: <FaBookOpen />, subject: 'Nyelvtan', color: '#22d3ee' },
     { name: 'Irodalom', icon: <FaBookOpen />, subject: 'Irodalom', color: '#34d399' },
     { name: 'Angol', icon: <FaGlobeAmericas />, subject: 'Angol', color: '#c084fc' },
+    { name: 'Német', icon: <FaGlobeEurope />, subject: 'Német', color: '#fcd34d' },
     { name: 'Környezetismeret', icon: <FaLeaf />, subject: 'Környezetismeret', color: '#fb923c' },
     { name: 'Történelem', icon: <FaHistory />, subject: 'Történelem', color: '#f43f5e' },
     { name: 'Fizika', icon: <FaAtom />, subject: 'Fizika', color: '#60a5fa' },

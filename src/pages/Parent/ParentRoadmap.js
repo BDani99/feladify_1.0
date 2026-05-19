@@ -67,7 +67,7 @@ const ParentRoadmap = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    const subjectsList = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Környezetismeret', 'Történelem', 'Fizika', 'Biológia', 'Földrajz'];
+    const subjectsList = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Környezetismeret', 'Történelem', 'Fizika', 'Biológia', 'Földrajz'];
 
     useEffect(() => {
         const fetchChildren = async () => {

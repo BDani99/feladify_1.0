@@ -24,7 +24,7 @@ ChartJS.register(
   CategoryScale, LinearScale, RadialLinearScale
 );
 
-const SUBJECT_ICONS = { Matematika: '🔢', Nyelvtan: '📝', Irodalom: '📖', Angol: '🌍', Környezetismeret: '🌱', Történelem: '⏳', Fizika: '⚛️', Biológia: '🧬', Földrajz: '🗺️' };
+const SUBJECT_ICONS = { Matematika: '🔢', Nyelvtan: '📝', Irodalom: '📖', Angol: '🌍', Német: '🇩🇪', Környezetismeret: '🌱', Történelem: '⏳', Fizika: '⚛️', Biológia: '🧬', Földrajz: '🗺️' };
 
 /* ─── Score colour helper ─── */
 const scoreColor = (v) => v >= 80 ? '#10b981' : v >= 60 ? '#3b82f6' : '#f59e0b';

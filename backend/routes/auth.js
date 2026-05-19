@@ -251,7 +251,7 @@ router.put('/update-password', authenticateUser, async (req, res) => {
   }
 });
 
-const ALLOWED_SUBJECTS = ['Nyelvtan', 'Irodalom', 'Angol', 'Matematika', 'Környezetismeret', 'Történelem', 'Fizika', 'Biológia', 'Földrajz'];
+const ALLOWED_SUBJECTS = ['Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Matematika', 'Környezetismeret', 'Történelem', 'Fizika', 'Biológia', 'Földrajz'];
 
 // Profil frissítése (név, email, tantárgyak)
 router.put('/update-profile', authenticateUser, async (req, res) => {

@@ -1,5 +1,5 @@
 {
-  "5-6": [
+  "5": [
     {
       "id": "csalad_otthon_nemzet",
       "name": "Család, otthon, nemzet – kisepikai és lírai alkotások",
@@ -28,6 +28,17 @@
       "suggestedActivities": "Egy versbeli táj lerajzolása vagy festése, fotómontázs készítése a vers hangulatához kapcsolódóan."
     },
     {
+      "id": "valaszthato_ifjusagi_regeny_1",
+      "name": "Egy szabadon választott magyar mese- vagy ifjúsági regény elemzése",
+      "recommendedHours": 4,
+      "learningOutcomes": "A tanuló önállóan elolvas egy kortárs vagy klasszikus magyar ifjúsági regényt, és képes annak szerkezetét és szereplőit bemutatni.",
+      "developmentalTasks": "Olvasmánynapló vezetése, a regény erkölcsi kérdéseinek megbeszélése csoportmunkában.",
+      "concepts": "Regényszerkezet, narrátor, konfliktus, jellemfejlődés, kortárs irodalom.",
+      "suggestedActivities": "Könyvajánló (plakát vagy rövid videó) készítése az osztálytársak számára."
+    }
+  ],
+  "6": [
+    {
       "id": "pal_utcai_fiuk",
       "name": "Molnár Ferenc: A Pál utcai fiúk",
       "recommendedHours": 10,
@@ -37,13 +48,13 @@
       "suggestedActivities": "A grund makettjének elkészítése, Nemecsek védőbeszédének vagy Áts Feri levelének megírása kreatív fogalmazásként."
     },
     {
-      "id": "valaszthato_ifjusagi_regeny_1",
-      "name": "Egy szabadon választott magyar mese- vagy ifjúsági regény elemzése",
-      "recommendedHours": 4,
-      "learningOutcomes": "A tanuló önállóan elolvas egy kortárs vagy klasszikus magyar ifjúsági regényt, és képes annak szerkezetét és szereplőit bemutatni.",
-      "developmentalTasks": "Olvasmánynapló vezetése, a regény erkölcsi kérdéseinek megbeszélése csoportmunkában.",
-      "concepts": "Regényszerkezet, narrátor, konfliktus, jellemfejlődés, kortárs irodalom.",
-      "suggestedActivities": "Könyvajánló (plakát vagy rövid videó) készítése az osztálytársak számára."
+      "id": "toldi",
+      "name": "Arany János: Toldi",
+      "recommendedHours": 16,
+      "learningOutcomes": "A tanuló ismeri a Toldi cselekményét, Toldi Miklós alakját, a mű történelmi hátterét, és képes megérteni az erkölcsi tanulságokat (bűn, bűnhődés, hűség).",
+      "developmentalTasks": "Az elbeszélő költemény stilisztikai elemeinek elemzése, a metaforák és az allegória felismerése, Toldi Miklós belső vívódásának megértése.",
+      "concepts": "Elbeszélő költemény, előhang, epizód, késleltetés, allegória, fokozás, túlzás, sorsvonal, lovagi erények.",
+      "suggestedActivities": "A Toldi-erőpróbák eljátszása az udvaron, Toldi Miklós 'naplójának' megírása a bűn elkövetése után."
     },
     {
       "id": "hosok_az_irodalomban",
@@ -53,15 +64,6 @@
       "developmentalTasks": "A balladai homály és a kihagyás technikájának felismerése balladaelemzés során, az időmértékes verselés alapjainak (daktilus, spondeus) megismerése.",
       "concepts": "Próbatétel, vándortéma, ballada, népballada, műballada, balladai homály, kihagyás, epigramma, időmértékes verselés, daktilus, spondeus, hexameter.",
       "suggestedActivities": "Egy népballada elszavalása drámai hatásokkal, 'balladai homály' rejtvény készítése."
-    },
-    {
-      "id": "toldi",
-      "name": "Arany János: Toldi",
-      "recommendedHours": 16,
-      "learningOutcomes": "A tanuló ismeri a Toldi cselekményét, Toldi Miklós alakját, a mű történelmi hátterét, és képes megérteni az erkölcsi tanulságokat (bűn, bűnhődés, hűség).",
-      "developmentalTasks": "Az elbeszélő költemény stilisztikai elemeinek elemzése, a metaforák és az allegória felismerése, Toldi Miklós belső vívódásának megértése.",
-      "concepts": "Elbeszélő költemény, előhang, epizód, késleltetés, allegória, fokozás, túlzás, sorsvonal, lovagi erények.",
-      "suggestedActivities": "A Toldi-erőpróbák eljátszása az udvaron, Toldi Miklós 'naplójának' megírása a bűn elkövetése után."
     },
     {
       "id": "szeretet_hazaszeretet_szerelem",
@@ -91,15 +93,51 @@
       "suggestedActivities": "Képzeletbeli interjú készítése a regény külföldi főhősével."
     }
   ],
-  "7-8": [
+  "7": [
     {
-      "id": "korok_portrek",
-      "name": "Korok és portrék (Középkor, reneszánsz, romantika, klasszicizmus)",
-      "recommendedHours": 50,
-      "learningOutcomes": "A tanuló ismeri a magyar és az európai kultúra nagy művelődéstörténeti korszakait és azok kiemelkedő alkotóit (Janus Pannonius, Balassi Bálint, Zrínyi Miklós, Csokonai Vitéz Mihály, Berzsenyi Dániel, Kölcsey Ferenc, Vörösmarty Mihály, Petőfi Sándor, Arany János, Jókai Mór, Mikszáth Kálmán).",
-      "developmentalTasks": "A Himnusz, a Szózat, a Nemzeti dal és más kiemelt nemzeti lírai művek mélyreható elemzése, stílusjegyek és verselési módok (időmértékes, ütemhangsúlyos) azonosítása, irodalmi művek és a történelmi folyamatok összekapcsolása.",
-      "concepts": "Középkor, reneszánsz, humanizmus, reformáció, barokk, klasszicizmus, romantika, realizmus, Himnusz, Szózat, Nemzeti dal, óda, epigramma, történelmi regény, elbeszélés, novella, stílusirányzat, memoriter.",
-      "suggestedActivities": "A Himnusz és a Szózat összehasonlító elemzése, szavalóverseny a korszak memoritereiből, reneszánsz udvari jelenet dramatizálása."
+      "id": "kozepkor_reneszansz",
+      "name": "Középkor és reneszánsz irodalom",
+      "recommendedHours": 12,
+      "learningOutcomes": "A tanuló megismeri a középkori és reneszánsz gondolkodás sajátosságait, a humanizmus és a reformáció irodalmi emlékeit és nagy alkotóit (Janus Pannonius, Balassi Bálint).",
+      "developmentalTasks": "A nemzeti és egyetemes értékek (pl. vitézség, istenes költészet) felismerése Balassi Bálint lírájában, a humanista témák és stílusjegyek elemzése Janus Pannonius verseiben, valamint drámarészletek közös feldolgozása (Shakespeare).",
+      "concepts": "Középkor, reneszánsz, humanizmus, reformáció, királytükör, istenes vers, vitézi ének, reneszánsz dráma, humanista költészet, szonett.",
+      "suggestedActivities": "Janus Pannonius Dunántúli mandulafáról és Balassi Egy katonaének c. verseinek összevetése hangulat és mondanivaló szerint, reneszánsz udvari jelenet vagy Shakespeare-drámarészlet dramatizálása."
+    },
+    {
+      "id": "barokk_17_18_szazad",
+      "name": "Barokk és a 17-18. század irodalma",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló megérti a barokk eposz és a kuruc költészet sajátosságait, megismeri Zrínyi Miklós és Mikes Kelemen alakját, írásait.",
+      "developmentalTasks": "Részletek elemzése a Szigeti veszedelemből, a barokk stílusjegyek és eposzi kellékek azonosítása, valamint a kuruc kor hangulatának és a bujdosó-líra sajátosságainak (Mikes Kelemen levelei) megértése.",
+      "concepts": "Barokk, eposz, eposzi kellék, propozíció, invokáció, anticipáció, kuruc költészet, bujdosóének, fiktív levél, fiktív levélregény.",
+      "suggestedActivities": "Kuruc dalok és Rákóczi-nóta közös éneklése, Zrínyi Miklós várvédő harcáról szóló eposzi csatajelenet illusztrálása képregény formájában."
+    },
+    {
+      "id": "klasszicizmus_felvilagosodas",
+      "name": "Klasszicizmus és a felvilágosodás irodalma",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló ismeri a felvilágosodás és a klasszicizmus magyarországi megjelenését, megérti Csokonai Vitéz Mihály és Berzsenyi Dániel verseinek hangulatát és művészi eszközeit.",
+      "developmentalTasks": "Az óda, a dal és az epigramma műfaji sajátosságainak felismerése, a metaforák és hangulati kontrasztok elemzése Csokonai (pl. A Reményhez) és Berzsenyi verseiben.",
+      "concepts": "Felvilágosodás, klasszicizmus, szentimentalizmus, óda, dal, epigramma, hangulati líra, ellentét, csalódás, reményvesztettség.",
+      "suggestedActivities": "Csokonai A Reményhez c. versének összevetése egy kiválasztott Berzsenyi-vers (pl. Levéltöredék barátnémhoz) hangulatával, versrészletek ritmikus felolvasása."
+    },
+    {
+      "id": "nemzeti_romantika_reformkor",
+      "name": "Nemzeti romantika és a reformkor – Kölcsey, Vörösmarty, Petőfi és Arany költészete",
+      "recommendedHours": 14,
+      "learningOutcomes": "A tanuló mélyrehatóan ismeri nemzeti jelképeinket (Himnusz, Szózat), a reformkori és 1848/49-es hazafias lírát, Petőfi Sándor és Arany János kapcsolatát, legfontosabb verseiket.",
+      "developmentalTasks": "A Himnusz és a Szózat összehasonlítása, a romantikus stílusjegyek és költői képek elemzése, hazafias versek, balladák (pl. Szondi két apródja) és levelezések feldolgozása.",
+      "concepts": "Romantika, hazafiság, reformkor, Himnusz, Szózat, Nemzeti dal, óda, ballada, népballada, műballada, balladai homály, kihagyás, lírai levél.",
+      "suggestedActivities": "A Himnusz és a Szózat közös elszavalása vagy éneklése, Petőfi és Arany baráti levelezésének felolvasása szerepjátékkal."
+    },
+    {
+      "id": "nagyepika_realizmus",
+      "name": "Nagyepikai alkotások és realizmus – Jókai Mór és Mikszáth Kálmán",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló megismeri a 19. század második felének prózairodalmát, Jókai Mór és Mikszáth Kálmán munkásságát, történeti hátterét.",
+      "developmentalTasks": "A kőszívű ember fiai és a Szent Péter esernyője szerkezetének, konfliktusainak, jellemábrázolásának és humorának elemzése, az irodalmi művek és filmváltozatok összevetése.",
+      "concepts": "Realizmus, romantikus regény, anekdota, anekdotikus szerkezet, romantikus hős, realizmus a prózában, regényszerkezet, filmadaptáció.",
+      "suggestedActivities": "Mikszáth Kálmán novelláinak vagy a Szent Péter esernyőjének csoportos feldolgozása, filmrészletek és a regényszöveg összehasonlító elemzése."
     },
     {
       "id": "ifjusagi_regeny_78",
@@ -109,7 +147,9 @@
       "developmentalTasks": "A regény időszerkezetének, narrációs technikájának és erkölcsi dilemmáinak (felelősségvállalás, felnőtté válás, közösségi szolidaritás) elemzése.",
       "concepts": "Regény, kalandregény, időszerkezet, narráció, nézőpont, közösség, beavatás.",
       "suggestedActivities": "A regényből készült film és a könyv összehasonlítása, szereplők 'tárgyalása' (bírósági szerepjáték egy döntésük kapcsán)."
-    },
+    }
+  ],
+  "8": [
     {
       "id": "xx_szazad_elso_fele",
       "name": "Kárpát-medencei irodalmunk a 20. század első felében",

@@ -1,17 +1,17 @@
 {
   "month": "2026-05",
-  "callCount": 69,
-  "totalCostUSD": 0.033123774400000014,
-  "totalInputTokens": 81032,
-  "totalOutputTokens": 61127,
-  "totalCacheHitTokens": 18048,
+  "callCount": 71,
+  "totalCostUSD": 0.03376598800000001,
+  "totalInputTokens": 84237,
+  "totalOutputTokens": 62069,
+  "totalCacheHitTokens": 18560,
   "byModel": {
     "deepseek-chat": {
-      "calls": 53,
-      "costUSD": 0.0242245976,
-      "inputTokens": 73881,
-      "outputTokens": 58294,
-      "cacheHitTokens": 17792
+      "calls": 55,
+      "costUSD": 0.024866811200000002,
+      "inputTokens": 77086,
+      "outputTokens": 59236,
+      "cacheHitTokens": 18304
     },
     "deepseek-reasoner": {
       "calls": 11,
@@ -44,27 +44,27 @@
       "cacheHitTokens": 256
     },
     "fast": {
-      "calls": 53,
-      "costUSD": 0.0242245976,
-      "inputTokens": 73881,
-      "outputTokens": 58294,
-      "cacheHitTokens": 17792
+      "calls": 55,
+      "costUSD": 0.024866811200000002,
+      "inputTokens": 77086,
+      "outputTokens": 59236,
+      "cacheHitTokens": 18304
     }
   },
   "byCaller": {
     "ExamOutline": {
-      "calls": 15,
-      "costUSD": 0.006479788,
-      "inputTokens": 10801,
-      "outputTokens": 20564,
+      "calls": 16,
+      "costUSD": 0.006766648,
+      "inputTokens": 11748,
+      "outputTokens": 21115,
       "cacheHitTokens": 5760
     },
     "ExamQuestions": {
-      "calls": 15,
-      "costUSD": 0.013687156000000002,
-      "inputTokens": 49623,
-      "outputTokens": 29716,
-      "cacheHitTokens": 11520
+      "calls": 16,
+      "costUSD": 0.014042509600000003,
+      "inputTokens": 51881,
+      "outputTokens": 30107,
+      "cacheHitTokens": 12032
     },
     "CheckAnswer": {
       "calls": 15,
@@ -111,11 +111,11 @@
   },
   "byUser": {
     "69f9084344e2198119e76fc7": {
-      "calls": 4,
-      "costUSD": 0.0022939336,
-      "inputTokens": 7289,
-      "outputTokens": 4799,
-      "cacheHitTokens": 512
+      "calls": 6,
+      "costUSD": 0.0029361471999999997,
+      "inputTokens": 10494,
+      "outputTokens": 5741,
+      "cacheHitTokens": 1024
     },
     "69f90cec2840e4a89a161a8a": {
       "calls": 30,

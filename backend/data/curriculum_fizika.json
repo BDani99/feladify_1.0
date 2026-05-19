@@ -1,5 +1,7 @@
 {
-  "7-8": [
+  "5": [],
+  "6": [],
+  "7": [
     {
       "id": "bevezetes_fizikaba",
       "name": "Bevezetés a fizikába",
@@ -44,7 +46,9 @@
       "developmentalTasks": "Jég olvadása és víz fagyása, hőmérséklet-változás megfigyelése. Termikus kölcsönhatások. Víz forrása. Halmazállapotok és részecske-modell. Hidrosztatikai nyomás, mélységtől való függés. Arkhimédész törvénye, sűrűségfeltétel. Kapilláris jelenségek. Szilárd anyagok hőtágulása, hővezetés. Levegő fizikai tulajdonságai: nyomás, hőmérséklet, páratartalom. Időjárási jelenségek fizikai magyarázata.",
       "concepts": "légnemű, folyékony, szilárd, fagyás, olvadás, párolgás, lecsapódás, forrás, kapilláris csövek, nyomás, hidrosztatikai nyomás, felhajtóerő, úszás, lebegés, sűrűségfeltétel, termikus kölcsönhatás, melegítés, felvett és leadott hő, nyomáskülönbség",
       "suggestedActivities": "Hőmérő készítése; nyomás időjárástól és magasságtól való függésének vizsgálata; páratartalom vizsgálata; úszó sűrűségmérő működésének vizsgálata; Cartesius-búvár készítése; kapilláris jelenségek a természetben; az álló és ülő ember által a talajra kifejtett nyomás becslése."
-    },
+    }
+  ],
+  "8": [
     {
       "id": "elektromossag_haztartas",
       "name": "Elektromosság a háztartásban",

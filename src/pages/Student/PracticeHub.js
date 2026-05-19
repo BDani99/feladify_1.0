@@ -37,7 +37,7 @@ const PracticeHub = () => {
         if (!sub) return false;
         const s = sub.toLowerCase();
         return ['matematika', 'nyelvtan', 'irodalom', 'történelem', 'környezetismeret',
-                'fizika', 'biológia', 'biologia', 'földrajz', 'foldrajz'].includes(s);
+                'fizika', 'biológia', 'biologia', 'földrajz', 'foldrajz', 'angol', 'német', 'nemet'].includes(s);
       };
 
       if (subject && isCurriculumSupported(subject) && gradeNum) {

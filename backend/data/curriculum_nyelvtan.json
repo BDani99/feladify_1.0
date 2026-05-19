@@ -1,5 +1,5 @@
 {
-  "5-6": [
+  "5": [
     {
       "id": "kommunikacio_alapjai",
       "name": "A kommunikáció alapjai",
@@ -19,24 +19,6 @@
       "suggestedActivities": "Helyesírási szótárhasználati verseny, vicces nyelvtörők és helyesírási rejtvények megfejtése."
     },
     {
-      "id": "allandosult_szokapcsolatok",
-      "name": "Állandósult szókapcsolatok",
-      "recommendedHours": 5,
-      "learningOutcomes": "A tanuló felismeri és helyesen alkalmazza a szólásokat, közmondásokat, szállóigéket beszélt és írott szövegekben, gazdagítva szókincsét.",
-      "developmentalTasks": "Szólások és közmondások képi ábrázolása, átviteli értelmük megfogalmazása és stilisztikai szerepük megértése.",
-      "concepts": "Állandósult szókapcsolat, szólás, szóláshasonlat, közmondás, szállóige, köznyelvi metafora.",
-      "suggestedActivities": "Szóláskártyás memória játék, szólások és közmondások dramatizálása kiscsoportban."
-    },
-    {
-      "id": "nyelvi_szintek",
-      "name": "A nyelvi szintek: beszédhang, fonéma, szóelemek, szavak, szóösszetételek",
-      "recommendedHours": 20,
-      "learningOutcomes": "A tanuló megkülönbözteti a magánhangzókat és mássalhangzókat, ismeri a legfontosabb hangtörvényeket, és képes szavakat szótőre és toldalékokra bontani.",
-      "developmentalTasks": "Hangrend és illeszkedés vizsgálata, mássalhangzó-törvények (hasonulás, összeolvadás, rövidülés, kiesés) felismerése írásban és kiejtésben.",
-      "concepts": "Beszédhang, fonéma, hangrend, illeszkedés, hasonulás, összeolvadás, szótő, toldalék (képző, jel, rag), egyszerű szó, összetett szó.",
-      "suggestedActivities": "Szóalkotó játékok, szavak elemzése dobozos modellekkel (szótő + képző + jel + rag)."
-    },
-    {
       "id": "hangalak_jelentes",
       "name": "Hangalak és jelentés",
       "recommendedHours": 6,
@@ -46,13 +28,24 @@
       "suggestedActivities": "Szójátékok (pl. activity rokon értelmű szavakkal), viccek nyelvi hátterének elemzése."
     },
     {
-      "id": "szovegertes_szovegalkotas",
-      "name": "Szövegértés és szövegalkotás a gyakorlatban",
-      "recommendedHours": 13,
-      "learningOutcomes": "A tanuló képes különféle szövegtípusokat (elbeszélés, leírás, jellemzés, levél, e-mail, plakát, meghívó) megérteni és önállóan megalkotni.",
-      "developmentalTasks": "Olvasási stratégiák alkalmazása, lényegkiemelés, vázlatkészítés, kreatív írási feladatok végzése az írásbeli megnyilatkozások szabályai szerint.",
-      "concepts": "Elbeszélés, leírás, jellemzés, feleletterv, vázlat, levél, e-mail, plakát, meghívó, bevezetés-tárgyalás-befejezés.",
-      "suggestedActivities": "Saját születésnapi meghívó vagy osztályplakát tervezése, képzeletbeli utazásról szóló elbeszélés vagy e-mail írása."
+      "id": "nyelvi_szintek",
+      "name": "A nyelvi szintek: beszédhang, fonéma, szóelemek, szavak, szóösszetételek",
+      "recommendedHours": 20,
+      "learningOutcomes": "A tanuló megkülönbözteti a magánhangzókat és mássalhangzókat, ismeri a legfontosabb hangtörvényeket, és képes szavakat szótőre és toldalékokra bontani.",
+      "developmentalTasks": "Hangrend és illeszkedés vizsgálata, mássalhangzó-törvények (hasonulás, összeolvadás, rövidülés, kiesés) felismerése írásban és kiejtésben.",
+      "concepts": "Beszédhang, fonéma, hangrend, illeszkedés, hasonulás, összeolvadás, szótő, toldalék (képző, jel, rag), egyszerű szó, összetett szó.",
+      "suggestedActivities": "Szóalkotó játékok, szavak elemzése dobozos modellekkel (szótő + képző + jel + rag)."
+    }
+  ],
+  "6": [
+    {
+      "id": "allandosult_szokapcsolatok",
+      "name": "Állandósult szókapcsolatok",
+      "recommendedHours": 5,
+      "learningOutcomes": "A tanuló felismeri és helyesen alkalmazza a szólásokat, közmondásokat, szállóigéket beszélt és írott szövegekben, gazdagítva szókincsét.",
+      "developmentalTasks": "Szólások és közmondások képi ábrázolása, átviteli értelmük megfogalmazása és stilisztikai szerepük megértése.",
+      "concepts": "Állandósult szókapcsolat, szólás, szóláshasonlat, közmondás, szállóige, köznyelvi metafora.",
+      "suggestedActivities": "Szóláskártyás memória játék, szólások és közmondások dramatizálása kiscsoportban."
     },
     {
       "id": "szofajok_rendszere",
@@ -64,6 +57,15 @@
       "suggestedActivities": "Szófaj-dominó, földrajzi nevek és intézménynevek helyesírási vetélkedője."
     },
     {
+      "id": "szovegertes_szovegalkotas",
+      "name": "Szövegértés és szövegalkotás a gyakorlatban",
+      "recommendedHours": 13,
+      "learningOutcomes": "A tanuló képes különféle szövegtípusokat (elbeszélés, leírás, jellemzés, levél, e-mail, plakát, meghívó) megérteni és önállóan megalkotni.",
+      "developmentalTasks": "Olvasási stratégiák alkalmazása, lényegkiemelés, vázlatkészítés, kreatív írási feladatok végzése az írásbeli megnyilatkozások szabályai szerint.",
+      "concepts": "Elbeszélés, leírás, jellemzés, feleletterv, vázlat, levél, e-mail, plakát, meghívó, bevezetés-tárgyalás-befejezés.",
+      "suggestedActivities": "Saját születésnapi meghívó vagy osztályplakát tervezése, képzeletbeli utazásról szóló elbeszélés vagy e-mail írása."
+    },
+    {
       "id": "konyv_konyvtarhasznalat",
       "name": "Könyv- és könyvtárhasználat, a kultúra helyszínei",
       "recommendedHours": 4,
@@ -73,16 +75,7 @@
       "suggestedActivities": "Könyvtári kincskereső játék, egy gyermekmagazin rovatainak elemzése és saját mini-újság tervezése."
     }
   ],
-  "7-8": [
-    {
-      "id": "kommunikacio_digitalis",
-      "name": "A kommunikáció, a digitális írásbeliség fejlesztése",
-      "recommendedHours": 5,
-      "learningOutcomes": "A tanuló magabiztosan kommunikál különféle beszédhelyzetekben (vita, kiselőadás, ünnepi beszéd), és érti a tömegkommunikáció és reklámok hatásmechanizmusát.",
-      "developmentalTasks": "Érvelési technikák gyakorlása, kiselőadások és digitális prezentációk készítése, a digitális kommunikáció illemszabályainak (netikett) alkalmazása.",
-      "concepts": "Alkalmi beszéd, kiselőadás, vita, érvelés, kommunikációs zavar, tömegkommunikáció, reklám, netikett, digitális lábnyom.",
-      "suggestedActivities": "Osztályvita szervezése aktuális iskolai témákról pro-kontra csoportokkal, reklámelemzés stilisztikai szempontból."
-    },
+  "7": [
     {
       "id": "egyszeru_mondat",
       "name": "Mondat a szövegben – egyszerű mondat részei, szószerkezetek, szóösszetételek",
@@ -111,15 +104,6 @@
       "suggestedActivities": "Forráskutatás egy választott történelmi vagy természettudományos témában, bibliográfia összeállítása."
     },
     {
-      "id": "felveteli_elokeszites",
-      "name": "Készüljünk a felvételire!",
-      "recommendedHours": 10,
-      "learningOutcomes": "A tanuló rendszerezi és a gyakorlatban alkalmazza a korábbi évfolyamokon tanult nyelvtani, helyesírási és szövegértési ismereteit a középiskolai felvételire készülve.",
-      "developmentalTasks": "Korábbi felvételi feladatsorok típusfeladatainak (szólások, hangtörvények, szófajok, mondatelemzés, helyesírás) szisztematikus gyakorlása és időre történő megoldása.",
-      "concepts": "Felvételi feladattípusok, időgazdálkodás, tesztmegoldási stratégiák, rendszerezés.",
-      "suggestedActivities": "Próbafelvételi írása szigorú időkorlát alatt, a leggyakoribb hibák közös elemzése és javítása."
-    },
-    {
       "id": "szovegertes_szovegalkotas_78",
       "name": "Szövegértés, szövegalkotás",
       "recommendedHours": 3,
@@ -127,7 +111,9 @@
       "developmentalTasks": "Az érv és a cáfolat szerkezetének elemzése, egyenes és inverz érvelés megkülönböztetése, többszempontú szövegelemzés.",
       "concepts": "Érv, cáfolat, érvtípusok (tény, tekintély, analógia), érvelő fogalmazás, esszé, kritika.",
       "suggestedActivities": "Esszé vagy kritika írása egy nemrég olvasott könyvről vagy megtekintett filmről."
-    },
+    }
+  ],
+  "8": [
     {
       "id": "osszetett_mondat",
       "name": "Összetett mondat a szövegben",
@@ -145,6 +131,24 @@
       "developmentalTasks": "Régi szövegek olvasása és fordítása mai magyar nyelvre, a nyelvújítás során keletkezett és elutasított szavak vizsgálata, rovásírás alapjainak megismerése.",
       "concepts": "Nyelvcsalád, finnugor nyelvrokonok, nyelvemlék, rovásírás, nyelvújítás (ortológusok, neológusok).",
       "suggestedActivities": "Saját név leírása rovásírással, vicces, elutasított nyelvújítási szavak (pl. 'folyondár' - szivar, 'szemgolyóbis') kitalálós játéka."
+    },
+    {
+      "id": "kommunikacio_digitalis",
+      "name": "A kommunikáció, a digitális írásbeliség fejlesztése",
+      "recommendedHours": 5,
+      "learningOutcomes": "A tanuló magabiztosan kommunikál különféle beszédhelyzetekben (vita, kiselőadás, ünnepi beszéd), és érti a tömegkommunikáció és reklámok hatásmechanizmusát.",
+      "developmentalTasks": "Érvelési technikák gyakorlása, kiselőadások és digitális prezentációk készítése, a digitális kommunikáció illemszabályainak (netikett) alkalmazása.",
+      "concepts": "Alkalmi beszéd, kiselőadás, vita, érvelés, kommunikációs zavar, tömegkommunikáció, reklám, netikett, digitális lábnyom.",
+      "suggestedActivities": "Osztályvita szervezése aktuális iskolai témákról pro-kontra csoportokkal, reklámelemzés stilisztikai szempontból."
+    },
+    {
+      "id": "felveteli_elokeszites",
+      "name": "Készüljünk a felvételire!",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló rendszerezi és a gyakorlatban alkalmazza a korábbi évfolyamokon tanult nyelvtani, helyesírási és szövegértési ismereteit a középiskolai felvételire készülve.",
+      "developmentalTasks": "Korábbi felvételi feladatsorok típusfeladatainak (szólások, hangtörvények, szófajok, mondatelemzés, helyesírás) szisztematikus gyakorlása és időre történő megoldása.",
+      "concepts": "Felvételi feladattípusok, időgazdálkodás, tesztmegoldási stratégiák, rendszerezés.",
+      "suggestedActivities": "Próbafelvételi írása szigorú időkorlát alatt, a leggyakoribb hibák közös elemzése és javítása."
     }
   ]
 }

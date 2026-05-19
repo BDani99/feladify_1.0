@@ -26,6 +26,10 @@ const SUBJECT_CATEGORIES = {
     categories: ['Grammar', 'Vocabulary', 'Reading', 'Writing', 'Listening', 'Speaking'],
     difficulty: [1, 2, 3, 4, 5]
   },
+  'Német': {
+    categories: ['Grammatik', 'Wortschatz', 'Lesen', 'Schreiben', 'Verstehen', 'Kommunikation'],
+    difficulty: [1, 2, 3, 4, 5]
+  },
   'Környezetismeret': {
     categories: ['Földrajz', 'Biológia', 'Fizika', 'Kémia', 'Társadalomismeret', 'Környezetvédelem'],
     difficulty: [1, 2, 3, 4, 5]
@@ -323,6 +327,36 @@ questionSchema.statics.initializeSampleQuestions = async function() {
       explanation: '"Sad" is the direct opposite of "happy".',
       points: 1,
       tags: ['vocabulary', 'opposites', 'adjectives']
+    },
+    
+    // Német kérdések
+    {
+      subject: 'Német',
+      category: 'Grammatik',
+      questionText: 'Wähle die richtige Form: "Er ___ jeden Tag zur Schule."',
+      questionType: 'multiple_choice',
+      difficulty: 1,
+      options: [
+        { label: 'A', text: 'gehen', isCorrect: false },
+        { label: 'B', text: 'geht', isCorrect: true },
+        { label: 'C', text: 'gehe', isCorrect: false },
+        { label: 'D', text: 'ging', isCorrect: false }
+      ],
+      correctAnswer: 'B',
+      explanation: 'Dritte Person Singular (er) erfordert "geht" im Präsens.',
+      points: 1,
+      tags: ['grammatik', 'präsens', 'dritte-person']
+    },
+    {
+      subject: 'Német',
+      category: 'Wortschatz',
+      questionText: 'Was ist das Gegenteil von "gut"?',
+      questionType: 'short_answer',
+      difficulty: 1,
+      correctAnswer: 'schlecht',
+      explanation: '"Schlecht" is the direct opposite of "gut".',
+      points: 1,
+      tags: ['wortschatz', 'gegenteil', 'adjektive']
     },
     
     // Környezetismeret kérdések

@@ -1,5 +1,5 @@
 {
-  "5-6": [
+  "5": [
     {
       "id": "anyagok_tulajdonsagai",
       "name": "Anyagok és tulajdonságaik",
@@ -53,7 +53,9 @@
       "developmentalTasks": "Magyarország domborzati és vízrajzi térképének használata, topográfiai pontok felismerése és megnevezése.",
       "concepts": "Alföld, hegység, folyó, tó, főváros, megyeszékhely, vaktérkép.",
       "suggestedActivities": "Vaktérképes játékok Magyarország hegységeinek, folyóinak (Duna, Tisza, Balaton) elhelyezésére."
-    },
+    }
+  ],
+  "6": [
     {
       "id": "novenyek_testfelepitese",
       "name": "A növények testfelépítése",
@@ -108,5 +110,7 @@
       "concepts": "Csontváz, izomzat, emésztés, légzés, pulzus, vérkeringés, egészséges táplálkozás, higiénia, testi-lelki egyensúly.",
       "suggestedActivities": "Pulzusszám mérése nyugalmi állapotban és fizikai terhelés után, napi étrend-elemzés készítése."
     }
-  ]
+  ],
+  "7": [],
+  "8": []
 }

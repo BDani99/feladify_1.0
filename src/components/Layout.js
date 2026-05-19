@@ -26,6 +26,7 @@ import RoadmapView from '../pages/Student/RoadmapView';
 import CheckpointPractice from '../pages/Student/CheckpointPractice';
 import DiagnosticResult from '../pages/Student/DiagnosticResult';
 import TeacherDashboard from '../pages/Teacher/TeacherDashboard';
+import CurriculumConfig from '../pages/Teacher/CurriculumConfig';
 import StudentDashboard from '../pages/Student/StudentDashboard';
 import StudentGoals from '../pages/Student/StudentGoals';
 import DocumentsPage from '../pages/Documents';
@@ -87,6 +88,7 @@ const Layout = ({ onLoginSuccess }) => {
                     <>
                         <Route path="/ai-asszisztens" element={<WelcomePage />} />
                         <Route path="/iranyitopult" element={<TeacherDashboard />} />
+                        <Route path="/kerettanterv" element={<CurriculumConfig />} />
                         <Route path="/dolgozat-generalas" element={<AssignmentGeneratePage />} />
                         <Route path="/generalt-dolgozatok" element={<GeneratedAssignments />} />
                         <Route path="/statisztika" element={<TeacherStatisticsPage />} />
