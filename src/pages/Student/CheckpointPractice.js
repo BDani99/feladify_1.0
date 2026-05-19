@@ -36,16 +36,23 @@ const CheckpointPractice = () => {
   const [chatQuestionIndex, setChatQuestionIndex] = useState(0);
   const chatEndRef = useRef(null);
 
-  useEffect(() => { startCheckpoint(); }, [subject, checkpointId]);
+  useEffect(() => {
+    const controller = new AbortController();
+    startCheckpoint(controller.signal);
+    return () => controller.abort();
+  }, [subject, checkpointId]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages]);
 
-  const startCheckpoint = async () => {
+  const startCheckpoint = async (signal) => {
+    setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/start`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ subject, checkpointId })
+        body: JSON.stringify({ subject, checkpointId }),
+        signal
       });
+      if (signal?.aborted) return;
       if (res.ok) {
         const data = await res.json();
         setQuestions(data.questions || []);
@@ -56,9 +63,10 @@ const CheckpointPractice = () => {
         addBotMessage('Hiba a checkpoint betöltésekor. Kérlek, próbálj vissza navigálni.');
       }
     } catch (err) {
+      if (err.name === 'AbortError') return;
       console.error('Hiba a checkpoint indításakor:', err);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   };
 
@@ -119,6 +127,13 @@ const CheckpointPractice = () => {
     return answers[qid] !== undefined && answers[qid] !== '';
   };
 
+  const getCurrentQuestionHistory = () => {
+    const lastSepIdx = chatMessages.map(m => m.role).lastIndexOf('separator');
+    return chatMessages
+      .slice(lastSepIdx + 1)
+      .filter(m => m.role === 'user' || m.role === 'bot');
+  };
+
   const handleCheckAnswer = async () => {
     const question = questions[currentIndex];
     const answer = collectAnswer(question);
@@ -129,7 +144,13 @@ const CheckpointPractice = () => {
       const res = await fetch(`${API_BASE}/answer`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ checkpointId, questionId: question.questionId, answer, subject, chatHistory: chatMessages })
+        body: JSON.stringify({
+          checkpointId,
+          questionId: question.questionId,
+          answer,
+          subject,
+          chatHistory: getCurrentQuestionHistory()
+        })
       });
       if (res.ok) {
         const data = await res.json();
@@ -138,11 +159,13 @@ const CheckpointPractice = () => {
         if (data.isCorrect) {
           setAnsweredCorrectly(prev => ({ ...prev, [question.questionId]: true }));
           setQuestionStatuses(prev => ({ ...prev, [question.questionId]: 'correct' }));
-          addBotMessage(`✅ ${data.aiMessage}`);
+          addBotMessage(`✅ **Helyes!** ${data.aiMessage}`);
         } else {
           setQuestionStatuses(prev => ({ ...prev, [question.questionId]: 'incorrect' }));
-          const hintText = data.hint ? `\n\n💡 *${data.hint}*` : '';
-          addBotMessage(`❌ ${data.aiMessage}${hintText}\n\nPróbáld meg újra! 💪`);
+          const incorrectMsg = data.hint
+            ? `❌ **Nem sikerült.** Gondold át még egyszer!\n\n💡 ${data.hint}`
+            : `❌ **Nem sikerült.** Gondold át még egyszer!`;
+          addBotMessage(incorrectMsg);
         }
       } else if (res.status === 503) {
         addBotMessage('⚠️ Az AI mentor jelenleg nem elérhető. Kérjük, próbáld újra később!');
@@ -243,7 +266,7 @@ const CheckpointPractice = () => {
     const currentQuestionHistory = updatedHistory
       .slice(lastSepIdx + 1)
       .filter(m => m.role === 'user' || m.role === 'bot')
-      .slice(-6);
+      .slice(-8);
 
     try {
       const attempts = currentQuestionHistory.filter(m => m.role === 'user').length;
@@ -550,7 +573,11 @@ const CheckpointPractice = () => {
                     msg.role === 'separator' ? (
                       <div key={idx} className="chat-separator">{msg.content}</div>
                     ) : (
-                      <div key={idx} className={`chat-msg ${msg.role}`}>
+                      <div key={idx} className={`chat-msg ${msg.role}${
+                        msg.role === 'bot' && msg.content?.startsWith('✅') ? ' msg-correct' :
+                        msg.role === 'bot' && msg.content?.startsWith('❌') ? ' msg-incorrect' :
+                        msg.role === 'bot' && msg.content?.startsWith('💡') ? ' msg-hint' : ''
+                      }`}>
                         <div className="msg-content">
                           <ReactMarkdown>{msg.content}</ReactMarkdown>
                         </div>

@@ -22,8 +22,57 @@ const PracticeHub = () => {
   const [startingDiagnostic, setStartingDiagnostic] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState(user?.className || '4. osztály');
   const [chaptersOpen, setChaptersOpen] = useState(false);
+  const [natTopics, setNatTopics] = useState([]);
+  const [selectedTopics, setSelectedTopics] = useState([]);
+  const [loadingTopics, setLoadingTopics] = useState(false);
 
   useEffect(() => { fetchSubjectStatus(); }, [subject]);
+
+  useEffect(() => {
+    const fetchTopics = async () => {
+      const gradeMatch = selectedGrade.match(/^(\d+)/);
+      const gradeNum = gradeMatch ? parseInt(gradeMatch[1], 10) : null;
+      
+      const isCurriculumSupported = (sub) => {
+        if (!sub) return false;
+        const s = sub.toLowerCase();
+        return ['matematika', 'nyelvtan', 'irodalom', 'történelem', 'környezetismeret',
+                'fizika', 'biológia', 'biologia', 'földrajz', 'foldrajz'].includes(s);
+      };
+
+      if (subject && isCurriculumSupported(subject) && gradeNum) {
+        setLoadingTopics(true);
+        try {
+          const response = await fetch(`${API_BASE_URL}/curriculum/topics?subject=${encodeURIComponent(subject)}&grade=${gradeNum}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('AccessToken')}` }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            if (data.available && Array.isArray(data.topics)) {
+              setNatTopics(data.topics);
+              setSelectedTopics([]);
+            } else {
+              setNatTopics([]);
+              setSelectedTopics([]);
+            }
+          } else {
+            setNatTopics([]);
+            setSelectedTopics([]);
+          }
+        } catch (err) {
+          console.error('Error fetching NAT topics:', err);
+          setNatTopics([]);
+          setSelectedTopics([]);
+        } finally {
+          setLoadingTopics(false);
+        }
+      } else {
+        setNatTopics([]);
+        setSelectedTopics([]);
+      }
+    };
+    fetchTopics();
+  }, [subject, selectedGrade]);
 
   const fetchSubjectStatus = async () => {
     try {
@@ -59,7 +108,7 @@ const PracticeHub = () => {
       const res = await fetch(`${API_BASE_URL}/student/diagnostic/start`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject, grade: selectedGrade })
+        body: JSON.stringify({ subject, grade: selectedGrade, selectedTopics })
       });
       if (res.ok) {
         const data = await res.json();
@@ -73,6 +122,47 @@ const PracticeHub = () => {
       alert('Hiba: ' + err.message);
       setStartingDiagnostic(false);
     }
+  };
+
+  const handleTopicToggle = (topicId) => {
+    setSelectedTopics(prev => 
+      prev.includes(topicId) ? prev.filter(id => id !== topicId) : [...prev, topicId]
+    );
+  };
+
+  const renderTopicSelector = () => {
+    if (loadingTopics) {
+      return (
+        <div className="hub-topics-loading">
+          <span className="hub-topics-spinner" />
+          <span>Témakörök betöltése...</span>
+        </div>
+      );
+    }
+    if (natTopics.length === 0) return null;
+
+    return (
+      <div className="hub-topic-selector">
+        <h3 className="hub-topic-title">🎯 Választható témakörök (opcionális)</h3>
+        <p className="hub-topic-subtitle">Válassz ki konkrét témaköröket a szintfelmérőhöz, vagy hagyd üresen az összes témakör felméréséhez.</p>
+        <div className="hub-topics-grid">
+          {natTopics.map(topic => {
+            const isSelected = selectedTopics.includes(topic.id);
+            return (
+              <button
+                key={topic.id}
+                type="button"
+                className={`hub-topic-chip${isSelected ? ' selected' : ''}`}
+                onClick={() => handleTopicToggle(topic.id)}
+              >
+                <span className="hub-topic-chip-icon">{isSelected ? '✓' : '+'}</span>
+                <span className="hub-topic-chip-name">{topic.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -109,7 +199,7 @@ const PracticeHub = () => {
   const bestScore = completedCps.length
     ? Math.max(...completedCps.map(c => c.score || 0))
     : 0;
-  const levelXP = completedCps.reduce((s, c) => s + 30 + (c.difficulty || 3) * 8 + Math.floor((c.score || 0) * 0.5), 0);
+  const levelXP = completedCps.reduce((s, c) => s + 30 + (c.difficulty || 3) * 8 + Math.floor((c.score || 0) * 0.5), 0) + 100;
   // Minden checkpoint 10 kérdés; helyes válaszok becsülése score%-ból
   const totalQuestionsAnswered = completedCps.length * 10;
   const totalCorrect = completedCps.reduce((s, c) => s + Math.round((c.score || 0) / 100 * 10), 0);
@@ -195,6 +285,8 @@ const PracticeHub = () => {
             </div>
             <p className="lc-next-hint">A szintfelmérő nehezebb kérdéseket tartalmaz majd.</p>
 
+            {renderTopicSelector()}
+
             <div className="lc-next-controls">
               <div className="grade-selector">
                 <label htmlFor="grade-lc">Osztályfok:</label>
@@ -278,6 +370,8 @@ const PracticeHub = () => {
                   {GRADE_OPTIONS.map(g => <option key={g}>{g}</option>)}
                 </select>
               </div>
+
+              {renderTopicSelector()}
 
               <button
                 className="start-btn"

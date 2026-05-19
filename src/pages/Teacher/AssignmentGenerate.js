@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { previewAssignment, saveAssignment } from '../../api/Assignments/Teacher/GenerateAssignment';
 import { fetchTeacherClasses } from '../../api/Assignments/Teacher/GetClasses';
 import { fetchUserData } from '../../api/Auth/ProfileData';
+import { API_BASE_URL } from '../../api/config';
 import {
     FaExclamationCircle,
     FaCheckCircle,
@@ -50,6 +51,10 @@ const AssignmentGenerate = ({ token }) => {
     const [subject, setSubject] = useState('');
     const [difficulty, setDifficulty] = useState('Normál');
     const [className, setClassName] = useState('');
+    
+    const [natTopics, setNatTopics] = useState([]);
+    const [selectedTopics, setSelectedTopics] = useState([]);
+    const [loadingTopics, setLoadingTopics] = useState(false);
     
     const [activeTypes, setActiveTypes] = useState({
         nyilt: true,
@@ -113,6 +118,53 @@ const AssignmentGenerate = ({ token }) => {
         loadData();
     }, [token]);
 
+    useEffect(() => {
+        const fetchTopics = async () => {
+            const isCurriculumSupported = (sub) => {
+                if (!sub) return false;
+                const s = sub.toLowerCase();
+                return ['matematika', 'nyelvtan', 'irodalom', 'történelem', 'környezetismeret',
+                        'fizika', 'biológia', 'biologia', 'földrajz', 'foldrajz'].includes(s);
+            };
+
+            if (subject && isCurriculumSupported(subject) && className) {
+                const gradeMatch = className.match(/^(\d+)/);
+                const gradeNum = gradeMatch ? parseInt(gradeMatch[1], 10) : null;
+                if (gradeNum) {
+                    setLoadingTopics(true);
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/curriculum/topics?subject=${encodeURIComponent(subject)}&grade=${gradeNum}`, {
+                            headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`,
+                            }
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.available && Array.isArray(data.topics)) {
+                                setNatTopics(data.topics);
+                            } else {
+                                setNatTopics([]);
+                            }
+                        } else {
+                            setNatTopics([]);
+                        }
+                    } catch (err) {
+                        console.error('Error fetching NAT topics:', err);
+                        setNatTopics([]);
+                    } finally {
+                        setLoadingTopics(false);
+                    }
+                } else {
+                    setNatTopics([]);
+                }
+            } else {
+                setNatTopics([]);
+                setSelectedTopics([]);
+            }
+        };
+        fetchTopics();
+    }, [subject, className]);
+
     const toggleType = (id) => {
         setActiveTypes(prev => ({ ...prev, [id]: !prev[id] }));
     };
@@ -151,7 +203,7 @@ const AssignmentGenerate = ({ token }) => {
         }
 
         try {
-            const data = await previewAssignment(title, subject, difficulty, className, questionTypes);
+            const data = await previewAssignment(title, subject, difficulty, className, questionTypes, selectedTopics);
             setPreviewQuestions(data.questions);
             setLastPreviewQuestions(data.questions);
             setShowModal(true);
@@ -209,6 +261,7 @@ const AssignmentGenerate = ({ token }) => {
         setActiveTypes({ nyilt: true });
         setSelectedStudentIds([]);
         setShowStudentSelector(false);
+        setSelectedTopics([]);
     };
 
     return (
@@ -312,6 +365,48 @@ const AssignmentGenerate = ({ token }) => {
                                                     );
                                                 })}
                                             </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {subject && ['matematika', 'nyelvtan', 'irodalom', 'történelem', 'környezetismeret'].includes(subject.toLowerCase()) && className && (
+                                <div className="nat-topics-container">
+                                    <label className="nat-topics-label"><FaBrain /> Nemzeti Alaptantervi (NAT) Témakörök</label>
+                                    {loadingTopics ? (
+                                        <div className="nat-topics-loading">NAT témakörök betöltése...</div>
+                                    ) : natTopics.length === 0 ? (
+                                        <div className="nat-topics-empty">Ehhez a tantárgyhoz és évfolyamhoz jelenleg nem áll rendelkezésre a részletes nemzeti kerettanterv.</div>
+                                    ) : (
+                                        <div className="nat-topics-grid">
+                                            {natTopics.map(topicItem => {
+                                                const isSelected = selectedTopics.includes(topicItem.id);
+                                                return (
+                                                    <div 
+                                                        key={topicItem.id} 
+                                                        className={`nat-topic-chip ${isSelected ? 'selected' : ''}`}
+                                                        onClick={() => {
+                                                            setSelectedTopics(prev => {
+                                                                const updated = prev.includes(topicItem.id)
+                                                                    ? prev.filter(id => id !== topicItem.id)
+                                                                    : [...prev, topicItem.id];
+                                                                
+                                                                const selectedNames = natTopics
+                                                                    .filter(t => updated.includes(t.id))
+                                                                    .map(t => t.name);
+                                                                setTitle(selectedNames.join(', '));
+                                                                
+                                                                return updated;
+                                                            });
+                                                        }}
+                                                    >
+                                                        <div className="nat-chip-check">
+                                                            {isSelected && <FaCheck />}
+                                                        </div>
+                                                        <div className="nat-chip-name">{topicItem.name}</div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>

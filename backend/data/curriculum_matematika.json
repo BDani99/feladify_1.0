@@ -1,0 +1,276 @@
+{
+  "5-6": [
+    {
+      "id": "halmazok",
+      "name": "Halmazok",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló halmazokat képez megadott szempontok alapján, csoportosít tárgyakat, geometriai alakzatokat, számokat. Képes eldönteni eleme-e kapcsolatokat.",
+      "developmentalTasks": "Szempontok szerinti válogatások, osztályozások végzése. Halmazok képzése, megadása megnevezéssel, elemek felsorolásával.",
+      "concepts": "Halmaz, elem, részhalmaz, üres halmaz, unió, közös rész.",
+      "suggestedActivities": "Játékos csoportosítások, Venn-diagramok rajzolása, osztálytársak tulajdonságai szerinti halmazok."
+    },
+    {
+      "id": "logika_kombinatorika",
+      "name": "Matematikai logika, kombinatorika",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló egyszerű logikai következtetéseket von le, szisztematikusan sorol fel lehetőségeket egyszerű kombinatorikai feladatokban.",
+      "developmentalTasks": "Logikai állítások igazságtartalmának vizsgálata. Esetek rendszerezése, elágazó ábrák rajzolása.",
+      "concepts": "Állítás, tagadás, igaz, hamis. Összes lehetőség, szisztematikus felsorolás.",
+      "suggestedActivities": "Barkochba, logikai játékok, öltözködési vagy útvonalválasztási lehetőségek számlálása."
+    },
+    {
+      "id": "szamok_szamelmelet",
+      "name": "Természetes számok, számelmélet",
+      "recommendedHours": 20,
+      "learningOutcomes": "A tanuló érti a helyiértékes rendszert nagy számok esetén is. Ismeri az oszthatósági szabályokat (2, 5, 10, 3, 9). Megállapítja a prímszámokat, összetett számokat.",
+      "developmentalTasks": "Tízes számrendszer szerkezete, kerekítések. Oszthatóság vizsgálata, közös osztók, közös többszörösök keresése.",
+      "concepts": "Helyi érték, valódi érték, alaki érték. Osztó, többszörös, prímszám, összetett szám, legnagyobb közös osztó (lnko), legkisebb közös többszörös (lkkt).",
+      "suggestedActivities": "Számkártyás játékok, oszthatósági dominó, prímtényezős felbontás vizuális modellekkel."
+    },
+    {
+      "id": "alapmuveletek_termeszetes",
+      "name": "Alapműveletek természetes számokkal",
+      "recommendedHours": 16,
+      "learningOutcomes": "A tanuló magabiztosan végez írásbeli összeadást, kivonást, szorzást és osztást. Érti a műveleti tulajdonságokat és a műveleti sorrendet.",
+      "developmentalTasks": "Fejszámolás és írásbeli műveletek gyakorlása. Becslés és ellenőrzés. Zárójelek használata.",
+      "concepts": "Összeadás, kivonás, szorzás, osztás, maradék, műveleti sorrend, zárójel, becslés.",
+      "suggestedActivities": "Vásárlási szituációk modellezése, hibás írásbeli számítások javítása."
+    },
+    {
+      "id": "egesz_szamok",
+      "name": "Egész számok",
+      "recommendedHours": 18,
+      "learningOutcomes": "A tanuló értelmezi a negatív számokat a hőmérséklet, tengerszint feletti magasság stb. kontextusában. Összead, kivon egész számokat, szoroz és oszt egész számot természetes számmal.",
+      "developmentalTasks": "Az egész számok elhelyezése a számegyenesen. Ellentett és abszolút érték fogalmának elmélyítése.",
+      "concepts": "Negatív szám, egész szám, ellentett, abszolút érték, számegyenes.",
+      "suggestedActivities": "Hőmérséklet-változások nyomon követése, adósság-vagyon játékok."
+    },
+    {
+      "id": "rac_tizedes_szamok",
+      "name": "Közönséges és tizedes törtek, racionális számok",
+      "recommendedHours": 18,
+      "learningOutcomes": "A tanuló felismeri a tört részeket mint egy egész részeit vagy osztást. Felírja a közönséges törteket tizedes tört alakban és fordítva.",
+      "developmentalTasks": "Törtek értelmezése, bővítése, egyszerűsítése. Törtek összehasonlítása, elhelyezése a számegyenesen.",
+      "concepts": "Számláló, nevező, törtvonal, valódi tört, áltört, vegyes szám, tizedes tört, tizedesjegyek.",
+      "suggestedActivities": "Csokoládé és pizza osztásos játékok, mérőszalag használata."
+    },
+    {
+      "id": "muveletek_kozoseges",
+      "name": "Alapműveletek közönséges törtekkel",
+      "recommendedHours": 18,
+      "learningOutcomes": "A tanuló azonos nevezőjű törteket összead és kivon. Különböző nevezőjű törteket közös nevezőre hozással ad össze és von ki. Törtet szoroz és oszt egész számmal.",
+      "developmentalTasks": "Törtekkel végzett műveletek képi és tárgyi modellezése. A reciprok fogalmának előkészítése.",
+      "concepts": "Közös nevező, egyszerűsítés, bővítés, reciprok.",
+      "suggestedActivities": "Receptek arányosítása (pl. fél vagy másfélszeres adag készítése)."
+    },
+    {
+      "id": "muveletek_tizedes",
+      "name": "Alapműveletek tizedes törtekkel",
+      "recommendedHours": 14,
+      "learningOutcomes": "A tanuló tizedes törteket összead, kivon, szoroz és oszt tizedes törttel vagy természetes számmal. Képes 10-zel, 100-zal, 1000-rel szorozni és osztani fejben.",
+      "developmentalTasks": "Tizedes törtekkel való írásbeli számolás szabályainak megértése. Helyiérték-eltolódás vizsgálata szorzásnál/osztásnál.",
+      "concepts": "Tizedesvessző, tizedesjegy, helyi érték.",
+      "suggestedActivities": "Pénzügyi számítások (pl. zsebpénz gyűjtése, vásárlás euróval)."
+    },
+    {
+      "id": "aranyossag_szazalek",
+      "name": "Arányosság, százalékszámítás",
+      "recommendedHours": 20,
+      "learningOutcomes": "A tanuló felismeri az egyenes arányosságot. Képes egyszerű következtetéseket tenni arányos mennyiségeknél. Megérti a százalékérték, százalékláb, alap fogalmát egyszerűbb esetekben.",
+      "developmentalTasks": "Következtetés az egységre. Aránypár felírása. Százalékérték kiszámítása (pl. 10%, 25%, 50%).",
+      "concepts": "Arány, egyenes arányosság, százalék, százalékalap, százalékláb, százalékérték.",
+      "suggestedActivities": "Térkép-méretarányok vizsgálata, áruházi kedvezmények kiszámolása."
+    },
+    {
+      "id": "szoveges_feladatok",
+      "name": "Egyszerű szöveges feladatok",
+      "recommendedHours": 20,
+      "learningOutcomes": "A tanuló értelmezi a szöveges feladatokat, adatokat gyűjt, tervet készít, megoldja és ellenőrzi az eredményt a szöveg alapján.",
+      "developmentalTasks": "Szövegértés fejlesztése, matematikai modellek alkotása (egyenletek előkészítése lebontogatással vagy szakaszos ábrázolással).",
+      "concepts": "Adatok, feltételek, összefüggések, modell, ellenőrzés.",
+      "suggestedActivities": "Életszerű történetek megoldása, saját szöveges feladatok írása társaknak."
+    },
+    {
+      "id": "fuggvenyek_elokeszitese",
+      "name": "A függvény fogalmának előkészítése",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló felismer összefüggéseket két mennyiség között. Összetartozó értékpárokat táblázatba foglal, ábrázol derékszögű koordináta-rendszerben.",
+      "developmentalTasks": "Hozzárendelési szabályok megfogalmazása szavakkal. Koordináta-rendszer pontjainak leolvasása.",
+      "concepts": "Hozzárendelés, szabály, táblázat, koordináta-rendszer, tengely, origó.",
+      "suggestedActivities": "Játékok koordináta-rendszerben (pl. torpedó), növekedési grafikonok készítése."
+    },
+    {
+      "id": "sorozatok",
+      "name": "Sorozatok",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló felismeri és folytatja az egyszerű számsorozatokat, ábrasorozatokat. Megfogalmazza a képzési szabályt.",
+      "developmentalTasks": "Sorozatok szabályának felismerése növekvő vagy csökkenő mintáknál. Szabálykövetés.",
+      "concepts": "Sorozat, tag, képzési szabály, különbség.",
+      "suggestedActivities": "Szín- és alakzat-mintázatok folytatása, Fibonaccival való játékos ismerkedés."
+    },
+    {
+      "id": "meres_mertekegyseg",
+      "name": "Mérés és mértékegységek",
+      "recommendedHours": 16,
+      "learningOutcomes": "A tanuló magabiztosan váltja át a hosszúság, tömeg, űrtartalom, idő és terület mértékegységeit. Érti a mértékegységrendszer tízes alapú felépítését.",
+      "developmentalTasks": "Mérőeszközök használata. Becslés. Átváltások gyakorlása a gyakorlati életből vett példákkal.",
+      "concepts": "Mérőszám, mértékegység, hosszúság, tömeg, űrtartalom, terület, idő.",
+      "suggestedActivities": "Osztálytermi tárgyak lemérése, főzési hozzávalók átszámolása."
+    },
+    {
+      "id": "sikbeli_alakzatok",
+      "name": "Síkbeli alakzatok",
+      "recommendedHours": 18,
+      "learningOutcomes": "A tanuló csoportosítja a háromszögeket, négyszögeket tulajdonságaik (oldalak, szögek) szerint. Kiszámítja a téglalap, négyzet kerületét és területét.",
+      "developmentalTasks": "Geometriai fogalmak megkülönböztetése. Kerület és terület fogalmi elkülönítése.",
+      "concepts": "Pont, egyenes, szakasz, félegyenes, szög, merőleges, párhuzamos, sokszög, téglalap, négyzet, kerület, terület.",
+      "suggestedActivities": "Tangram-játékok, terület-lefedések egységnégyzetekkel."
+    },
+    {
+      "id": "transzformaciok_szerkesztes",
+      "name": "Transzformációk, szerkesztések",
+      "recommendedHours": 20,
+      "learningOutcomes": "A tanuló felismeri a tengelyes szimmetriát a környezetében és a geometriai alakzatoknál. Egyszerűbb alakzatokat tükröz tengelyesen.",
+      "developmentalTasks": "Tükrös formák keresése természetben, betűknél. Tükörkép szerkesztése négyzethálón és szerkesztőeszközökkel.",
+      "concepts": "Tengelyes szimmetria, szimmetriatengely, tükörkép, távolság.",
+      "suggestedActivities": "Papírkivágások készítése szimmetrikusan, festéktükrözések."
+    },
+    {
+      "id": "tergeometria",
+      "name": "Térgeometria",
+      "recommendedHours": 16,
+      "learningOutcomes": "A tanuló felismeri és megnevezi a leggyakoribb térbeli alakzatokat (kocka, téglatest). Ismeri a kocka és téglatest hálóját, kiszámítja felszínüket és térfogatukat.",
+      "developmentalTasks": "Térszemlélet fejlesztése építőkockákkal. Kocka és téglatest felszínének és térfogatának kiszámítása.",
+      "concepts": "Test, kocka, téglatest, lap, él, csúcs, háló, felszín, térfogat.",
+      "suggestedActivities": "Papírhálóból testek hajtogatása, dobozok felszínének lemérése."
+    },
+    {
+      "id": "leiro_statisztika",
+      "name": "Leíró statisztika",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló adatokat gyűjt, rendszerez, ábrázol egyszerűbb oszlopdiagramon vagy kördiagramon. Kiszámítja adathalmazok számtani közepét (átlagát).",
+      "developmentalTasks": "Diagramok olvasása és értelmezése. Adatok ábrázolása. Átlag fogalmának gyakorlati használata.",
+      "concepts": "Adat, diagram, táblázat, átlag (számtani közép).",
+      "suggestedActivities": "Időjárási hőmérsékletek vagy osztályzatok átlagának kiszámítása."
+    },
+    {
+      "id": "valoszinuseg",
+      "name": "Valószínűség-számítás",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló felismeri, hogy események bekövetkezése lehet biztos, lehetetlen vagy véletlen. Egyszerű kísérleteknél megfigyeli a gyakoriságot.",
+      "developmentalTasks": "Kísérletek végzése (pénzdobás, kockadobás). Relatív gyakoriság kiszámítása.",
+      "concepts": "Esemény, biztos, lehetetlen, véletlen, kísérlet, gyakoriság, relatív gyakoriság.",
+      "suggestedActivities": "Kockadobásos játékok, statisztika gyűjtése 100 dobásból."
+    }
+  ],
+  "7-8": [
+    {
+      "id": "halmazok_szamhalmazok",
+      "name": "Halmazok, számhalmazok",
+      "recommendedHours": 12,
+      "learningOutcomes": "A tanuló érti a valós számhalmazok (természetes, egész, racionális, irracionális, valós számok) hierarchiáját és Venn-diagramon ábrázolja azokat. Magabiztosan használja a halmazműveleteket.",
+      "developmentalTasks": "Halmazműveletek szimbolikus jelölése. Számok besorolása a megfelelő számhalmazba.",
+      "concepts": "Természetes (N), egész (Z), racionális (Q), irracionális (I), valós (R) számok. Unió, metszet, különbség, komplementer.",
+      "suggestedActivities": "Számhalmaz-puzzle, halmazműveletek interaktív ábrázolása."
+    },
+    {
+      "id": "logika_kombinatorika_grafok",
+      "name": "Matematikai logika, kombinatorika, gráfok",
+      "recommendedHours": 18,
+      "learningOutcomes": "A tanuló eldönti állítások igazságtartalmát és használja a logikai szavakat (és, vagy, ha... akkor). Ismeri a gráfok alapelemeit. Kombinatorikai problémákban permutációt, variációt alkalmaz képlet nélkül.",
+      "developmentalTasks": "Gráfok rajzolása kapcsolatok alapján. Fokszámok összege szabály. Kombinatorikus gondolkodás fejlesztése szisztematikus úton.",
+      "concepts": "Logikai műveletek, implikáció. Gráf, csúcs, él, fokszám, összefüggő gráf. Permutáció, variáció (ismétléses és ismétlés nélküli).",
+      "suggestedActivities": "Kézfogások számlálása, hálózattervezési feladatok gráffal."
+    },
+    {
+      "id": "szamelmelet_hatvany_gyok",
+      "name": "Számelmélet, hatványozás, négyzetgyök",
+      "recommendedHours": 18,
+      "learningOutcomes": "A tanuló értelmezi az egész kitevőjű hatványokat és a négyzetgyököt. Képes prímfelbontással LNKO-t és LKKT-t keresni. Felír számokat normálalakban.",
+      "developmentalTasks": "Hatványozás azonosságainak alkalmazása. Normálalak értelmezése és átírása. Négyzetgyökvonás becsléssel.",
+      "concepts": "Hatvány, alap, kitevő, normálalak, négyzetgyök, prímtényezős felbontás.",
+      "suggestedActivities": "Mikroorganizmusok osztódásának modellezése hatványozással, csillagászati távolságok normálalakban."
+    },
+    {
+      "id": "aranyossag_szazalek_78",
+      "name": "Arányosság, százalékszámítás",
+      "recommendedHours": 22,
+      "learningOutcomes": "A tanuló érti és alkalmazza az egyenes és fordított arányosságot. Összetett százalékszámítási feladatokat (kamatos kamat, áfa, árleszállítások) old meg.",
+      "developmentalTasks": "Fordított arányosság ábrázolása hiperbolaként. Százalékszámítás különböző alapok esetén. Százalékos változások egymásutánja.",
+      "concepts": "Egyenes arányosság, fordított arányosság, kamat, kamatos kamat, áfa, százalékláb, százalékalap, százalékérték.",
+      "suggestedActivities": "Banki ajánlatok és hitelek összehasonlítása, adók és kedvezmények modellezése."
+    },
+    {
+      "id": "szoveges_elokeszites",
+      "name": "Szöveges feladatok előkészítése (algebra)",
+      "recommendedHours": 16,
+      "learningOutcomes": "A tanuló betűs kifejezéseket hoz létre szöveges leírás alapján. Behelyettesít a betűs kifejezésekbe. Egyszerűbb algebrai kifejezéseket összevon, egyszerűsít.",
+      "developmentalTasks": "Változók bevezetése. Egyszerű egyenletek, egyenlőtlenségek megoldása mérlegelvvel.",
+      "concepts": "Változó, együttható, tag, egynemű algebrai kifejezés, egyenlet, egyenlőtlenség, mérlegelv.",
+      "suggestedActivities": "Kitalálós számjátékok leírása egyenlettel."
+    },
+    {
+      "id": "szoveges_feladatok_78",
+      "name": "Szöveges feladatok",
+      "recommendedHours": 22,
+      "learningOutcomes": "A tanuló összetett, életszerű szöveges feladatokat (keverési, munkavégzési, mozgási és számjegyekkel kapcsolatos feladatok) egyenletek felírásával old meg és ellenőriz.",
+      "developmentalTasks": "Szöveg matematikai nyelvre fordítása, egyenlet felírása, megoldása és a kapott gyökök ellenőrzése a szöveg feltételei szerint.",
+      "concepts": "Modellalkotás, keverési feladat, munkavégzési feladat, mozgási feladat, egyenletrendszer előkészítése.",
+      "suggestedActivities": "Kémiai oldatok hígításának kiszámolása, utazási tervek készítése sebesség-idő grafikonnal."
+    },
+    {
+      "id": "fuggvenyek_elokeszitese_78",
+      "name": "A függvény fogalmának mélyítése",
+      "recommendedHours": 12,
+      "learningOutcomes": "A tanuló értelmezi a lineáris függvényt, ábrázolja annak grafikonját. Meghatározza a meredekséget (iránytényezőt) és a tengelymetszetet. Leolvas tulajdonságokat.",
+      "developmentalTasks": "Függvény hozzárendelési szabályának felírása. Meredekség értelmezése. Értéktáblázat készítése és koordináták ábrázolása.",
+      "concepts": "Függvény, lineáris függvény, meredekség (m), y-tengelymetszet (b), zérushely, értelmezési tartomány, értékkészlet.",
+      "suggestedActivities": "Mobiltelefon-előfizetések havidíjainak ábrázolása grafikonon."
+    },
+    {
+      "id": "sikbeli_alakzatok_78",
+      "name": "Síkbeli alakzatok és Pitagorasz-tétel",
+      "recommendedHours": 20,
+      "learningOutcomes": "A tanuló ismeri a háromszögek, négyszögek (deltoid, rombusz, paralelogramma, trapéz) tulajdonságait és területképleteit. Alkalmazza a Pitagorasz-tételt síkbeli számításokban.",
+      "developmentalTasks": "Alakzatok magasságának, átlóinak használata terület- és kerületszámításnál. Pitagorasz-tétel felismerése és alkalmazása derékszögű háromszögekben.",
+      "concepts": "Deltoid, rombusz, paralelogramma, trapéz, Pitagorasz-tétel, átfogó, befogó, magasságvonal.",
+      "suggestedActivities": "Telek területének kiszámítása felosztással, árnyékok és létrák Pitagorasz-tételes vizsgálata."
+    },
+    {
+      "id": "transzformaciok_szerkesztes_78",
+      "name": "Geometriai transzformációk",
+      "recommendedHours": 20,
+      "learningOutcomes": "A tanuló ismeri és alkalmazza a tengelyes és középpontos tükrözést, a pont körüli forgatást és a párhuzamos eltolást. Érti az egybevágóság fogalmát.",
+      "developmentalTasks": "Transzformációk végrehajtása szerkesztőeszközökkel. Szimmetriatengelyek és szimmetriaközéppontok keresése alakzatokban.",
+      "concepts": "Tengelyes tükrözés, középpontos tükrözés, forgatás, eltolás, egybevágóság, irányított szakasz, forgásszög.",
+      "suggestedActivities": "M. C. Escher-féle mozaikok (tesszelációk) tervezése eltolással és tükrözéssel."
+    },
+    {
+      "id": "tergeometria_78",
+      "name": "Térgeometria (hasábok és hengerek)",
+      "recommendedHours": 20,
+      "learningOutcomes": "A tanuló felismeri és megnevezi a hasábokat, hengereket. Kiszámítja az egyenes hasáb és a körhenger felszínét és térfogatát. Alkalmazza a Pitagorasz-tételt testek átlóinál.",
+      "developmentalTasks": "Felszín- és térfogatképletek alkalmazása szöveges feladatokban. Háló alapján való térbeli rekonstrukció.",
+      "concepts": "Hasáb, henger, körhenger, alaplap, palást, magasság, testátló, felszín, térfogat.",
+      "suggestedActivities": "Különböző formájú italos dobozok és hengeres flakonok térfogatának és csomagolóanyagának összehasonlítása."
+    },
+    {
+      "id": "leiro_statisztika_78",
+      "name": "Leíró statisztika",
+      "recommendedHours": 12,
+      "learningOutcomes": "A tanuló értelmezi a statisztikai mutatószámokat (átlag, módusz, medián, terjedelem). Képes bonyolultabb diagramokat (pl. csoportosított oszlopdiagram, kördiagram) elemezni.",
+      "developmentalTasks": "Adathalmazok statisztikai jellemzőinek kiszámítása. Eltérő átlag-medián tulajdonságú adatok vizsgálata (pl. jövedelmek).",
+      "concepts": "Számtani közép (átlag), módusz, medián, terjedelem, gyakoriság.",
+      "suggestedActivities": "Osztály dolgozat-eredményeinek elemzése statisztikai mutatókkal."
+    },
+    {
+      "id": "valoszinuseg_78",
+      "name": "Valószínűség-számítás",
+      "recommendedHours": 12,
+      "learningOutcomes": "A tanuló érti a klasszikus valószínűségi mező fogalmát. Egyszerűbb események valószínűségét kiszámítja a kedvező és az összes eset hányadosaként.",
+      "developmentalTasks": "Valószínűség skálája 0 és 1 között (vagy 0% és 100% között). Kísérletek eredményének összevetése az elméleti valószínűséggel.",
+      "concepts": "Klasszikus valószínűség, kedvező esetek száma, összes eset száma, elméleti valószínűség, relatív gyakoriság.",
+      "suggestedActivities": "Kártyajátékok esélyeinek kiszámolása, szerencsekerék-esélyek."
+    }
+  ]
+}

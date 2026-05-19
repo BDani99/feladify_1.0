@@ -1,0 +1,128 @@
+{
+  "month": "2026-05",
+  "callCount": 69,
+  "totalCostUSD": 0.033123774400000014,
+  "totalInputTokens": 81032,
+  "totalOutputTokens": 61127,
+  "totalCacheHitTokens": 18048,
+  "byModel": {
+    "deepseek-chat": {
+      "calls": 53,
+      "costUSD": 0.0242245976,
+      "inputTokens": 73881,
+      "outputTokens": 58294,
+      "cacheHitTokens": 17792
+    },
+    "deepseek-reasoner": {
+      "calls": 11,
+      "costUSD": 0.0070999768,
+      "inputTokens": 5005,
+      "outputTokens": 2049,
+      "cacheHitTokens": 256
+    },
+    "qwen-plus": {
+      "calls": 5,
+      "costUSD": 0.0017992,
+      "inputTokens": 2146,
+      "outputTokens": 784,
+      "cacheHitTokens": 0
+    },
+    "qwen-turbo": {
+      "calls": 0,
+      "costUSD": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "cacheHitTokens": 0
+    }
+  },
+  "byChain": {
+    "reasoning": {
+      "calls": 16,
+      "costUSD": 0.0088991768,
+      "inputTokens": 7151,
+      "outputTokens": 2833,
+      "cacheHitTokens": 256
+    },
+    "fast": {
+      "calls": 53,
+      "costUSD": 0.0242245976,
+      "inputTokens": 73881,
+      "outputTokens": 58294,
+      "cacheHitTokens": 17792
+    }
+  },
+  "byCaller": {
+    "ExamOutline": {
+      "calls": 15,
+      "costUSD": 0.006479788,
+      "inputTokens": 10801,
+      "outputTokens": 20564,
+      "cacheHitTokens": 5760
+    },
+    "ExamQuestions": {
+      "calls": 15,
+      "costUSD": 0.013687156000000002,
+      "inputTokens": 49623,
+      "outputTokens": 29716,
+      "cacheHitTokens": 11520
+    },
+    "CheckAnswer": {
+      "calls": 15,
+      "costUSD": 0.0083082868,
+      "inputTokens": 6220,
+      "outputTokens": 2797,
+      "cacheHitTokens": 256
+    },
+    "StreamChat": {
+      "calls": 1,
+      "costUSD": 0.00059089,
+      "inputTokens": 931,
+      "outputTokens": 36,
+      "cacheHitTokens": 0
+    },
+    "DiagOutline": {
+      "calls": 2,
+      "costUSD": 0.00049588,
+      "inputTokens": 1484,
+      "outputTokens": 1029,
+      "cacheHitTokens": 0
+    },
+    "DiagQuestions": {
+      "calls": 2,
+      "costUSD": 0.00162904,
+      "inputTokens": 2780,
+      "outputTokens": 4428,
+      "cacheHitTokens": 0
+    },
+    "QuestionAnalysis": {
+      "calls": 2,
+      "costUSD": 0.00025718,
+      "inputTokens": 665,
+      "outputTokens": 586,
+      "cacheHitTokens": 0
+    },
+    "CheckpointHint": {
+      "calls": 17,
+      "costUSD": 0.0016755536000000002,
+      "inputTokens": 8528,
+      "outputTokens": 1971,
+      "cacheHitTokens": 512
+    }
+  },
+  "byUser": {
+    "69f9084344e2198119e76fc7": {
+      "calls": 4,
+      "costUSD": 0.0022939336,
+      "inputTokens": 7289,
+      "outputTokens": 4799,
+      "cacheHitTokens": 512
+    },
+    "69f90cec2840e4a89a161a8a": {
+      "calls": 30,
+      "costUSD": 0.019997930400000002,
+      "inputTokens": 57399,
+      "outputTokens": 50938,
+      "cacheHitTokens": 16768
+    }
+  }
+}

@@ -8,9 +8,14 @@ import '../../styles/Student/DiagnosticResult.css';
 
 const SUBJECT_COLORS = {
   'Matematika': '#3498db',
-  'Magyar': '#ef4444',
+  'Nyelvtan': '#ef4444',
+  'Irodalom': '#34d399',
   'Angol': '#10b981',
-  'Környezetismeret': '#9b59b6'
+  'Környezetismeret': '#9b59b6',
+  'Történelem': '#f43f5e',
+  'Fizika': '#60a5fa',
+  'Biológia': '#4ade80',
+  'Földrajz': '#fbbf24'
 };
 
 const getAuthHeaders = () => ({

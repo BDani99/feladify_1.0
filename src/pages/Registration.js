@@ -8,7 +8,7 @@ import '../styles/Login.css';
 import logo from '../assets/logo-400.png';
 import nameImg from '../assets/name.png';
 
-const CANONICAL_SUBJECTS = ['Nyelvtan', 'Irodalom', 'Angol', 'Matematika', 'Környezetismeret'];
+const CANONICAL_SUBJECTS = ['Nyelvtan', 'Irodalom', 'Angol', 'Matematika', 'Környezetismeret', 'Történelem', 'Fizika', 'Biológia', 'Földrajz'];
 
 const ROLES = [
     { value: 'student', label: 'Diák', icon: <FaUserGraduate /> },

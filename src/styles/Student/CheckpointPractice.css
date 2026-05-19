@@ -735,6 +735,25 @@
     margin: 8px 0;
 }
 
+.chat-msg.bot.msg-correct {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: var(--color-text);
+}
+
+.chat-msg.bot.msg-incorrect {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: var(--color-text);
+}
+
+.chat-msg.bot.msg-hint {
+    background: rgba(99, 102, 241, 0.08);
+    border-color: rgba(99, 102, 241, 0.3);
+    color: var(--color-text);
+    font-style: italic;
+}
+
 .msg-content p { margin: 0; }
 .msg-content p + p { margin-top: 10px; }
 .msg-content strong { font-weight: 700; color: var(--color-text); }

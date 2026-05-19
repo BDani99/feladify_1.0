@@ -1,0 +1,231 @@
+{
+  "5-6": [
+    {
+      "id": "szemelyes_tortenenelem",
+      "name": "Személyes történelem",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló megérti a múlt és jelen közötti kapcsolatot személyes családi forrásokon keresztül, ismeri a történelmi időszámítás alapjait.",
+      "developmentalTasks": "Családi fotók és tárgyak gyűjtése, időszalag készítése, a történelmi korok (őskor, ókor, középkor, újkor, jelenkor) elhelyezése az időben.",
+      "concepts": "Történelmi idő, családi forrás, kódex, időszámítás, Kr. e. és Kr. u., évszázad, címer, zászló, pecsét.",
+      "suggestedActivities": "Személyes vagy családi címer készítése, kódexlap festése a Képes Krónika alapján, saját életesemények időszalagon ábrázolása."
+    },
+    {
+      "id": "fejezetek_okorbol",
+      "name": "Fejezetek az ókor történetéből",
+      "recommendedHours": 13,
+      "learningOutcomes": "A tanuló ismeri az ókori civilizációk (Egyiptom, görögök, rómaiak, hunok) főbb jellegzetességeit, hadviselését és kulturális örökségét.",
+      "developmentalTasks": "Ókori hősökhöz kapcsolódó történetek felidézése, a görög hopliták és a római légiók fegyverzetének azonosítása, Pannónia és Aquincum történetének megismerése.",
+      "concepts": "Öntözéses földművelés, fáraó, piramis, hieroglifa, városállam, többistenhit, olümpiai játékok, provincia, rabszolga, gladiátor, falanx, légió, népvándorlás.",
+      "suggestedActivities": "Az ókori és a modern olimpiai játékok összehasonlítása, ókori csaták (pl. marathóni csata) rekonstruálása makettel, látogatás Aquincumban."
+    },
+    {
+      "id": "keresztenyseg_eredete",
+      "name": "A kereszténység",
+      "recommendedHours": 5,
+      "learningOutcomes": "A tanuló megismeri a zsidó-keresztény kultúra kialakulásának főbb állomásait, bibliai történeteket és Jézus tanításait.",
+      "developmentalTasks": "Jézus élete legfontosabb eseményeinek bemutatása, a tízparancsolat és a keresztény erkölcsi tanítások értelmezése, a keresztény szimbólumok felismerése.",
+      "concepts": "Egyistenhit, Biblia, Ószövetség, Újszövetség, zsidó vallás, keresztény vallás, keresztség, úrvacsora, apostol, tízparancsolat.",
+      "suggestedActivities": "Bibliai történeteket ábrázoló képzőművészeti alkotások gyűjtése, Pál apostol missziós útjainak nyomon követése térképen."
+    },
+    {
+      "id": "kozepkor_vilagai",
+      "name": "A középkor világai",
+      "recommendedHours": 13,
+      "learningOutcomes": "A tanuló leírja a középkori várak, uradalmak, kolostorok és városok működését, az egyes társadalmi rétegek (jobbágy, lovag, szerzetes, polgár) életmódját.",
+      "developmentalTasks": "A középkori lovagi kultúra, a szerzetesrendek (bencések, pálosok) és a városi céhek működésének megismerése, román és gótikus stílusjegyek felismerése.",
+      "concepts": "Földesúr, lovag, nemes, uradalom, jobbágy, robot, pápa, szerzetes, kolostor, román stílus, gótikus stílus, polgár, céh, iszlám vallás, könyvnyomtatás.",
+      "suggestedActivities": "Céhcégér tervezése, beszámoló írása egy képzeletbeli lovagi tornáról, középkori vár (pl. Visegrád) alaprajzának elemzése."
+    },
+    {
+      "id": "arpad_kor_tortenete",
+      "name": "Képek és portrék az Árpád-kor történetéből",
+      "recommendedHours": 20,
+      "learningOutcomes": "A tanuló ismeri a magyarok eredetét, a honfoglalást, az államalapítást és az Árpád-kor legfontosabb uralkodóit és szentjeit.",
+      "developmentalTasks": "Álmos, Árpád, Szent István, Szent László, Könyves Kálmán, IV. Béla történelmi szerepének és a tatárjárás következményeinek megértése, a koronázási jelvények megismerése.",
+      "concepts": "Hun-magyar eredetmonda, vérszerződés, kalandozások, vármegye, tized, ispán, Szent Korona, tatárjárás, Aranybulla, pozsonyi csata.",
+      "suggestedActivities": "A koronázási jelvények (palást, jogar, országalma) rajzolása és szimbolikájának bemutatása, Szent László-freskók gyűjtése."
+    },
+    {
+      "id": "kozepkori_magyar_allam",
+      "name": "Képek és portrék a középkori magyar állam virágkorából",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló leírja az Anjouk (Károly Róbert, Nagy Lajos), Luxemburgi Zsigmond és Hunyadi Mátyás uralkodását, a nándorfehérvári diadalt.",
+      "developmentalTasks": "Hunyadi János törökellenes harcainak megismerése, Mátyás király reneszánsz udvarának és a fekete seregnek a jellemzése, Mátyás-mondák és a valóság összevetése.",
+      "concepts": "Aranyforint, kormányzó, végvár, szekérvár, zsoldos, fekete sereg, reneszánsz udvar, végvári rendszer.",
+      "suggestedActivities": "A nándorfehérvári diadal (1456) menetének rekonstruálása térképvázlaton, beszámoló írása egy képzeletbeli látogatásról Mátyás budai vagy visegrádi palotájában."
+    },
+    {
+      "id": "uj_latohatarok_reformacio",
+      "name": "Új látóhatárok (Földrajzi felfedezések, reformáció)",
+      "recommendedHours": 11,
+      "learningOutcomes": "A tanuló ismeri a nagy földrajzi felfedezések hatásait, a gyarmatosítást és a reformáció (Luther, Kálvin) kibontakozását.",
+      "developmentalTasks": "Kolumbusz és Magellán útjainak nyomon követése, a manufaktúrák és a kapitalizmus kezdeteinek megismerése, a reformáció hitelveinek és a jezsuitáknak a vizsgálata.",
+      "concepts": "Gyarmat, manufaktúra, tőkés, kapitalizmus, reformáció, protestáns (evangélikus, református), ellenreformáció, jezsuiták, vallási türelem, felvilágosodás.",
+      "suggestedActivities": "A felfedező utak követése világtérképen, a manufaktúra és a céh működésének összehasonlító táblázata."
+    },
+    {
+      "id": "kora_ujkori_magyarorszag",
+      "name": "Portrék és történetek Magyarország kora újkori történetéből",
+      "recommendedHours": 14,
+      "learningOutcomes": "A tanuló megérti a mohácsi vészt, az ország három részre szakadását, a végvári harcokat és a Rákóczi-szabadságharcot.",
+      "developmentalTasks": "Szulejmán, II. Lajos, Dobó István, Zrínyi Miklós és II. Rákóczi Ferenc szerepének megismerése, a kuruc és labanc küzdelmek bemutatása.",
+      "concepts": "Hódoltság, három részre szakadt ország, végvári vitézek, kuruc, labanc, kettős adózás, mohácsi vész.",
+      "suggestedActivities": "A mohácsi csata vagy Szigetvár ostromának dramatikus feldolgozása, kuruc dalok hallgatása."
+    },
+    {
+      "id": "elet_kora_ujkorban",
+      "name": "Élet a kora újkori Magyarországon",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló leírja a török hódoltság alatti mindennapokat, az együttélést, a mezővárosok és a végvárak világát.",
+      "developmentalTasks": "Török és magyar kulturális hatások azonosítása (fürdők, ételek, szavak), a barokk stílusjegyek megismerése.",
+      "concepts": "Mezőváros, barokk építészet, minaret, dzsámi, kulturális kölcsönhatás, végvári életmód.",
+      "suggestedActivities": "Képek gyűjtése a magyarországi barokk építészetről és török kori műemlékekről."
+    },
+    {
+      "id": "forradalmak_kora",
+      "name": "Forradalmak kora (Ipari forradalom, francia forradalom)",
+      "recommendedHours": 5,
+      "learningOutcomes": "A tanuló érti az ipari forradalom jelentőségét, a gyáripart, James Watt találmányát, valamint a francia forradalmat és Napóleont.",
+      "developmentalTasks": "A gőzgép és a vasút elterjedésének hatásvizsgálata a mindennapokra, a francia forradalmi terror és Napóleon hadjáratainak elemzése.",
+      "concepts": "Ipari forradalom, gőzgép, vasút, gyár, szabad verseny, forradalom, terror, diktatúra.",
+      "suggestedActivities": "A manufaktúra és a gyár összehasonlítása, beszélgetés a korabeli gyermekmunkáról, Napóleon oroszországi hadjáratának követése térképen."
+    },
+    {
+      "id": "nemzeti_ebredes",
+      "name": "A magyar nemzeti ébredés és polgárosodás kora (Reformkor, 1848/49-es szabadságharc)",
+      "recommendedHours": 15,
+      "learningOutcomes": "A tanuló ismeri a reformkort (Széchenyi István, Kossuth Lajos), az 1848. március 15-i forradalmat, a szabadságharc csatáit és a megtorlást.",
+      "developmentalTasks": "A reformkori viták (jobbágyfelszabadítás, magyar nyelv), a 12 pont, a tavaszi hadjárat, az aradi vértanúk és a kiegyezés megismerése.",
+      "concepts": "Reformkor, országgyűlés, jobbágyfelszabadítás, közteherviselés, sajtószabadság, cenzúra, honvédség, megtorlás, kiegyezés, Osztrák-Magyar Monarchia.",
+      "suggestedActivities": "A 12 pont elemzése és modern megfelelőinek megfogalmazása, március 15-i forradalom útvonalának térképe, Kossuth-nóta közös éneklése."
+    }
+  ],
+  "7-8": [
+    {
+      "id": "modern_kor_szuletese",
+      "name": "A modern kor születése",
+      "recommendedHours": 5,
+      "learningOutcomes": "A tanuló ismeri a 19. század második felének technikai és tudományos felfedezéseit, a nagyhatalmak imperialista törekvéseit.",
+      "developmentalTasks": "Az elektromosság, a távközlés és az autóipar kezdeteinek elemzése, a monopóliumok és a gyarmatbirodalmak kialakulásának megértése.",
+      "concepts": "Monopólium, imperializmus, gyarmatosítás, modernizáció, polgári állam.",
+      "suggestedActivities": "A korszak legfontosabb találmányairól (pl. telefon, izzólámpa, belső égésű motor) prezentáció készítése."
+    },
+    {
+      "id": "dualizmus_kora",
+      "name": "A dualizmus kora: felzárkózás Európához",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló leírja az Osztrák-Magyar Monarchia gazdasági és társadalmi fejlődését, Budapest világvárossá válását.",
+      "developmentalTasks": "A millenniumi ünnepségek, a földalatti vasút, a zsidóság emancipációja és a nemzetiségi kérdés vizsgálata.",
+      "concepts": "Kiegyezés, dualizmus, nemzetiségi törvény, emancipáció, millennium, infrastruktúra.",
+      "suggestedActivities": "Budapest millenniumi épületeinek (Hősök tere, Vajdahunyad vára) és a kisföldalatti történetének kutatása."
+    },
+    {
+      "id": "elso_vh",
+      "name": "Az első világháború és következményei",
+      "recommendedHours": 11,
+      "learningOutcomes": "A tanuló ismeri az első világháború okait, jellegzetes hadviselését (állóháború), a Monarchia összeomlását és a trianoni békeszerződést.",
+      "developmentalTasks": "A frontvonalak és az állóháború borzalmainak megértése, a trianoni békediktátum területi, népességi és gazdasági következményeinek elemzése Magyarországra nézve.",
+      "concepts": "Állóháború, hátország, hadigazdaság, szovjet-Oroszország, őszirózsás forradalom, Tanácsköztársaság, trianoni béke, revízió, utódállamok.",
+      "suggestedActivities": "A háborús frontról küldött katonalevelek elemzése, a történelmi Magyarország és a trianoni határok összehasonlítása térképen."
+    },
+    {
+      "id": "totalis_diktaturak",
+      "name": "Totális diktatúrák",
+      "recommendedHours": 5,
+      "learningOutcomes": "A tanuló megkülönbözteti a fasiszta, nemzetiszocialista és kommunista diktatúrák ideológiáját, államszervezetét és bűneit.",
+      "developmentalTasks": "A sztálini Szovjetunió (GULAG, terror) és a hitleri Németország (faji elmélet, koncentrációs táborok) összehasonlító elemzése, a diktatúra mechanizmusának megértése.",
+      "concepts": "Fasizmus, nemzetiszocializmus, kommunizmus, pártállam, személyi kultusz, cenzúra, koncepciós per, holokauszt, antiszemitizmus, koncentrációs tábor, GULAG.",
+      "suggestedActivities": "Források elemzése a propagandáról és a személyi kultuszról, beszélgetés a demokrácia védelméről."
+    },
+    {
+      "id": "horthy_korszak",
+      "name": "A Horthy-korszak",
+      "recommendedHours": 9,
+      "learningOutcomes": "A tanuló leírja a Horthy-rendszer konszolidációját (Bethlen István), a gazdasági válság hatásait, a revíziós politikát és az oktatáspolitikát (Klebelsberg Kuno).",
+      "developmentalTasks": "Horthy Miklós történelmi szerepének mérlegelése, az aktív revíziós politika és a német szövetségi rendszerhez való közeledés elemzése.",
+      "concepts": "Kormányzó, konszolidáció, revíziós politika, kultúrfölény, zsidótörvények, numerus clausus, pengő.",
+      "suggestedActivities": "Klebelsberg Kuno iskolaépítési programjának bemutatása, a pengő inflációjának vagy a bécsi döntéseknek a vizsgálata térképen."
+    },
+    {
+      "id": "masodik_vh",
+      "name": "A második világháború",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló ismeri a második világháború legfontosabb eseményeit (tengelyhatalmak, szövetségesek, sztálingrádi csata), Magyarország háborús részvételét és a holokausztot.",
+      "developmentalTasks": "A doni katasztrófa, a német megszállás (1944. március 19.), a zsidóság és a romák gettósítása, deportálása és a fegyveres ellenállás megismerése.",
+      "concepts": "Villámháború, tengelyhatalmak, szövetségesek, holokauszt (Soá), porajmos (roma holokauszt), gettó, sárga csillag, deportálás, nyilas uralom, Don-kanyar.",
+      "suggestedActivities": "Emlékezés a magyarországi vészkorszak embermentőire (Sztehlo Gábor, Raoul Wallenberg), túlélők visszaemlékezéseinek feldolgozása."
+    },
+    {
+      "id": "megosztott_vilag_hideghaboru",
+      "name": "A megosztott világ",
+      "recommendedHours": 5,
+      "learningOutcomes": "A tanuló érti a kétpólusú világ (hidegháború), a NATO és a Varsói Szerződés, valamint a berlini fal jelentőségét.",
+      "developmentalTasks": "A szuperhatalmak fegyverkezési versenyének, a harmadik világ gyarmati felszabadulásának és a hidegháborús konfliktusoknak (pl. kubai rakétaválság) a megértése.",
+      "concepts": "Kétpólusú világ, hidegháború, vasfüggöny, NATO, Varsói Szerződés, fegyverkezési verseny, űrverseny, berlini fal.",
+      "suggestedActivities": "A vasfüggöny útvonalának berajzolása Európa-térképre, prezentáció az űrverseny legfontosabb mérföldköveiről."
+    },
+    {
+      "id": "magyarorszag_szovjetizalasa",
+      "name": "Magyarország szovjetizálása (Rákosi-korszak)",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló leírja a többpártrendszer felszámolását, a Rákosi-diktatúrát, az ÁVH terrort, a koncepciós pereket és a mindennapok átalakítását.",
+      "developmentalTasks": "A totális diktatúra magyarországi kiépítésének (kollektivizálás, kuláküldözés, padlássöprés, Rákosi Mátyás személyi kultusza) elemzése.",
+      "concepts": "Szalámitaktika, államosítás, téeszesítés, kollektivizálás, kulák, padlássöprés, ÁVH, koncepciós per (Mindszenty József, Rajk László), személyi kultusz, Recsk.",
+      "suggestedActivities": "A korszak propaganda-plakátjainak és jelszavainak elemzése, beszélgetés a beszolgáltatásokról és a mindennapi félelemről."
+    },
+    {
+      "id": "forradalom_ezredforduloig",
+      "name": "A forradalomtól az ezredfordulóig (1956-os forradalom, Kádár-korszak, rendszerváltás)",
+      "recommendedHours": 20,
+      "learningOutcomes": "A tanuló ismeri az 1956-os forradalom eseményeit (október 23., Nagy Imre, szovjet intervenció), a kádári megtorlást és konszolidációt, a 'puha diktatúrát' és az 1989-es rendszerváltást.",
+      "developmentalTasks": "Az 1956-os forradalom okainak és leverésének, a gulyáskommunizmus jellemzőinek (lakótelepek, háztáji, eladósodás) és a békés rendszerváltás folyamatának (Nagy Imre újratemetése, határnyitás, többpárti választások) megértése.",
+      "concepts": "Forradalom, szabadságharc, szovjet intervenció, Nagy Imre, gulyáskommunizmus, frizsider-szocializmus, háztáji, megtorlás, szamizdat, ellenzéki kerekasztal, rendszerváltás, köztársaság kikiáltása.",
+      "suggestedActivities": "Interjú készítése a nagyszülőkkel az 1956-os vagy a rendszerváltás alatti emlékeikről, 1956-os pesti emlékhelyek térképe."
+    },
+    {
+      "id": "egyutteles_karpat_medenceben",
+      "name": "Együttélés a Kárpát-medencében",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló megismeri a Kárpát-medence etnikai viszonyainak alakulását, a magyarországi nemzetiségek és a határon túli magyarság megmaradásáért vívott küzdelmét.",
+      "developmentalTasks": "Példák gyűjtése a régió népeinek kulturális és politikai együttműködésére, a kisebbségi jogok és az asszimiláció fogalmának megértése.",
+      "concepts": "Nemzetiség, kisebbségi jogok, asszimiláció, autonómia, szórvány, nemzeti identitás, toleráns együttélés.",
+      "suggestedActivities": "A Kárpát-medence népcsoportjait ábrázoló etnikai térkép elemzése, határon túli magyar kulturális értékek (pl. erdélyi kastélyok, várak) bemutatása."
+    },
+    {
+      "id": "nepesedes_tarsadalom",
+      "name": "Népesedés és társadalom",
+      "recommendedHours": 5,
+      "learningOutcomes": "A tanuló átlátja Magyarország demográfiai változásait a honfoglalástól napjainkig, a vándorlásokat és a társadalmi rétegek átalakulását.",
+      "developmentalTasks": "A demográfiai robbanás, a járványok, a betelepítések és az elöregedő társadalom problémakörének történelmi vizsgálata.",
+      "concepts": "Demográfia, betelepítés, népességfogyás, elöregedés, urbanizáció, migráció.",
+      "suggestedActivities": "Családfakutatás vagy a saját település lakosságszám-változásának grafikonos ábrázolása az elmúlt 150 évben."
+    },
+    {
+      "id": "demokratikus_allam",
+      "name": "A demokratikus állam",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló ismeri a Magyar Köztársaság államszervezetét, az állampolgári jogokat és kötelességeket, a hatalmi ágak megosztását.",
+      "developmentalTasks": "Az Alaptörvény szerepének megértése, a parlament, a köztársasági elnök, a kormány és az önkormányzatok feladatainak megkülönböztetése, az aktív állampolgárság megélése.",
+      "concepts": "Alkotmány/Alaptörvény, hatalommegosztás, parlament, képviselő, köztársasági elnök, miniszterelnök, önkormányzat, állampolgárság, emberi jogok, szavazati jog.",
+      "suggestedActivities": "Mini-parlamenti vita szimulációja az osztályban egy szabály elfogadásáról, látogatás a Parlamentben vagy a helyi polgármesteri hivatalban."
+    },
+    {
+      "id": "regiok_tortenete",
+      "name": "Régiók története",
+      "recommendedHours": 14,
+      "learningOutcomes": "A tanuló ismeri a főbb világbirodalmak és régiók (pl. Európa, Amerika, Közel-Kelet, Távol-Kelet) történeti fejlődését, vallásaikat és kultúráikat.",
+      "developmentalTasks": "A különböző kultúrák és civilizációk (kereszténység, iszlám, buddhizmus, hinduizmus) közötti különbségek és az egyetemes emberi értékek felismerése.",
+      "concepts": "Globalizáció, multikulturalizmus, világvallások, geopolitika, integráció (Európai Unió).",
+      "suggestedActivities": "Tabló vagy prezentáció készítése a világvallások főbb szent helyeiről és ünnepeiről."
+    },
+    {
+      "id": "merlegen_a_tortenelem",
+      "name": "Mérlegen a magyar történelem",
+      "recommendedHours": 5,
+      "learningOutcomes": "A tanuló képes szintetizálni a magyar történelem legfontosabb fordulópontjait, mérlegeli a sikereket, kudarcokat és a magyarság hozzájárulását a világ tudományához és kultúrájához.",
+      "developmentalTasks": "Világhírű magyar tudósok (Szent-Györgyi Albert, Neumann János), művészek és sportolók teljesítményének megismerése, a nemzeti identitás erősítése tényeken alapulva.",
+      "concepts": "Nemzeti identitás, tudományos örökség, Nobel-díj, nemzetközi elismertség, hungarikum.",
+      "suggestedActivities": "Kiselőadás készítése egy választott híres magyar tudósról, feltalálóról vagy Nobel-díjasról, kvízjáték a magyar feltalálók találmányaiból."
+    }
+  ]
+}

@@ -5,6 +5,7 @@ const announcementSchema = new mongoose.Schema({
   classId: { type: mongoose.Schema.Types.ObjectId, ref: 'Class', required: true },
   title: { type: String, required: true },
   content: { type: String, required: true },
+  deadline: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -1,0 +1,94 @@
+{
+  "7-8": [
+    {
+      "id": "bevezetes_fizikaba",
+      "name": "Bevezetés a fizikába",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló jó becsléseket tud adni egyszerű számítás, következtetés segítségével; értelmezi a sportolást segítő applikációk mért fizikai adatait; megfigyeléseket és kísérleteket végez, a tapasztalatokat rögzíti; felismeri a tudományosan vizsgálható jelenségeket; helyesen használja a közismert mértékegységeket; ismeri a fizika fontosabb szakterületeit.",
+      "developmentalTasks": "A testek mérhető tulajdonságai: hosszúság, térfogat, tömeg jele, mértékegységei és mérőeszközei, mértékegységek átváltása. Az eltelt idő és hőmérséklet jele, mértékegységei, Celsius-skála. Közvetlen mérés rendelkezésre álló eszközökkel (beleértve mobiltelefonos eszközöket). Mérési pontosság becslése ismételt mérések alapján. Azonos anyagból készült testek tömeg-térfogat kapcsolata, sűrűség meghatározása. A fizika szakterületei, néhány újabb eredmény bemutatása.",
+      "concepts": "mérés, hosszúság, térfogat, tömeg, sűrűség, idő, hőmérséklet, a mérés pontossága, a mért adatok átlaga, becslés, tudományos eredmény",
+      "suggestedActivities": "Adott idejű folyamatok létrehozása; szilárd, folyékony és légnemű anyagok térfogatának értelmezése, mérése; az emberi test méreteihez kötött távolságok vizsgálata; időtartam becslése; távolságok mérése digitális térképeken; külső hőmérséklet vizsgálata adott időszakban; szilárd és folyékony anyagok sűrűségének összehasonlítása csoportos kísérletezéssel."
+    },
+    {
+      "id": "energia",
+      "name": "Az energia",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló azonosítja a technológiák környezetkárosító hatásait; ismeri az energiatakarékosság fontosságát, az energiatermelés környezeti hatásait és az energiabiztonság fogalmát; ismeri a zöldenergia és fosszilis energia fogalmát, az erőművek szerepét; átlátja a táplálékok energiatartalmának szerepét a szervezet energiaháztartásában.",
+      "developmentalTasks": "A teljesítmény és energiafogyasztás kapcsolata. A lakásban lévő fogyasztók jellemző adatai. Háztartásban használt energiahordozók: elektromos áram, földgáz, szén, fa. Fosszilis energia és zöldenergia jellemzése, csoportosítása. Rugalmas, helyzeti és mozgási energia átalakulásainak megfigyelése. Erőmű energiaátalakulásai, az energia megmaradása. Szélerőmű, napelemek, napkollektor működése. Energiatakarékossági lehetőségek. Táplálékok energiatartalma és az ideális testsúly kapcsolata.",
+      "concepts": "energiafogyasztás, teljesítmény, energiahordozók, zöldenergia, fosszilis energia, energiabiztonság, energiatakarékosság, energiamegmaradás, rugalmas energia, helyzeti energia, mozgási energia, belső energia",
+      "suggestedActivities": "Az emberiség energiafogyasztásának és rendelkezésre álló energiaforrásoknak áttekintése; a jövő energiaforrásaival kapcsolatos ismeretek gyűjtése; háztartási izzók gazdaságosságának összehasonlítása; az emberi szervezet energiafelhasználásának elemzése; energiatakarékossági módszerek vizsgálata a közvetlen környezetben."
+    },
+    {
+      "id": "mozgas_kozlekedes",
+      "name": "Mozgás közlekedés és sportolás közben",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló megfelelően összekapcsolja a hely- és időadatokat; megkülönbözteti az utat és elmozdulást; kiszámítja az átlagsebességet; meghatározza az egyenes vonalú egyenletes mozgást végző test sebességét, megtett útját és idejét; ismeri az erő szerepét a mozgásváltozásban; tisztában van az önvezérelt járművek és a légzsák/biztonsági öv fizikájával; megismeri Newton, Arkhimédész, Galilei és Jedlik Ányos életét.",
+      "developmentalTasks": "A hely megadása, mozgások megfigyelése és csoportosítása. A sebesség nagysága, iránya, mértékegysége. Közel állandó sebességű mozgások vizsgálata, Newton I. törvénye. Megtett út és idő kiszámítása. Elejtett test mozgása, nehézségi erő és gyorsulás, Newton II. törvénye. Gyorsuló és kanyarodó autó sebességváltozása. Az önvezérelt autó működési elve. A légzsák és a biztonsági öv fizikai magyarázata.",
+      "concepts": "hely, pálya, elmozdulás, út, átlagsebesség, kölcsönhatás, gyorsulás, nehézségi gyorsulás, erő, Newton első és második törvénye",
+      "suggestedActivities": "Newton vagy Galilei életéről anyaggyűjtés; sebességrekordok gyűjtése és vizsgálata; közlekedéstervezés alkalmazással; sebesség mérésére szolgáló eljárás kidolgozása; mozgás elemzése telefonos alkalmazással."
+    },
+    {
+      "id": "lendulet_egyensuly",
+      "name": "Lendület és egyensúly",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló egyszerű eszközökkel periodikus mozgásokat hoz létre, méri a periódusidőt; tisztában van a mozgások okával; ismeri Newton III. törvényét; a rugalmasság és rugalmatlanság fogalmát; egyszerű gépek erőátvitelét; Arkhimédész munkásságát.",
+      "developmentalTasks": "Lendület kiszámítása, lendület megmaradásának vizsgálata hétköznapi helyzetekben. Rakétamozgás kísérleti vizsgálata (léggömb-rakéta), Newton III. törvénye. Körmozgások és lengések, periódusidő mérése. Nyugvó testek egyensúlyának vizsgálata. Rugalmas és rugalmatlan alakváltozások. Szilárd anyagok belső szerkezetének szemléletes képe.",
+      "concepts": "lendület, a lendület megmaradása, periódusidő, fordulatszám, egyensúly, amplitúdó, rezgésszám, rugalmas alakváltozás, Newton harmadik törvénye",
+      "suggestedActivities": "Egyszerű ütközések kísérleti vizsgálata; háztartási eszközök mint egyszerű gépek erőátvitelének vizsgálata; Föld mozgási periódusainak tanulmányozása; Arkhimédész gépeinek bemutatása; szilárd anyagok belső szerkezetét ábrázoló modell készítése."
+    },
+    {
+      "id": "viz_levego_haztartas",
+      "name": "Víz, levegő és szilárd anyagok a háztartásban és a környezetünkben",
+      "recommendedHours": 14,
+      "learningOutcomes": "A tanuló jellemzi az anyag halmazállapotait és halmazállapot-változásait; magyarázza az úszást, lebegést és elmerülést; ismeri a kapilláris jelenségeket; megfigyeli a folyadékok és szilárd anyagok melegítésének folyamatát; ismeri a levegő fizikai tulajdonságait és az időjárási jelenségek fizikai magyarázatát.",
+      "developmentalTasks": "Jég olvadása és víz fagyása, hőmérséklet-változás megfigyelése. Termikus kölcsönhatások. Víz forrása. Halmazállapotok és részecske-modell. Hidrosztatikai nyomás, mélységtől való függés. Arkhimédész törvénye, sűrűségfeltétel. Kapilláris jelenségek. Szilárd anyagok hőtágulása, hővezetés. Levegő fizikai tulajdonságai: nyomás, hőmérséklet, páratartalom. Időjárási jelenségek fizikai magyarázata.",
+      "concepts": "légnemű, folyékony, szilárd, fagyás, olvadás, párolgás, lecsapódás, forrás, kapilláris csövek, nyomás, hidrosztatikai nyomás, felhajtóerő, úszás, lebegés, sűrűségfeltétel, termikus kölcsönhatás, melegítés, felvett és leadott hő, nyomáskülönbség",
+      "suggestedActivities": "Hőmérő készítése; nyomás időjárástól és magasságtól való függésének vizsgálata; páratartalom vizsgálata; úszó sűrűségmérő működésének vizsgálata; Cartesius-búvár készítése; kapilláris jelenségek a természetben; az álló és ülő ember által a talajra kifejtett nyomás becslése."
+    },
+    {
+      "id": "elektromossag_haztartas",
+      "name": "Elektromosság a háztartásban",
+      "recommendedHours": 14,
+      "learningOutcomes": "A tanuló ismeri az elektromos állapot fogalmát és kialakulását; szemléletes képe van az elektromos áramról; használja a feszültség, áramerősség, ellenállás fogalmakat egyszerű áramkörök jellemzésére; ismeri az Ohm-törvényt; a Joule-hőt; az érintésvédelmi szabályokat; a Föld mágneses terét; Jedlik Ányos munkásságát.",
+      "developmentalTasks": "Elektromos állapot kialakulása, atomszerkezet. Villámok fizikája. Egyenáram és váltakozóáram eszközei. Feszültség és áramerősség jele, mértékegysége. Az áramerősség meghatározása ellenállásból. Egyszerű áramkör részei. Elemek és akkumulátorok. Veszélyes feszültség- és áramerősség-értékek. Joule-hő: vasaló, hajszárító. Rövidzár, biztosíték, földelés. Iránytű. Jedlik Ányos és az elektromos motor. Transzformátor.",
+      "concepts": "atom, elektromos állapot, elektromos áram, feszültség, áramerősség, ellenállás, Ohm törvénye, áramforrás, fogyasztó, Joule-hő, áramütés, elektromos energia, teljesítmény, dipólus, transzformátor",
+      "suggestedActivities": "Dörzselektromos jelenség kísérleti vizsgálata léggömbökkel; háztartási eszközök elektromos tulajdonságainak vizsgálata; elektromos biztosíték szerepe és működése; elemek és akkumulátorok környezeti hatása; LED-es egyszerű áramkör készítése, változó ellenállású elemmel."
+    },
+    {
+      "id": "vilagitas_feny_optika",
+      "name": "Világítás, fény, optikai eszközök",
+      "recommendedHours": 12,
+      "learningOutcomes": "A tanuló ismeri az aktuális elektromos fényforrásokat és jellemzőiket; a látás folyamatát, a szem hibáit és a szemüveg szerepét; néhány optikai eszköz részeit és működési elvét; a fény egyenes vonalú terjedését; a visszaverődés törvényét; a fénytörést.",
+      "developmentalTasks": "Fény egyenes vonalú terjedésének megfigyelése. Síktükörben látható tükörkép és visszaverődés törvénye. Háztartási fényforrások és tulajdonságaik. Fénytörés megfigyelése. Gyűjtőlencse optikai tulajdonságai, nagyítás. Látás fizikája; rövidlátás, távollátás, korrekció. Távcső és mikroszkóp részeinek vizsgálata.",
+      "concepts": "fényforrás, szabályos visszaverődés, tükör, fénytörés, gyűjtő és szórólencse, fókusztávolság, fókuszpont",
+      "suggestedActivities": "Fényforrások szétszerelése, alkatrészek szerepének vizsgálata; árnyékok megfigyelése és magyarázata; optikai illúziók vizsgálata; camera obscura készítése; az iskola világítási rendszerének elemzése; különböző élőlények látórendszere, látástartománya."
+    },
+    {
+      "id": "hullamok",
+      "name": "Hullámok",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló érti a hullámmozgás lényegét és jellemző mennyiségeit (frekvencia, amplitúdó, hullámhossz, terjedési sebesség); megfigyeli a hangszerek működési elvét; ismeri a hallás folyamatát és a halláskárosodás tényezőit; érti a fény hullámtermészetét és a színek kialakulásának fizikai hátterét.",
+      "developmentalTasks": "Állóhullámok rugalmas kötélen, rugón. Vízhullámok kísérleti vizsgálata. Haladó hullámok; amplitúdó, frekvencia, hullámhossz. Lökéshullám megfigyelése. Hang tulajdonságai (hangmagasság, hangerő). Hangszerek hangképzésének elve. Hallás mechanizmusának fizikája, halláskárosodást okozó tényezők. Fény hullámtermészete. Színek észlelése, kiegészítő színek.",
+      "concepts": "állóhullám, hullámhossz, frekvencia, hullám terjedési sebessége, hangmagasság, hangerő, szivárvány színei, kiegészítő színek",
+      "suggestedActivities": "A cunami jelenségének megismerése; hangok keltése és elemzése Audacity programmal; szivárvány létrehozása, megfigyelése; fényfestés, játékok, kísérletek színekkel; színek kikeverése festékekkel."
+    },
+    {
+      "id": "globalis_problemak",
+      "name": "Környezetünk globális problémái",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló azonosítja a technológiák környezetkárosító hatásait; ismeri az éghajlatváltozás összetevőit és lehetséges okait; az ózonpajzs elvékonyodásának tényét és következményeit; a hagyományos ipari nyersanyagok végességét; zajszintméréseket végez.",
+      "developmentalTasks": "Ózonpajzs elvékonyodásának hatása, ultraibolya sugárzás erősödése, ózonpajzs védelme. Éghajlatváltozás okai és következményei. Tengerszint emelkedésének fizikai okai. Tüzelőanyagok elégetése és üvegházhatás. Ökológiai lábnyom. Fényszennyezés és zajszennyezés. Innovatív technológiák a környezetvédelemben: porszűrők, hangszigetelés, energiatakarékos eszközök.",
+      "concepts": "éghajlatváltozás, üvegházhatás, ökológiai lábnyom, környezettudatosság, fényszennyezés, zajszennyezés",
+      "suggestedActivities": "Sötét és világos felületek fényelnyelési tulajdonságainak vizsgálata; globális éghajlatváltozás bizonyítékainak gyűjtése és elemzése; zajszint mérése mobiltelefon segítségével; saját ökológiai lábnyom csökkentésének tervezése; üvegházhatás megfigyelése, értelmezése."
+    },
+    {
+      "id": "egi_jelensegek",
+      "name": "Égi jelenségek megfigyelése és magyarázata",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló érti a nappalok és éjszakák változásának fizikai okát; megfigyeli a holdfázisok változásának fizikai hátterét; ismeri a csillagok fogalmát és a galaxisok mibenlétét; a Naprendszer bolygóinak fontosabb fizikai jellemzőit; az űrkutatás aktuális céljait és eredményeit; a csillagképek szerepét a tájékozódásban.",
+      "developmentalTasks": "A Nap fizikai jellemzői és energiájának forrása. Föld Nap körüli mozgása és Hold Föld körüli mozgásának jellemzői. Kopernikusz és Kepler felismerései. A Nap járásának megfigyelése, égtájak meghatározása. Holdfázisok megfigyelése és fizikai magyarázata. Föld típusú bolygók és óriásbolygók. Csillagok és csillagképek. Tejút, galaxisok, fekete lyukak. Űrkutatás aktuális céljai.",
+      "concepts": "napközéppontú világkép, földtípusú bolygó, óriásbolygó, holdfázis, fogyatkozások, csillag, galaxis, fekete lyuk, fényév",
+      "suggestedActivities": "A Hold megfigyelése szabad szemmel és távcsővel; aktuális csillagászati hírek elemzése; a Naprendszer égitestjeinek érdekességei; érvek gyűjtése a Föld gömbszerűsége mellett; a fény véges sebességéről való gondolkodás."
+    }
+  ]
+}

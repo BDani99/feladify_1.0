@@ -11,6 +11,8 @@ import {
 } from 'react-icons/fa';
 import { API_BASE_URL } from '../../api/config';
 import '../../styles/Student/StudentDashboard.css';
+import '../../styles/Parent/ParentGoals.css';
+import '../../styles/Announcements.css';
 
 const getDaysUntil = (d) => {
     if (!d) return null;
@@ -45,6 +47,35 @@ const StudentDashboard = () => {
     const [goals, setGoals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [newAssignmentIds, setNewAssignmentIds] = useState(new Set());
+
+    useEffect(() => {
+        const token = localStorage.getItem('AccessToken');
+        if (!token) return;
+        const es = new EventSource(`${API_BASE_URL}/realtime/stream?token=${token}`);
+        es.addEventListener('new_assignment', (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                fetchAvailableAssignments().then(avail => {
+                    if (Array.isArray(avail)) {
+                        setAvailable(avail);
+                        if (data.assignmentId) {
+                            setNewAssignmentIds(prev => new Set([...prev, data.assignmentId]));
+                            setTimeout(() => {
+                                setNewAssignmentIds(prev => {
+                                    const s = new Set(prev);
+                                    s.delete(data.assignmentId);
+                                    return s;
+                                });
+                            }, 8000);
+                        }
+                    }
+                }).catch(() => {});
+            } catch {}
+        });
+        es.onerror = () => {};
+        return () => es.close();
+    }, []);
 
     useEffect(() => {
         const load = async () => {
@@ -164,13 +195,15 @@ const StudentDashboard = () => {
                             {deadlines.map(a => {
                                 const days = getDaysUntil(a.dueDate);
                                 const uc = urgencyClass(days);
+                                const isNew = newAssignmentIds.has(String(a._id));
                                 return (
-                                    <div key={a._id} className={`dash-deadline-card ${uc}`}>
+                                    <div key={a._id} className={`dash-deadline-card ${uc}${isNew ? ' ann-new' : ''}`}>
                                         <div className="dash-deadline-top">
                                             <span className="dash-item-subject">{a.subject}</span>
                                             <span className={`dash-deadline-badge ${uc}`}>
                                                 {urgencyLabel(days)}
                                             </span>
+                                            {isNew && <span className="ann-new-badge">Új</span>}
                                         </div>
                                         <div className="dash-deadline-title">{a.title}</div>
                                         <div className="dash-deadline-footer">
@@ -207,55 +240,29 @@ const StudentDashboard = () => {
                       <span className="dash-empty-sub">Szólj a szüleidnek, hogy tűzzenek ki neked motivációs célokat!</span>
                     </div>
                   ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+                    <div className="pg-goals-grid">
                       {activeGoals.slice(0, 3).map(goal => {
                         const pct = goal.progress?.pct ?? 0;
-                        const fillClass = pct >= 100 ? '#10b981' : pct >= 60 ? '#3b82f6' : '#f59e0b';
+                        const typeClass = goal.type === 'assignment_avg' ? 'type-assignment' : goal.type === 'practice_xp' ? 'type-xp' : 'type-streak';
+                        const fillColor = pct >= 100 ? '#10b981' : pct >= 60 ? '#3b82f6' : '#f59e0b';
+                        const barClass = pct >= 100 ? 'pct-high' : pct >= 60 ? 'pct-mid' : 'pct-low';
                         const displaySub = goal.subject === 'all' ? 'Összes tantárgy' : goal.subject;
                         const displayType = goal.type === 'assignment_avg' ? 'Dolgozat Átlag' : goal.type === 'practice_xp' ? 'XP Célpont' : 'Sorozat';
                         return (
-                          <div 
-                            key={goal.goalId} 
-                            style={{ 
-                              background: 'var(--bg-input)', 
-                              border: '1px solid var(--border-color)', 
-                              borderRadius: 'var(--radius-lg)', 
-                              padding: 16,
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: 10
-                            }}
-                          >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <span 
-                                style={{ 
-                                  fontSize: '0.7rem', 
-                                  fontWeight: 800, 
-                                  background: 'var(--accent-glow)', 
-                                  color: 'var(--accent)', 
-                                  padding: '2px 8px', 
-                                  borderRadius: 'var(--radius-pill)',
-                                  border: '1px solid rgba(59, 130, 246, 0.15)'
-                                }}
-                              >
-                                {displaySub}
-                              </span>
-                              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--color-text-dim)' }}>
-                                {displayType}
-                              </span>
+                          <div key={goal.goalId} className={`pg-goal-card ${typeClass}`}>
+                            <div className="pg-goal-header">
+                              <span className="pg-subject-badge">{displaySub}</span>
+                              <span className="pg-type-badge">{displayType}</span>
                             </div>
-                            
-                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--color-text)', minHeight: 40, lineHeight: 1.4 }}>
-                              {goal.title}
-                            </div>
-                            
-                            <div>
-                              <div style={{ height: 6, background: 'var(--bg-card)', borderRadius: 10, overflow: 'hidden', marginBottom: 6 }}>
-                                <div style={{ height: '100%', width: `${pct}%`, background: fillClass, borderRadius: 10, transition: 'width 0.5s' }} />
+                            <div className="pg-goal-title">{goal.title}</div>
+                            <div className="pg-progress-wrap">
+                              <div className="pg-progress-bar-track">
+                                <div className={`pg-progress-bar-fill ${barClass}`} style={{ width: `${pct}%` }} />
                               </div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 700 }}>
-                                <span style={{ color: 'var(--color-text)' }}>{goal.progress?.current ?? 0}{goal.progress?.unit ?? ''} / {goal.progress?.target ?? 0}{goal.progress?.unit ?? ''}</span>
-                                <span style={{ color: fillClass }}>{pct}%</span>
+                              <div className="pg-progress-values">
+                                <span className="pg-progress-current">{goal.progress?.current ?? 0}{goal.progress?.unit ?? ''}</span>
+                                <span className="pg-progress-target"> / {goal.progress?.target ?? 0}{goal.progress?.unit ?? ''}</span>
+                                <span className="pg-progress-pct" style={{ color: fillColor }}>{pct}%</span>
                               </div>
                             </div>
                           </div>

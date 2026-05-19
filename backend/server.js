@@ -12,6 +12,9 @@ const notificationRoutes = require('./routes/notifications');
 const documentRoutes = require('./routes/documents');
 const realtimeRoutes = require('./routes/realtime');
 const announcementRoutes = require('./routes/announcements');
+const adminRoutes = require('./routes/admin');
+const curriculumRoutes = require('./routes/curriculum');
+const { startCleanupJob } = require('./jobs/cleanupAnnouncements');
 
 const app = express();
 app.use(cors());
@@ -59,6 +62,10 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/realtime', realtimeRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/curriculum', curriculumRoutes);
+
+startCleanupJob();
 
 const { sendError } = require('./utils/errorResponse');
 

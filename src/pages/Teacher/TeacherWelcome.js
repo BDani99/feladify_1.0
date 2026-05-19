@@ -38,19 +38,17 @@ const TeacherWelcome = () => {
     const [renamingSessionId, setRenamingSessionId] = useState(null);
     const [renamingTitle, setRenamingTitle] = useState('');
     const [confirmDeleteModal, setConfirmDeleteModal] = useState({ isOpen: false, sessionId: null });
-    const [selectedModel, setSelectedModel] = useState({ provider: 'qwen', model: 'qwen/qwen3-32b' });
+    const [selectedModel, setSelectedModel] = useState({ provider: 'deepseek', model: 'dpv4pro' });
     const [showModelPicker, setShowModelPicker] = useState(false);
     const chatEndRef = useRef(null);
     const inputRef = useRef(null);
     const modelPickerRef = useRef(null);
 
     const ALL_MODELS = [
-        { label: 'Qwen3 32B',     value: 'qwen/qwen3-32b',                            provider: 'qwen',   badge: 'Qwen' },
-        { label: 'GPT-OSS 120B',  value: 'openai/gpt-oss-120b',                       provider: 'openai', badge: 'OpenAI' },
-        { label: 'GPT-OSS 20B',   value: 'openai/gpt-oss-20b',                        provider: 'openai', badge: 'OpenAI' },
-        { label: 'Llama 3.3 70B', value: 'llama-3.3-70b-versatile',                   provider: 'meta',   badge: 'Meta' },
-        { label: 'Llama 4 Scout', value: 'meta-llama/llama-4-scout-17b-16e-instruct', provider: 'meta',   badge: 'Meta' },
-        { label: 'Llama 3.1 8B',  value: 'llama-3.1-8b-instant',                      provider: 'meta',   badge: 'Meta' },
+        { label: 'DeepSeek v4 Pro',   value: 'dpv4pro',         provider: 'deepseek', badge: 'DeepSeek' },
+        { label: 'DeepSeek v4 Flash', value: 'v4flash',         provider: 'deepseek', badge: 'DeepSeek' },
+        { label: 'Qwen 3.5 Plus',     value: 'qwen-3.5-plus',   provider: 'qwen',     badge: 'Qwen' },
+        { label: 'Qwen 3.5 Flash',    value: 'qwen-3.5-flash',  provider: 'qwen',     badge: 'Qwen' },
     ];
 
     useEffect(() => {

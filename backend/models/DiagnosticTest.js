@@ -14,8 +14,12 @@ const SUBJECT_CATEGORIES = {
     categories: ['Algebra', 'Geometria', 'Statisztika', 'Függvények', 'Számelmélet', 'Mértékegységek'],
     difficulty: [1, 2, 3, 4, 5] // Nehézségi szintek
   },
-  'Magyar': {
-    categories: ['Nyelvtan', 'Irodalom', 'Fogalmazás', 'Helyesírás', 'Szövegértés', 'Nyelvhelyesség'],
+  'Nyelvtan': {
+    categories: ['Hangtan', 'Szófajok', 'Mondatelemzés', 'Helyesírás', 'Nyelvhelyesség'],
+    difficulty: [1, 2, 3, 4, 5]
+  },
+  'Irodalom': {
+    categories: ['Népköltészet', 'Műfajok', 'Verselemzés', 'Szövegértés', 'Cselekmény és Karakterek'],
     difficulty: [1, 2, 3, 4, 5]
   },
   'Angol': {
@@ -24,6 +28,22 @@ const SUBJECT_CATEGORIES = {
   },
   'Környezetismeret': {
     categories: ['Földrajz', 'Biológia', 'Fizika', 'Kémia', 'Társadalomismeret', 'Környezetvédelem'],
+    difficulty: [1, 2, 3, 4, 5]
+  },
+  'Történelem': {
+    categories: ['Ókori civilizációk és kultúrák', 'A magyarság őstörténete és a honfoglalás', 'Az Árpád-házi királyok kora', 'Középkori élet, kultúra és hitvilág', 'Helytörténet és nemzeti jelképek'],
+    difficulty: [1, 2, 3, 4, 5]
+  },
+  'Fizika': {
+    categories: ['Mechanika', 'Hőtan', 'Fénytan', 'Elektromosság', 'Hangtan', 'Erők és mozgás'],
+    difficulty: [1, 2, 3, 4, 5]
+  },
+  'Biológia': {
+    categories: ['Növények', 'Állatok', 'Emberi test', 'Ökológia', 'Sejtek és szaporodás', 'Egészség és betegség'],
+    difficulty: [1, 2, 3, 4, 5]
+  },
+  'Földrajz': {
+    categories: ['Magyarország földrajza', 'Európa', 'Kontinensek és óceánok', 'Természetföldrajz', 'Gazdaságföldrajz', 'Térképészet'],
     difficulty: [1, 2, 3, 4, 5]
   }
 };
@@ -221,10 +241,10 @@ questionSchema.statics.initializeSampleQuestions = async function() {
       tags: ['átlag', 'statisztika', 'számítás']
     },
     
-    // Magyar kérdések
+    // Nyelvtan kérdések
     {
-      subject: 'Magyar',
-      category: 'Nyelvtan',
+      subject: 'Nyelvtan',
+      category: 'Szófajok',
       questionText: 'Melyik szó FŐNÉV a következők közül?',
       questionType: 'multiple_choice',
       difficulty: 1,
@@ -240,7 +260,7 @@ questionSchema.statics.initializeSampleQuestions = async function() {
       tags: ['főnév', 'szófaj', 'nyelvtan']
     },
     {
-      subject: 'Magyar',
+      subject: 'Nyelvtan',
       category: 'Helyesírás',
       questionText: 'Melyik a helyes írásmód?',
       questionType: 'multiple_choice',
@@ -255,6 +275,24 @@ questionSchema.statics.initializeSampleQuestions = async function() {
       explanation: 'Az "együtt" előtaggal alkotott összetételek egybeírandók.',
       points: 1,
       tags: ['helyesírás', 'összetétel', 'egybeírás']
+    },
+    // Irodalom kérdések
+    {
+      subject: 'Irodalom',
+      category: 'Műfajok',
+      questionText: 'Melyik irodalmi műfajba tartozik a János vitéz?',
+      questionType: 'multiple_choice',
+      difficulty: 2,
+      options: [
+        { label: 'A', text: 'Elbeszélő költemény', isCorrect: true },
+        { label: 'B', text: 'Novella', isCorrect: false },
+        { label: 'C', text: 'Dráma', isCorrect: false },
+        { label: 'D', text: 'Mese', isCorrect: false }
+      ],
+      correctAnswer: 'A',
+      explanation: 'A János vitéz Petőfi Sándor elbeszélő költeménye (verses elbeszélés).',
+      points: 1,
+      tags: ['Petőfi', 'János vitéz', 'műfajok']
     },
     
     // Angol kérdések

@@ -16,6 +16,7 @@ import {
   FaBrain, FaBook, FaCheckCircle, FaClock, FaChevronDown, FaChevronUp
 } from 'react-icons/fa';
 import '../../styles/Student/StudentStatistics.css';
+import { XP_PER_LEVEL } from '../../utils/xpConstants';
 
 ChartJS.register(
   Title, Tooltip, Legend, Filler,
@@ -23,7 +24,7 @@ ChartJS.register(
   CategoryScale, LinearScale, RadialLinearScale
 );
 
-const SUBJECT_ICONS = { Matematika: '🔢', Magyar: '📖', Angol: '🌍', Környezetismeret: '🌱' };
+const SUBJECT_ICONS = { Matematika: '🔢', Nyelvtan: '📝', Irodalom: '📖', Angol: '🌍', Környezetismeret: '🌱', Történelem: '⏳', Fizika: '⚛️', Biológia: '🧬', Földrajz: '🗺️' };
 
 /* ─── Score colour helper ─── */
 const scoreColor = (v) => v >= 80 ? '#10b981' : v >= 60 ? '#3b82f6' : '#f59e0b';
@@ -332,7 +333,7 @@ const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'];
 const PracticeTab = ({ data }) => {
   if (!data) return null;
   const { totalXP, streak, badges, subjectStats, diagnosticBySubject, totalCheckpointsCompleted, overallAvgScore } = data;
-  const xpLevel = Math.floor(totalXP / 50) + 1;
+  const xpLevel = Math.floor(totalXP / XP_PER_LEVEL) + 1;
   const hasData = subjectStats && subjectStats.some(s => s.status !== 'not_started');
   const activeSubs = (subjectStats || []).filter(s => s.completedCheckpoints > 0);
 

@@ -4,7 +4,7 @@ const Assignment = require('../models/Assignment');
 const User = require('../models/User');
 const Class = require('../models/Class');
 const { generateText, generateChat, generateChatWithHistory } = require('../services/ai');
-const groqService = require('../services/aiService');
+const aiService = require('../services/aiService');
 const Notification = require('../models/Notification');
 
 async function notify(userId, type, title, message, data = {}) {
@@ -18,6 +18,7 @@ const router = express.Router();
 const authenticateTeacher = require('../middleware/authenticateTeacher');
 const authenticateStudent = require('../middleware/authenticateStudent');
 const authenticateUser = require('../middleware/authenticateUser');
+const realtimeService = require('../services/realtimeService');
 
 const DIFFICULTY_DESCRIPTIONS = {
   'Könnyű': 'egyszerű, egylépéses kérdések, amelyek közvetlen tényismeretet mérnek, 1-4. osztályos szinten',
@@ -66,14 +67,29 @@ const TYPE_MAPPING = {
   'hianyos_szoveg': 'fill_blank'
 };
 
-// AI generálás GroqService használatával – egyetlen hívásban, pontos típus/darabszám arányban
-async function generateQuestions(subject, title, diffDesc, resolvedTypes) {
+// AI generálás – egyetlen hívásban, pontos típus/darabszám arányban
+async function generateQuestions(subject, title, diffDesc, resolvedTypes, grade, selectedTopics, userId = null) {
   const typeSpecs = resolvedTypes.map(({ type, count }) => ({
     type: TYPE_MAPPING[type] || type,
     count
   }));
 
-  const questions = await groqService.generateExamQuestionSet(subject, title, diffDesc, typeSpecs);
+  const rawQuestions = await aiService.generateExamQuestionSet(subject, title, diffDesc, typeSpecs, grade, selectedTopics, userId);
+
+  // MCQ integritás: correctAnswer mindig az options között legyen
+  const normStr = s => String(s ?? '').toLowerCase().trim().replace(/\s+/g, ' ');
+  const questions = rawQuestions.map((q, idx) => {
+    if (q.questionType === 'mcq' && Array.isArray(q.options) && q.options.length > 0) {
+      const matchIdx = q.options.findIndex(o => normStr(o) === normStr(q.correctAnswer));
+      if (matchIdx === -1) {
+        console.warn(`[assignments] MCQ q${idx + 1} correctAnswer nem volt options-ban, javítva`);
+        const newOptions = [...q.options];
+        newOptions[newOptions.length - 1] = String(q.correctAnswer ?? 'Helyes válasz');
+        return { ...q, options: newOptions.sort(() => Math.random() - 0.5) };
+      }
+    }
+    return q;
+  });
 
   return shuffleArray(questions.map(q => ({
     questionText: q.questionText,
@@ -95,7 +111,7 @@ function resolveQuestionTypes(body) {
 }
 
 function normalizeAndValidateQuestions(questions) {
-  const sanitized = groqService._sanitizeQuestions(questions.map(q => ({
+  const sanitized = aiService._sanitizeQuestions(questions.map(q => ({
     questionText: (q.questionText || '').trim(),
     questionType: q.questionType || 'short_answer',
     options: Array.isArray(q.options) ? q.options : [],
@@ -106,7 +122,7 @@ function normalizeAndValidateQuestions(questions) {
   })), 3);
 
   const invalid = sanitized
-    .map((q, index) => ({ index, validation: groqService._validateQuestion(q) }))
+    .map((q, index) => ({ index, validation: aiService._validateQuestion(q) }))
     .filter(item => !item.validation.valid);
 
   if (invalid.length > 0) {
@@ -157,7 +173,7 @@ function sanitizeAssignmentForStudent(assignment) {
 // Előnézet generálása (DB írás nélkül)
 router.post('/teacher/preview', authenticateTeacher, async (req, res) => {
   try {
-    const { title, subject, difficulty, className } = req.body;
+    const { title, subject, difficulty, className, selectedTopics } = req.body;
     const missing = ['title','subject','difficulty','className'].filter(f => !req.body[f]);
     if (missing.length > 0) return res.status(400).json({ message: `Hiányzó mezők: ${missing.join(', ')}.` });
 
@@ -165,7 +181,10 @@ router.post('/teacher/preview', authenticateTeacher, async (req, res) => {
     if (validTypes.length === 0) return res.status(400).json({ message: 'Legalább egy kérdéstípust meg kell adni.' });
 
     const diffDesc = getDifficultyDescription(difficulty, className);
-    const questions = await generateQuestions(subject, title, diffDesc, validTypes);
+    const gradeMatch = className && className.match(/^(\d+)/);
+    const grade = gradeMatch ? `${gradeMatch[1]}. osztály` : 'általános iskola';
+
+    const questions = await generateQuestions(subject, title, diffDesc, validTypes, grade, selectedTopics, req.userId);
 
     res.status(200).json({ questions });
   } catch (error) {
@@ -219,10 +238,18 @@ router.post('/teacher/save', authenticateTeacher, async (req, res) => {
 
     // Értesítés minden diáknak és szüleiknek
     const notifMsg = `Új dolgozat érkezett: "${title}" – ${subject}`;
+    const studentIdStrings = students.map(s => String(s._id));
     students.forEach(s => notify(s._id, 'new_assignment', 'Új dolgozat kiírva', notifMsg, { assignmentId: assignment._id }));
     User.find({ role: 'parent', children: { $in: students.map(s => s._id) } }).select('_id').lean().then(parents => {
       parents.forEach(p => notify(p._id, 'new_assignment', 'Gyermeked új dolgozatot kapott', notifMsg, { assignmentId: assignment._id }));
     }).catch(() => {});
+
+    // SSE valós idejű push az online diákoknak
+    realtimeService.sendToUsers(studentIdStrings, 'new_assignment', {
+      assignmentId: String(assignment._id),
+      title,
+      subject
+    });
 
     res.status(201).json({ message: 'Feladatsor sikeresen mentve és hozzárendelve az osztály diákjaihoz.', assignment });
   } catch (error) {
@@ -234,7 +261,7 @@ router.post('/teacher/save', authenticateTeacher, async (req, res) => {
 // Feladatsor generálása, csak tanároknak (legacy - közvetlen mentés)
 router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
   try {
-    const { title, subject, difficulty, className } = req.body;
+    const { title, subject, difficulty, className, selectedTopics } = req.body;
     const missing = ['title','subject','difficulty','className'].filter(f => !req.body[f]);
     if (missing.length > 0) return res.status(400).json({ message: `Hiányzó mezők: ${missing.join(', ')}.` });
 
@@ -256,7 +283,10 @@ router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
       }
     }
 
-    const questions = await generateQuestions(subject, title, diffDesc, validTypes);
+    const gradeMatch = className && className.match(/^(\d+)/);
+    const grade = gradeMatch ? `${gradeMatch[1]}. osztály` : 'általános iskola';
+
+    const questions = await generateQuestions(subject, title, diffDesc, validTypes, grade, selectedTopics, req.userId);
 
     const assignment = new Assignment({
       teacherId: req.userId, title, subject, difficulty,
@@ -267,10 +297,18 @@ router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
 
     // Értesítés minden diáknak és szüleiknek
     const genNotifMsg = `Új dolgozat érkezett: "${title}" – ${subject}`;
+    const genStudentIdStrings = students.map(s => String(s._id));
     students.forEach(s => notify(s._id, 'new_assignment', 'Új dolgozat kiírva', genNotifMsg, { assignmentId: assignment._id }));
     User.find({ role: 'parent', children: { $in: students.map(s => s._id) } }).select('_id').lean().then(parents => {
       parents.forEach(p => notify(p._id, 'new_assignment', 'Gyermeked új dolgozatot kapott', genNotifMsg, { assignmentId: assignment._id }));
     }).catch(() => {});
+
+    // SSE valós idejű push az online diákoknak
+    realtimeService.sendToUsers(genStudentIdStrings, 'new_assignment', {
+      assignmentId: String(assignment._id),
+      title,
+      subject
+    });
 
     res.status(201).json({ message: 'Feladatsor sikeresen generálva és hozzárendelve a kiválasztott osztály diákjaihoz', assignment });
   } catch (error) {
@@ -730,7 +768,7 @@ router.post('/student/submit/:assignmentId', authenticateStudent, async (req, re
         } else if (type === 'short_answer') {
           // Nyílt végű: AI értékelés
           try {
-            const evaluation = await groqService.checkShortTextAnswer(
+            const evaluation = await aiService.checkShortTextAnswer(
               assignment.subject,
               question.questionText,
               studentAnswer,
@@ -1327,7 +1365,7 @@ Szabályok:
       console.log('[Teacher Chat] Kezdődik a válasz streaming...');
       let fullResponse = '';
 
-      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride)) {
+      for await (const chunk of aiService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride)) {
         fullResponse += chunk;
         res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
       }

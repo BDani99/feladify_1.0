@@ -509,6 +509,108 @@
     to { transform: rotate(360deg); }
 }
 
+/* Témakör választó egyéni gyakorláshoz */
+.hub-topic-selector {
+    margin-top: 15px;
+    background: var(--bg-card);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid var(--border-color);
+    padding: 16px;
+    transition: all 0.25s ease;
+    text-align: left;
+    width: 100%;
+}
+
+.hub-topic-title {
+    font-size: 1rem;
+    font-weight: 750;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.hub-topic-subtitle {
+    font-size: 0.82rem;
+    color: var(--color-text-dim);
+    line-height: 1.4;
+    margin: 0 0 10px 0;
+}
+
+.hub-topics-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+/* Custom scrollbar for topics */
+.hub-topics-grid::-webkit-scrollbar {
+    width: 5px;
+}
+.hub-topics-grid::-webkit-scrollbar-track {
+    background: transparent;
+}
+.hub-topics-grid::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 10px;
+}
+
+.hub-topic-chip {
+    background: var(--bg-input);
+    border: 1.5px solid var(--border-color);
+    color: var(--color-text-dim);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: left;
+}
+
+.hub-topic-chip:hover {
+    border-color: var(--accent);
+    color: var(--color-text);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.hub-topic-chip.selected {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 2px 10px rgba(59, 130, 246, 0.15);
+}
+
+.hub-topic-chip-icon {
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+
+.hub-topics-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    color: var(--color-text-dim);
+    padding: 12px;
+}
+
+.hub-topics-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: lc-spin 0.7s linear infinite;
+}
+
 /* ════════════════════════════════════════
    RESZPONZÍV
 ════════════════════════════════════════ */

@@ -10,8 +10,7 @@ import '../../styles/Parent/ParentGlobal.css';
 import '../../styles/Parent/ParentRoadmap.css';
 import '../../styles/Student/RoadmapView.css';
 import '../../styles/Student/StudentDashboard.css';
-
-const XP_PER_LEVEL = 50;
+import { XP_PER_LEVEL } from '../../utils/xpConstants';
 
 const RadarChart = ({ data }) => {
     if (!data || data.length === 0) return (
@@ -68,7 +67,7 @@ const ParentRoadmap = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    const subjectsList = ['Matematika', 'Magyar', 'Angol', 'Környezetismeret'];
+    const subjectsList = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Környezetismeret', 'Történelem', 'Fizika', 'Biológia', 'Földrajz'];
 
     useEffect(() => {
         const fetchChildren = async () => {

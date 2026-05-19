@@ -8,7 +8,7 @@ import CustomDatePicker from '../../components/CustomDatePicker';
 import '../../styles/Parent/ParentGlobal.css';
 import '../../styles/Parent/ParentGoals.css';
 
-const SUBJECTS = ['Matematika', 'Magyar', 'Angol', 'Környezetismeret'];
+const SUBJECTS = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Környezetismeret', 'Történelem', 'Fizika', 'Biológia', 'Földrajz'];
 const SUBJECTS_WITH_ALL = [...SUBJECTS, 'Összes tantárgy'];
 
 const TYPE_META = {

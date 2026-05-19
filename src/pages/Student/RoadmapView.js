@@ -4,8 +4,7 @@ import { API_BASE_URL } from '../../api/config';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { FaArrowLeft, FaLock, FaPlay, FaCheck, FaTrophy, FaStar, FaFire } from 'react-icons/fa';
 import '../../styles/Student/RoadmapView.css';
-
-const XP_PER_LEVEL = 50;
+import { XP_PER_LEVEL } from '../../utils/xpConstants';
 
 const RoadmapView = () => {
   const { subject } = useParams();
@@ -17,6 +16,8 @@ const RoadmapView = () => {
   const [xpFlash, setXpFlash] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
+    setCheckpoints([]);
     fetchRoadmap();
   }, [subject]);
 

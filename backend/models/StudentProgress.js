@@ -58,6 +58,8 @@ const diagnosticSessionSchema = new mongoose.Schema({
 const subjectCheckpointSchema = new mongoose.Schema({
   checkpointId: { type: String, required: true },
   topic: { type: String, default: 'Gyakorlás' },
+  gamifiedTitle: { type: String, default: null },
+  topicId: { type: String, default: null },
   difficulty: { type: Number, default: 3, min: 1, max: 5 },
   status: {
     type: String,

@@ -1,0 +1,76 @@
+{
+  "7-8": [
+    {
+      "id": "tajekozdas_foldrajzi_terben",
+      "name": "Tájékozódás a földrajzi térben",
+      "recommendedHours": 4,
+      "learningOutcomes": "A tanuló tájékozódik különböző típusú és tartalmú térképeken; gyakorlati feladatokat old meg nyomtatott és digitális térkép segítségével; el tud készíteni egyszerű térképvázlatokat és útvonalterveket; azonosítja a jelenségek időbeli jellemzőit.",
+      "developmentalTasks": "Különböző léptékű, típusú és tartalmú térképek használata és összehasonlítása. Terepi tájékozódási és térképalapú távolság- és helymeghatározási feladatok. Hagyományos és digitális térképen történő távolságmérés. Különböző időpontban készült űr- vagy légifelvételek és térképek párhuzamos használata. A térkép fogalma, jelrendszere és fajtái. Távérzékelés és földrajzi alkalmazásai. A földrajzi helymeghatározás módszerei.",
+      "concepts": "földrajzi fokhálózat, keresőhálózat, fő- és mellékvilágtájak, méretarány, aránymérték, szintvonal",
+      "suggestedActivities": "Osztálykirándulás útvonalának tervezése nyomtatott és digitális térképekkel; iránytű, térkép, GPS használatának gyakorlása; távolság és hely meghatározása térképen; geocaching játék; tematikus térképek megadott szempontok szerinti elemzése; különböző időpontokban készült műhold- és légifelvételek összehasonlítása."
+    },
+    {
+      "id": "lakokornyzet_foldrajza",
+      "name": "Közvetlen lakókörnyezetünk földrajza",
+      "recommendedHours": 5,
+      "learningOutcomes": "A tanuló elkötelezett szűkebb és tágabb környezete természeti és társadalmi-gazdasági értékeinek megismerése és megőrzése iránt; összehasonlít hazai nagytájakat, régiókat és településeket; javaslatot fogalmaz meg lakókörnyezete fenntartható fejlesztésére; érvel a tudatos fogyasztói magatartás fontossága mellett.",
+      "developmentalTasks": "A szűkebb lakókörnyezet társadalmi és gazdasági problémáinak felismerése. Az adott terület komplex földrajzi elemzése. A lakóhely jelenét segítő és nehezítő természet- és társadalomföldrajzi folyamatok felismerése. A lakókörnyezet földrajzi jellemzőiből fakadó előnyeinek és hátrányainak mérlegelése. A szűkebb lakókörnyezet (település és környezete) földrajzi helyzetének és kulturális értékeinek bemutatása.",
+      "concepts": "kulturális érték, természeti érték",
+      "suggestedActivities": "A közvetlen környezet virtuális felfedezése 3D-s program segítségével; szituációs játék – önkormányzati ülés a fenntartható fejlesztésről; irányított beszélgetés helyi médiaforásokból gyűjtött földrajzi információkról; projektfeladat: poszter, prezentáció vagy rövid videofilm a lakóhely természeti és kulturális értékeiről; tanösvény és térkép tervezése."
+    },
+    {
+      "id": "magyarorszag_foldrajza",
+      "name": "Magyarország földrajza",
+      "recommendedHours": 25,
+      "learningOutcomes": "A tanuló rendszerezi Magyarország természeti és társadalmi-gazdasági erőforrásait; következtet Magyarország és a Kárpát-medence természeti és környezeti veszélyeire; elkötelezett hazánk értékeinek megismerése iránt; reális magyarság- és Európa-tudattal rendelkezik.",
+      "developmentalTasks": "Hazánk és a Kárpát-medence tájainak és régióinak feldolgozása hagyományos és digitális térképhasználattal. Magyarország természeti, társadalmi-gazdasági és környezeti jellemzői. Egy kistáj, középtáj vagy település komplex vizsgálata. Magyarország idegenforgalmi adottságai. Magyarország nemzetközi gazdasági szerepe. Topográfiai ismeretek: nagytájak, vizek, nemzeti parkok, régiók, megyék.",
+      "concepts": "erőforrás, falu, folyószabályozás, hungarikum, kontinentális éghajlat, közigazgatás, medencejelleg, nemzetiség, öregedő társadalom, táj, talaj, tanya, természetes szaporodás és fogyás, területi fejlettség-különbség, tranzitforgalom, város, világörökség",
+      "suggestedActivities": "Hazánk tájainak és régióinak feldolgozása kooperatív módszerrel; topográfiai ismeretek elmélyítése online játékokkal; osztálykirándulás tervezése egy középtáj megismerésére; természetföldrajzi és gazdasági adatsorok rendszerezése és ábrázolása; hazánk területén előforduló természeti veszélyek bemutatása; nemzeti értékek, hungarikumok kiállításának szervezése."
+    },
+    {
+      "id": "karpat_medence",
+      "name": "A Kárpát-medence térsége",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló rendszerezi a Kárpát-medence természeti és társadalmi-gazdasági erőforrásait; bemutatja a területi fejlettségbeli különbségek okait és következményeit; következtet a Kárpát-medencében előforduló természeti és környezeti veszélyekre; nyitott más országok és nemzetiségek kultúrájának megismerése iránt.",
+      "developmentalTasks": "A térszemlélet fejlesztése Magyarország területének a Kárpát-medence egészében való értelmezésével. A medencejelleg közvetlen és közvetett földrajzi következményeinek felismerése. A Kárpát-medence és környezete természeti és társadalmi-gazdasági erőforrásainak rendszerezése. Az egyes nagytájak természeti és társadalmi-gazdasági jellemzőinek összehasonlítása. A Kárpát-medence idegenforgalmi adottságainak értékelése.",
+      "concepts": "autonómia, éghajlatváltozás, erdőgazdálkodás, gazdasági átalakulás, húzóágazat, idegenforgalom, nemzeti kisebbség, népességvándorlási folyamatok, néprajzi csoport, néprajzi táj, tájhasználat, talajpusztulás",
+      "suggestedActivities": "Élménybeszámoló egy Kárpát-medencében tett kirándulásról; fotógaléria összeállítása a Kárpát-medence tájainak bemutatására; a medencejelleg következményeinek feltárása logikai lánc alkotásával; kooperatív adatgyűjtés a Kárpát-medence társadalmi-gazdasági folyamatairól; Kárpát-medence modelljének elkészítése."
+    },
+    {
+      "id": "europa_foldrajza",
+      "name": "Európa földrajza",
+      "recommendedHours": 22,
+      "learningOutcomes": "A tanuló megnevezi Európa főbb országaira jellemző társadalmi-gazdasági folyamatokat; probléma- és értékközpontú megközelítéssel jellemzi Európa tipikus tájait; ismerteti az Európai Unió jellemzőit és világgazdasági szerepét; ismeri és értelmezi a fejlettségbeli különbségek mutatóit.",
+      "developmentalTasks": "Európa főbb országainak, országcsoportjainak, jellemző tájainak megismerése. A nemzetközi szintű munkamegosztás és fejlettségbeli különbségek okainak és következményeinek elemzése. Az Európai Unió társadalmi-gazdasági jellemzőinek ismertetése és világgazdasági szerepének igazolása. Tipikus európai tájak, települések jellemzése. Európa sokszínű kulturális öröksége.",
+      "concepts": "agglomeráció, deltatorkolat, elöregedő társadalom, Európai Unió, fjord, gazdasági szerkezetváltás, gleccser, jégkorszak, K+F, karsztvidék, kék banán, munkanélküliség, napfényövezet, tagolatlan part, tagolt part, tölcsértorkolat, vendégmunkás",
+      "suggestedActivities": "Az én Európám szubjektív térkép készítése; Európa tipikus tájainak bemutatása modellek segítségével; kvízjáték Európáról; a kontinens országainak bemutatása kooperatív technikával; különböző tartalmú tematikus térképek összehasonlítása; virtuális séta egy európai nemzeti parkban."
+    },
+    {
+      "id": "europan_kivuli_kontinensek",
+      "name": "Az Európán kívüli kontinensek földrajza",
+      "recommendedHours": 20,
+      "learningOutcomes": "A tanuló megnevezi az egyes kontinensekre jellemző társadalmi-gazdasági folyamatokat; bemutatja a fejlettségbeli különbségek okait és következményeit; megfogalmazza a helyi környezetkárosítás globálissá váló következményeit; nyitott más országok és kultúrák megismerése iránt.",
+      "developmentalTasks": "A kontinensek főbb országainak, tájainak megismerésével a világtér-szemlélet fejlesztése. A gazdasági fejlettség területi különbségeinek okai és következményei. Afrika, Ausztrália, Amerika, Ázsia társadalmi és gazdasági jellemzői, problémái és tipikus tájai. A regionális környezeti problémák világméretűvé válásának igazolása. Az országok közötti együttműködések szükségessége.",
+      "concepts": "éhségövezet, eladósodás, élelmezési válság, elsivatagosodás, fenntarthatóság, gazdasági szerkezet, globalizáció, népességrobbanás, nyomornegyed, őslakos, perifériatérség, rezervátum, tömegturizmus, túlhalászás, városfejlődés, világvallások, világgazdasági hatalom",
+      "suggestedActivities": "Kontinensekre jellemző képekből montázs készítése; kontinensek tipikus tájainak bemutatása modellek segítségével; kulturális hatások a mindennapokban gyűjtőmunka; egy tipikus tájat bemutató képzeletbeli fotókiállítás ismertetőjének elkészítése; élménybeszámoló egy átélt vagy elképzelt távoli utazásról."
+    },
+    {
+      "id": "foldrajzi_ovezetesseg",
+      "name": "A földrajzi övezetesség rendszere",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló bemutatja a földrajzi övezetesség rendszerét; ismerteti az övezetek kialakulásának okait és elhelyezkedésének jellemzőit; összehasonlítja az egyes övezetek főbb jellemzőit; törvényszerűségeket fogalmaz meg; ismeri a vízszintes és a függőleges övezetesség összefüggéseit.",
+      "developmentalTasks": "A vízszintes és függőleges övezetesség elrendeződésének megismerése. Az egyes övezetek, övek főbb természeti jellemzőinek rendszerezése. Környezettudatosság fejlesztése az egyes övezeteket érintő környezeti problémák megismertetésével. Az időjárás és az éghajlat kapcsolatának értelmezése. A kontinensekről tanult ismeretek és a földrajzi övezetesség szintézise.",
+      "concepts": "éghajlat, éghajlati diagram, fenntarthatóság, forró övezet és övei, függőleges övezetesség, hideg övezet és övei, környezetkárosítás, mérsékelt övezet és övei, tipikus táj",
+      "suggestedActivities": "Montázs készítése egy éghajlati területre jellemző képekből; az éghajlati övezetek bemutatása prezentációval; képzeletbeli riport egy adott övben élő gyerek napjáról; éghajlati diagram alapján rövid ismertető leírás készítése; összefogásra felhívó plakát készítése az éghajlatváltozás megállításáért."
+    },
+    {
+      "id": "gazdasag_penz_munka",
+      "name": "Életünk és a gazdaság: a pénz és a munka világa",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló ismeri és értelmezi a fejlettségbeli különbségek leírására alkalmazott mutatókat; értelmezi a mindennapi életben jelen lévő pénzügyi tevékenységeket és szolgáltatásokat; megnevezi a vállalkozás működését befolyásoló tényezőket; életkori sajátosságainak megfelelő helyzetekben alkalmazza pénzügyi ismereteit.",
+      "developmentalTasks": "Adatok gyűjtése és értelmezése a pénz és a munka világához kapcsolódóan. A felelős döntéshozatal pénzügyi döntések meghozatalában. A hitelfelvétel és a fejlődés, illetve az eladósodás kapcsolata. Foglalkoztatási adatok értelmezése és elemzése. A fogyasztóvédelem szerepe. Az energiahatékony és zöld gazdálkodás szemlélete. A globalizáció és a mindennapi élet kapcsolata.",
+      "concepts": "családi költségvetés, eladósodás, globalizáció, hitel, munkanélküli, munkavállaló, pénz, tőzsde, valuta, valutaváltás, világtermék",
+      "suggestedActivities": "Pénzügyi döntési helyzetek megoldása szerepjátékkal; a piac és a tőzsde működésének bemutatása szimulációs játékkal; bankok portáljáról igénybe vehető szolgáltatások megismerése; helyzetgyakorlat az energiatudatos fogyasztói döntés meghozataláról; osztálykirándulás költségtervének elkészítése csoportmunkában; foglalkoztatási adatok gyűjtése és értelmezése."
+    }
+  ]
+}

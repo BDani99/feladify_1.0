@@ -8,7 +8,7 @@ const Assignment = require('../models/Assignment');
 const Class = require('../models/Class');
 const DiagnosticResult = require('../models/DiagnosticResult');
 const ParentGoal = require('../models/ParentGoal');
-const groqService = require('../services/aiService');
+const aiService = require('../services/aiService');
 const authenticateUser = require('../middleware/authenticateUser');
 const Notification = require('../models/Notification');
 const realtimeService = require('../services/realtimeService');
@@ -982,7 +982,7 @@ ${diagnosticContext ? `\n**Szintfelmérő eredmények:**${diagnosticContext}` : 
       });
 
       let fullResponse = '';
-      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride)) {
+      for await (const chunk of aiService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride)) {
         fullResponse += chunk;
         res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
       }
@@ -997,7 +997,7 @@ ${diagnosticContext ? `\n**Szintfelmérő eredmények:**${diagnosticContext}` : 
       return;
     }
 
-    const aiResponse = await groqService.generateResponse(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride);
+    const aiResponse = await aiService.generateResponse(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride);
     chatDoc.addMessage('assistant', aiResponse);
     await chatDoc.save();
 

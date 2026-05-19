@@ -8,9 +8,34 @@ const Assignment = require('../models/Assignment');
 const Class = require('../models/Class');
 const DiagnosticTest = require('../models/DiagnosticTest');
 const DiagnosticResult = require('../models/DiagnosticResult');
-const groqService = require('../services/aiService');
+const aiService = require('../services/aiService');
 const { sendError } = require('../utils/errorResponse');
 const ParentGoal = require('../models/ParentGoal');
+
+// MCQ integritás-ellenőrzés: biztosítja, hogy correctAnswer mindig az options között legyen
+const ensureMcqIntegrity = (questions) => {
+  const normStr = s => String(s ?? '').toLowerCase().trim().replace(/\s+/g, ' ');
+  return questions.map((q, idx) => {
+    if (q.questionType === 'mcq' && Array.isArray(q.options) && q.options.length > 0) {
+      const normCA = normStr(q.correctAnswer);
+      const matchIdx = q.options.findIndex(o => normStr(o) === normCA);
+      if (matchIdx !== -1) {
+        // Igazítjuk a correctAnswer-t az opció pontos szövegéhez (whitespace/case eltérés javítás)
+        return { ...q, correctAnswer: q.options[matchIdx] };
+      }
+      // correctAnswer nem szerepel az opciók között – beillesszük és frissítjük
+      const fallback = (q.correctAnswer != null && String(q.correctAnswer).trim())
+        ? String(q.correctAnswer)
+        : 'Helyes válasz';
+      console.warn(`[MCQ integrity] q${idx + 1} correctAnswer nem volt options-ban, javítva: "${fallback.substring(0, 40)}"`);
+      const newOptions = [...q.options];
+      newOptions[newOptions.length - 1] = fallback;
+      const shuffled = newOptions.sort(() => Math.random() - 0.5);
+      return { ...q, options: shuffled, correctAnswer: fallback };
+    }
+    return q;
+  });
+};
 
 // Middleware to verify JWT token and get user
 const authMiddleware = async (req, res, next) => {
@@ -63,7 +88,7 @@ router.get('/roadmap', authMiddleware, async (req, res) => {
 
     res.json({
       totalXP: progress.totalXP,
-      streak: progress.streak,
+      streak: progress.getEffectiveStreak(),
       badges: progress.badges,
       roadmap: progress.roadmap,
       dailyGoal: progress.dailyGoal,
@@ -109,7 +134,7 @@ router.post('/roadmap/submit', authMiddleware, async (req, res) => {
     const newBadges = progress.checkBadges();
     await progress.save();
 
-    res.json({ message: 'Sikeresen beküldve', xpEarned: 50, newBadges, totalXP: progress.totalXP, streak: progress.streak });
+    res.json({ message: 'Sikeresen beküldve', xpEarned: 50, newBadges, totalXP: progress.totalXP, streak: progress.getEffectiveStreak() });
   } catch (error) {
     res.status(500).json({ message: 'Hiba történt a beküldéskor', error: error.message });
   }
@@ -125,7 +150,7 @@ router.get('/progress', authMiddleware, async (req, res) => {
     }
 
     // Biztosítjuk, hogy minden tantárgy létezik
-    const validSubjects = ['Matematika', 'Magyar', 'Angol', 'Környezetismeret'];
+    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Környezetismeret', 'Történelem'];
     for (const subject of validSubjects) {
       if (!progress.subjectProgress.find(sp => sp.subject === subject)) {
         progress.subjectProgress.push({
@@ -154,7 +179,7 @@ router.get('/progress', authMiddleware, async (req, res) => {
 router.get('/progress/:subject', authMiddleware, async (req, res) => {
   try {
     const { subject } = req.params;
-    const validSubjects = ['Matematika', 'Magyar', 'Angol', 'Környezetismeret'];
+    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Környezetismeret', 'Történelem'];
     if (!validSubjects.includes(subject)) {
       return res.status(400).json({ message: 'Érvénytelen tantárgy' });
     }
@@ -283,7 +308,7 @@ router.post('/practice/submit', authMiddleware, async (req, res) => {
       message: 'Kihívás sikeresen mentve',
       xpEarned,
       totalXP: progress.totalXP,
-      streak: progress.streak,
+      streak: progress.getEffectiveStreak(),
       newBadges,
       subjectProgress: subjectData
     });
@@ -304,7 +329,7 @@ router.post('/tutor/question-set', authMiddleware, async (req, res) => {
     const student = await User.findById(req.user._id);
     const grade = student ? student.className : 'általános iskola';
 
-    const questions = await groqService.generatePracticeQuestionSet(subject, topic, difficulty || 3, count || 3, grade);
+    const questions = await aiService.generatePracticeQuestionSet(subject, topic, difficulty || 3, count || 3, grade, [], [], req.user._id);
     res.json({ questions });
   } catch (error) {
     console.error('[Student API] Error in /tutor/question-set:', error);
@@ -317,8 +342,8 @@ router.post('/tutor/question-set', authMiddleware, async (req, res) => {
 // POST /api/student/diagnostic/start - Diagnosztikai teszt indítása (AI-generált)
 router.post('/diagnostic/start', authMiddleware, async (req, res) => {
   try {
-    const { subject, grade } = req.body;
-    const validSubjects = ['Matematika', 'Magyar', 'Angol', 'Környezetismeret'];
+    const { subject, grade, selectedTopics } = req.body;
+    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Környezetismeret', 'Történelem'];
     if (!subject || !validSubjects.includes(subject)) {
       return res.status(400).json({ message: 'Érvénytelen vagy hiányzó tantárgy' });
     }
@@ -353,7 +378,9 @@ router.post('/diagnostic/start', authMiddleware, async (req, res) => {
     const subjectProg = progress.subjectProgress?.find(sp => sp.subject === subject);
     const currentLevel = subjectProg?.currentLevel || 1;
     console.log(`[Diagnostic] Generating questions for ${subject} / ${grade || '4. osztály'} / level ${currentLevel}`);
-    const generatedQuestions = await groqService.generateDiagnosticTest(subject, grade || '4. osztály', 10, currentLevel);
+    const generatedQuestions = ensureMcqIntegrity(
+      await aiService.generateDiagnosticTest(subject, grade || '4. osztály', 10, currentLevel, selectedTopics, req.user._id)
+    );
 
     // Teljes kérdéssort (correctAnswer-rel) elmentjük a session-be
     progress.diagnosticSession = {
@@ -441,7 +468,7 @@ router.post('/diagnostic/submit', authMiddleware, async (req, res) => {
         if (question.questionType === 'mcq' || question.questionType === 'true_false') {
           isCorrect = norm(studentAnswer) === norm(question.correctAnswer);
         } else if (question.questionType === 'short_answer' || question.questionType === 'fill_blank') {
-          const aiResult = await groqService.checkShortTextAnswer(
+          const aiResult = await aiService.checkShortTextAnswer(
             session.subject, question.questionText, studentAnswer, question.correctAnswer
           );
           isCorrect = aiResult.correct;
@@ -489,8 +516,8 @@ router.post('/diagnostic/submit', authMiddleware, async (req, res) => {
     }));
 
     // AI elemzés (checkpoint-ajánlatok)
-    const aiAnalysisResult = await groqService.analyzeDiagnosticTest(
-      { subject: session.subject, scorePercentage, totalQuestions: totalCount, answers: perQuestionResults },
+    const aiAnalysisResult = await aiService.analyzeDiagnosticTest(
+      { subject: session.subject, grade: session.grade, scorePercentage, totalQuestions: totalCount, answers: perQuestionResults },
       session.questions.map((q, i) => ({ category: q.category, questionText: q.questionText }))
     );
 
@@ -543,7 +570,7 @@ router.post('/diagnostic/question-analysis', authMiddleware, async (req, res) =>
     if (!subject || !questionText || correctAnswer === undefined) {
       return res.status(400).json({ message: 'Hiányos adatok' });
     }
-    const analysis = await groqService.generateQuestionAnalysis(subject, questionText, correctAnswer, studentAnswer, !!isCorrect);
+    const analysis = await aiService.generateQuestionAnalysis(subject, questionText, correctAnswer, studentAnswer, !!isCorrect);
     res.json(analysis);
   } catch (error) {
     console.error('[Student API] Error in diagnostic/question-analysis:', error);
@@ -592,7 +619,7 @@ router.post('/tutor/hint', authMiddleware, async (req, res) => {
     if (!subject || !topic || !questionText || !studentAnswer || !correctAnswer) {
       return res.status(400).json({ message: 'Hiányos adatok' });
     }
-    const hint = await groqService.generateSocraticHint(subject, topic, questionText, studentAnswer, correctAnswer, attemptNumber || 1, tone || 'teacher');
+    const hint = await aiService.generateSocraticHint(subject, topic, questionText, studentAnswer, correctAnswer, attemptNumber || 1, tone || 'teacher');
     res.json({ hint });
   } catch (error) {
     res.status(500).json({ message: 'Hiba történt a tipp generálásakor', error: error.message });
@@ -605,7 +632,7 @@ router.post('/tutor/question', authMiddleware, async (req, res) => {
     const { subject, topic } = req.body;
     const student = await User.findById(req.user._id);
     const grade = student ? student.className : 'általános iskola';
-    const questionsSet = await groqService.generatePracticeQuestionSet(subject, topic, 3, 1, grade);
+    const questionsSet = await aiService.generatePracticeQuestionSet(subject, topic, 3, 1, grade, [], [], req.user._id);
     res.json(questionsSet[0] || {});
   } catch (error) {
     res.status(500).json({ message: 'Hiba történt a kérdés generálásakor', error: error.message });
@@ -618,7 +645,7 @@ router.post('/tutor/check', authMiddleware, async (req, res) => {
     
     let isCorrect = false;
     if (questionType === 'shorttext') {
-      const result = await groqService.checkShortTextAnswer(subject, questionText, studentAnswer, correctAnswer);
+      const result = await aiService.checkShortTextAnswer(subject, questionText, studentAnswer, correctAnswer);
       isCorrect = result.correct;
     } else {
       const norm = (s) => String(s).toLowerCase().trim().replace(/[.,!?]/g, '');
@@ -628,7 +655,7 @@ router.post('/tutor/check', authMiddleware, async (req, res) => {
     if (isCorrect) {
       return res.json({ correct: true, message: 'Helyes válasz! Szép munka, lépjünk is tovább! 🎉' });
     } else {
-      const hint = await groqService.generateSocraticHint(subject, topic, questionText, studentAnswer, correctAnswer, attemptNumber || 1, tone || 'teacher');
+      const hint = await aiService.generateSocraticHint(subject, topic, questionText, studentAnswer, correctAnswer, attemptNumber || 1, tone || 'teacher');
       return res.json({ correct: false, hint });
     }
   } catch (error) {
@@ -638,7 +665,7 @@ router.post('/tutor/check', authMiddleware, async (req, res) => {
 
 router.get('/diagnostic/statuses', authMiddleware, async (req, res) => {
   try {
-    const subjects = ['Matematika', 'Magyar', 'Angol', 'Környezetismeret'];
+    const subjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Környezetismeret', 'Történelem'];
     const statuses = {};
 
     for (const subject of subjects) {
@@ -697,13 +724,19 @@ async function createOrUpdatePracticePath(studentId, analyzedResultDoc, subjectN
       { topic: 'Szöveges feladatok', difficulty: 4 },
       { topic: 'Statisztika és valószínűség', difficulty: 4 }
     ],
-    'Magyar': [
+    'Nyelvtan': [
       { topic: 'Szófajok felismerése', difficulty: 1 },
       { topic: 'Helyesírás alapszabályai', difficulty: 2 },
       { topic: 'Mondatelemzés', difficulty: 3 },
-      { topic: 'Szövegértés', difficulty: 3 },
-      { topic: 'Fogalmazás és stíluseszközök', difficulty: 4 },
-      { topic: 'Irodalmi műfajok', difficulty: 4 }
+      { topic: 'Hangtani alapismeretek', difficulty: 3 },
+      { topic: 'Nyelvhelyesség', difficulty: 4 }
+    ],
+    'Irodalom': [
+      { topic: 'Népköltészet és mesék', difficulty: 1 },
+      { topic: 'Szövegértés és olvasás', difficulty: 2 },
+      { topic: 'Irodalmi műfajok', difficulty: 3 },
+      { topic: 'Verselemzés alapjai', difficulty: 3 },
+      { topic: 'Karakterek és cselekmény', difficulty: 4 }
     ],
     'Angol': [
       { topic: 'Alapvető szókincs', difficulty: 1 },
@@ -720,6 +753,13 @@ async function createOrUpdatePracticePath(studentId, analyzedResultDoc, subjectN
       { topic: 'Természeti jelenségek', difficulty: 3 },
       { topic: 'Környezetvédelem', difficulty: 4 },
       { topic: 'Összefüggések a természetben', difficulty: 4 }
+    ],
+    'Történelem': [
+      { topic: 'Ókori civilizációk és kultúrák', difficulty: 1 },
+      { topic: 'A magyarság őstörténete és a honfoglalás', difficulty: 2 },
+      { topic: 'Az Árpád-házi királyok kora', difficulty: 2 },
+      { topic: 'Középkori élet, kultúra és hitvilág', difficulty: 3 },
+      { topic: 'Helytörténet és nemzeti jelképek', difficulty: 4 }
     ]
   };
 
@@ -743,6 +783,7 @@ async function createOrUpdatePracticePath(studentId, analyzedResultDoc, subjectN
     checkpointId: `chk_${Date.now()}_${index}`,
     topic: rec.topic || 'Gyakorló feladat',
     gamifiedTitle: rec.gamifiedTitle || null,
+    topicId: rec.topicId || null,
     difficulty: rec.difficulty || 3,
     status: index === 0 ? 'unlocked' : 'locked',
     score: 0,
@@ -917,7 +958,7 @@ FONTOS SZABÁLYOK:
       console.log('[Student API] Chat send - Kezdődik a válasz streaming...');
       let fullResponse = '';
 
-      for await (const chunk of groqService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride)) {
+      for await (const chunk of aiService.generateResponseStream(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride)) {
         fullResponse += chunk;
         res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
       }
@@ -933,8 +974,8 @@ FONTOS SZABÁLYOK:
       return;
     }
 
-    console.log('[Student API] Chat send - Groq API hívása előtt');
-    const aiResponse = await groqService.generateResponse(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride);
+    console.log('[Student API] Chat send - AI hívása előtt');
+    const aiResponse = await aiService.generateResponse(systemPrompt, messagesForAI, { temperature: 0.75, max_tokens: 2048 }, true, modelOverride);
     console.log('[Student API] Chat send - AI válasz hossza:', aiResponse.length, 'Első 100 char:', aiResponse.substring(0, 100));
 
     chatDoc.addMessage('assistant', aiResponse);
@@ -1122,6 +1163,31 @@ router.post('/checkpoint/start', authMiddleware, async (req, res) => {
     const checkpoint = subjectData.checkpoints.find(c => c.checkpointId === checkpointId);
     if (!checkpoint) return res.status(404).json({ message: 'Checkpoint nem található' });
 
+    // Duplikált kérés-védelem: ha ugyanaz a checkpoint-session már létezik (<2 perc),
+    // visszaadjuk a meglévőt (React StrictMode és gyors újratöltés ellen)
+    if (
+      progress.checkpointSession?.checkpointId === checkpointId &&
+      progress.checkpointSession.startedAt &&
+      Date.now() - new Date(progress.checkpointSession.startedAt).getTime() < 120000
+    ) {
+      const existingQs = progress.checkpointSession.questions.map(q => ({
+        questionId:   q.questionId,
+        questionText: q.questionText,
+        questionType: q.questionType,
+        difficulty:   q.difficulty,
+        options:      q.options,
+        pairs:        q.pairs,
+        items:        q.items
+      }));
+      console.log('[Student API] Checkpoint/start: meglévő session visszaadva (duplikált kérés)');
+      return res.json({
+        checkpointId,
+        checkpointTitle: checkpoint.topic,
+        questions: existingQs,
+        difficulty: checkpoint.difficulty
+      });
+    }
+
     // Szint-alapú nehézség skálázás: alap + szintbónusz
     const student = await User.findById(req.user._id);
     const gradeNum = parseInt(student?.className) || 4;
@@ -1134,9 +1200,10 @@ router.post('/checkpoint/start', authMiddleware, async (req, res) => {
 
     // Kérdéssor generálása AI-val (6+ feladattípus)
 
-    const generatedQuestions = await groqService.generatePracticeQuestionSet(
-      subject, checkpoint.topic, effectiveDifficulty, 10, student?.className || '4. osztály', weakQuestions
+    const rawQuestions = await aiService.generatePracticeQuestionSet(
+      subject, checkpoint.topic, effectiveDifficulty, 10, student?.className || '4. osztály', weakQuestions, [], req.user._id
     );
+    const generatedQuestions = ensureMcqIntegrity(rawQuestions);
 
     // Mentés robusztus módon (VersionError kezelésével)
     let saved = false;
@@ -1223,12 +1290,15 @@ router.post('/checkpoint/answer', authMiddleware, async (req, res) => {
 
     // Típus szerinti valódi validáció
     let isCorrect = false;
-    const norm = s => String(s).toLowerCase().trim().replace(/[.,!?;:]/g, '');
+    const norm = s => String(s ?? '').toLowerCase().trim().replace(/\s+/g, ' ').replace(/[.,!?;:]/g, '');
 
     if (question.questionType === 'mcq' || question.questionType === 'true_false') {
-      isCorrect = norm(answer) === norm(question.correctAnswer);
+      const normA = norm(answer);
+      const normCA = norm(question.correctAnswer);
+      isCorrect = normA === normCA;
+      console.log(`[checkpoint/answer] MCQ ellenőrzés q="${question.questionId}" answer="${normA}" correct="${normCA}" match=${isCorrect}`);
     } else if (question.questionType === 'short_answer' || question.questionType === 'fill_blank') {
-      const result = await groqService.checkShortTextAnswer(
+      const result = await aiService.checkShortTextAnswer(
         subject, question.questionText, answer, question.correctAnswer
       );
       isCorrect = result.correct;
@@ -1272,7 +1342,7 @@ router.post('/checkpoint/answer', authMiddleware, async (req, res) => {
       aiMessage = `Helyes! Jól gondoltad át. 🎉 (${uniqueCorrect}/${total} helyes eddig)`;
     } else {
       const chatHistory = req.body.chatHistory || [];
-      hint = await groqService.generateCheckpointHint(
+      hint = await aiService.generateCheckpointHint(
         subject, session.topic, question, answer, question.correctAnswer, attemptNumber, session.questions, session.answers, chatHistory
       );
       aiMessage = `Nem egészen... Gondold át még egyszer! 💡`;
@@ -1312,7 +1382,7 @@ router.post('/checkpoint/hint', authMiddleware, async (req, res) => {
     const question = session.questions.find(q => q.questionId === questionId);
     if (!question) return res.status(404).json({ message: 'Kérdés nem található' });
 
-    const hint = await groqService.generateCheckpointHint(
+    const hint = await aiService.generateCheckpointHint(
       session.subject,
       session.topic,
       question,
@@ -1404,8 +1474,10 @@ router.post('/checkpoint/complete', authMiddleware, async (req, res) => {
       subjectData.weakQuestionsForNext = weakQs.slice(0, 3);
     }
 
-    // XP: alap + nehézség * 8 + teljesítmény (max 50)
-    const xpEarned = 30 + (checkpoint.difficulty * 8) + Math.floor(score * 0.5);
+    // XP: alap + nehézség * 8 + teljesítmény (max 50) + szintbónusz ha minden checkpoint kész
+    const checkpointXP = 30 + (checkpoint.difficulty * 8) + Math.floor(score * 0.5);
+    const levelBonusXP = allDone ? 100 : 0;
+    const xpEarned = checkpointXP + levelBonusXP;
     progress.addXP(xpEarned);
     subjectData.subjectXP = (subjectData.subjectXP || 0) + xpEarned;
     const newBadges = progress.checkBadges();
@@ -1421,7 +1493,7 @@ router.post('/checkpoint/complete', authMiddleware, async (req, res) => {
       score,
       xpEarned,
       totalXP: progress.totalXP,
-      streak: progress.streak,
+      streak: progress.getEffectiveStreak(),
       newBadges,
       nextUnlocked: checkpointIndex < subjectData.checkpoints.length - 1,
       levelComplete: allDone,

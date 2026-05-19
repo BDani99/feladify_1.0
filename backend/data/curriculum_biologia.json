@@ -1,0 +1,121 @@
+{
+  "7-8": [
+    {
+      "id": "biologia_tudomanya",
+      "name": "A biológia tudományának céljai és vizsgálati módszerei",
+      "recommendedHours": 3,
+      "learningOutcomes": "A tanuló ismeri a biológia tudományának kutatási céljait, érti a tudományos megismerés természetét; biológiai jelenségekkel kapcsolatban kérdéseket, előfeltevéseket fogalmaz meg; megkülönbözteti a bulvár, a népszerűsítő és a tudományos közléseket; kísérleteket hajt végre útmutató alapján és következtetéseket fogalmaz meg.",
+      "developmentalTasks": "A bioszféra fogalmának értelmezése, a biológia kutatási céljainak megismerése. Néhány jelentős felfedezés történeti bemutatása. A biológiai ismeretek gyarapodásának összefüggése a technológiai fejlődéssel. A természettudományos vizsgálatok feltételei és alapvető módszerei. Az áltudományos és tudományos források megkülönböztetése.",
+      "concepts": "bioszféra, élettudományok, tudományos probléma, hipotézis, kísérlet, kísérleti változó, rendszer, környezet, szerveződési szint, tudományos közlemény, áltudomány",
+      "suggestedActivities": "Kiselőadások az élettudományok történetének személyiségeiről (Arisztotelész, Galenus, Linné, Darwin, Watson és Crick); orvosi Nobel-díjas felfedezések bemutatása; áltudományos hírek gyűjtése és cáfolata; kisfilmek megtekintése a modern biológiáról."
+    },
+    {
+      "id": "elet_kialakulas",
+      "name": "Az élet kialakulása és szerveződése",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló tényekre alapozott érveket fogalmaz meg a baktériumok jelentőségével kapcsolatban; felismeri és megnevezi a sejtmagvas sejttípus alkotórészeit; összehasonlítja a növényi és az állati sejtek felépítését; érti a többsejtűek szerveződési típusainak különbségét.",
+      "developmentalTasks": "Mikroszkópok működési elvének megismerése, használat készségének fejlesztése. A mikroorganizmusok és a földi élet kialakulásának kapcsolata. A biológiai energiaforrás típusainak megkülönböztetése. A növényi és az állati sejttípusok összehasonlítása, anyagcseretípusok.",
+      "concepts": "fénymikroszkóp, sejt, sejtalkotó, baktérium, biológiai információ, gén, anyagcsere, szénforrás, energiaforrás, fotoszintézis, légzés, egysejtű, telep, szövet",
+      "suggestedActivities": "Fénymikroszkóp beállítása, egysejtűek megfigyelése; növényi szövetpreparátumok készítése; állati szövetmetszetek vizsgálata; a baktériumok sokféle biológiai szerepének bemutatása; papucsállatka-tenyészet készítése; növényi és állati sejtmodell készítése."
+    },
+    {
+      "id": "elovilag_fejlodese",
+      "name": "Az élővilág fejlődése",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló figyelembe veszi az evolúciós fejlődés szempontjait; a földtörténeti időskálán elhelyezi az evolúció mérföldköveit; értelmezi a rátermettség és a természetes szelekció fogalmát; elfogadja, hogy minden ember egy fajhoz tartozik és a nagyrasszok értékükben nem különböznek.",
+      "developmentalTasks": "Az evolúciós idődimenziók felmérése, a természetes szelekció és semleges folyamatok jelentőségének felismerése. Az élővilág sokféleségének értékelése. Az alkalmazkodással összefüggő változások azonosítása. Az emberi evolúció főbb lépései: agytérfogat, testtartás, tűz- és eszközhasználat.",
+      "concepts": "evolúció, természetes kiválasztódás, alkalmazkodás, rátermettség, fajok sokfélesége, emberi evolúció, ősemberek, nagyrasszok, Homo sapiens",
+      "suggestedActivities": "Az élővilág fejlődését bemutató időszalag készítése; a környezet és az élőlények alkalmazkodásának elemzése; emberelődök testfelépítésének összehasonlítása; az emberré válást bemutató videó elemzése."
+    },
+    {
+      "id": "elovilag_orszagai",
+      "name": "Az élővilág országai",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló alaktani jellemzők alapján felismer néhány fontosabb növény- és állatcsoportot; összehasonlítja a gombák, növények és állatok testfelépítését és életműködéseit; érvel az önálló rendszertani csoportba sorolásuk mellett.",
+      "developmentalTasks": "Az élőlények sokféleségében való eligazodás módszereinek azonosítása, a hierarchia és a leszármazási rokonság elvének felismerése. A gombák, növények és állatok külön országba sorolása melletti érvek, fontosabb rendszertani csoportok jellemzése. Élőlénycsoportok, fajok azonosítása határozókönyvek és mobilapplikációk segítségével.",
+      "concepts": "fejlődéstörténeti rendszer, rendszertani kategóriák, faj, kettős nevezéktan, virágtalan növények, virágos növények, férgek, ízeltlábúak, puhatestűek, a gerincesek osztályai",
+      "suggestedActivities": "Növény- és állatismeret segédkönyv és mobilapplikációk keresése; fajok rendszertani besorolásának ábrázolása; az élővilág országait bemutató törzsfa rajzolása; kiselőadás Darwin és Linné munkásságáról; mikroorganizmusok mikroszkópos vizsgálata; fajok felismerése terepgyakorlaton."
+    },
+    {
+      "id": "bolygonk_elovilaga",
+      "name": "Bolygónk élővilága",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló ismeri a földrészek legjellegzetesebb növény- és állatfajait; tematikus térképek alapján azonosítja a biomokat; felismeri az éghajlati övezetek és az ott élő élővilág kapcsolatait; felismeri, hogy a legnagyobb életközösség a világtengerekben él.",
+      "developmentalTasks": "Bolygónk nagy életközösségeinek azonosítása tematikus térképen. Az élőlények testfelépítése és a biom ökológiai feltételei közti kapcsolat elemzése. Az európai magashegységek függőleges zonalitása. Óceánok, tengerek és édesvízi életközösségek. Táplálkozási láncok és hálózatok összeállítása.",
+      "concepts": "tápláléklánc, táplálékhálózat, elterjedési terület, éghajlati övezet, biomok, vízi életközösségek, függőleges zonalitás",
+      "suggestedActivities": "A kontinensek élővilágát bemutató természetfilmek feladatlapos elemzése; tematikus térképek rajzolása; tűrőképességi görbék elemzése; táplálkozási piramis rajzolása; természettudósok filmrészleteinek megtekintése és megbeszélése."
+    },
+    {
+      "id": "eletkozsegek",
+      "name": "Életközösségek vizsgálata",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló vizsgál életközösségeket és elemzi az élettelen környezeti tényezők és élőlények közötti kapcsolatokat; magyarázza az anyagforgalom folyamatát; elemzi az állatok viselkedésének alaptípusait; felismeri az életközösségek biológiai értékeit.",
+      "developmentalTasks": "Az élettelen környezeti tényezők és élőlények közötti kölcsönhatások azonosítása. A levegő, a víz és a talaj minőségi jellemzőinek vizsgálata. Az élőhely fogalma és típusai. Az életközösségek rendszerként való értelmezése. Az indikátorszervezetek jelentőségének megértése.",
+      "concepts": "életközösség, élőhely, környezeti igény, tűrőképesség, indikátorszervezet, populációs kölcsönhatás, évszakos és napi változási ciklus, társulások fejlődése, szukcesszió",
+      "suggestedActivities": "Egyszerű levegőminőség-, vízminőség- és talajvizsgálatok elvégzése; természetes életközösség rendszeres megfigyelése; kiselőadás idegenhonos inváziós fajokról; zuzmók elterjedésének vizsgálata az iskola környezetében."
+    },
+    {
+      "id": "termeszeti_ertekek",
+      "name": "A természeti értékek védelme",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló érti és elfogadja, hogy az élő természet törvényi védelemre szorul; az életformák sokféleségét megőrzendő értékként kezeli; tájékozódik a védett fajokról és életközösségekről; ismeri a hazai nemzeti parkok számát és elhelyezkedését; felismeri egyéni és közösségi felelősségét a természetért.",
+      "developmentalTasks": "A természetvédelem szükségessége melletti érvelés, egyedi és rendszerszintű módszerek. A gazdálkodás és infrastruktúra természetre gyakorolt hatásainak azonosítása. Ökológiai elvek érvényesítési lehetőségei. Nemzeti parkjaink elnevezése, területi elhelyezkedése és biológiai értékei. A védett faj és az eszmei érték fogalma.",
+      "concepts": "tájvédelmi körzet, természetvédelmi terület, nemzeti park, védett faj, eszmei érték, ökoturizmus, ökogazdálkodás, urbanizáció, környezettudatosság",
+      "suggestedActivities": "Környezet- és természetvédelem jeles napjaihoz kapcsolódó programok; szerepjáték természetvédelmi problémák elemzésére; a lakóhely természetvédelmi értékeinek bemutatása projektmunka keretében; hazai nemzeti parkok életközösségeit bemutató kiselőadások; kirándulás valamely hazai nemzeti parkba."
+    },
+    {
+      "id": "elovilag_es_ember",
+      "name": "Az élővilág és az ember kapcsolata, fenntarthatóság",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló kritikusan értékeli az emberi tevékenység természeti környezetre gyakorolt hatását; ismeri a növények gondozásának biológiai alapjait; kritikusan vizsgálja a haszonállatok tartási módjait; elemzi a globális környezeti problémák összefüggéseit és a megelőzés stratégiáit.",
+      "developmentalTasks": "A biológiai sokféleség beszűkülését előidéző okok és lehetséges veszélyek felismerése. Az emberi populáció növekedésével járó hatások elemzése. A fogyasztói létforma és a Föld véges erőforrásai közötti ellentmondás. Ökológiai gazdálkodás és génmegőrzés. Éghajlatváltozási modellek és a megelőzés, hatáscsökkentés módjai.",
+      "concepts": "biológiai sokféleség, fajgazdagság, fajtanemesítés, génmegőrzés, globális probléma, éghajlatváltozás, monokultúra, biogazdálkodás, tájgazdálkodás, fenntarthatóság",
+      "suggestedActivities": "Információgyűjtés az iskola és a település jellegzetes gazdálkodási tevékenységeiről; a helyi szinttől a globális szintig átívelő természetvédelmi esetek keresése és összefüggéseik feltárása."
+    },
+    {
+      "id": "emberi_szervezet_1",
+      "name": "Az emberi szervezet I. – Testkép, testalkat, mozgásképesség",
+      "recommendedHours": 5,
+      "learningOutcomes": "A tanuló azonosítja a főbb testtájakat és testrészeket; felismeri a bőr, a csontváz és a vázizomzat főbb elemeit; értelmezi a mozgási szervrendszer felépítése és a mozgásképesség kapcsolatát; felismeri a sportok testi és lelki fejlesztő hatását és baleseti veszélyeit.",
+      "developmentalTasks": "Tájékozódás az emberi testen, a testtájak és szervek elhelyezkedésének bemutatása. Az emberi kültakaró szövettani rétegeinek azonosítása. A gerincoszlop tájékai és részei, végtagok és függesztőövek, mellkas csontjai. A mozgásszervrendszer szövettani csoportjai. A végtagok hajlító- és feszítőizmai. Sportok mozgásformáinak elemzése anatómiai elvek alapján.",
+      "concepts": "kültakaró, bőr(szövet), csont(szövet), koponyacsontok, gerincoszlop, csigolyák, bordák, a végtagok alapfelépítése, függesztőövek, izom(szövet), hajlító- és feszítőizmok, mimikai izmok",
+      "suggestedActivities": "Az emberi test anatómiáját bemutató videók és alkalmazások keresése; mikroszkópi metszetek vizsgálata; csontok szöveti felépítésének vizsgálata; a mozgásszervrendszer egyes részeit bemutató mozgatható makett készítése; egyszerű biometriai mérések elvégzése."
+    },
+    {
+      "id": "emberi_szervezet_2",
+      "name": "Az emberi szervezet II. – Anyagforgalom",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló ábrák alapján felismeri az anyagforgalmi szervrendszerek fontosabb szerveit; azonosítja a táplálkozási, keringési, légzési, kiválasztási szervrendszerek alapvető biológiai funkcióit; ismeri és értékeli az emberi szervezet állapotát jellemző fontosabb adatokat.",
+      "developmentalTasks": "A belső szervek elhelyezkedésének bemutatása maketten vagy ábrán. A táplálkozási szervrendszer főbb részeinek és funkcióinak értelmezése, az emésztés és felszívódás folyamata. A tápanyagok élettani szerepe. A légzőszervrendszer felépítése és gázcsere-folyamatok. A keringési szervrendszer szervei és biológiai funkciója. A vérkép, vér összetétele, véralvadás. A kiválasztó szervrendszer feladata és működési elve.",
+      "concepts": "tápcsatorna, tápanyag, emésztőnedv, felszívódás, máj, hasnyálmirigy, felső és alsó légutak, tüdő, légcsere és gázcsere, szív, szívciklus, értípusok, véralvadás, vérkép, vese, só- és vízháztartás, kiválasztás",
+      "suggestedActivities": "Belső szerveket bemutató maketten, torzón tanulmányozás; szövettani ábrák elemzése; táplálkozási szervrendszer folyamatvázlatának rajzolása; élelmiszerek összetételi adatainak értelmezése; sertésszív és sertésvese boncolása; keringési és légzési szervrendszer megfigyelési és mérési feladatok."
+    },
+    {
+      "id": "emberi_szervezet_3",
+      "name": "Az emberi szervezet III. – Érzékelés, szabályozás",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló ábrák alapján felismeri az ideg- és hormonrendszer fontosabb szerveit; azonosítja az ideg- és hormonrendszer alapvető biológiai funkcióit; érti a szabályozás elvét; felismeri, hogy az immunrendszer is információkat dolgoz fel; ismeri a védőoltások működési módját.",
+      "developmentalTasks": "Az idegrendszer feladatának és működési módjának megértése; a központi és környéki idegrendszer vázlatos ismerete; akaratlagos és vegetatív szabályozás. Az érzékelési képességek és az érzékszervek felépítése és működése. A hormonrendszer működési módja, főbb hormontermelő szervek. Az immunrendszer és a védekezésben szerepet játszó sejttípusok. Védőoltások működési módja.",
+      "concepts": "központi és környéki idegrendszer, gerincvelő, érző- és mozgatópálya, reflex, belső elválasztású mirigy, hormon és receptor, agyalapi mirigy, pajzsmirigy, mellékvese, nemi mirigyek és hormonjaik, immunrendszer, veleszületett és szerzett immunitás, védőoltás",
+      "suggestedActivities": "Az agy és gerincvelő felépítését bemutató ábrák, maketek elemzése; gerincvelői reflexet bemutató animációk elemzése; a szem és fül felépítésének megbeszélése; látás- és hallásvizsgálatok; összefoglaló táblázat a belső elválasztású mirigyekről; az immunrendszer működését bemutató rajzfilm."
+    },
+    {
+      "id": "szaporodas_orokles",
+      "name": "Szaporodás, öröklődés, életmód",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló azonosítja az emberi egyedfejlődés főbb szakaszait; bemutatja az emberi nemek testi különbözőségének kialakulását; tisztában van a felelős szexuális magatartás ismérveivel; érti a gének szerepét; megkülönbözteti a testi és nemi kromoszómákat; értékeli az életmód egészségre gyakorolt hatását.",
+      "developmentalTasks": "A nemi szervrendszerek felépítésének elemzése. A másodlagos nemi jellegek kialakulása. Az ivarsejtek képződési helye és szerepe. A megtermékenyítés feltételei és fogamzásgátló módszerek. A magzati fejlődés főbb jellemzői. A gének szerepe, egyszerű öröklésmenet elemzése. A testi és nemi kromoszómák. Az öröklött hajlamok és a környezet kapcsolata.",
+      "concepts": "női és férfi ivarszervek, nemi jellegek, hímivarsejt és petesejt, gén, kromoszóma, minőségi és mennyiségi tulajdonság, öröklésmenet, megtermékenyítés, embrió, magzati fejlődés, szülés",
+      "suggestedActivities": "Az emberi nemek anatómiai különbségeit bemutató képek és animációk tanulmányozása; a megtermékenyítést és magzati fejlődést bemutató fotósorozatok elemzése; családi öröklésmeneteket bemutató ábrák, családfák elemzése; genetikai betegségeket bemutató esettanulmányok megbeszélése."
+    },
+    {
+      "id": "egeszseg_elsosegely",
+      "name": "Egészségmegőrzés, elsősegély",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló ismeri a szív- és érrendszeri betegségek kockázati tényezőit; megkülönbözteti a vírusos és bakteriális betegségeket; érti az antibiotikumok helyes használatának fontosságát; ismeri az orvosi diagnosztikai eljárások célját; elsősegélyt tud nyújtani (sebellátás, vérzéscsillapítás, CPR).",
+      "developmentalTasks": "A szív- és érrendszeri betegségek kockázati tényezőinek azonosítása. Az egészséges táplálkozás alapvető elvei. A rendszeres testmozgás és egészség összefüggése. A kórokozó, fertőzés, járvány és higiénia kapcsolata. Az antibiotikumok helyes használata, rezisztencia kialakulása. A daganatos betegségek kockázati tényezői és megelőzés. Az elsősegélynyújtás lépéseinek elvi ismerete és szimulációs gyakorlása. Alapszintű újraélesztés (CPR).",
+      "concepts": "fertőzés, járvány, stressz, rákkeltő anyag/hatás, személyi higiénia, élelmiszer-összetétel és -minőség, lelki egészség, függőség, szűrővizsgálat, diagnosztikai eljárások, elsősegélynyújtás, alapszintű újraélesztés",
+      "suggestedActivities": "Népegészségügyi adatsorok és grafikonok értelmezése; egészségnap szervezése; különböző élelmiszerek összetételének összehasonlítása; járványok történetéről kiselőadások; alapvető elsősegélynyújtási ismeretek gyakorlati bemutatása."
+    }
+  ]
+}

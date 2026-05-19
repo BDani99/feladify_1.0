@@ -1,0 +1,112 @@
+{
+  "5-6": [
+    {
+      "id": "anyagok_tulajdonsagai",
+      "name": "Anyagok és tulajdonságaik",
+      "recommendedHours": 12,
+      "learningOutcomes": "A tanuló megkülönbözteti a környezetében előforduló anyagokat (víz, levegő, talaj, fémek, fa, műanyagok) fizikai és kémiai tulajdonságaik alapján.",
+      "developmentalTasks": "Anyagok halmazállapot-változásainak (olvadás, fagyás, párolgás, lecsapódás) megfigyelése, kísérleti vizsgálata.",
+      "concepts": "Halmazállapot, sűrűség, oldhatóság, hővezetés, elektromos vezetés, éghetőség.",
+      "suggestedActivities": "Különböző anyagok úszásának és merülésének vizsgálata vízben, egyszerű keverékek szétválasztása (szűrés, mágnesezés)."
+    },
+    {
+      "id": "meresek_mertekegysegek",
+      "name": "Mérések, mértékegységek, mérőeszközök",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló magabiztosan használja a mérőeszközöket (hőmérő, mérőszalag, mérleg, mérőhenger) és a megfelelő mértékegységeket.",
+      "developmentalTasks": "Hosszúság, tömeg, térfogat, idő és hőmérséklet pontos mérése, a mérési adatok lejegyzése és ábrázolása.",
+      "concepts": "Mérőszám, mértékegység, hosszúság, tömeg, térfogat, hőmérséklet, pontosság, mérési hiba.",
+      "suggestedActivities": "Napi hőmérséklet-ingadozás mérése és grafikonos ábrázolása, különböző edények térfogatának mérése."
+    },
+    {
+      "id": "megfigyeles_kiserletezes",
+      "name": "Megfigyelés, kísérletezés, tapasztalás",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló képes egyszerű természettudományos kísérletet tervezni, végrehajtani, jegyzőkönyvet készíteni és következtetéseket levonni.",
+      "developmentalTasks": "Tudományos megfigyelések végzése, hipotézisek (feltételezések) felállítása és ellenőrzése kísérletekkel.",
+      "concepts": "Kísérlet, megfigyelés, hipotézis, tapasztalat, jegyzőkönyv, következtetés.",
+      "suggestedActivities": "A növények fény- és vízigényének vizsgálata csíráztatási kísérlettel, a párolgás sebességét befolyásoló tényezők vizsgálata."
+    },
+    {
+      "id": "tajekozodas_idoben",
+      "name": "Tájékozódás az időben",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló érti az idő múlását, a ciklikus természeti folyamatokat (napszakok, évszakok változása) és a történelmi/földtörténeti léptékeket.",
+      "developmentalTasks": "Időbeli dimenziók és folyamatok elhelyezése időszalagon a másodperctől a földtörténeti korokig.",
+      "concepts": "Időszámítás, évszakok, napéjegyenlőség, napforduló, földtörténeti korok, ciklikusság.",
+      "suggestedActivities": "A Hold fázisváltozásainak megfigyelése és naplózása egy hónapon keresztül."
+    },
+    {
+      "id": "terkepeszeti_alapismeretek",
+      "name": "Alapvető térképészeti ismeretek",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló ismeri a térkép alapelemeit, tájékozódik az égtájak segítségével és képes egyszerűbb térképeket olvasni.",
+      "developmentalTasks": "Térképjelek, méretarány és szintvonalak értelmezése. Alaprajz és térkép közötti különbség megértése.",
+      "concepts": "Térkép, méretarány, égtájak, iránytű, jelkulcs, szintvonal, domborzatábrázolás.",
+      "suggestedActivities": "Az osztályterem vagy az iskolaudvar alaprajzának elkészítése megadott méretarányban."
+    },
+    {
+      "id": "topografiai_alapismeretek",
+      "name": "Topográfiai alapismeretek",
+      "recommendedHours": 7,
+      "learningOutcomes": "A tanuló azonosítja Magyarország főbb tájegységeit, folyóit és városait a térképen.",
+      "developmentalTasks": "Magyarország domborzati és vízrajzi térképének használata, topográfiai pontok felismerése és megnevezése.",
+      "concepts": "Alföld, hegység, folyó, tó, főváros, megyeszékhely, vaktérkép.",
+      "suggestedActivities": "Vaktérképes játékok Magyarország hegységeinek, folyóinak (Duna, Tisza, Balaton) elhelyezésére."
+    },
+    {
+      "id": "novenyek_testfelepitese",
+      "name": "A növények testfelépítése",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló ismeri a hajtásos növények fő szerveit, azok működését és szerepét a növény életében.",
+      "developmentalTasks": "Növényi részek (gyökér, szár, levél, virág, termés) azonosítása élő növényeken és ábrákon, a fotoszintézis alapjainak megértése.",
+      "concepts": "Gyökérzet, szár, levél, fotoszintézis, virág, beporzás, termés, mag.",
+      "suggestedActivities": "Növényi szervek mikroszkópos vagy nagyítós vizsgálata, préselt növényekből herbárium készítése."
+    },
+    {
+      "id": "allatok_testfelepitese",
+      "name": "Az állatok testfelépítése",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló megkülönbözteti a gerinces és gerinctelen állatokat, ismeri a főbb állatcsoportok (halak, kétéltűek, hüllők, madarak, emlősök) testfelépítését.",
+      "developmentalTasks": "Az állatok kültakarójának, mozgásának, táplálkozásának és szaporodásának összehasonlítása az életmódjukkal összefüggésben.",
+      "concepts": "Gerinces, gerinctelen, kopoltyú, tüdő, kültakaró, csontváz, ragadozó, növényevő, mindenevő.",
+      "suggestedActivities": "Különböző állatcsoportok tollainak, pikkelyeinek, szőrének vizsgálata nagyító alatt."
+    },
+    {
+      "id": "erdok_eletkozossege",
+      "name": "Az erdők életközössége és természeti-környezeti problémái",
+      "recommendedHours": 11,
+      "learningOutcomes": "A tanuló megérti az erdei életközösség szintjeit, a táplálékláncokat és a környezeti tényezők hatását az erdő élővilágára.",
+      "developmentalTasks": "Az erdei növény- és állatfajok felismerése, az erdő szintjeinek (lombkorona-, cserje-, gyep-, avarszint) jellemzése.",
+      "concepts": "Életközösség, tápláléklánc, termelő, fogyasztó, lebontó, szimbiózis, erdőirtás, biodiverzitás.",
+      "suggestedActivities": "Virtuális vagy valóságos erdei tanösvény látogatása, tápláléklánc-modellek rajzolása."
+    },
+    {
+      "id": "mezok_szantofoldek",
+      "name": "A mezők és a szántóföldek életközössége, természeti-környezeti problémái",
+      "recommendedHours": 9,
+      "learningOutcomes": "A tanuló ismeri a füves területek és a termesztett növények világát, az ott élő állatokat és a mezőgazdaság környezeti hatásait.",
+      "developmentalTasks": "A termesztett növények (gabonafélék, kapásnövények) és a mezei állatok (rovarok, rágcsálók, madarak) életmódjának megismerése.",
+      "concepts": "Rét, legelő, szántóföld, monokultúra, vegyszerhasználat, talajerózió, kártevő, hasznos szervezet.",
+      "suggestedActivities": "Különböző gabonafélék magjainak tanulmányozása, mezei gyomnövények gyűjtése."
+    },
+    {
+      "id": "vizi_vizparti_eletkozosseg",
+      "name": "Vízi és vízparti életközösségek és természeti-környezeti problémái",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló leírja a vizek és vízpartok jellegzetes növény- és állatvilágát, megérti a vizek tisztaságának és védelmének fontosságát.",
+      "developmentalTasks": "A vízi életmódhoz való alkalmazkodás vizsgálata (pl. úszóhártya, áramvonalas test), a vízparti övezetek jellemzése.",
+      "concepts": "Nádas, hínár, plankton, vízszennyezés, öntisztulás, vizes élőhelyek védelme.",
+      "suggestedActivities": "Vízminta mikroszkópos vizsgálata (papucsállatka, algák keresése), vízminőség-teszt végzése."
+    },
+    {
+      "id": "emberi_szervezet",
+      "name": "Az emberi szervezet felépítése, működése, a testi-lelki egészség",
+      "recommendedHours": 15,
+      "learningOutcomes": "A tanuló alapvető ismeretekkel rendelkezik az emberi test főbb szervrendszereiről (mozgás, táplálkozás, légzés, keringés) és az egészséges életmódről.",
+      "developmentalTasks": "A szervrendszerek összehangolt működésének megértése, a személyes higiénia, a helyes táplálkozás és a mozgás fontosságának belátása.",
+      "concepts": "Csontváz, izomzat, emésztés, légzés, pulzus, vérkeringés, egészséges táplálkozás, higiénia, testi-lelki egyensúly.",
+      "suggestedActivities": "Pulzusszám mérése nyugalmi állapotban és fizikai terhelés után, napi étrend-elemzés készítése."
+    }
+  ]
+}

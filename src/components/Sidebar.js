@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaTachometerAlt, FaChalkboardTeacher, FaBrain, FaClipboard, FaChartBar, FaCog, FaGraduationCap, FaBullseye, FaTasks, FaCompass, FaClipboardList, FaCheckCircle, FaFolderOpen, FaChalkboard } from 'react-icons/fa';
+import { FaTachometerAlt, FaChalkboardTeacher, FaBrain, FaClipboard, FaChartBar, FaCog, FaGraduationCap, FaBullseye, FaTasks, FaHome, FaCompass, FaClipboardList, FaCheckCircle, FaFolderOpen, FaChalkboard } from 'react-icons/fa';
 import '../styles/Sidebar.css';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
@@ -84,8 +84,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                             </button>
                         </li>
                         <li>
-                            <a tabIndex={0} className={isActiveLink('/teendoim') ? 'active-link' : ''} onClick={() => handleNavigation('/teendoim')}>
-                                <FaTasks className="icon" /> Teendőim
+                            <a tabIndex={0} className={isActiveLink('/iranyitopult') ? 'active-link' : ''} onClick={() => handleNavigation('/iranyitopult')}>
+                                <FaHome className="icon" /> Irányítópult
                             </a>
                         </li>
                         <li>

@@ -5,7 +5,7 @@ const assignmentAnswerSchema = new mongoose.Schema({
   answers: [
     {
       questionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Question', required: true },
-      studentAnswer: { type: mongoose.Schema.Types.Mixed, required: true },
+      studentAnswer: { type: mongoose.Schema.Types.Mixed },
       score: { type: Number, default: 0 },
       confidence: { type: Number, default: null },
       aiFeedback: { type: String, default: '' },

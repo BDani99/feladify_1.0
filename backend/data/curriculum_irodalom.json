@@ -1,0 +1,150 @@
+{
+  "5-6": [
+    {
+      "id": "csalad_otthon_nemzet",
+      "name": "Család, otthon, nemzet – kisepikai és lírai alkotások",
+      "recommendedHours": 18,
+      "learningOutcomes": "A tanuló megismeri a családi és baráti kapcsolatok sokféleségét, felismeri a népmesék, mondák és mítoszok szerkezetét és jellegzetes motívumait.",
+      "developmentalTasks": "Történetek szóbeli és írásbeli összefoglalása, a nemzeti hagyományok, eredetmondák (pl. hun-magyar mondák) és lírai életképek elemzése.",
+      "concepts": "Népmese, mesealak, meseformálás, motívum, monda, rege, mítosz, nemzeti kultúra, hazaszeretet, eredetmonda, dal, életkép, lírai én.",
+      "suggestedActivities": "Egy népmese vagy monda dramatizálása csoportban, illusztrációk készítése a kedvenc mesehősökről."
+    },
+    {
+      "id": "janos_vitez",
+      "name": "Petőfi Sándor: János vitéz",
+      "recommendedHours": 14,
+      "learningOutcomes": "A tanuló ismeri a János vitéz cselekményét, fő fordulópontjait, szereplőit és poétikai eszközeit, és képes részleteket memoriterként felidézni.",
+      "developmentalTasks": "A verses epika és az elbeszélő költemény műfajának megértése, az ütemhangsúlyos verselés és a szóképek (hasonlat, metafora, megszemélyesítés) azonosítása.",
+      "concepts": "Verses epika, elbeszélő költemény, ütemhangsúlyos verselés, felező tizenkettes, páros rím, hasonlat, metafora, megszemélyesítés, párhuzam, ellentét.",
+      "suggestedActivities": "A rajzfilmváltozat és a szöveg összehasonlítása, versrészletek ritmikus felolvasása kísérő hangszerekkel."
+    },
+    {
+      "id": "szulofold_taj",
+      "name": "Szülőföld, táj",
+      "recommendedHours": 8,
+      "learningOutcomes": "A tanuló értelmezi a tájleíró lírai és prózai szövegeket, megérti a szülőföldhöz való kötődést és a természet ábrázolásának művészi eszközeit.",
+      "developmentalTasks": "Különböző korszakokban született tájversek nyelvi eltéréseinek összevetése, az irodalmi és a valós helyszínek (pl. Alföld) összekapcsolása földrajzi ismeretekkel.",
+      "concepts": "Tájleírás, útleírás, személyesség, téma, motívum, stilisztikai eszközök, hangulatfestés.",
+      "suggestedActivities": "Egy versbeli táj lerajzolása vagy festése, fotómontázs készítése a vers hangulatához kapcsolódóan."
+    },
+    {
+      "id": "pal_utcai_fiuk",
+      "name": "Molnár Ferenc: A Pál utcai fiúk",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló ismeri A Pál utcai fiúk cselekményét, szereplőit, a grund és a füvészkert jelentőségét, és véleményt formál az erkölcsi konfliktusokról (hűség, árulás, önfeláldozás).",
+      "developmentalTasks": "Az epikai mű szerkezetének (előkészítés, bonyodalom, tetőpont, megoldás) elemzése, a szereplők jellemzése cselekedeteik alapján.",
+      "concepts": "Történelmi háttér, ifjúsági regény, expozíció, fordulat, tetőpont, megoldás, főszereplő, mellékszereplő, jellemzés, helyszín.",
+      "suggestedActivities": "A grund makettjének elkészítése, Nemecsek védőbeszédének vagy Áts Feri levelének megírása kreatív fogalmazásként."
+    },
+    {
+      "id": "valaszthato_ifjusagi_regeny_1",
+      "name": "Egy szabadon választott magyar mese- vagy ifjúsági regény elemzése",
+      "recommendedHours": 4,
+      "learningOutcomes": "A tanuló önállóan elolvas egy kortárs vagy klasszikus magyar ifjúsági regényt, és képes annak szerkezetét és szereplőit bemutatni.",
+      "developmentalTasks": "Olvasmánynapló vezetése, a regény erkölcsi kérdéseinek megbeszélése csoportmunkában.",
+      "concepts": "Regényszerkezet, narrátor, konfliktus, jellemfejlődés, kortárs irodalom.",
+      "suggestedActivities": "Könyvajánló (plakát vagy rövid videó) készítése az osztálytársak számára."
+    },
+    {
+      "id": "hosok_az_irodalomban",
+      "name": "Hősök az irodalomban",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló megérti a hősiesség különböző történelmi és irodalmi példáit, megkülönbözteti a műfajokat (ballada, epigramma).",
+      "developmentalTasks": "A balladai homály és a kihagyás technikájának felismerése balladaelemzés során, az időmértékes verselés alapjainak (daktilus, spondeus) megismerése.",
+      "concepts": "Próbatétel, vándortéma, ballada, népballada, műballada, balladai homály, kihagyás, epigramma, időmértékes verselés, daktilus, spondeus, hexameter.",
+      "suggestedActivities": "Egy népballada elszavalása drámai hatásokkal, 'balladai homály' rejtvény készítése."
+    },
+    {
+      "id": "toldi",
+      "name": "Arany János: Toldi",
+      "recommendedHours": 16,
+      "learningOutcomes": "A tanuló ismeri a Toldi cselekményét, Toldi Miklós alakját, a mű történelmi hátterét, és képes megérteni az erkölcsi tanulságokat (bűn, bűnhődés, hűség).",
+      "developmentalTasks": "Az elbeszélő költemény stilisztikai elemeinek elemzése, a metaforák és az allegória felismerése, Toldi Miklós belső vívódásának megértése.",
+      "concepts": "Elbeszélő költemény, előhang, epizód, késleltetés, allegória, fokozás, túlzás, sorsvonal, lovagi erények.",
+      "suggestedActivities": "A Toldi-erőpróbák eljátszása az udvaron, Toldi Miklós 'naplójának' megírása a bűn elkövetése után."
+    },
+    {
+      "id": "szeretet_hazaszeretet_szerelem",
+      "name": "Szeretet, hazaszeretet, szerelem",
+      "recommendedHours": 11,
+      "learningOutcomes": "A tanuló felismeri a szeretet és a hazaszeretet lírai kifejezőeszközeit a klasszikus és a népköltészetben.",
+      "developmentalTasks": "A dal műfajának és a népdalok szerkezetének, rímelésének vizsgálata, a lírai én és a stilisztikai eszközök (alliteráció) azonosítása.",
+      "concepts": "Líra, lírai alany, lírai én, téma, motívum, versforma, rímszerkezet, keresztrím, alliteráció, dal, népdal.",
+      "suggestedActivities": "Népdaléneklés, saját vers vagy dalszöveg írása a szeretet témájában."
+    },
+    {
+      "id": "egri_csillagok",
+      "name": "Gárdonyi Géza: Egri csillagok",
+      "recommendedHours": 12,
+      "learningOutcomes": "A tanuló ismeri az Egri csillagok főbb szereplőit (Bornemissza Gergely, Cecey Éva, Dobó István), a várvédők hősiességét és a török kori Magyarország történelmi hátterét.",
+      "developmentalTasks": "A történelmi regény műfaji sajátosságainak (több szálon futó cselekmény, valós és fiktív hősök) elemzése, a jellemek és kapcsolatok vizsgálata.",
+      "concepts": "Történelmi regény, elbeszélő, időszerkezet, több szálon futó cselekmény, hazaszeretet, várvédelem, hősiesség.",
+      "suggestedActivities": "Eger vár ostromának rekonstruálása térképvázlaton vagy taktikai táblán, Dobó István esküjének közös elszavalása."
+    },
+    {
+      "id": "valaszthato_ifjusagi_regeny_2",
+      "name": "Szabadon választott világirodalmi ifjúsági regény",
+      "recommendedHours": 5,
+      "learningOutcomes": "A tanuló képes egy választott külföldi ifjúsági regény (pl. kincskereső, kalandregény) cselekményét és karaktereit összevetni a magyar regényekben látottakkal.",
+      "developmentalTasks": "Összehasonlító elemzés készítése, a kulturális különbségek és az egyetemes emberi értékek (barátság, kitartás) felismerése.",
+      "concepts": "Kalandregény, világirodalom, kulturális kontextus, összehasonlító elemzés.",
+      "suggestedActivities": "Képzeletbeli interjú készítése a regény külföldi főhősével."
+    }
+  ],
+  "7-8": [
+    {
+      "id": "korok_portrek",
+      "name": "Korok és portrék (Középkor, reneszánsz, romantika, klasszicizmus)",
+      "recommendedHours": 50,
+      "learningOutcomes": "A tanuló ismeri a magyar és az európai kultúra nagy művelődéstörténeti korszakait és azok kiemelkedő alkotóit (Janus Pannonius, Balassi Bálint, Zrínyi Miklós, Csokonai Vitéz Mihály, Berzsenyi Dániel, Kölcsey Ferenc, Vörösmarty Mihály, Petőfi Sándor, Arany János, Jókai Mór, Mikszáth Kálmán).",
+      "developmentalTasks": "A Himnusz, a Szózat, a Nemzeti dal és más kiemelt nemzeti lírai művek mélyreható elemzése, stílusjegyek és verselési módok (időmértékes, ütemhangsúlyos) azonosítása, irodalmi művek és a történelmi folyamatok összekapcsolása.",
+      "concepts": "Középkor, reneszánsz, humanizmus, reformáció, barokk, klasszicizmus, romantika, realizmus, Himnusz, Szózat, Nemzeti dal, óda, epigramma, történelmi regény, elbeszélés, novella, stílusirányzat, memoriter.",
+      "suggestedActivities": "A Himnusz és a Szózat összehasonlító elemzése, szavalóverseny a korszak memoritereiből, reneszánsz udvari jelenet dramatizálása."
+    },
+    {
+      "id": "ifjusagi_regeny_78",
+      "name": "Magyar vagy világirodalmi ifjúsági regény",
+      "recommendedHours": 10,
+      "learningOutcomes": "A tanuló elolvas és önállóan vagy csoportban feldolgoz egy hosszabb epikai művet (pl. Jules Verne: Kétévi vakáció, Csukás István: Vakáció a halott utcában, Szabó Magda: Abigél).",
+      "developmentalTasks": "A regény időszerkezetének, narrációs technikájának és erkölcsi dilemmáinak (felelősségvállalás, felnőtté válás, közösségi szolidaritás) elemzése.",
+      "concepts": "Regény, kalandregény, időszerkezet, narráció, nézőpont, közösség, beavatás.",
+      "suggestedActivities": "A regényből készült film és a könyv összehasonlítása, szereplők 'tárgyalása' (bírósági szerepjáték egy döntésük kapcsán)."
+    },
+    {
+      "id": "xx_szazad_elso_fele",
+      "name": "Kárpát-medencei irodalmunk a 20. század első felében",
+      "recommendedHours": 35,
+      "learningOutcomes": "A tanuló megismeri a Nyugat nemzedékét és a korszak legfontosabb alkotóit (Ady Endre, Babits Mihály, Kosztolányi Dezső, Juhász Gyula, Tóth Árpád, József Attila, Radnóti Miklós, Móricz Zsigmond, Karinthy Frigyes, Tamási Áron), valamint a trianoni trauma irodalmi megjelenését.",
+      "developmentalTasks": "A modern líra és epika kifejezőeszközeinek elemzése, a humor és az irónia (Karinthy: Tanár úr kérem), a szociális és nemzeti sorskérdések (Móricz, József Attila, Radnóti) megértése.",
+      "concepts": "Nyugat, modernség, szimbolizmus, impresszionizmus, irónia, szatíra, szociográfia, Trianon az irodalomban, sorsvers, ecloga, háborús költészet.",
+      "suggestedActivities": "Karinthy-karcolatok felolvasószínházi előadása, József Attila- és Radnóti-versek megzenésítése vagy ritmikus szavalása."
+    },
+    {
+      "id": "xx_szazad_masodik_fele",
+      "name": "Kárpát-medencei irodalmunk a 20. század második felében",
+      "recommendedHours": 25,
+      "learningOutcomes": "A tanuló tájékozódik a II. világháború utáni magyar irodalom legfontosabb alkotóiról (Szabó Lőrinc, Nagy László, Nemes Nagy Ágnes, Weöres Sándor, Kányádi Sándor, Wass Albert, Örkény István, Sütő András).",
+      "developmentalTasks": "Az egyperces novellák (Örkény István) groteszk és abszurd stílusának megértése, a határon túli magyarság irodalmának (Kányádi, Sütő) és a lírai formák gazdagságának (Weöres) elemzése.",
+      "concepts": "Groteszk, abszurd, egyperces novella, határon túli magyar irodalom, sorslíra, ritmus és dallam, szabadvers.",
+      "suggestedActivities": "Saját 'egyperces novella' írása Örkény mintájára, Kányádi Sándor Két nyárfa c. versének kórusban történő megszólaltatása."
+    },
+    {
+      "id": "xx_szazadi_tortenelem_irodalom",
+      "name": "A 20. századi történelem az irodalmunkban (világháborúk, diktatúrák, holokauszt, 1956)",
+      "recommendedHours": 20,
+      "learningOutcomes": "A tanuló megérti, hogyan tükröződnek a 20. század történelmi kataklizmái (világháborúk, holokauszt, kommunista diktatúra, 1956-os forradalom) az irodalomban (Szabó Magda: Abigél, George Orwell: Állatfarm, Anna Frank naplója, Márai Sándor: Mennyből az angyal).",
+      "developmentalTasks": "Az irodalmi művek morális üzenetének (humanizmus a diktatúrában, szabadságvágy, az áldozatok iránti szolidaritás) elemzése, történelmi párhuzamok keresése.",
+      "concepts": "Diktatúra, holokauszt, szabadságvágy, allegorikus regény (Állatfarm), napló, 1956 az irodalomban, zsarnokság.",
+      "suggestedActivities": "Az Állatfarm allegóriáinak elemzése és megfeleltetése a valós történelmi alakoknak és eseményeknek, részletek olvasása Anna Frank naplójából."
+    },
+    {
+      "id": "szorakoztato_irodalom",
+      "name": "Szórakoztató irodalom",
+      "recommendedHours": 6,
+      "learningOutcomes": "A tanuló megismeri a szórakoztató irodalom és a klasszikus krimi műfaját (Agatha Christie művei példáján), érti a logikus nyomozás és feszültségteremtés eszközeit.",
+      "developmentalTasks": "A detektívregény/krimi szerkezetének (bűntény, gyanúsítottak, nyomozás, bizonyítékok, leleplezés) elemzése, logikus gondolkodás és következtetés.",
+      "concepts": "Szórakoztató irodalom, krimi, detektívregény, feszültségteremtés, gyanúsított, bizonyíték, dedukció.",
+      "suggestedActivities": "Közös nyomozós játék ('Ki a tettes?'), egy Poirot-novella alternatív végkifejletének megírása."
+    }
+  ]
+}

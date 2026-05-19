@@ -584,3 +584,110 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* NAT Topics Selector */
+.nat-topics-container {
+    margin-bottom: 25px;
+    background: var(--bg-form-group, rgba(18, 27, 48, 0.4));
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    animation: fadeIn var(--transition-normal);
+}
+
+.nat-topics-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: 0.95rem;
+}
+
+.nat-topics-label svg {
+    color: var(--accent);
+}
+
+.nat-topics-loading {
+    color: var(--color-text-dim);
+    font-size: 0.9rem;
+    padding: 10px 0;
+    text-align: center;
+    font-style: italic;
+}
+
+.nat-topics-empty {
+    color: var(--color-text-dim);
+    font-size: 0.9rem;
+    padding: 10px 0;
+    text-align: center;
+}
+
+.nat-topics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.nat-topic-chip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color-2);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+}
+
+.nat-topic-chip:hover {
+    border-color: var(--accent);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.nat-topic-chip.selected {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+.nat-chip-check {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 2px solid var(--border-color-strong);
+    background: rgba(255, 255, 255, 0.02);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: transparent;
+    font-size: 9px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+
+.nat-chip-check svg {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: scale(0.6);
+}
+
+.nat-topic-chip.selected .nat-chip-check {
+    border-color: var(--accent);
+    background: var(--accent-gradient);
+    color: white;
+    box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.nat-topic-chip.selected .nat-chip-check svg {
+    transform: scale(1);
+}
+
+.nat-chip-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--color-text);
+    line-height: 1.3;
+}

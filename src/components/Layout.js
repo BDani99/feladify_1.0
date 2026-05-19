@@ -77,8 +77,8 @@ const Layout = ({ onLoginSuccess }) => {
             <Routes>
                 <Route path="/" element={
                     user?.role === 'teacher' 
-                        ? <Navigate to="/iranyitopult" /> 
-                        : (user?.role === 'parent' ? <Navigate to="/szulo-iranyitopult" /> : <Navigate to="/teendoim" />)
+                        ? <Navigate to="/iranyitopult" />
+                        : (user?.role === 'parent' ? <Navigate to="/szulo-iranyitopult" /> : <Navigate to="/iranyitopult" />)
                 } />
                 <Route path="/bejelentkezes" element={<Navigate to="/" />} />
                 <Route path="/regisztracio" element={<Navigate to="/" />} />
@@ -100,7 +100,7 @@ const Layout = ({ onLoginSuccess }) => {
                 {user?.role === 'student' && (
                     <>
                         <Route path="/ai-mentor" element={<StudentWelcome />} />
-                        <Route path="/teendoim" element={<StudentDashboard />} />
+                        <Route path="/iranyitopult" element={<StudentDashboard />} />
                         <Route path="/szulo-celok" element={<StudentGoals />} />
                         <Route path="/elerheto-dolgozatok" element={<AvailableAssignments />} />
                         <Route path="/megoldott-dolgozatok" element={<SolvedAssignments />} />

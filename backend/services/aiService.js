@@ -1,30 +1,153 @@
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
+const costTracker = require('./costTracker');
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+function getCurriculumSnippet(subject, grade, selectedTopics) {
+  if (!selectedTopics || !Array.isArray(selectedTopics) || selectedTopics.length === 0) return '';
+  const normSubject = String(subject).trim().toLowerCase();
 
-class GroqService {
+  let fileName = null;
+  let minGrade = 5;
+  let maxGrade = 8;
+
+  if (normSubject === 'matematika') {
+    fileName = 'curriculum_matematika.json';
+  } else if (normSubject === 'nyelvtan') {
+    fileName = 'curriculum_nyelvtan.json';
+  } else if (normSubject === 'irodalom') {
+    fileName = 'curriculum_irodalom.json';
+  } else if (normSubject === 'történelem' || normSubject === 'tortenelem') {
+    fileName = 'curriculum_tortenelem.json';
+  } else if (
+    normSubject === 'környezetismeret' ||
+    normSubject === 'kornyezet' ||
+    normSubject === 'természetismeret' ||
+    normSubject === 'természettudomány'
+  ) {
+    fileName = 'curriculum_kornyezet.json';
+    maxGrade = 6;
+  } else if (normSubject === 'fizika') {
+    fileName = 'curriculum_fizika.json';
+    minGrade = 7; maxGrade = 8;
+  } else if (normSubject === 'biológia' || normSubject === 'biologia') {
+    fileName = 'curriculum_biologia.json';
+    minGrade = 7; maxGrade = 8;
+  } else if (normSubject === 'földrajz' || normSubject === 'foldrajz') {
+    fileName = 'curriculum_foldrajz.json';
+    minGrade = 7; maxGrade = 8;
+  }
+
+  if (!fileName) return '';
+
+  const gradeMatch = String(grade).match(/^(\d+)/);
+  const gradeNum = gradeMatch ? parseInt(gradeMatch[1], 10) : null;
+  if (!gradeNum || gradeNum < minGrade || gradeNum > maxGrade) return '';
+
+  try {
+    const curriculumPath = path.join(__dirname, '../data', fileName);
+    if (!fs.existsSync(curriculumPath)) return '';
+    const curriculum = JSON.parse(fs.readFileSync(curriculumPath, 'utf8'));
+    const key = (gradeNum === 5 || gradeNum === 6) ? '5-6' : '7-8';
+    const topics = curriculum[key] || [];
+
+    const matchedTopics = topics.filter(t => selectedTopics.includes(t.id));
+    if (matchedTopics.length === 0) return '';
+
+    let snippet = `\nSZIGORÚAN KÖTELEZŐ NEMZETI ALAPTANTERVI (NAT) KÖVETELMÉNYEK:\nA feladatoknak a(z) ${gradeNum}. osztályos ${subject} tantárgy alábbi témaköreit és előírásait kell lefedniük:\n`;
+    matchedTopics.forEach(t => {
+      snippet += `\nTémakör: ${t.name} (Ajánlott óraszám: ${t.recommendedHours} óra)\n`;
+      snippet += `- Tanulási eredmények: ${t.learningOutcomes}\n`;
+      snippet += `- Fejlesztési feladatok és ismeretek: ${t.developmentalTasks}\n`;
+      snippet += `- Fogalmak: ${t.concepts}\n`;
+      snippet += `- Javasolt tevékenységek: ${t.suggestedActivities}\n`;
+    });
+    return snippet;
+  } catch (err) {
+    console.error('[aiService] Error loading curriculum snippet:', err);
+    return '';
+  }
+}
+
+
+class AIService {
   constructor() {
-    this.apiKey  = process.env.GROQ_API_KEY;
-    this.apiBase = 'https://api.groq.com/openai/v1';
+    this.deepseekKey = process.env.DEEPSEEK_API_KEY || 'sk-a4ef2c5339b94ea4a1bcf0f28d59910d';
+    this.qwenKey = process.env.QWEN_API_KEY || 'sk-c5f4512e4eaa4d499397c7c4b627fb95';
 
     this.reasoningChain = [
-      { model: 'qwen/qwen3-32b' },
-      { model: 'openai/gpt-oss-120b' },
-      { model: 'llama-3.3-70b-versatile' },
+      { model: 'dpv4pro', provider: 'deepseek' },
+      { model: 'qwen-3.5-plus', provider: 'qwen' },
     ];
     this.fastChain = [
-      { model: 'openai/gpt-oss-20b' },
-      { model: 'meta-llama/llama-4-scout-17b-16e-instruct' },
-      { model: 'llama-3.1-8b-instant' },
+      { model: 'v4flash', provider: 'deepseek' },
+      { model: 'qwen-3.5-flash', provider: 'qwen' },
     ];
 
     this.reasoningModel = this.reasoningChain[0].model;
     this.fastModel      = this.fastChain[0].model;
+  }
 
-    if (!this.apiKey) {
-      console.warn('[AIService] FIGYELMEZTETÉS: GROQ_API_KEY nincs beállítva!');
+  _resolveProviderAndModel(modelName) {
+    const model = (modelName || '').toLowerCase();
+    
+    let apiBase = 'https://api.deepseek.com';
+    let apiKey = this.deepseekKey;
+    let actualModel = 'deepseek-chat';
+    
+    if (model === 'dpv4pro' || model === 'deepseek-reasoner') {
+      apiBase = 'https://api.deepseek.com';
+      apiKey = this.deepseekKey;
+      actualModel = 'deepseek-reasoner';
+    } else if (model === 'v4flash' || model === 'deepseek-chat') {
+      apiBase = 'https://api.deepseek.com';
+      apiKey = this.deepseekKey;
+      actualModel = 'deepseek-chat';
+    } else if (model === 'qwen-3.5-plus' || model === 'qwen-plus') {
+      apiBase = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
+      apiKey = this.qwenKey;
+      actualModel = 'qwen-plus';
+    } else if (model === 'qwen-3.5-flash' || model === 'qwen-turbo' || model === 'qwen-3.5-flash-compat') {
+      apiBase = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
+      apiKey = this.qwenKey;
+      actualModel = 'qwen-turbo';
+    } else if (model.includes('qwen') || model.includes('turbo') || model.includes('plus')) {
+      apiBase = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1';
+      apiKey = this.qwenKey;
+      actualModel = modelName;
+    } else if (model.includes('deepseek') || model.includes('dp')) {
+      apiBase = 'https://api.deepseek.com';
+      apiKey = this.deepseekKey;
+      actualModel = modelName;
+    } else {
+      apiBase = 'https://api.deepseek.com';
+      apiKey = this.deepseekKey;
+      actualModel = modelName;
     }
+
+    return { apiBase, apiKey, actualModel };
+  }
+
+  _getFallbackChain(modelName, useReasoning) {
+    if (!modelName) {
+      return useReasoning ? this.reasoningChain.map(c => c.model) : this.fastChain.map(c => c.model);
+    }
+    const model = modelName.toLowerCase();
+    if (model === 'dpv4pro' || model === 'deepseek-reasoner') {
+      return ['dpv4pro', 'qwen-3.5-plus'];
+    }
+    if (model === 'v4flash' || model === 'deepseek-chat') {
+      return ['v4flash', 'qwen-3.5-flash'];
+    }
+    if (model.includes('plus') || model.includes('reasoner')) {
+      return [modelName, 'qwen-3.5-plus'];
+    }
+    if (model.includes('flash') || model.includes('chat') || model.includes('turbo')) {
+      return [modelName, 'qwen-3.5-flash'];
+    }
+    return [modelName];
   }
 
   _stripThinking(text) {
@@ -51,7 +174,7 @@ class GroqService {
           // Egyszerű javítás, ha a JSON vége levágódott (pl. max_tokens miatt)
           let repaired = jsonStr.trim();
           if (!repaired.endsWith('}') && !repaired.endsWith(']')) {
-            console.warn('[GroqService] Levágott JSON észlelve, javítás megkísérlése...');
+            console.warn('[AIService] Levágott JSON észlelve, javítás megkísérlése...');
             // Próbáljuk meg bezárni a tömböt és az objektumot
             if (repaired.includes('"questions"') && !repaired.includes(']')) {
               // Ha a kérdések listája közben szakadt meg, próbáljuk meg lezárni az utolsó elemet
@@ -77,9 +200,10 @@ class GroqService {
 
 
   async _callModel(model, messages, options) {
+    const { apiBase, apiKey, actualModel } = this._resolveProviderAndModel(model);
     try {
       const payload = {
-        model,
+        model: actualModel,
         messages,
         temperature: options.temperature || 0.7,
         max_tokens: options.max_tokens || 1024,
@@ -90,35 +214,43 @@ class GroqService {
         payload.response_format = { type: 'json_object' };
       }
       const response = await axios.post(
-        `${this.apiBase}/chat/completions`,
+        `${apiBase}/chat/completions`,
         payload,
         {
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
           },
-          timeout: 45000 // Increased timeout
+          timeout: 90000 // Increased timeout
         }
       );
-      return this._stripThinking(response.data.choices[0].message.content);
+      const content = this._stripThinking(response.data.choices[0].message.content);
+      const raw = response.data.usage || {};
+      // DeepSeek: prompt_tokens/completion_tokens; Qwen: input_tokens/output_tokens
+      const usage = {
+        promptTokens:     raw.prompt_tokens     ?? raw.input_tokens      ?? 0,
+        completionTokens: raw.completion_tokens ?? raw.output_tokens     ?? 0,
+        cacheHitTokens:   raw.prompt_cache_hit_tokens                    ?? 0,
+      };
+      return { content, usage };
     } catch (error) {
       const status = error.response?.status;
       const errorData = error.response?.data?.error;
       const headers = error.response?.headers;
 
       if (status === 429) {
-        const groqMsg = errorData?.message || '';
-        const limitType = groqMsg.toLowerCase().includes('tokens') ? 'TPM (Token)' : 'RPM (Request)';
+        const errorMsg = errorData?.message || '';
+        const limitType = errorMsg.toLowerCase().includes('tokens') ? 'TPM (Token)' : 'RPM (Request)';
 
-        console.warn(`[GroqService] ✗ Rate limit (429) hiba [${limitType}]:`);
-        if (groqMsg) console.warn(`[GroqService]   Üzenet: ${groqMsg}`);
+        console.warn(`[AIService] ✗ Rate limit (429) hiba [${limitType}]:`);
+        if (errorMsg) console.warn(`[AIService]   Üzenet: ${errorMsg}`);
 
         // Log rate limit headers if available
         if (headers) {
           const resetTime = headers['x-ratelimit-reset-requests'] || headers['x-ratelimit-reset-tokens'];
-          if (resetTime) console.warn(`[GroqService]   Reset idő: ${resetTime}`);
+          if (resetTime) console.warn(`[AIService]   Reset idő: ${resetTime}`);
         }
-        console.warn(`[GroqService]   Azonnali fallback indítása...`);
+        console.warn(`[AIService]   Azonnali fallback indítása...`);
       }
 
       throw error;
@@ -126,15 +258,27 @@ class GroqService {
 
   }
 
-  async _callModelWithFallback(chain, messages, options, caller = '') {
+  async _callModelWithFallback(chain, messages, options, caller = '', validateFn = null, userId = null) {
+    const chainType = chain === this.reasoningChain ? 'reasoning' : 'fast';
     for (let i = 0; i < chain.length; i++) {
       const { model } = chain[i];
       const tag = caller ? `[AIService/${caller}]` : '[AIService]';
       console.log(`${tag} API hívás → ${model} (${i + 1}/${chain.length})`);
       try {
-        const result = await this._callModel(model, messages, options);
-        console.log(`${tag} ✓ Válasz kész: ${model} (${result.length} kar.)`);
-        return result;
+        const { content, usage } = await this._callModel(model, messages, options);
+        if (!content || content.trim().length === 0) {
+          throw new Error('Üres válasz érkezett a modelltől');
+        }
+        if (validateFn) {
+          validateFn(content);
+        }
+        console.log(`${tag} ✓ Válasz kész: ${model} (${content.length} kar., in:${usage.promptTokens} out:${usage.completionTokens})`);
+        costTracker.trackCall({
+          caller, chainType, chainPosition: i,
+          realTokens: { input: usage.promptTokens, output: usage.completionTokens, cacheHit: usage.cacheHitTokens },
+          userId,
+        });
+        return content;
       } catch (err) {
         const status = err.response?.status || 'timeout/network';
         const errMsg = err.response?.data?.error?.message || err.message;
@@ -146,150 +290,230 @@ class GroqService {
         }
       }
     }
-  }
-
-  async generateResponse(prompt, messages = [], options = {}, useReasoning = false, modelOverride = null) {
-    if (!this.apiKey) throw new Error('Az AI szolgáltatás jelenleg nem elérhető. Kérjük, próbálja újra.');
+  }  async generateResponse(prompt, messages = [], options = {}, useReasoning = false, modelOverride = null, caller = 'Chat', validateFn = null) {
+    if (!this.deepseekKey && !this.qwenKey) throw new Error('Az AI szolgáltatás jelenleg nem elérhető. Kérjük, próbálja újra.');
 
     const allMessages = [{ role: 'system', content: prompt }, ...messages];
+    const targetModel = modelOverride?.model || (useReasoning ? this.reasoningModel : this.fastModel);
 
-    if (modelOverride) {
-      const { model } = modelOverride;
-      console.log(`[AIService] Override hívás → ${model}`);
-      return this._callModel(model, allMessages, options);
+    // Resolve fallback chain
+    const chain = this._getFallbackChain(targetModel, useReasoning);
+    console.log(`[AIService] API hívás lánc: ${chain.join(' → ')}`);
+
+    for (let i = 0; i < chain.length; i++) {
+      const currentModel = chain[i];
+      const tag = caller ? `[AIService/${caller}]` : '[AIService]';
+      console.log(`${tag} API hívás → ${currentModel} (${i + 1}/${chain.length})`);
+      try {
+        const { content, usage } = await this._callModel(currentModel, allMessages, options);
+        if (!content || content.trim().length === 0) {
+          throw new Error('Üres válasz érkezett a modelltől');
+        }
+        if (validateFn) {
+          validateFn(content);
+        }
+        console.log(`${tag} ✓ Válasz kész: ${currentModel} (${content.length} kar., in:${usage.promptTokens} out:${usage.completionTokens})`);
+        const chainType = useReasoning ? 'reasoning' : 'fast';
+        costTracker.trackCall({
+          caller: caller || 'Chat', chainType, chainPosition: i,
+          realTokens: { input: usage.promptTokens, output: usage.completionTokens, cacheHit: usage.cacheHitTokens },
+        });
+        return content;
+      } catch (err) {
+        const status = err.response?.status || 'timeout/network';
+        const errMsg = err.response?.data?.error?.message || err.message;
+        if (i < chain.length - 1) {
+          console.warn(`${tag} ✗ ${currentModel} sikertelen (HTTP ${status}): ${errMsg} → következő: ${chain[i + 1]}`);
+        } else {
+          console.error(`${tag} ✗ Összes modell sikertelen. Utolsó hiba (${currentModel}, HTTP ${status}): ${errMsg}`);
+          throw new Error('Az AI szolgáltatás jelenleg nem elérhető. Kérjük, próbálja újra.');
+        }
+      }
     }
-
-    const chain = useReasoning ? this.reasoningChain : this.fastChain;
-    console.log(`[AIService] API hívás → ${chain[0].model} (${chain.length} szintű lánc, useReasoning=${useReasoning})`);
-    const content = await this._callModelWithFallback(chain, allMessages, options);
-    console.log(`[AIService] ✓ Válasz kész (${content.length} kar.)`);
-    return content;
   }
 
   async *generateResponseStream(prompt, messages = [], options = {}, useReasoning = false, modelOverride = null) {
-    if (!this.apiKey) {
+    if (!this.deepseekKey && !this.qwenKey) {
       yield 'Az AI szolgáltatás jelenleg nem elérhető. Kérjük, próbálja újra.';
       return;
     }
 
     const allMessages = [{ role: 'system', content: prompt }, ...messages];
+    const targetModel = modelOverride?.model || (useReasoning ? this.reasoningModel : this.fastModel);
 
-    const primaryModel = modelOverride?.model
-      ?? (useReasoning ? this.reasoningChain[0].model : this.fastChain[0].model);
+    // Resolve fallback chain
+    const chain = this._getFallbackChain(targetModel, useReasoning);
+    console.log(`[AIService] Stream hívás lánc: ${chain.join(' → ')}`);
 
-    try {
-      const payload = {
-        model: primaryModel,
-        messages: allMessages,
-        temperature: options.temperature || 0.7,
-        max_tokens: options.max_tokens || 2048,
-        top_p: options.top_p || 1,
-        stream: true
-      };
+    for (let i = 0; i < chain.length; i++) {
+      const currentModel = chain[i];
+      let streamOutput = '';
+      let streamSucceeded = false;
 
-      console.log(`[AIService] Stream API hívás → ${primaryModel}`);
-      const response = await axios.post(
-        `${this.apiBase}/chat/completions`,
-        payload,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
-          },
-          responseType: 'stream',
-          timeout: 45000
-        }
-      );
+      try {
+        const { apiBase, apiKey, actualModel } = this._resolveProviderAndModel(currentModel);
 
-      const stream = response.data;
-      let rawBuf = '';
-      // Think-tag szűrő állapot
-      let inThink = false;
-      let thinkBuf = '';
+        const payload = {
+          model: actualModel,
+          messages: allMessages,
+          temperature: options.temperature || 0.7,
+          max_tokens: options.max_tokens || 2048,
+          top_p: options.top_p || 1,
+          stream: true
+        };
 
-      for await (const chunk of stream) {
-        rawBuf += chunk.toString();
-        const lines = rawBuf.split('\n');
-        rawBuf = lines.pop();
+        console.log(`[AIService] Stream API hívás → ${currentModel} (${actualModel}) (${i + 1}/${chain.length})`);
+        const response = await axios.post(
+          `${apiBase}/chat/completions`,
+          payload,
+          {
+            headers: {
+              'Authorization': `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            },
+            responseType: 'stream',
+            timeout: 45000
+          }
+        );
 
-        for (const line of lines) {
-          const cleaned = line.trim();
-          if (!cleaned || cleaned === 'data: [DONE]') continue;
-          if (cleaned.startsWith('data: ')) {
-            try {
-              const parsed = JSON.parse(cleaned.slice(6));
-              let delta = parsed.choices?.[0]?.delta?.content || '';
-              if (!delta) continue;
+        const stream = response.data;
+        let rawBuf = '';
+        let inThink = false;
+        let thinkBuf = '';
 
-              // Stateful think-tag filter
-              thinkBuf += delta;
-              let out = '';
-              while (thinkBuf.length > 0) {
-                if (inThink) {
-                  const endIdx = thinkBuf.indexOf('</think>');
-                  if (endIdx !== -1) {
-                    thinkBuf = thinkBuf.slice(endIdx + 8);
-                    if (thinkBuf.startsWith('*')) thinkBuf = thinkBuf.slice(1);
-                    inThink = false;
+        for await (const chunk of stream) {
+          rawBuf += chunk.toString();
+          const lines = rawBuf.split('\n');
+          rawBuf = lines.pop();
+
+          for (const line of lines) {
+            const cleaned = line.trim();
+            if (!cleaned || cleaned === 'data: [DONE]') continue;
+            if (cleaned.startsWith('data: ')) {
+              try {
+                const parsed = JSON.parse(cleaned.slice(6));
+                let delta = parsed.choices?.[0]?.delta?.content || '';
+                if (!delta) continue;
+
+                thinkBuf += delta;
+                let out = '';
+                while (thinkBuf.length > 0) {
+                  if (inThink) {
+                    const endIdx = thinkBuf.indexOf('</think>');
+                    if (endIdx !== -1) {
+                      thinkBuf = thinkBuf.slice(endIdx + 8);
+                      if (thinkBuf.startsWith('*')) thinkBuf = thinkBuf.slice(1);
+                      inThink = false;
+                    } else {
+                      if (thinkBuf.length > 8) thinkBuf = thinkBuf.slice(-8);
+                      break;
+                    }
                   } else {
-                    if (thinkBuf.length > 8) thinkBuf = thinkBuf.slice(-8);
-                    break;
-                  }
-                } else {
-                  const s1 = thinkBuf.indexOf('<think>');
-                  const s2 = thinkBuf.indexOf('*<think>');
-                  let tStart = -1, tLen = 0;
-                  if (s1 !== -1 && (s2 === -1 || s1 <= s2)) { tStart = s1; tLen = 7; }
-                  else if (s2 !== -1) { tStart = s2; tLen = 8; }
+                    const s1 = thinkBuf.indexOf('<think>');
+                    const s2 = thinkBuf.indexOf('*<think>');
+                    let tStart = -1, tLen = 0;
+                    if (s1 !== -1 && (s2 === -1 || s1 <= s2)) { tStart = s1; tLen = 7; }
+                    else if (s2 !== -1) { tStart = s2; tLen = 8; }
 
-                  if (tStart !== -1) {
-                    out += thinkBuf.slice(0, tStart);
-                    thinkBuf = thinkBuf.slice(tStart + tLen);
-                    inThink = true;
-                  } else {
-                    const safe = Math.max(0, thinkBuf.length - 8);
-                    out += thinkBuf.slice(0, safe);
-                    thinkBuf = thinkBuf.slice(safe);
-                    break;
+                    if (tStart !== -1) {
+                      out += thinkBuf.slice(0, tStart);
+                      thinkBuf = thinkBuf.slice(tStart + tLen);
+                      inThink = true;
+                    } else {
+                      const safe = Math.max(0, thinkBuf.length - 8);
+                      out += thinkBuf.slice(0, safe);
+                      thinkBuf = thinkBuf.slice(safe);
+                      break;
+                    }
                   }
                 }
+                if (out) { streamOutput += out; yield out; }
+              } catch (e) {
+                // ignore malformed lines
               }
-              if (out) yield out;
-            } catch (e) {
-              // ignore malformed lines
             }
           }
         }
-      }
-      // flush remaining
-      if (!inThink && thinkBuf.trim()) yield thinkBuf;
-    } catch (error) {
-      const status = error.response?.status;
-      const errBody = error.response?.data;
-      console.warn(`[AIService] Stream hiba (HTTP ${status ?? 'network'}):`, error.message);
-      if (errBody) {
-        if (typeof errBody.pipe === 'function') {
-          console.warn('[AIService] Stream hiba body: [readable stream]');
+
+        const flushed = thinkBuf.trim();
+        if (!inThink && flushed) { streamOutput += flushed; yield flushed; }
+
+        streamSucceeded = true;
+        const chainType = useReasoning ? 'reasoning' : 'fast';
+        costTracker.trackCall({ caller: 'StreamChat', chainType, chainPosition: i, messages: allMessages, output: streamOutput });
+
+        // Success: exit stream loop
+        return;
+      } catch (error) {
+        const status = error.response?.status || 'timeout/network';
+        const errMsg = error.response?.data?.error?.message || error.message;
+        console.warn(`[AIService] Stream hiba a modellel: ${currentModel} (HTTP ${status}):`, errMsg);
+
+        if (i < chain.length - 1) {
+          console.warn(`[AIService] Kísérlet a következő modellel a láncban: ${chain[i + 1]}`);
         } else {
-          try { console.warn('[AIService] Stream hiba body:', JSON.stringify(errBody).slice(0, 500)); }
-          catch { console.warn('[AIService] Stream hiba body: [nem serializable]'); }
+          console.error('[AIService] Összes stream kísérlet sikertelen.');
+          // Try non-streaming fallback as a last resort
+          try {
+            const fallbackResponse = await this.generateResponse(prompt, messages, options, useReasoning, modelOverride);
+            yield fallbackResponse;
+          } catch (err2) {
+            console.error('[AIService] Non-stream fallback is sikertelen:', err2.message);
+            yield 'Az AI szolgáltatás ideiglenesen nem elérhető.';
+          }
         }
-      }
-      try {
-        const response = await this.generateResponse(prompt, messages, options, useReasoning, modelOverride);
-        yield response;
-      } catch (err2) {
-        console.error('[AIService] Non-stream fallback is sikertelen:', err2.message);
-        yield 'Az AI szolgáltatás ideiglenesen nem elérhető.';
       }
     }
   }
 
-
   async analyzeDiagnosticTest(testResult, questions) {
+    const grade = testResult.grade || '5. osztály';
+    let curriculumContext = '';
+    const normSubject = String(testResult.subject).trim().toLowerCase();
+    let fileName = null;
+    let minGrade = 5;
+    let maxGrade = 8;
+
+    if (normSubject === 'matematika') {
+      fileName = 'curriculum_matematika.json';
+    } else if (normSubject === 'nyelvtan') {
+      fileName = 'curriculum_nyelvtan.json';
+    } else if (normSubject === 'irodalom') {
+      fileName = 'curriculum_irodalom.json';
+    } else if (normSubject === 'történelem' || normSubject === 'tortenelem') {
+      fileName = 'curriculum_tortenelem.json';
+    } else if (
+      normSubject === 'környezetismeret' || 
+      normSubject === 'kornyezet' || 
+      normSubject === 'természetismeret' || 
+      normSubject === 'természettudomány'
+    ) {
+      fileName = 'curriculum_kornyezet.json';
+      maxGrade = 6;
+    }
+
+    if (fileName) {
+      try {
+        const gradeMatch = String(grade).match(/^(\d+)/);
+        const gradeNum = gradeMatch ? parseInt(gradeMatch[1], 10) : 5;
+        const curriculumPath = path.join(__dirname, '../data', fileName);
+        if (fs.existsSync(curriculumPath)) {
+          const curriculum = JSON.parse(fs.readFileSync(curriculumPath, 'utf8'));
+          const key = (gradeNum === 5 || gradeNum === 6) ? '5-6' : '7-8';
+          const topics = curriculum[key] || [];
+          curriculumContext = `\nELÉRHETŐ NEMZETI KERETTANTERVI (NAT) TÉMAKÖRÖK (${testResult.subject} ${key} osztály):\n` +
+            topics.map(t => `- ID: "${t.id}", Név: "${t.name}" (Tanulási eredmények: ${t.learningOutcomes || ''})`).join('\n') +
+            `\nKÉRLEK, HOGY A recommendedCheckpoints ELEMEIT KIZÁRÓLAG A FENTI TÉMAKÖRÖK KÖZÜL VÁLASZD KI! A checkpoint "topic" mezője pontosan egyezzen meg a választott témakör "name" értékével, a "topicId" mező pedig pontosan egyezzen meg a választott témakör "id" értékével!\n`;
+        }
+      } catch (err) {
+        console.error('[aiService] Error loading curriculum for analysis:', err);
+      }
+    }
+
     const prompt = `Te egy tapasztalt pedagógus és oktatási szakértő vagy. Elemezd egy diák diagnosztikai tesztjének eredményét, és készíts belőle egy személyre szabott tanulási útvonalat (checkpointokat) az "Egyéni Gyakorlás" modulhoz.
 
 Tantárgy: ${testResult.subject}
+Évfolyam: ${grade}
 Összpontszám: ${testResult.scorePercentage.toFixed(1)}%
 Kérdések száma: ${testResult.totalQuestions}
 
@@ -298,10 +522,10 @@ ${questions.map((q, i) => {
       const answer = testResult.answers[i];
       return `- ${q.category}: ${q.questionText.substring(0, 80)}... [Helyes: ${answer?.isCorrect ? 'Igen' : 'Nem'}]`;
     }).join('\n')}
-
+${curriculumContext}
 FONTOS SZABÁLYOK A CHECKPOINTOKHOZ:
 1. Adj meg LEGALÁBB 5, legfeljebb 8 checkpointot.
-2. Minden checkpoint topic legyen SPECIFIKUS, cselekvő nevű (pl. "Lineáris egyenletek megoldása" – NEM "Egyenletek"; "Mondatelemzés és szófajok felismerése" – NEM "Nyelvtan").
+2. Minden checkpoint topic legyen SPECIFIKUS, cselekvő nevű (pl. "Lineáris egyenletek megoldása" – NEM "Egyenletek"; "Mondatelemzés és szófajok felismerése" – NEM "Nyelvtan"). ${fileName ? `${testResult.subject} esetén a checkpoint topic mezője pontosan a fenti elérhető NAT témakörök egyikének neve (Név) legyen, a topicId mező pedig az ahhoz tartozó ID!` : ''}
 3. A checkpointok nehézsége legyen FOKOZATOSAN NÖVEKVŐ (az első 1-2-es, az utolsó 4-5-ös nehézségen).
 4. Az első 1-2 checkpoint alapozó legyen (a gyenge területek megalapozása), a later-iek alkalmazás szintű.
 5. Minden checkpointhoz adj "learningObjective" mezőt: mit fog tudni a diák a fejezet elvégzése után (egy mondatban).
@@ -316,15 +540,15 @@ SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\
     {"category":"kategória","description":"Miben volt jó?"}
   ],
   "recommendedCheckpoints": [
-    {"topic":"Specifikus, cselekvő témacím","gamifiedTitle":"Küldetés: Témacím","difficulty": 1, "reason": "Miért kell ezt gyakorolni", "learningObjective": "Mit fog tudni utána"}
+    {"topic":"Specifikus, cselekvő témacím", "topicId": "nat_topic_id_vagy_null", "gamifiedTitle":"Küldetés: Témacím","difficulty": 1, "reason": "Miért kell ezt gyakorolni", "learningObjective": "Mit fog tudni utána"}
   ]
 }`;
 
     try {
-      const raw = await this.generateResponse(prompt, [], { temperature: 0.3, max_tokens: 800 }, true);
+      const raw = await this.generateResponse(prompt, [], { temperature: 0.3, max_tokens: 800 }, true, null, 'AnalyzeDiag', (res) => this._extractJSON(res));
       return this._extractJSON(raw);
     } catch (error) {
-      console.warn('[GroqService] analyzeDiagnosticTest parse hiba:', error.message);
+      console.warn('[AIService] analyzeDiagnosticTest parse hiba:', error.message);
     }
 
     return this._getDefaultAnalysis(testResult);
@@ -343,14 +567,14 @@ SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\
 
     try {
       const result = await this._callModelWithFallback(
-        this.reasoningChain,
+        this.fastChain,
         [{ role: 'system', content: prompts[level] }, { role: 'user', content: user }],
         { temperature: 0.65, max_tokens: 600 },
         'SocraticHint'
       );
       return result?.trim() || this._getFallbackHint(attemptNumber);
     } catch (error) {
-      console.error('[GroqService] Szókratészi tipp hiba:', error.message);
+      console.error('[AIService] Szókratészi tipp hiba:', error.message);
       return this._getFallbackHint(attemptNumber);
     }
   }
@@ -369,11 +593,22 @@ SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\
   }
 
   _isHumanitiesSubject(subject) {
-    const humanities = ['irodalom', 'magyar', 'történelem', 'földrajz', 'erkölcstan', 'hittan', 'művészet', 'ének', 'etika', 'társadalom'];
+    const humanities = ['irodalom', 'nyelvtan', 'magyar', 'történelem', 'földrajz', 'erkölcstan', 'hittan', 'művészet', 'ének', 'etika', 'társadalom'];
     return humanities.some(h => subject.toLowerCase().includes(h));
   }
 
-  async _generateOutline(subject, topic, diffDesc, typeSpecs) {
+  _getAgeLanguageInstruction(grade) {
+    const gradeNum = parseInt(grade) || 6;
+    if (gradeNum <= 4) {
+      return `ÉLETKORNAK MEGFELELŐ NYELVEZET (${gradeNum}. osztály): Írj rövid, egyszerű mondatokat. Csak hétköznapi, ismert szavakat használj. A kérdés legyen max 1-2 rövid mondat. Kerüld a bonyolult összetételeket és idegen szavakat. Életszerű példák: állatok, játékok, otthon, természet, barátok.`;
+    } else if (gradeNum === 5 || gradeNum === 6) {
+      return `ÉLETKORNAK MEGFELELŐ NYELVEZET (${gradeNum}. osztály, kb. 11-12 éves): Fogalmazz közérthetően, NE "tankönyvszagúan"! TILOS a NAT/kerettanterv pedagógiai szakzsargonja (pl. "tanulási eredmény", "fejlesztési feladat", "kompetencia", "tevékenységalapú") – ezeket a diák nem érti! A kérdés legyen max 2-3 egyszerű mondat. Életszerű példák: iskolai élet, sport, természet, mindennapi megfigyelések.`;
+    } else {
+      return `ÉLETKORNAK MEGFELELŐ NYELVEZET (${gradeNum}. osztály, 13-14 éves): Tantárgyi szakkifejezések megengedettek, ha a tananyag részei, DE fogalmazz KÖZVETLENÜL és érthetően. TILOS a NAT/kerettantervi pedagógiai zsargon és a körmondatos "értékelési szempontszerű" fogalmazás. A tanuló számára ismerős hangnemben tedd fel a kérdést.`;
+    }
+  }
+
+  async _generateOutline(subject, topic, diffDesc, typeSpecs, grade = 'általános iskola', selectedTopics = null, userId = null) {
     const total = typeSpecs.reduce((s, t) => s + t.count, 0);
     const typeLabels = {
       mcq: 'Feleletválasztós', true_false: 'Igaz/Hamis',
@@ -387,36 +622,42 @@ SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\
       ? `1. Bontsd fel a(z) "${topic}" témát 10 KÜLÖNBÖZŐ vizsgálati szempontra (pl. szereplők, helyszínek, motívumok, szimbólumok, cselekményfordulatok, stílus, korabeli háttér, szerkezet, műfaj, üzenet).
 2. Véletlenszerűen válassz ki 3-at.
 3. Minden kérdéshez rendelj egy szempontot + konkrét kérdési fókuszt + Bloom-szintet (Emlékezés/Értés/Alkalmazás/Elemzés/Értékelés).`
-      : `1. Bontsd fel a főtémát 10 ritkán érintett szempontra.
+      : `1. Bontsd fel a főtémát 10 iskolai tanterv szerinti altémára/szempontra.
 2. Véletlenszerűen válassz ki 3-at.
-3. Minden kérdéshez rendelj egy szempontot + valódi, életszerű szituációt + Bloom-szintet (Emlékezés/Értés/Alkalmazás/Elemzés/Értékelés).`;
+3. Minden kérdéshez rendelj egy altémát + életszerű mindennapi szituációt + Bloom-szintet (Emlékezés/Értés/Alkalmazás/Elemzés/Értékelés).`;
 
     const contextRule = isHumanities
       ? `KRITIKUS SZABÁLY: A kérdések KIZÁRÓLAG a(z) "${topic}" konkrét tartalmáról szólhatnak – a mű szereplőiről, cselekményéről, témáiról, stílusáról, korának kontextusáról. Tilos az anyag tartalmától független, általános vagy modern szituáció használata!`
-      : `SZIGORÚ SZABÁLY: Tilos az elcsépelt tankönyvi példák (pl. alma/torta a törteknél, vonat-sebesség stb.). Modern, releváns kontextust használj (gaming, sport, technológia stb.).`;
+      : `SZABÁLY: Életszerű, a diák mindennapjaiból vett példákat használj (pl. háztartás, természetjárás, mindennapi eszközök, egyszerűbb vásárlás, időjárás). TILOS az erőltetett tech, gaming és streamer (pl. Minecraft, Stardew Valley) kontextus használata! A kérdések anyaga szigorúan a(z) ${grade} osztály iskolai tantervéhez és követelményeihez igazodjon!`;
 
     const exampleLine = isHumanities
       ? `1. Kérdés (Emlékezés). Szempont: Főszereplők. Fókusz: Baradlay Ödön jellemének bemutatása a regény elején.
 2. Kérdés (Elemzés). Szempont: Szimbolika. Fókusz: A kőszív mint szimbólum értelmezése.`
-      : `1. Kérdés (Alkalmazás). Altéma: Hálózati sávszélesség. Szituáció: Egy e-sport csapat szerverének terheltségét kell kiszámolni.
+      : `1. Kérdés (Alkalmazás). Altéma: Párolgás és lecsapódás. Szituáció: Reggeli pára lecsapódása az ablaküvegen.
 2. Kérdés (Értés). Altéma: ...`;
 
-    const prompt = `Te egy tapasztalt pedagógus-stratéga vagy. Készíts TÖMÖR, SIMA SZÖVEGES vázlatot (NEM JSON-t!) ${total} dolgozat-kérdéshez.
-Tantárgy: ${subject} | Témakör: "${topic}" | Nehézség: ${diffDesc}
-Kért feladattípusok: ${bloomTypes}
+    const curriculumSnippet = getCurriculumSnippet(subject, grade, selectedTopics);
+
+    const prompt = `Te egy tapasztalt magyar pedagógus-stratéga vagy. Készíts TÖMÖR, SIMA SZÖVEGES vázlatot (NEM JSON-t!) ${total} dolgozat-kérdéshez.
+    Tantárgy: ${subject} | Témakör: "${topic}" | Évfolyam/Szint: ${grade} | Nehézség: ${diffDesc}
+    Kért feladattípusok: ${bloomTypes}
+    ${curriculumSnippet}
 
 FELADATOD:
 ${aspectsInstruction}
 
 ${contextRule}
 
+${this._getAgeLanguageInstruction(grade)}
+
 KIMENET – sima szöveg, például:
 ${exampleLine}`;
 
     return await this._callModelWithFallback(
-      this.reasoningChain,
+      this.fastChain,
       [{ role: 'system', content: prompt }],
-      { temperature: 0.85, top_p: 0.9, max_tokens: 1500 }
+      { temperature: 0.85, top_p: 0.9, max_tokens: 1500 },
+      'ExamOutline', null, userId
     );
   }
 
@@ -429,14 +670,14 @@ ${exampleLine}`;
 {"questionText":"A kőszívű ember fiai című regény a(z) ___ szabadságharc eseményeire épül.","questionType":"fill_blank","options":[],"pairs":[],"items":[],"correctAnswer":"1848–49-es","explanation":"Jókai Mór az 1848–49-es forradalmat és szabadságharcot dolgozza fel a műben."}`;
     }
     return `PÉLDA KÉRDÉSEK – ilyen minőséget és formátumot várunk el (JSON tömb elemek):
-{"questionText":"Egy streamer nézőszáma januárban 1200 fő volt, februárban 35%-kal nőtt. Hány néző volt februárban?","questionType":"mcq","options":["1620 néző","1560 néző","1440 néző","1800 néző"],"pairs":[],"items":[],"correctAnswer":"1620 néző","explanation":"1200 × 1,35 = 1620"}
-{"questionText":"Párosítsd a fogalmakat a definícióikkal:","questionType":"matching","options":["Egy érték tárolására alkalmas memóriacím","Egy függvény saját magát hívja meg","Azonos nevű metódusok különböző paraméterekkel"],"pairs":[{"left":"Változó","right":"Egy érték tárolására alkalmas memóriacím"},{"left":"Rekurzió","right":"Egy függvény saját magát hívja meg"},{"left":"Túlterhelés","right":"Azonos nevű metódusok különböző paraméterekkel"}],"items":[],"correctAnswer":{"Változó":"Egy érték tárolására alkalmas memóriacím","Rekurzió":"Egy függvény saját magát hívja meg","Túlterhelés":"Azonos nevű metódusok különböző paraméterekkel"},"explanation":""}
-{"questionText":"Az adatátvitel sebességét ___ határozza meg a hálózatban.","questionType":"fill_blank","options":[],"pairs":[],"items":[],"correctAnswer":"sávszélesség","explanation":"A sávszélesség határozza meg az adatátvitel sebességét."}`;
+{"questionText":"Egy kerékpáros 15 km/h sebességgel halad. Hány kilométert tesz meg 3 óra alatt?","questionType":"mcq","options":["45 km","30 km","15 km","60 km"],"pairs":[],"items":[],"correctAnswer":"45 km","explanation":"15 km/h × 3 h = 45 km"}
+{"questionText":"Párosítsd a halmazállapot-változásokat a hozzájuk tartozó leírásokkal:","questionType":"matching","options":["Légneműből folyékony halmazállapotúvá válás","Szilárdból folyékony halmazállapotúvá válás","Folyékonyból légnemű halmazállapotúvá válás"],"pairs":[{"left":"Lecsapódás","right":"Légneműből folyékony halmazállapotúvá válás"},{"left":"Olvadás","right":"Szilárdból folyékony halmazállapotúvá válás"},{"left":"Párolgás","right":"Folyékonyból légnemű halmazállapotúvá válás"}],"items":[],"correctAnswer":{"Lecsapódás":"Légneműből folyékony halmazállapotúvá válás","Olvadás":"Szilárdból folyékony halmazállapotúvá válás","Párolgás":"Folyékonyból légnemű halmazállapotúvá válás"},"explanation":""}
+{"questionText":"A fotoszintézis során a növények szén-dioxidot vesznek fel, és ___ bocsátanak ki.","questionType":"fill_blank","options":[],"pairs":[],"items":[],"correctAnswer":"oxigént","explanation":"A növények a fotoszintézis során oxigént termelnek és juttatnak a levegőbe."}`;
   }
 
-  async _generateQuestionsChunked(outline, subject, topic, diffDesc, typeSpecs, fewShotExamples) {
+  async _generateQuestionsChunked(outline, subject, topic, diffDesc, typeSpecs, fewShotExamples, grade = 'általános iskola', curriculumSnippet = '', userId = null) {
     const typeDescriptions = {
-      mcq: '"mcq": feleletválasztós, 4 valós szöveges lehetőség (NEM betűjelölők!). options: ["Első válasz","Második válasz","Harmadik válasz","Negyedik válasz"], correctAnswer: "Első válasz"',
+      mcq: '"mcq": feleletválasztós. A questionText KÉRDŐ MONDAT legyen (kérdőjellel végződjön!). TILOS: a questionText NEM tartalmazhatja a helyes választ és nem lehet a helyes válasz kijelentő átfogalmazása! 4 valódi szöveges lehetőség (NEM betűjelölők, NEM "A.", "B." előtagok!). PONTOSAN EGYETLEN helyes válasz! options: ["Első válasz","Második válasz","Harmadik válasz","Negyedik válasz"], correctAnswer: "Első válasz" (az options tömb PONTOS szövege, betű-előtag nélkül!)',
       true_false: '"true_false": igaz/hamis. KÖTELEZŐ: a questionText KIJELENTŐ MONDAT legyen (pl. "A fotoszintézis során a növények CO2-t vesznek fel.") – TILOS kérdőmondat, összehasonlítás, "melyik" kezdetű szöveg! options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"',
       short_answer: '"short_answer": rövid szöveges válasz. options: [], correctAnswer: "szöveges válasz"',
       fill_blank: '"fill_blank": szövegkiegészítős, PONTOSAN EGY ___ jelölővel. options: [], correctAnswer: egyetlen hiányzó szó/kifejezés, | jel nélkül',
@@ -446,7 +687,7 @@ ${exampleLine}`;
 
     const typeQueue = typeSpecs.flatMap(s => Array(s.count).fill(s.type));
     const allQuestions = [];
-    const chunkSize = 2;
+    const chunkSize = 10;
 
     while (typeQueue.length > 0) {
       const chunk = typeQueue.splice(0, chunkSize);
@@ -469,11 +710,16 @@ ${exampleLine}`;
 
       const prompt = `${fewShotExamples}
 
-Te egy precíz JSON generáló AI vagy. A Qwen által készített vázlat alapján generálj pontosan ${chunk.length} ÚJ kérdést.
+Te egy precíz magyar pedagógiai kérdés-generáló AI vagy. A készített vázlat alapján generálj pontosan ${chunk.length} ÚJ kérdést a(z) "${subject}" tantárgy "${topic}" témaköréből, a(z) ${grade} szinthez igazodva.
 
 ${topicAnchor}
+${curriculumSnippet ? `\nNAT CURRICULUM EMLÉKEZTETŐ (a kérdések ezeket a követelményeket fedik le):\n${curriculumSnippet}` : ''}
 
-VÁZLAT (Qwen szempontjai – kövesd a fókuszokat!):
+SZIGORÚ PEDAGÓGIAI SZABÁLYOK:
+1. Olyan kérdéseket készíts, amelyeket a diák egy valódi iskolai dolgozatban vagy felmérőben kapna. Kerüld az erőltetett modernkedést (Minecraft, streamer, Stardew Valley stb. TILOS). Helyette használj klasszikus mindennapi, természetbeli vagy tudományos megfigyeléseket.
+2. ${this._getAgeLanguageInstruction(grade)}
+
+VÁZLAT (szempontok – kövesd a fókuszokat!):
 ${outline}
 ${previousContext}
 MOSTANI FELADAT – generálj PONTOSAN ${chunk.length} kérdést:
@@ -484,30 +730,33 @@ SZABÁLYOK:
 2. matching options KIZÁRÓLAG a jobb oldali (right) értékeket tartalmazza keverve – SOHA a bal oldalit!
 3. fill_blank kérdésben KÖTELEZŐ pontosan egy ___ jelölő, és a correctAnswer egyetlen válasz legyen, | jel nélkül!
 4. ordering items tömbje KEVEREDETT sorrendben legyen!
-5. Minden kérdés a(z) "${topic}" témáról szóljon – semmi egyéb!
+5. MCQ ANTI-PATTERN TILOS: a questionText NEM lehet a helyes válasz kijelentő átfogalmazása (pl. TILOS: questionText="A patríciusok az előkelő... a plebejusok a köznép..." + option A = ua. szöveg)! A questionText MINDIG KÉRDŐ MONDAT legyen!
 
 VÁLASZOLJ KIZÁRÓLAG ÉRVÉNYES JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
 [{"questionText":"...","questionType":"...","options":[],"pairs":[],"items":[],"correctAnswer":"...","explanation":"..."}]`;
 
       try {
         if (allQuestions.length > 0) {
-          await sleep(3000); // Várakozás a chunk-ok között (RPM/TPM kímélés)
+          await sleep(800); // Várakozás a chunk-ok között (RPM/TPM kímélés)
         }
-        console.log(`[GroqService]   → chunk: [${chunk.join(', ')}]`);
+        console.log(`[AIService]   → chunk: [${chunk.join(', ')}]`);
         const raw = await this._callModelWithFallback(
           this.fastChain,
           [{ role: 'system', content: prompt }],
-          { temperature: 0.7, max_tokens: 2000 }
+          { temperature: 0.7, max_tokens: 5000 },
+          'ExamQuestions',
+          (res) => this._extractJSONArray(res),
+          userId
         );
 
 
         const parsed = this._extractJSONArray(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
           allQuestions.push(...parsed);
-          console.log(`[GroqService]   ✓ chunk kész (+${parsed.length} kérdés)`);
+          console.log(`[AIService]   ✓ chunk kész (+${parsed.length} kérdés)`);
         }
       } catch (e) {
-        console.warn(`[GroqService]   ✗ chunk sikertelen (${chunk.join(',')}):`, e.message);
+        console.warn(`[AIService]   ✗ chunk sikertelen (${chunk.join(',')}):`, e.message);
         chunk.forEach(type => {
           const fallbackTexts = {
             true_false: `Igaz vagy hamis? A(z) "${topic}" témakör tananyagának részét képezi a kurzusnak.`,
@@ -545,24 +794,25 @@ VÁLASZOLJ KIZÁRÓLAG ÉRVÉNYES JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!
     return allQuestions;
   }
 
-  // Dolgozat-specifikus generálás: kétfázisú pipeline (Qwen vázlat → Llama chunking)
-  async generateExamQuestionSet(subject, topic, diffDesc, typeSpecs) {
+  // Dolgozat-specifikus generálás: kétfázisú AI pipeline (vázlat → JSON chunking)
+  async generateExamQuestionSet(subject, topic, diffDesc, typeSpecs, grade = 'általános iskola', selectedTopics = null, userId = null) {
     // === 1. FÁZIS: Qwen 3 32B – kreatív szöveges vázlat ===
     let outline = '';
     try {
-      console.log('[GroqService] 1. fázis: vázlat generálása (Qwen)...');
-      outline = await this._generateOutline(subject, topic, diffDesc, typeSpecs);
-      console.log('[GroqService] ✓ Vázlat kész:', outline.substring(0, 150).replace(/\n/g, ' '));
+      console.log('[AIService] 1. fázis: vázlat generálása (Qwen)...');
+      outline = await this._generateOutline(subject, topic, diffDesc, typeSpecs, grade, selectedTopics, userId);
+      console.log('[AIService] ✓ Vázlat kész:', outline.substring(0, 150).replace(/\n/g, ' '));
     } catch (e) {
-      console.warn('[GroqService] Vázlat generálás sikertelen, általános vázlattal folytatom:', e.message);
-      outline = `Általános vázlat: modern, életszerű szituációk a "${topic}" témában, különféle altémákkal.`;
+      console.warn('[AIService] Vázlat generálás sikertelen, általános vázlattal folytatom:', e.message);
+      outline = `Általános vázlat: a(z) ${subject} tantárgy "${topic}" témájában, ${grade} szinten, különféle altémákkal.`;
     }
 
-    // === 2. FÁZIS: Llama 3.3 70B – JSON kérdések chunking alapon ===
+    // === 2. FÁZIS: AI – JSON kérdések chunking alapon ===
     try {
-      console.log('[GroqService] 2. fázis: kérdések generálása Llama chunkingban...');
+      console.log('[AIService] 2. fázis: kérdések generálása AI chunkingban...');
       const fewShot = this._getFewShotExamples(subject);
-      const rawQuestions = await this._generateQuestionsChunked(outline, subject, topic, diffDesc, typeSpecs, fewShot);
+      const curriculumSnippet = getCurriculumSnippet(subject, grade, selectedTopics);
+      const rawQuestions = await this._generateQuestionsChunked(outline, subject, topic, diffDesc, typeSpecs, fewShot, grade, curriculumSnippet, userId);
 
       if (rawQuestions.length > 0) {
         const mapped = rawQuestions.map((q, idx) => ({
@@ -576,18 +826,19 @@ VÁLASZOLJ KIZÁRÓLAG ÉRVÉNYES JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!
           explanation: q.explanation || ''
         }));
         const finalized = this._finalizeQuestionSet(mapped, typeSpecs, topic);
-        console.log(`[GroqService] ✓ Kétfázisú generálás kész: ${finalized.length} validált kérdés`);
+        console.log(`[AIService] ✓ Kétfázisú generálás kész: ${finalized.length} validált kérdés`);
         return finalized;
       }
     } catch (e) {
-      console.warn('[GroqService] Kétfázisú generálás sikertelen, egyfázisú fallback:', e.message);
+      console.warn('[AIService] Kétfázisú generálás sikertelen, egyfázisú fallback:', e.message);
     }
 
     // === FALLBACK: egyfázisú Qwen generálás (eredeti módszer) ===
-    console.log('[GroqService] Fallback: egyfázisú generálás...');
+    console.log('[AIService] Fallback: egyfázisú generálás...');
     const total = typeSpecs.reduce((s, t) => s + t.count, 0);
+    const curriculumSnippet = getCurriculumSnippet(subject, grade, selectedTopics);
     const typeDescriptions = {
-      mcq: '"mcq": feleletválasztós, 4 valós szöveges lehetőség (NEM betűjelölők!). options: ["Első válasz szövege","Második válasz szövege","Harmadik válasz szövege","Negyedik válasz szövege"], correctAnswer: "Első válasz szövege"',
+      mcq: '"mcq": feleletválasztós. questionText = KÉRDŐ MONDAT (?-jel!), TILOS a questionText-be a helyes választ belefoglalni! 4 valódi szöveges lehetőség (NEM betűjelölők, NEM "A.", "B." előtagok!). PONTOSAN EGYETLEN helyes válasz! options: ["Első válasz szövege","Második válasz szövege","Harmadik válasz szövege","Negyedik válasz szövege"], correctAnswer: "Első válasz szövege" (az options tömb PONTOS szövege, betű-előtag nélkül!)',
       true_false: '"true_false": igaz/hamis. KÖTELEZŐ: a questionText KIJELENTŐ MONDAT legyen (pl. "A fotoszintézis során a növények CO2-t vesznek fel.") – TILOS kérdőmondat, összehasonlítás! options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"',
       short_answer: '"short_answer": rövid szöveges válasz. options: [], correctAnswer: "szöveges válasz"',
       fill_blank: '"fill_blank": szövegkiegészítős, PONTOSAN EGY ___ jelölővel. options: [], correctAnswer: egyetlen hiányzó szó/kifejezés, | jel nélkül',
@@ -599,20 +850,21 @@ VÁLASZOLJ KIZÁRÓLAG ÉRVÉNYES JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!
       return `- PONTOSAN ${s.count} darab ${s.type} típusú kérdés. Formátum: ${desc}`;
     }).join('\n');
     const fallbackPrompt = `Te egy kreatív és tapasztalt pedagógus AI vagy. Készíts pontosan ${total} darab KIVÁLÓ MINŐSÉGŰ vizsgakérdést ${subject} tantárgyból, a "${topic}" témakörhöz.
-Nehézség: ${diffDesc}
-KÖTELEZŐ TÍPUSOK ÉS DARABSZÁMOK (tartsd be szigorúan!):
-${typeLines}
-FONTOS SZABÁLYOK:
-1. Az MCQ options tömbben SOHA ne szerepeljenek puszta betűk – mindig valódi szöveges válaszok!
-2. A matching options tömb KIZÁRÓLAG a jobb oldali definíciókat tartalmazza (keverve)!
-3. A fill_blank kérdésben KÖTELEZŐ pontosan egy ___ jelölő, és a correctAnswer egyetlen válasz legyen, | jel nélkül!
-4. Az ordering items tömbje KEVEREDETT sorrendben legyen!
-5. SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\`\`json ... \`\`\`), semmi egyéb!
-{"questions":[{"questionId":"q1","questionText":"...","questionType":"mcq","options":[],"pairs":[],"items":[],"correctAnswer":"...","explanation":"..."}]}`;
+    Nehézség: ${diffDesc}
+    ${curriculumSnippet}
+    KÖTELEZŐ TÍPUSOK ÉS DARABSZÁMOK (tartsd be szigorúan!):
+    ${typeLines}
+    FONTOS SZABÁLYOK:
+    1. Az MCQ options tömbben SOHA ne szerepeljenek puszta betűk – mindig valódi szöveges válaszok!
+    2. A matching options tömb KIZÁRÓLAG a jobb oldali definíciókat tartalmazza (keverve)!
+    3. A fill_blank kérdésben KÖTELEZŐ pontosan egy ___ jelölő, és a correctAnswer egyetlen válasz legyen, | jel nélkül!
+    4. Az ordering items tömbje KEVEREDETT sorrendben legyen!
+    5. SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\`\`json ... \`\`\`), semmi egyéb!
+    {"questions":[{"questionId":"q1","questionText":"...","questionType":"mcq","options":[],"pairs":[],"items":[],"correctAnswer":"...","explanation":"..."}]}`;
 
     let raw = '';
     try {
-      raw = await this.generateResponse(fallbackPrompt, [], { temperature: 0.65, max_tokens: 6000 }, true);
+      raw = await this.generateResponse(fallbackPrompt, [], { temperature: 0.65, max_tokens: 6000 }, false, null, 'ExamQuestions');
       const parsed = this._extractJSON(raw);
       if (Array.isArray(parsed.questions) && parsed.questions.length > 0) {
         const mapped = parsed.questions.map((q, idx) => ({
@@ -628,8 +880,8 @@ FONTOS SZABÁLYOK:
         return this._finalizeQuestionSet(mapped, typeSpecs, topic);
       }
     } catch (error) {
-      console.warn('[GroqService] Fallback generálás is sikertelen:', error.message);
-      if (raw) console.warn('[GroqService] Nyers válasz:', raw.substring(0, 800));
+      console.warn('[AIService] Fallback generálás is sikertelen:', error.message);
+      if (raw) console.warn('[AIService] Nyers válasz:', raw.substring(0, 800));
     }
 
     // Végső fallback: típus-tudatos statikus kérdések
@@ -677,8 +929,9 @@ FONTOS SZABÁLYOK:
 
 KÖZÖS SZABÁLYOK:
 - Minden kérdés a(z) "${topic}" témáról szóljon, kizárólag szöveg alapján megoldható (NEM hang/videó).
-- Kerüld a száraz definíciókat – használj életszerű, modern szituációkat (gaming, sport, tech, közösségi média), kivéve humán tárgyaknál a mű/korszak konkrét tartalmát.
-- Minden kérdés EGYEDI legyen – ne ismételj fogalmakat.`;
+- Kerüld a száraz definíciókat – használj életszerű, mindennapi szituációkat (sport, természet, hétköznapi élet), kivéve humán tárgyaknál a mű/korszak konkrét tartalmát. TILOS: Minecraft, streamer, Stardew Valley kontextus!
+- Minden kérdés EGYEDI legyen – ne ismételj fogalmakat.
+- ${this._getAgeLanguageInstruction(grade)}`;
   }
 
   _groupSpec(groupName) {
@@ -686,12 +939,13 @@ KÖZÖS SZABÁLYOK:
       basic: {
         types: ['mcq', 'true_false'],
         instructions: `KÉRT TÍPUSOK ÉS DARABSZÁM:
-- mcq (feleletválasztós): 4 valódi szöveges option, EGYIK helyes, correctAnswer = az adott option szövege MASOLATA
+- mcq (feleletválasztós): questionText = KÉRDŐ MONDAT (?-jel kötelező!), TILOS a questionText-be a helyes választ belefoglalni! 4 valódi szöveges option (NEM "A.", "B." betűjelölők!), PONTOSAN EGYETLEN helyes, correctAnswer = az adott option szövege PONTOS MÁSOLATA (betű-előtag nélkül!)
 - true_false (igaz/hamis): a questionText KIJELENTŐ MONDAT legyen (nem kérdés), options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"
 
 PÉLDÁK (másold a formátumot!):
-✓ JÓ mcq: {"questionType":"mcq","questionText":"Egy streamer nézőszáma 1200-ról 35%-kal nőtt. Hányan néznek?","options":["1620 néző","1560 néző","1440 néző","1800 néző"],"correctAnswer":"1620 néző","explanation":"1200×1,35=1620"}
-✗ ROSSZ mcq: options:["A","B","C","D"]  ← betűjelölők TILOSAK!
+✓ JÓ mcq: {"questionType":"mcq","questionText":"Egy kerékpáros 1200-ról 35%-kal nőtt nézőszámú csatornán hirdet. Hány néző látja?","options":["1620 néző","1560 néző","1440 néző","1800 néző"],"correctAnswer":"1620 néző","explanation":"1200×1,35=1620"}
+✗ ROSSZ mcq (betűjelölők): options:["A","B","C","D"]  ← TILOS!
+✗ ROSSZ mcq (anti-pattern): {"questionText":"A patríciusok az előkelő, kiváltságos családok tagjai, a plebejusok a köznéphez tartoztak.","options":["A patríciusok az előkelő, kiváltságos...","A plebejusok az előkelő..."],...}  ← questionText = helyes válasz kijelentő formája TILOS! A questionText MINDIG KÉRDŐ MONDAT (?-jel)!
 
 ✓ JÓ true_false: {"questionType":"true_false","questionText":"A naprendszer 8 bolygóból áll.","options":["Igaz","Hamis"],"correctAnswer":"Igaz","explanation":"..."}
 ✗ ROSSZ true_false: {"questionText":"Hány bolygója van a naprendszernek?"}  ← KÉRDŐ MONDAT TILOS!`
@@ -764,7 +1018,8 @@ A pairs és items mező MINDEN kérdésnél szerepeljen (üres tömb, ha nem rel
       const raw = await this._callModelWithFallback(
         this.fastChain,
         [{ role: 'system', content: prompt }],
-        { temperature: 0.7, max_tokens: 2500, jsonMode: true }
+        { temperature: 0.7, max_tokens: 2500, jsonMode: true },
+        'ExamQuestions'
       );
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed.questions)) {
@@ -772,13 +1027,13 @@ A pairs és items mező MINDEN kérdésnél szerepeljen (üres tömb, ha nem rel
       }
       return parsed.questions;
     } catch (e) {
-      console.warn(`[GroqService] ${groupName} csoport sikertelen:`, e.message);
+      console.warn(`[AIService] ${groupName} csoport sikertelen:`, e.message);
       return [];
     }
   }
 
-  async generatePracticeQuestionSet(subject, topic, difficulty = 3, count = 10, grade = 'általános iskola', weakQuestions = [], excludeQuestions = []) {
-    console.log(`[GroqService] Gyakorlás generálás indul Qwen->Llama pipeline-nal: count=${count}`);
+  async generatePracticeQuestionSet(subject, topic, difficulty = 3, count = 10, grade = 'általános iskola', weakQuestions = [], excludeQuestions = [], userId = null) {
+    console.log(`[AIService] Gyakorlás generálás indul AI pipeline-nal: count=${count}`);
 
     const difficultyDescriptions = {
       1: 'Könnyű (alapfogalmak)',
@@ -807,41 +1062,104 @@ A pairs és items mező MINDEN kérdésnél szerepeljen (üres tömb, ha nem rel
       typeSpecs.push({ type: 'ordering', count: Math.floor(complexCount / 2) });
     }
 
-    // A generálás a Qwen vázlat -> Llama chunking pipeline-t fogja használni
-    return await this.generateExamQuestionSet(subject, topic, diffDesc, typeSpecs);
+    let selectedTopics = null;
+    const normSubject = String(subject).trim().toLowerCase();
+    let fileName = null;
+    let minGrade = 5;
+    let maxGrade = 8;
+
+    if (normSubject === 'matematika') {
+      fileName = 'curriculum_matematika.json';
+    } else if (normSubject === 'nyelvtan') {
+      fileName = 'curriculum_nyelvtan.json';
+    } else if (normSubject === 'irodalom') {
+      fileName = 'curriculum_irodalom.json';
+    } else if (normSubject === 'történelem' || normSubject === 'tortenelem') {
+      fileName = 'curriculum_tortenelem.json';
+    } else if (
+      normSubject === 'környezetismeret' ||
+      normSubject === 'kornyezet' ||
+      normSubject === 'természetismeret' ||
+      normSubject === 'természettudomány'
+    ) {
+      fileName = 'curriculum_kornyezet.json';
+      maxGrade = 6;
+    } else if (normSubject === 'fizika') {
+      fileName = 'curriculum_fizika.json';
+      minGrade = 7; maxGrade = 8;
+    } else if (normSubject === 'biológia' || normSubject === 'biologia') {
+      fileName = 'curriculum_biologia.json';
+      minGrade = 7; maxGrade = 8;
+    } else if (normSubject === 'földrajz' || normSubject === 'foldrajz') {
+      fileName = 'curriculum_foldrajz.json';
+      minGrade = 7; maxGrade = 8;
+    }
+
+    if (fileName) {
+      try {
+        const gradeMatch = String(grade).match(/^(\d+)/);
+        const gradeNum = gradeMatch ? parseInt(gradeMatch[1], 10) : null;
+        if (gradeNum >= minGrade && gradeNum <= maxGrade) {
+          const curriculumPath = path.join(__dirname, '../data', fileName);
+          if (fs.existsSync(curriculumPath)) {
+            const curriculum = JSON.parse(fs.readFileSync(curriculumPath, 'utf8'));
+            const key = (gradeNum === 5 || gradeNum === 6) ? '5-6' : '7-8';
+            const topics = curriculum[key] || [];
+            
+            const matched = topics.find(t => 
+              t.id.toLowerCase() === String(topic).trim().toLowerCase() ||
+              t.name.toLowerCase() === String(topic).trim().toLowerCase()
+            );
+            if (matched) {
+              selectedTopics = [matched.id];
+              console.log(`[aiService] Gyakorlás NAT témakör egyezés: "${topic}" -> ID: "${matched.id}"`);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[aiService] Hiba a gyakorlás NAT témakör keresésekor:', err);
+      }
+    }
+
+    // A generálás a kétfázisú AI pipeline-t fogja használni
+    return await this.generateExamQuestionSet(subject, topic, diffDesc, typeSpecs, grade, selectedTopics, userId);
   }
 
-  async _generateDiagnosticOutline(subject, grade, count) {
-    const prompt = `Te egy kreatív pedagógus-stratéga vagy.
-Tantárgy: ${subject} | Évfolyam: ${grade} | Kérdések száma: ${count}
+  async _generateDiagnosticOutline(subject, grade, count, selectedTopics = null, userId = null) {
+    const curriculumSnippet = getCurriculumSnippet(subject, grade, selectedTopics);
+    const prompt = `Te egy tapasztalt, a Nemzeti Alaptantervet (NAT) kiválóan ismerő magyar pedagógus-stratéga vagy.
+Tantárgy: ${subject} | Évfolyam/Szint: ${grade} | Kérdések száma: ${count}
+${curriculumSnippet}
 
 FELADATOD:
-1. Bontsd fel a tantárgyat 10 SPECIFIKUS mikro-képességre (pl. "Szövegértés: ok-okozati összefüggések felismerése", "Algebra: lineáris egyenletek megoldása").
-2. Véletlenszerűen válassz ki 3-at.
-3. Minden kérdéshez rendelj: mikro-képesség + valódi, modern szituáció (Persona/Scenario: gaming, sport, social media, tech) + Bloom-szint (Emlékezés/Értés/Alkalmazás/Elemzés/Értékelés).
+1. Bontsd fel a(z) ${subject} tantárgy ${grade} osztályos anyagát 10 SPECIFIKUS, az iskolai követelményeknek megfelelő mikro-képességre (pl. "Biológia: gerincesek és gerinctelenek megkülönböztetése", "Szövegértés: ok-okozati összefüggések felismerése").
+2. Véletlenszerűen válassz ki 3-at közülük.
+3. Minden kérdéshez tervezz: mikro-képesség + életszerű, a diák korosztályának megfelelő mindennapi helyzet (pl. otthoni teendők, természetjárás, egyszerű vásárlás, időjárás, iskolai élet - TILOS az erőltetett tech/gaming/streamer példák használata) + Bloom-szint (Emlékezés/Értés/Alkalmazás/Elemzés/Értékelés).
 
-SZIGORÚ SZABÁLY: Tilos az elcsépelt tankönyvi példák használata (alma/torta, vonat-sebesség, elvont halmazok). Modern, a mai generáció számára releváns kontextust használj.
+SZIGORÚ SZABÁLY: A kérdések és témakörök elvárásai pontosan igazodjanak a(z) ${grade} szinthez! Olyan kérdések vázlatát tervezd meg, amelyeket a tanuló az iskolai számonkérések során is megkaphatna.
+${this._getAgeLanguageInstruction(grade)}
 
 KIMENET – sima szöveg (NEM JSON!), pl.:
-1. Kérdés (Alkalmazás). Mikro-képesség: Százalékszámítás. Szituáció: Egy streamer nézőinek száma 35%-kal nőtt januárban.
+1. Kérdés (Alkalmazás). Mikro-képesség: Víz körforgása. Szituáció: Párolgás megfigyelése egy pohár víznél az ablakpárkányon.
 2. Kérdés (Értés). Mikro-képesség: ...`;
 
     return await this._callModelWithFallback(
-      this.reasoningChain,
+      this.fastChain,
       [{ role: 'system', content: prompt }],
-      { temperature: 0.85, top_p: 0.9, max_tokens: 1200 }
+      { temperature: 0.85, top_p: 0.9, max_tokens: 1200 },
+      'DiagOutline', null, userId
     );
 
   }
 
-  async _generateDiagnosticQuestionsChunked(outline, subject, grade, count, currentLevel) {
+  async _generateDiagnosticQuestionsChunked(outline, subject, grade, count, currentLevel, curriculumSnippet = '', userId = null) {
     const gradeNum = parseInt(grade) || 4;
     const baseDifficulty = Math.max(1, Math.min(5, Math.ceil(gradeNum / 2)));
     const levelBonus = Math.floor((Math.max(1, Math.min(10, currentLevel)) - 1) / 3);
     const effectiveDifficulty = Math.max(1, Math.min(5, baseDifficulty + levelBonus));
 
     const typePool = ['mcq', 'true_false', 'short_answer', 'fill_blank', 'matching', 'ordering'];
-    const chunkSize = 3;
+    const chunkSize = 10;
     const totalChunks = Math.ceil(count / chunkSize);
     const allQuestions = [];
 
@@ -857,18 +1175,23 @@ KIMENET – sima szöveg (NEM JSON!), pl.:
         ? `\nEddig generált kérdések (KERÜLD a szóhasználat és megközelítés ismétlését):\n${JSON.stringify(allQuestions.map(q => ({ text: q.questionText.substring(0, 60), type: q.questionType })))}\n`
         : '';
 
-      const prompt = `Te egy precíz diagnosztikai kérdés-generáló AI vagy.
+      const prompt = `Te egy precíz magyar pedagógiai kérdés-generáló AI vagy.
 
-VÁZLAT (Qwen tervei):
+VÁZLAT (az outline tervei):
 ${outline}
-${prevContext}
-Generálj PONTOSAN ${chunkCount} kérdést a vázlat alapján!
+${curriculumSnippet ? `\nNAT CURRICULUM EMLÉKEZTETŐ (a kérdések ezeket a követelményeket fedik le):\n${curriculumSnippet}\n` : ''}${prevContext}
+Generálj PONTOSAN ${chunkCount} kérdést a vázlat alapján, amely szigorúan a(z) ${subject} tantárgy ${grade} osztályos iskolai tananyagának szintjéhez és nyelvezetéhez igazodik!
+
 Preferált típusok: ${typeHint}
 Nehézség: ~${effectiveDifficulty}/5
 Kötelező: minden kérdésnek legyen "category" mezője (a mikro-képesség neve).
 
-SZABÁLYOK:
-- MCQ: 4 valódi szöveges option (nem betűjelölő), correctAnswer = az egyik option szövege
+SZIGORÚ PEDAGÓGIAI SZABÁLYOK:
+1. Olyan kérdéseket készíts, amelyeket a diák egy valódi iskolai dolgozatban vagy felmérőben kapna. Kerüld az erőltetett modernkedést (Minecraft, streamer, Stardew Valley stb. TILOS). Helyette használj klasszikus mindennapi, természetbeli vagy tudományos megfigyeléseket.
+2. ${this._getAgeLanguageInstruction(grade)}
+
+FORMÁTUM SZABÁLYOK:
+- MCQ: questionText KÉRDŐ MONDAT (?-jel!), TILOS a questionText-be a helyes választ belefoglalni (NEM lehet: "A patríciusok előkelők, a plebejusok köznép" → majd option A = ua.)! 4 valódi szöveges option (NEM "A.", "B." betűjelölők!), PONTOSAN EGYETLEN helyes, correctAnswer = az adott option szövege PONTOS MÁSOLATA
 - true_false: KÖTELEZŐ KIJELENTŐ MONDAT (nem kérdés, nem összehasonlítás!), options: ["Igaz","Hamis"]
 - fill_blank: a szövegben kötelező a ___ jelölő (akár több is), correctAnswer több üres helynél "szó1|szó2"
 - matching: options CSAK a jobb oldali értékek (keverve), pairs: [{"left":"...","right":"..."}]
@@ -879,25 +1202,28 @@ VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
 
       try {
         if (allQuestions.length > 0) {
-          await sleep(3000); // Szünet a diagnosztika chunk-ok között (TPM kímélés)
+          await sleep(800); // Szünet a diagnosztika chunk-ok között (TPM kímélés)
         }
 
-        console.log(`[GroqService]   → diagnosztika chunk ${i + 1}/${totalChunks} (${chunkCount} kérdés)`);
+        console.log(`[AIService]   → diagnosztika chunk ${i + 1}/${totalChunks} (${chunkCount} kérdés)`);
         const raw = await this._callModelWithFallback(
           this.fastChain,
           [{ role: 'system', content: prompt }],
-          { temperature: 0.7, max_tokens: 2500 }
+          { temperature: 0.7, max_tokens: 5000 },
+          'DiagQuestions',
+          (res) => this._extractJSONArray(res),
+          userId
         );
 
         const parsed = this._extractJSONArray(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
           allQuestions.push(...parsed.slice(0, chunkCount));
-          console.log(`[GroqService]   ✓ diagnosztika chunk kész (+${parsed.length} kérdés)`);
+          console.log(`[AIService]   ✓ diagnosztika chunk kész (+${parsed.length} kérdés)`);
         } else {
           throw new Error('Üres vagy érvénytelen válasz a chunk-ban.');
         }
       } catch (e) {
-        console.warn(`[GroqService]   ✗ diagnosztika chunk ${i + 1} sikertelen:`, e.message);
+        console.warn(`[AIService]   ✗ diagnosztika chunk ${i + 1} sikertelen:`, e.message);
         // Fallback kérdések hozzáadása, hogy a folyamat ne szakadjon meg és a darabszám stimmeljen
         for (let j = 0; j < chunkCount; j++) {
           const type = typePool[j % typePool.length];
@@ -919,7 +1245,7 @@ VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
     return allQuestions;
   }
 
-  async generateDiagnosticTest(subject, grade, count = 20, currentLevel = 1) {
+  async generateDiagnosticTest(subject, grade, count = 20, currentLevel = 1, selectedTopics = null, userId = null) {
     const gradeNum = parseInt(grade) || 4;
     const baseDifficulty = Math.max(1, Math.min(5, Math.ceil(gradeNum / 2)));
     const levelBonus = Math.floor((Math.max(1, Math.min(10, currentLevel)) - 1) / 3);
@@ -928,23 +1254,29 @@ VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
     // === FÁZIS 1: Qwen vázlat ===
     let outline = '';
     try {
-      console.log('[GroqService] Diagnosztika 1. fázis: vázlat generálása (Qwen)...');
-      outline = await this._generateDiagnosticOutline(subject, grade, count);
-      console.log('[GroqService] ✓ Diagnosztika vázlat kész:', outline.substring(0, 100).replace(/\n/g, ' '));
+      console.log('[AIService] Diagnosztika 1. fázis: vázlat generálása (Qwen)...');
+      outline = await this._generateDiagnosticOutline(subject, grade, count, selectedTopics, userId);
+      console.log('[AIService] ✓ Diagnosztika vázlat kész:', outline ? outline.substring(0, 100).replace(/\n/g, ' ') : '(üres)');
     } catch (e) {
-      console.warn('[GroqService] Diagnosztika vázlat sikertelen, egyfázisú fallbackre váltok:', e.message);
-      outline = '';
+      console.warn('[AIService] Diagnosztika vázlat sikertelen, általános vázlattal folytatom:', e.message);
     }
 
-    // === FÁZIS 2: Llama chunking (csak ha van vázlat) ===
+    if (!outline || outline.trim().length === 0) {
+      console.log('[AIService] Diagnosztika vázlat üres, általános vázlattal folytatom...');
+      outline = `Általános szintfelmérő vázlat a(z) ${subject} tantárgyhoz, ${grade}. osztályos szinten. A kérdések fedjék le az alapvető témaköröket és készségeket.`;
+    }
+
+    // === FÁZIS 2: AI chunking (csak ha van vázlat) ===
     if (outline) {
       try {
-        console.log('[GroqService] Diagnosztika 2. fázis: kérdések generálása (Llama chunking)...');
-        const questions = await this._generateDiagnosticQuestionsChunked(outline, subject, grade, count, currentLevel);
+        console.log('[AIService] Diagnosztika 2. fázis: kérdések generálása (AI chunking)...');
+        const diagCurriculumSnippet = getCurriculumSnippet(subject, grade, selectedTopics);
+        const questions = await this._generateDiagnosticQuestionsChunked(outline, subject, grade, count, currentLevel, diagCurriculumSnippet, userId);
         if (questions.length >= Math.floor(count * 0.7)) {
           const subjectCategories = {
             'Matematika': ['Algebra', 'Geometria', 'Statisztika', 'Függvények', 'Számelmélet', 'Mértékegységek'],
-            'Magyar': ['Nyelvtan', 'Irodalom', 'Fogalmazás', 'Helyesírás', 'Szövegértés', 'Nyelvhelyesség'],
+            'Nyelvtan': ['Hangtan', 'Szófajok', 'Mondatelemzés', 'Helyesírás', 'Nyelvhelyesség'],
+            'Irodalom': ['Népköltészet', 'Műfajok', 'Verselemzés', 'Szövegértés', 'Cselekmény és Karakterek'],
             'Angol': ['Grammar', 'Vocabulary', 'Reading', 'Writing', 'Comprehension', 'Communication'],
             'Környezetismeret': ['Földrajz', 'Biológia', 'Fizika', 'Kémia', 'Társadalomismeret', 'Környezetvédelem']
           };
@@ -961,19 +1293,20 @@ VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
             correctAnswer: q.correctAnswer !== undefined ? q.correctAnswer : '',
             explanation: q.explanation || ''
           }));
-          console.log(`[GroqService] ✓ Diagnosztika kétfázisú generálás kész: ${mapped.length} kérdés`);
+          console.log(`[AIService] ✓ Diagnosztika kétfázisú generálás kész: ${mapped.length} kérdés`);
           return this._sanitizeQuestions(mapped, baseDifficulty);
         }
       } catch (e) {
-        console.warn('[GroqService] Diagnosztika chunking sikertelen, egyfázisú fallback:', e.message);
+        console.warn('[AIService] Diagnosztika chunking sikertelen, egyfázisú fallback:', e.message);
       }
     }
 
     // === FALLBACK: egyfázisú Qwen generálás ===
-    console.log('[GroqService] Diagnosztika fallback: egyfázisú generálás...');
+    console.log('[AIService] Diagnosztika fallback: egyfázisú generálás...');
     const subjectCategories = {
       'Matematika': ['Algebra', 'Geometria', 'Statisztika', 'Függvények', 'Számelmélet', 'Mértékegységek'],
-      'Magyar': ['Nyelvtan', 'Irodalom', 'Fogalmazás', 'Helyesírás', 'Szövegértés', 'Nyelvhelyesség'],
+      'Nyelvtan': ['Hangtan', 'Szófajok', 'Mondatelemzés', 'Helyesírás', 'Nyelvhelyesség'],
+      'Irodalom': ['Népköltészet', 'Műfajok', 'Verselemzés', 'Szövegértés', 'Cselekmény és Karakterek'],
       'Angol': ['Grammar', 'Vocabulary', 'Reading', 'Writing', 'Comprehension', 'Communication'],
       'Környezetismeret': ['Földrajz', 'Biológia', 'Fizika', 'Kémia', 'Társadalomismeret', 'Környezetvédelem']
     };
@@ -1030,7 +1363,7 @@ Válaszolj az alábbi JSON formátumban:
 Fontos: minden kérdésnél add meg a "category" mezőt (az adott témakör nevét), és a "questionId" legyen "d1", "d2", stb.`;
 
     try {
-      const raw = await this.generateResponse(prompt, [], { temperature: 0.6, max_tokens: 4500 }, true);
+      const raw = await this.generateResponse(prompt, [], { temperature: 0.6, max_tokens: 4500 }, false, null, 'DiagQuestions', (res) => this._extractJSON(res));
       const parsed = this._extractJSON(raw);
       if (Array.isArray(parsed.questions)) {
         const mapped = parsed.questions.map((q, idx) => ({
@@ -1048,7 +1381,7 @@ Fontos: minden kérdésnél add meg a "category" mezőt (az adott témakör nev�
         return this._sanitizeQuestions(mapped, baseDifficulty);
       }
     } catch (error) {
-      console.warn('[GroqService] generateDiagnosticTest parse hiba:', error.message);
+      console.warn('[AIService] generateDiagnosticTest parse hiba:', error.message);
     }
 
     return Array.from({ length: count }, (_, idx) => ({
@@ -1066,48 +1399,59 @@ Fontos: minden kérdésnél add meg a "category" mezőt (az adott témakör nev�
   async generateCheckpointHint(subject, topic, currentQuestion, studentAnswer, correctAnswer, attemptNumber, allQuestions, previousAnswers, chatHistory = []) {
     const level = Math.min(attemptNumber, 3);
 
-    // Few-shot: utolsó 2 helyes kérdés-válasz pár kontextusként
-    const successes = previousAnswers
-      .filter(a => a.isCorrect)
-      .slice(-2)
-      .map(a => {
-        const q = allQuestions.find(q => q.questionId === a.questionId);
-        return q
-          ? `"${q.questionText.substring(0, 60)}" → Helyes: "${String(a.studentAnswer).substring(0, 40)}"`
-          : null;
-      })
-      .filter(Boolean);
-    const fewShotCtx = successes.length > 0
-      ? `\nEmlékeztetőül: ezeket már helyesen tudtad: ${successes.join('; ')}.`
-      : '';
+    // Kérdés kontextus összeállítása típusonként
+    const qType = currentQuestion.questionType;
+    let questionContext = `Tantárgy: ${subject} | Témakör: ${topic}\nKérdéstípus: ${qType}\nKérdés: "${currentQuestion.questionText}"`;
 
-    const prompts = {
-      1: `Te vagy Szókratész. TILOS megmondani a megoldást. Kérdezz az alapokra, vagy adj életszerű analógiát! Max 3 mondat, tegeződve.${fewShotCtx}`,
-      2: `A diák másodszor hibázott. Adj konkrét részletszabályt, kérdezd meg, hogyan alkalmazná. Max 3 mondat, tegeződve.${fewShotCtx}`,
-      3: `Harmadik hiba. Vezesd le a feladat első felét, az utolsó lépést hagyd neki. Max 4 mondat, tegeződve.${fewShotCtx}`
+    if (qType === 'mcq' && Array.isArray(currentQuestion.options) && currentQuestion.options.length > 0) {
+      questionContext += `\nVálaszlehetőségek: ${currentQuestion.options.map((o, i) => `${String.fromCharCode(65 + i)}. ${o}`).join(' | ')}`;
+    } else if (qType === 'true_false') {
+      questionContext += `\nVálaszlehetőségek: Igaz / Hamis`;
+    } else if (qType === 'matching' && Array.isArray(currentQuestion.pairs)) {
+      questionContext += `\nBal oldal (fogalmak): ${currentQuestion.pairs.map(p => p.left).join(', ')}`;
+    }
+
+    questionContext += `\nDiák válasza: "${JSON.stringify(studentAnswer)}"`;
+    questionContext += `\n[A helyes választ NE áruld el közvetlenül!]`;
+
+    const systemPrompts = {
+      1: `Te egy barátságos, szókratészi módszerű AI tanár vagy (${subject} tantárgy). A diák első hibás válasza után segítesz.
+SZABÁLYOK:
+- TILOS a helyes választ megmondani!
+- Ha MCQ: ne mondd meg melyik betű a jó, de utalj arra, MILYEN SZEMPONTRA érdemes fókuszálni a fogalmak között.
+- Kérdezz vissza egy irányító kérdéssel, vagy adj egy életszerű, a témához kapcsolódó analógiát.
+- Tegeződj. Max 2-3 rövid mondat.`,
+      2: `Te egy türelmes AI tanár vagy (${subject} tantárgy). A diák másodszor is tévesztett.
+SZABÁLYOK:
+- TILOS a helyes választ közvetlenül megmondani!
+- Ha MCQ: segíts kizárásos módszerrel – mondj egy szempontot, amellyel ki lehet zárni a nyilvánvalóan rossz opciókat, de ne mondd meg melyik helyes.
+- Ha nyílt kérdés: adj egy konkrét fogalmi kapaszkodót vagy emlékeztetőt a témából.
+- Tegeződj. Max 3 mondat.`,
+      3: `Te egy segítőkész AI tanár vagy (${subject} tantárgy). A diák harmadszor is elakadt.
+SZABÁLYOK:
+- Vezesd le a gondolatmenetet: mi a kérdés lényege, melyik fogalomra kell gondolni.
+- Ha MCQ: szűkítsd le 2 opcióra, de a végső döntést hagyd a diáknak.
+- Az utolsó lépést – a konkrét választ – NE mondd ki!
+- Tegeződj. Max 4 mondat.`
     };
 
-    const correct = previousAnswers.filter(a => a.isCorrect).length;
-    const total = allQuestions.length;
-
+    // Csak az aktuális kérdés chat history-ja (frontend már szűrte, de itt is biztosítjuk)
     const historyMessages = chatHistory
-      .filter(m => m.content && m.content.trim())
-      .slice(-4)
+      .filter(m => m.content && m.content.trim() && (m.role === 'user' || m.role === 'bot'))
+      .slice(-6)
       .map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.content }));
 
-    const user = `Haladás: ${correct}/${total} helyes\nKérdés: ${currentQuestion.questionText}\nHelyes válasz (NE áruld el!): ${JSON.stringify(correctAnswer)}\nDiák válasza: "${JSON.stringify(studentAnswer)}"`;
-
     const messages = [
-      { role: 'system', content: prompts[level] },
+      { role: 'system', content: systemPrompts[level] },
       ...historyMessages,
-      { role: 'user', content: user }
+      { role: 'user', content: questionContext }
     ];
 
     try {
       const result = await this._callModelWithFallback(
-        this.reasoningChain,
+        this.fastChain,
         messages,
-        { temperature: 0.65, max_tokens: 600 },
+        { temperature: 0.6, max_tokens: 400 },
         'CheckpointHint'
       );
       return result?.trim() || this._getFallbackHint(attemptNumber);
@@ -1137,7 +1481,7 @@ Válaszolj az alábbi JSON formátumban:
 A "confidence" értéke 0.0 és 1.0 között legyen: mennyire vagy biztos a döntésedben. Ha a válasz egyértelműen jó vagy rossz, legyen magas (0.85-1.0). Ha a szemantikai egyezés kétes, legyen alacsony (0.4-0.7).`;
 
     try {
-      const raw = await this.generateResponse(prompt, [], { temperature: 0.1, max_tokens: 300 }, true);
+      const raw = await this.generateResponse(prompt, [], { temperature: 0.1, max_tokens: 300 }, true, null, 'CheckAnswer', (res) => this._extractJSON(res));
       const parsed = this._extractJSON(raw);
       return {
         correct: Boolean(parsed.correct),
@@ -1145,7 +1489,7 @@ A "confidence" értéke 0.0 és 1.0 között legyen: mennyire vagy biztos a dön
         confidence: typeof parsed.confidence === 'number' ? Math.min(1, Math.max(0, parsed.confidence)) : 0.8
       };
     } catch (error) {
-      console.warn('[GroqService] checkShortTextAnswer parse hiba:', error.message);
+      console.warn('[AIService] checkShortTextAnswer parse hiba:', error.message);
     }
 
     // Fallback: kulcsszó-kereső algoritmus
@@ -1182,10 +1526,10 @@ Adj JSON választ a következő szerkezetben:
 }`;
 
     try {
-      const raw = await this.generateResponse(prompt, [], { temperature: 0.4, max_tokens: 600 }, true);
+      const raw = await this.generateResponse(prompt, [], { temperature: 0.4, max_tokens: 600 }, false, null, 'QuestionAnalysis', (res) => this._extractJSON(res));
       return this._extractJSON(raw);
     } catch (error) {
-      console.warn('[GroqService] generateQuestionAnalysis parse hiba:', error.message);
+      console.warn('[AIService] generateQuestionAnalysis parse hiba:', error.message);
       return {
         explanation: 'A helyes válasz: ' + correctAnswerStr,
         whyWrong: isCorrect ? null : 'A megadott válasz nem egyezik a helyes megoldással.',
@@ -1392,7 +1736,7 @@ Adj JSON választ a következő szerkezetben:
 
         const validation = this._validateQuestion(q);
         if (!validation.valid) {
-          console.warn(`[GroqService] Kidobott hibás ${type} kérdés: ${validation.reasons.join(', ')}`);
+          console.warn(`[AIService] Kidobott hibás ${type} kérdés: ${validation.reasons.join(', ')}`);
           continue;
         }
 
@@ -1440,8 +1784,22 @@ Adj JSON választ a következő szerkezetben:
 
       if (questionType === 'mcq') {
         if (options.length > 4) options = options.slice(0, 4);
-        if (options.length === 4 && !options.map(String).includes(String(correctAnswer))) {
-          correctAnswer = options[0];
+        const normStr = s => String(s ?? '').toLowerCase().trim().replace(/\s+/g, ' ');
+        const normCA = normStr(correctAnswer);
+        const matchIdx = options.findIndex(o => normStr(o) === normCA);
+        if (matchIdx !== -1) {
+          // Igazítjuk a correctAnswer-t az opció pontos szövegéhez (whitespace/case drift javítás)
+          correctAnswer = options[matchIdx];
+        } else {
+          // correctAnswer nincs az opciók között: beillesszük, az utolsó opciót lecseréljük
+          const fallback = (correctAnswer != null && String(correctAnswer).trim())
+            ? String(correctAnswer)
+            : 'Helyes válasz';
+          while (options.length < 4) options.push('—');
+          options[options.length - 1] = fallback;
+          correctAnswer = fallback; // a tárolt correctAnswer egyezzen a beilleszetett opcióval
+          options = this._shuffle(options);
+          console.warn(`[AIService] MCQ q${idx + 1}: correctAnswer nem volt az options közt – pótolva`);
         }
       }
 
@@ -1480,13 +1838,13 @@ Adj JSON választ a következő szerkezetben:
           options.some(opt => leftValues.includes(String(opt)));
         if (hasLeftInOptions) {
           options = this._shuffle(rightValues);
-          console.warn(`[GroqService] Matching q${idx + 1}: options javítva (bal=jobb hiba)`);
+          console.warn(`[AIService] Matching q${idx + 1}: options javítva (bal=jobb hiba)`);
         }
         // Ha a kérdésszöveg felsorolja a bal oldali fogalmakat, cseréljük általánosabb szövegre
         const leftInText = leftValues.filter(lv => lv.length > 2 && questionText.includes(lv));
         if (leftInText.length >= Math.floor(leftValues.length * 0.5)) {
           questionText = 'Párosítsd a fogalmakat a megfelelő definícióikkal:';
-          console.warn(`[GroqService] Matching q${idx + 1}: kérdésszöveg generikusra cserélve (bal fogalmakat listázta)`);
+          console.warn(`[AIService] Matching q${idx + 1}: kérdésszöveg generikusra cserélve (bal fogalmakat listázta)`);
         }
         // correctAnswer: minden kulcshoz biztosan van érték
         const needsAnswerRepair = typeof correctAnswer !== 'object' || Array.isArray(correctAnswer) || correctAnswer === null ||
@@ -1508,7 +1866,7 @@ Adj JSON választ a következő szerkezetben:
           } else {
             correctAnswer = [];
           }
-          console.warn(`[GroqService] Ordering q${idx + 1}: correctAnswer tömbbé alakítva`);
+          console.warn(`[AIService] Ordering q${idx + 1}: correctAnswer tömbbé alakítva`);
         }
         if ((!Array.isArray(items) || items.length === 0) && Array.isArray(correctAnswer) && correctAnswer.length > 0) {
           items = this._shuffle(correctAnswer);
@@ -1521,7 +1879,7 @@ Adj JSON választ a következő szerkezetben:
             if (items.every((it, i) => String(it) === String(correctAnswer[i])) && items.length > 1) {
               items = [items[1], ...items.slice(2), items[0]];
             }
-            console.warn(`[GroqService] Ordering q${idx + 1}: items megkeverve (helyes sorrend volt)`);
+            console.warn(`[AIService] Ordering q${idx + 1}: items megkeverve (helyes sorrend volt)`);
           }
           const itemsInText = items.filter(it => String(it).length > 2 && questionText.includes(String(it)));
           if (itemsInText.length >= Math.floor(items.length * 0.5)) {
@@ -1529,7 +1887,7 @@ Adj JSON választ a következő szerkezetben:
             questionText = directionHint
               ? `Rendezd ${directionHint.toLowerCase()} sorrendbe az elemeket:`
               : 'Rendezd sorba az elemeket a helyes sorrendnek megfelelően:';
-            console.warn(`[GroqService] Ordering q${idx + 1}: kérdésszöveg generikusra cserélve`);
+            console.warn(`[AIService] Ordering q${idx + 1}: kérdésszöveg generikusra cserélve`);
           }
         }
       }
@@ -1552,12 +1910,19 @@ Adj JSON választ a következő szerkezetben:
         { topic: 'Geometriai alakzatok és területszámítás', difficulty: 3, reason: 'Térben való gondolkodás fejlesztése', learningObjective: 'Kiszámítja síkidomok területét és kerületét' },
         { topic: 'Szöveges feladatok megoldása', difficulty: 4, reason: 'Alkalmazás valós helyzetekben', learningObjective: 'Több lépéses szöveges feladatokat old meg logikusan' }
       ],
-      'Magyar': [
-        { topic: 'Szófajok és mondatrészek felismerése', difficulty: 1, reason: 'Alaptudás ellenőrzése', learningObjective: 'Biztosan felismeri az alapvető szófajokat' },
+      'Nyelvtan': [
+        { topic: 'Szófajok felismerése', difficulty: 1, reason: 'Alaptudás ellenőrzése', learningObjective: 'Biztosan felismeri az alapvető szófajokat' },
         { topic: 'Helyesírás alapszabályai', difficulty: 2, reason: 'Írásban való pontosság', learningObjective: 'Alkalmazza a legfontosabb helyesírási szabályokat' },
-        { topic: 'Mondatelemzés', difficulty: 3, reason: 'Mélyebb grammatikai tudás', learningObjective: 'Teljes mondatokat elemez' },
-        { topic: 'Szövegértés és szövegelemzés', difficulty: 3, reason: 'Olvasott szöveg megértése', learningObjective: 'Szövegből következtetéseket von le' },
-        { topic: 'Fogalmazás és stíluseszközök', difficulty: 4, reason: 'Alkotóképesség fejlesztése', learningObjective: 'Felépített, stílusos szöveget ír' }
+        { topic: 'Mondatelemzés és szószerkezetek', difficulty: 3, reason: 'Mélyebb grammatikai tudás', learningObjective: 'Összetett mondatokat elemez' },
+        { topic: 'Hangtani alapismeretek', difficulty: 3, reason: 'Kiejtés és helyesírás kapcsolata', learningObjective: 'Csoportosítja a hangokat és érti a hangtörvényeket' },
+        { topic: 'Nyelvhelyesség és stílus', difficulty: 4, reason: 'Kifejezőkészség fejlesztése', learningObjective: 'Felépített, helyes mondatokat fogalmaz meg' }
+      ],
+      'Irodalom': [
+        { topic: 'Népköltészet és mesék', difficulty: 1, reason: 'Irodalmi alapok', learningObjective: 'Felismeri a népmesei sajátosságokat' },
+        { topic: 'Szövegértés és olvasás', difficulty: 2, reason: 'Olvasott szöveg feldolgozása', learningObjective: 'Szövegből következtetéseket von le' },
+        { topic: 'Irodalmi műfajok', difficulty: 3, reason: 'Műfaji tájékozottság', learningObjective: 'Megkülönbözteti a líra, epika és dráma műveit' },
+        { topic: 'Verselemzés alapjai', difficulty: 3, reason: 'Esztétikai érzék', learningObjective: 'Felismeri az alapvető stíluseszközöket (hasonlat, metafora)' },
+        { topic: 'Karakterek és cselekmény', difficulty: 4, reason: 'Kritikai szövegelemzés', learningObjective: 'Elemzi az olvasott művek szereplőit és cselekményszálait' }
       ],
       'Angol': [
         { topic: 'Alapvető szókincs és szójelentések', difficulty: 1, reason: 'Szókincs bővítése', learningObjective: 'Ismeri és helyesen használja az alapvető szavakat' },
@@ -1592,4 +1957,4 @@ Adj JSON választ a következő szerkezetben:
   }
 }
 
-module.exports = new GroqService();
+module.exports = new AIService();
