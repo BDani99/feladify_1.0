@@ -1,9 +1,9 @@
 {
   "month": "2026-05",
-  "callCount": 71,
-  "totalCostUSD": 0.03376598800000001,
-  "totalInputTokens": 84237,
-  "totalOutputTokens": 62069,
+  "callCount": 91,
+  "totalCostUSD": 0.049816448000000006,
+  "totalInputTokens": 95824,
+  "totalOutputTokens": 66488,
   "totalCacheHitTokens": 18560,
   "byModel": {
     "deepseek-chat": {
@@ -14,10 +14,10 @@
       "cacheHitTokens": 18304
     },
     "deepseek-reasoner": {
-      "calls": 11,
-      "costUSD": 0.0070999768,
-      "inputTokens": 5005,
-      "outputTokens": 2049,
+      "calls": 31,
+      "costUSD": 0.023150436800000004,
+      "inputTokens": 16592,
+      "outputTokens": 6468,
       "cacheHitTokens": 256
     },
     "qwen-plus": {
@@ -37,10 +37,10 @@
   },
   "byChain": {
     "reasoning": {
-      "calls": 16,
-      "costUSD": 0.0088991768,
-      "inputTokens": 7151,
-      "outputTokens": 2833,
+      "calls": 36,
+      "costUSD": 0.024949636799999998,
+      "inputTokens": 18738,
+      "outputTokens": 7252,
       "cacheHitTokens": 256
     },
     "fast": {
@@ -74,10 +74,10 @@
       "cacheHitTokens": 256
     },
     "StreamChat": {
-      "calls": 1,
-      "costUSD": 0.00059089,
-      "inputTokens": 931,
-      "outputTokens": 36,
+      "calls": 21,
+      "costUSD": 0.01664135,
+      "inputTokens": 12518,
+      "outputTokens": 4455,
       "cacheHitTokens": 0
     },
     "DiagOutline": {

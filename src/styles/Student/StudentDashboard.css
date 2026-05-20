@@ -1,6 +1,219 @@
 /* Student dashboard shares the same layout system as TeacherDashboard */
 /* All .dashboard-container, .dash-* classes are defined here self-contained */
 
+/* Header badges */
+.dash-header-badges {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.dash-streak-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: rgba(249, 115, 22, 0.12);
+    color: #f97316;
+    border-radius: var(--radius-pill);
+    font-size: 0.88rem;
+    font-weight: 700;
+    border: 1px solid rgba(249, 115, 22, 0.25);
+}
+
+.dash-xp-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: rgba(139, 92, 246, 0.12);
+    color: #8b5cf6;
+    border-radius: var(--radius-pill);
+    font-size: 0.88rem;
+    font-weight: 700;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+}
+
+/* See-all link */
+.dash-see-all-link {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+.dash-see-all-link:hover { opacity: 1; }
+
+.dash-see-all-link-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+.dash-see-all-link-btn:hover { opacity: 1; }
+
+/* Score bar */
+.dash-score-bar-track {
+    height: 5px;
+    background: var(--border-color);
+    border-radius: 3px;
+    overflow: hidden;
+    flex: 1;
+    min-width: 60px;
+    margin-top: 4px;
+}
+.dash-score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Subject grid */
+.dash-subjects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 10px;
+}
+
+.dash-subject-card {
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: all 0.2s ease;
+}
+.dash-subject-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.dash-subject-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.dash-subject-emoji {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+.dash-subject-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+.dash-subject-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+.dash-subject-level {
+    font-size: 0.75rem;
+    color: var(--color-text-dim);
+}
+.dash-subject-score {
+    font-size: 1rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.dash-subject-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.dash-subject-pct-label {
+    font-size: 0.72rem;
+    color: var(--color-text-dim);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.dash-subject-diag {
+    font-size: 0.78rem;
+    color: var(--color-text-dim);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Toggle button */
+.dash-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-dim);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.2s;
+}
+.dash-toggle-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Insight rows (strengths/weaknesses) */
+.dash-insight-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.dash-insight-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+}
+.dash-insight-emoji {
+    font-size: 1.2rem;
+}
+.dash-insight-label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+.dash-insight-score {
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.dash-insight-row .dash-score-bar-track {
+    min-width: 80px;
+}
+
+/* Pending sub-label */
+.dash-pending-sub {
+    font-size: 0.72rem;
+    color: var(--color-text-dim);
+    margin-top: 2px;
+}
+
 .dashboard-container {
     max-width: 1200px;
     margin: 0 auto;

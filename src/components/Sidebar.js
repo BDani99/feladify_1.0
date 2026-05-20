@@ -84,8 +84,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, userRole }) => {
                 {userRole === 'student' && (
                     <>
                         <li className="new-chat-li">
-                            <button className={`new-chat-btn${isActiveLink('/ai-mentor') ? ' active' : ''}`} onClick={() => handleNavigation('/ai-mentor')}>
-                                <FaGraduationCap /> AI Mentor
+                            <button className={`new-chat-btn${isActiveLink('/ai-tanar') ? ' active' : ''}`} onClick={() => handleNavigation('/ai-tanar')}>
+                                <FaGraduationCap /> AI Tanár
                             </button>
                         </li>
                         <li>

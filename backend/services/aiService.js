@@ -103,8 +103,8 @@ class AIService {
     this.qwenKey = process.env.QWEN_API_KEY || 'sk-c5f4512e4eaa4d499397c7c4b627fb95';
 
     this.reasoningChain = [
-      { model: 'dpv4pro', provider: 'deepseek' },
       { model: 'qwen-3.5-plus', provider: 'qwen' },
+      { model: 'dpv4pro', provider: 'deepseek' },
     ];
     this.fastChain = [
       { model: 'v4flash', provider: 'deepseek' },
@@ -166,8 +166,8 @@ class AIService {
     if (model === 'v4flash' || model === 'deepseek-chat') {
       return ['v4flash', 'qwen-3.5-flash'];
     }
-    if (model.includes('plus') || model.includes('reasoner')) {
-      return [modelName, 'qwen-3.5-plus'];
+    if (model.includes('plus') || model.includes('qwen')) {
+      return [modelName, 'dpv4pro'];
     }
     if (model.includes('flash') || model.includes('chat') || model.includes('turbo')) {
       return [modelName, 'qwen-3.5-flash'];

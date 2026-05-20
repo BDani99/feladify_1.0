@@ -168,7 +168,7 @@ const CheckpointPractice = () => {
           addBotMessage(incorrectMsg);
         }
       } else if (res.status === 503) {
-        addBotMessage('⚠️ Az AI mentor jelenleg nem elérhető. Kérjük, próbáld újra később!');
+        addBotMessage('⚠️ Az AI tanár jelenleg nem elérhető. Kérjük, próbáld újra később!');
       } else {
         addBotMessage('⚠️ Hiba az ellenőrzéskor. Próbáld újra!');
       }
@@ -285,7 +285,7 @@ const CheckpointPractice = () => {
         const data = await res.json();
         addBotMessage(data.hint || 'Próbáld meg más megközelítésből!');
       } else if (res.status === 503) {
-        addBotMessage('⚠️ Az AI mentor jelenleg nem elérhető. Próbáld meg később!');
+        addBotMessage('⚠️ Az AI tanár jelenleg nem elérhető. Próbáld meg később!');
       } else {
         addBotMessage('Hiba történt. Próbáld újra!');
       }
@@ -557,7 +557,7 @@ const CheckpointPractice = () => {
             </div>
           </div>
 
-          {/* Jobb oldal – AI Mentor chat */}
+          {/* Jobb oldal – AI Tanár chat */}
           <div className={`practice-right ${isChatOpen ? 'open' : 'closed'}`}>
             <div className="chat-header" onClick={() => setIsChatOpen(!isChatOpen)} style={{ cursor: 'pointer' }}>
               <h4>🤖 AI Tanár <span className="chat-question-badge">{currentIndex + 1}. kérdés</span></h4>

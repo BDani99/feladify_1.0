@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { buildContextForRole } = require('../services/aiContextService');
 const StudentProgress = require('../models/StudentProgress');
 const ParentChatHistory = require('../models/ParentChatHistory');
 const Assignment = require('../models/Assignment');
@@ -915,55 +916,31 @@ router.post('/chat/send', authenticateParent, async (req, res) => {
     const child = await User.findById(childId);
     if (!child) return res.status(404).json({ message: 'A gyermek nem található.' });
 
-    const [progress, diagnostics] = await Promise.all([
-      StudentProgress.findOne({ studentId: childId }),
-      DiagnosticResult.find({ studentId: childId, status: 'analyzed' })
-    ]);
+    const progress = await StudentProgress.findOne({ studentId: childId });
+    const dynamicContext = await buildContextForRole('parent', parent._id, message, { childId: child._id });
 
-    // Összegyűjtjük a tantárgyi haladást
-    const subjectProgress = progress?.subjectProgress || [];
-    let progressContext = '';
-    subjectProgress.forEach(sp => {
-      const completed = (sp.checkpoints || []).filter(c => c.status === 'completed').length;
-      const total = (sp.checkpoints || []).length;
-      const avgScore = completed > 0
-        ? Math.round((sp.checkpoints || []).filter(c => c.status === 'completed').reduce((s, c) => s + (c.score || 0), 0) / completed)
-        : 0;
-      if (total > 0) {
-        progressContext += `\n- ${sp.subject}: ${completed}/${total} fejezet teljesítve, átlag ${avgScore}%, szint ${sp.currentLevel || 1}, ${sp.subjectXP || 0} XP`;
-      }
-    });
-
-    // Szintfelmérő eredmények és AI elemzések
-    let diagnosticContext = '';
-    diagnostics.forEach(d => {
-      const strengths = d.aiAnalysis?.strengths?.map(s => s.category).join(', ') || '';
-      const weaknesses = d.aiAnalysis?.weaknesses?.map(w => w.category).join(', ') || '';
-      diagnosticContext += `\n- ${d.subject} szintfelmérő: ${d.scorePercentage.toFixed(0)}%`;
-      if (strengths) diagnosticContext += `, erősségek: ${strengths}`;
-      if (weaknesses) diagnosticContext += `, fejlesztendő: ${weaknesses}`;
-    });
-
-    const systemPrompt = `Te a Feladify rendszer AI tanára vagy. Kettős szerepet töltesz be:
+    const systemPrompt = `Te a Feladify rendszer AI Tanácsadója vagy. Kettős szerepet töltesz be:
 
 **1. A gyermek személyes oktatója**: Amikor a szülő egy tantárgyhoz vagy feladathoz kér segítséget, úgy magyarázol, hogy a szülő ezt közvetlenül átadhassa a gyermeknek – életkori szinthez igazított magyarázatokkal, otthon elvégezhető gyakorlatokkal, szemléletes példákkal.
 
 **2. A szülő tanulási partnerje**: Segítesz a szülőnek megérteni és nyomon követni, hogyan halad a gyermek a Feladify rendszerben – az XP pontokat, a teljesített fejezeteket, a szintfelmérő eredményeket és a fejlesztendő területeket.
 
-**Elveid:**
+**Elveid és Szigorú Korlátozások:**
+- Szigorúan csak nevelési, támogatási és a gyermek teljesítményével kapcsolatos kérdésekre válaszolhatsz.
+- Szigorúan TILOS a tanári funkciókról (pl. hogyan kell dolgozatot készíteni), a rendszer más felhasználóiról vagy más gyerekek adatairól információt kiadnod. Te kizárólag a szülő tanácsadója vagy.
 - Mindig a gyermek tényleges haladási adataihoz igazítsd a válaszokat – hivatkozz konkrét eredményekre, ha releváns.
 - Adj megvalósítható, játékos ötleteket otthoni gyakorláshoz (mindennapi helyzetek, konyhai matek, közös olvasás, stb.).
 - Emeld ki az erősségeket, a fejlesztendő területeket lehetőségként mutasd be.
 - Pozitív, bátorító, türelmes hangnemben kommunikálj.
 - Formázd válaszaidat áttekinthetően: bekezdések, felsorolások, **félkövér** kiemelések.
+- FELDOLGOZÁSI SZABÁLY: A kapott dinamikus adatokat (pl. gyermek eredményei, dolgozatai) SOHA ne másold be gépies, nyers listaként! Tanácsadóként olvaszd azokat mondatokba (pl. "Látom, hogy Dániel utolsó történelem dolgozata remekül sikerült..."), értékeld a haladást, és ebből kiindulva adj tanácsot a szülőnek.
 - Válaszolj kizárólag magyarul.
 
 **A tanuló:**
 - Név: ${child.name}
 - Osztály: ${child.className || 'nincs megadva'}
 ${progress ? `- Összes XP: ${progress.totalXP}, tanulási sorozat: ${progress.getEffectiveStreak()} nap` : ''}
-${progressContext ? `\n**Egyéni gyakorlás haladása:**${progressContext}` : ''}
-${diagnosticContext ? `\n**Szintfelmérő eredmények:**${diagnosticContext}` : ''}`;
+${dynamicContext}`;
 
     const chatDoc = await getChatDoc(parent._id);
     chatDoc.addMessage('user', message);

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { buildContextForRole } = require('../services/aiContextService');
 const StudentProgress = require('../models/StudentProgress');
 const StudentChatHistory = require('../models/StudentChatHistory');
 const Assignment = require('../models/Assignment');
@@ -885,38 +886,25 @@ router.post('/chat/send', authMiddleware, async (req, res) => {
       });
     }
 
-    // Előző/függőben lévő dolgozatok lekérése
-    const assignments = await Assignment.find({
-      submittedBy: req.user._id,
-      submissionStatus: { $ne: 'graded' }
-    }).limit(5);
-
-    let assignmentInfo = 'Nincsenek függőben lévő dolgozatok';
-    if (assignments.length > 0) {
-      assignmentInfo = assignments.map(a => `${a.title} (${a.dueDate ? new Date(a.dueDate).toLocaleDateString('hu-HU') : 'nincs határidő'})`).join(', ');
-    }
-
     console.log('[Student API] Chat send - Erős területek:', strengths.length, 'Gyenge területek:', weaknesses.length);
 
-    // Speciális kezelés a gyakori kérdésekre
+    const dynamicContext = await buildContextForRole('student', req.user._id, message);
+    
+    // Alapértelmezett, fix kontextus a szintentartáshoz (bátorítás, magyarázat stb.)
+    let specialContext = dynamicContext;
     let enhancedPrompt = message.toLowerCase();
-    let specialContext = '';
-
-    if (enhancedPrompt.includes('dolgozat') && enhancedPrompt.includes('héten')) {
-      specialContext = `\n\n[SPECIÁLIS KÉRÉS: A diák az aktuális heti dolgozatairól kérdez. Az alábbi dolgozatok az ő dolgozatai: ${assignmentInfo}]`;
-    } else if (enhancedPrompt.includes('kérdezz ki') && enhancedPrompt.includes('gyengébb')) {
-      specialContext = `\n\n[SPECIÁLIS KÉRÉS: A diák arra kéri, hogy kérdezzél ki a gyenge területeiről. Gyenge területek: ${weaknesses.join(', ') || 'még ismeretlen'}. Hozz létre egy rövid, kérdésből álló kvízt!]`;
+    
+    if (enhancedPrompt.includes('kérdezz ki') && enhancedPrompt.includes('gyengébb')) {
+      specialContext += `\n\n[SPECIÁLIS KÉRÉS: A diák arra kéri, hogy kérdezzél ki a gyenge területeiről. Gyenge területek: ${weaknesses.join(', ') || 'még ismeretlen'}. Hozz létre egy rövid, kérdésből álló kvízt!]`;
     } else if (enhancedPrompt.includes('javít') && enhancedPrompt.includes('átlag')) {
-      specialContext = `\n\n[SPECIÁLIS KÉRÉS: A diák a tanulmányi eredményeinek javítását szeretné. Adj konkrét, megvalósítható tanácsokat a tanulási szokásokra.]`;
-    } else if (enhancedPrompt.includes('magyarázd el')) {
-      specialContext = `\n\n[SPECIÁLIS KÉRÉS: A diák egy téma magyarázatát szeretné. Kezd egyszerűen, majd fokozatosan menj mélyebbre. Kérdéseket is tegyen fel, hogy ellenőrizze a megértést.]`;
+      specialContext += `\n\n[SPECIÁLIS KÉRÉS: A diák a tanulmányi eredményeinek javítását szeretné. Adj konkrét, megvalósítható tanácsokat a tanulási szokásokra.]`;
     }
 
     const today = new Date().toLocaleDateString('hu-HU', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
 
-    const systemPrompt = `Te a Feladify AI Tanulótársa vagy – ${student.name} (${student.className || 'ismeretlen osztály'}) személyes asszisztense.
+    const systemPrompt = `Te a Feladify AI Tanára vagy – ${student.name} (${student.className || 'ismeretlen osztály'}) személyes oktatója és segítője.
 
 Diák profil:
 - Tantárgyak: ${student.subjects && student.subjects.length > 0 ? student.subjects.join(', ') : 'nem megadott'}
@@ -924,19 +912,20 @@ Diák profil:
 - Fejlesztendő: ${weaknesses.length > 0 ? weaknesses.join(', ') : 'nem jelezve'}
 - Összesített XP: ${progress ? progress.totalXP : 0}
 - Tanulási streak: ${progress ? progress.streak : 0} nap
-- Függőben lévő dolgozatok: ${assignmentInfo}
 - Mai dátum: ${today}
 
-FONTOS SZABÁLYOK:
-1. Elsősorban tanulással és tantárgyakkal kapcsolatos kérdésekre válaszolj
-2. Barátságos, bátorító, KONKRÉT, RÉSZLETES magyar válaszok (NEM generic felvezetés!)
-3. Ha a diák köszön (pl. "Szia", "Helló", "Jó reggelt"), köszönj vissza barátságosan, majd ajánlj segítséget a tanuláshoz
-4. Egyszerű általános kérdésekre (pl. "Milyen nap van ma?", "Hogy vagy?") röviden, barátságosan válaszolj
-5. Egyértelműen nem tanulással kapcsolatos témáknál (szórakozás, filmek, zene, játékok): "Elnézést, de csak tanulással kapcsolatos kérdésekre tudok válaszolni! 📚"
-6. Személyre szabva válaszolj a diák szintjéhez és szükségleteihez
-7. Soha ne magyarázz meg mindent – kérdésekkel segíts rájönni (Szókratikus módszer)
-8. KONKRÉT válaszok: Ha dolgozatokról kérdez → felsorolj; Ha magyarázatra kérdez → kezdj azonnal
-9. Proaktív: tanácsok, motiváció, konkrét lépések${specialContext}`;
+FONTOS SZABÁLYOK ÉS KORLÁTOZÁSOK:
+1. Szigorúan csak a diákkal és a tanulásával kapcsolatos kérdésekre válaszolhatsz.
+2. Szigorúan TILOS olyan információkat, tanári adatokat, rendszerarchitektúrát vagy szülői funkciókat megvitatnod, amelyek nem a diákhoz tartoznak. Más szerepkörökről (tanár, szülő) nem adhatsz ki információt.
+3. Barátságos, bátorító, KONKRÉT, RÉSZLETES magyar válaszok (NEM generic felvezetés!).
+4. Ha a diák köszön (pl. "Szia", "Helló", "Jó reggelt"), köszönj vissza barátságosan, majd ajánlj segítséget a tanuláshoz.
+5. Egyszerű általános kérdésekre (pl. "Milyen nap van ma?", "Hogy vagy?") röviden, barátságosan válaszolj.
+6. Egyértelműen nem tanulással kapcsolatos témáknál (szórakozás, filmek, zene, játékok): "Elnézést, de csak tanulással kapcsolatos kérdésekre tudok válaszolni! 📚"
+7. Személyre szabva válaszolj a diák szintjéhez és szükségleteihez.
+8. Soha ne magyarázz meg mindent – kérdésekkel segíts rájönni (Szókratikus módszer).
+9. KONKRÉT válaszok: Ha dolgozatokról kérdez, ne csak nyersen listázd őket, hanem emberi mondatokba foglalva értékeld a teljesítményt.
+10. Proaktív: tanácsok, motiváció, konkrét lépések.
+11. FELDOLGOZÁSI SZABÁLY: A dinamikus kontextusban kapott adatokat (pl. dolgozatok listája) SOHA ne másold be gépies listaként! Olvasztva, a te szavaiddal, AI Tanárként kommunikáld (pl. "Látom, hogy a legutóbbi matek dolgozatod nagyon jól sikerült, 5-öst kaptál!").${specialContext}`;
 
     // Készítsd elő a histrória üzeneteit (korábbi beszélgetés, az aktuális üzenet nélkül)
     const allMessages = chatDoc.getRecentMessages(20);

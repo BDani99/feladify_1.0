@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken'); // Importáljuk a JWT-t a token kezeléséhez
 const Assignment = require('../models/Assignment');
 const User = require('../models/User');
+const { buildContextForRole } = require('../services/aiContextService');
 const Class = require('../models/Class');
 const { generateText, generateChat, generateChatWithHistory } = require('../services/ai');
 const aiService = require('../services/aiService');
@@ -1254,12 +1255,14 @@ ${classLines}
 ${assignmentLines}
 === VÉGE ===
 
-Szabályok:
-1. A fenti adatok PONTOS TÉNYEK a rendszerből. Fogadd el őket igazként és válaszolj belőlük magabiztosan.
-2. Ne mondd azt, hogy "nem tudom pontosan" vagy "sajnos nincs információ" ha az adat szerepel fent.
-3. Ha valóban nincs adat (pl. üres lista), akkor és csak akkor jelezd.
-4. Ne adj általános tudásbázis-választ, csak a fenti adatokra alapozz.
-5. Rövid, lényegre törő válaszokat adj.`;
+Szabályok és Szigorú Korlátozások:
+1. Szigorúan csak tanítási, értékelési és diák-teljesítmény elemzési kérdésekre válaszolhatsz.
+2. Szigorúan TILOS a rendszer szülői funkcióiról, a diákok személyes, nem tanulmányi jellegű vagy a platform más felhasználóinak adatairól beszélned. Más felhasználói szerepkörökről és jogaikról nem adhatsz információt.
+3. A fenti adatok PONTOS TÉNYEK a rendszerből. Fogadd el őket igazként és válaszolj belőlük magabiztosan.
+4. Ne mondd azt, hogy "nem tudom pontosan" vagy "sajnos nincs információ" ha az adat szerepel fent.
+5. Ha valóban nincs adat (pl. üres lista), akkor és csak akkor jelezd.
+6. Ne adj általános tudásbázis-választ, csak a fenti adatokra alapozz.
+7. Rövid, lényegre törő válaszokat adj.`;
 
     const responseText = await generateChat(systemPrompt, userMessage);
     res.status(200).json({ message: responseText });
@@ -1303,50 +1306,24 @@ router.post('/teacher/chat/send', authenticateTeacher, async (req, res) => {
     const teacherId = req.userId;
     const userObjectId = new mongoose.Types.ObjectId(teacherId);
 
-    const [teacherAssignments, teacherClasses, teacherUser] = await Promise.all([
-      Assignment.find({ teacherId: userObjectId }).lean(),
-      Class.find({ teacherIds: userObjectId }).populate('studentIds', 'name className assignments').lean(),
-      User.findById(userObjectId).select('-password').lean(),
-    ]);
+    const teacherUser = await User.findById(userObjectId).select('-password').lean();
+    const dynamicContext = await buildContextForRole('teacher', teacherId, message);
 
-    const classLines = teacherClasses.length > 0
-      ? teacherClasses.map(c => {
-          const students = c.studentIds || [];
-          const studentDetails = students.map(s => {
-            const completedCount = (s.assignments || []).length;
-            const totalAchieved = (s.assignments || []).reduce((sum, a) => sum + (a.achievedPoints || 0), 0);
-            return `    • ${s.name}: ${completedCount} megírt dolgozat, összesen ${totalAchieved} pont`;
-          });
-          return `  - ${c.name} (${students.length} diák)${studentDetails.length > 0 ? ':\n' + studentDetails.join('\n') : ''}`;
-        }).join('\n')
-      : '  Nincs hozzárendelt osztály.';
+    const systemPrompt = `Te a Feladify AI Asszisztense vagy – ${teacherUser ? teacherUser.name : 'ismeretlen'} személyes, proaktív és intelligens segítőtársa.
 
-    const assignmentLines = teacherAssignments.length > 0
-      ? teacherAssignments.map(a => {
-          const studentCount = (a.studentIds || []).length;
-          return `  - "${a.title}" | tantárgy: ${a.subject} | nehézség: ${a.difficulty} | teljesítette: ${a.completedCount || 0}/${studentCount} diák | max pont: ${a.totalPoints}`;
-        }).join('\n')
-      : '  Még nem hozott létre dolgozatot.';
+Tanár profil:
+- Tantárgyak: ${(teacherUser?.subjects || []).join(', ') || 'nincs megadva'}
+${dynamicContext}
 
-    const systemPrompt = `Te a Feladify általános iskolai oktatási platform asszisztense vagy. Magyarul, magabiztosan és tömören válaszolj. A felhasználó egy tanár.
-
-=== A TANÁR ADATAI (ezek tények, nem kell hozzájuk kétség) ===
-Neve: ${teacherUser ? teacherUser.name : 'ismeretlen'}
-Tantárgyai: ${(teacherUser?.subjects || []).join(', ') || 'nincs megadva'}
-
-=== OSZTÁLYAI (ezekben tanít) ===
-${classLines}
-
-=== DOLGOZATAI ===
-${assignmentLines}
-=== VÉGE ===
-
-Szabályok:
-1. A fenti adatok PONTOS TÉNYEK a rendszerből. Fogadd el őket igazként és válaszolj belőlük magabiztosan.
-2. Ne mondd azt, hogy "nem tudom pontosan" vagy "sajnos nincs információ" ha az adat szerepel fent.
-3. Ha valóban nincs adat (pl. üres lista), akkor és csak akkor jelezd.
-4. Ne adj általános tudásbázis-választ, csak a fenti adatokra alapozz.
-5. Rövid, lényegre törő válaszokat adj.`;
+FONTOS SZABÁLYOK ÉS KORLÁTOZÁSOK:
+1. Szigorúan csak tanítási, értékelési és diák-teljesítmény elemzési kérdésekre válaszolhatsz.
+2. Szigorúan TILOS a rendszer szülői funkcióiról, a diákok személyes adatairól beszélned.
+3. Barátságos, proaktív, KONKRÉT, RÉSZLETES magyar válaszok (NEM generic felvezetés!).
+4. Ha a tanár köszön, köszönj vissza barátságosan, majd kérdezd meg, miben segíthetsz.
+5. Egyszerű kérdésekre röviden és kedvesen válaszolj.
+6. Ne mondd azt, hogy "nem tudom pontosan", ha az adat szerepel a kontextusban. Fogadd el igaznak a kapott adatokat.
+7. Proaktív legyél: adj tanácsokat a diákok motiválására, új feladattípusokra vagy az időbeosztásra.
+8. FELDOLGOZÁSI SZABÁLY: A kapott dinamikus adatokat (pl. osztályok állapota, dolgozatok listája) SOHA ne listázd ki nyersen gépies formátumban! Dolgozd fel azokat olvasztva, a te szavaiddal, AI Asszisztensként (pl. "Látom, hogy az előző 5 dolgozatodból négy irodalom volt..."), emeld ki az összefüggéseket! Csak akkor adj nyers listát, ha a tanár kifejezetten ezt kéri.`;
 
     let chatDoc = await TeacherChatHistory.findOne({ teacherId });
     if (!chatDoc) chatDoc = new TeacherChatHistory({ teacherId });

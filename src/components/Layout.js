@@ -101,7 +101,7 @@ const Layout = ({ onLoginSuccess }) => {
 
                 {user?.role === 'student' && (
                     <>
-                        <Route path="/ai-mentor" element={<StudentWelcome />} />
+                        <Route path="/ai-tanar" element={<StudentWelcome />} />
                         <Route path="/iranyitopult" element={<StudentDashboard />} />
                         <Route path="/szulo-celok" element={<StudentGoals />} />
                         <Route path="/elerheto-dolgozatok" element={<AvailableAssignments />} />

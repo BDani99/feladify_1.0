@@ -13,8 +13,8 @@ const qwenClient = new OpenAI({
 });
 
 const REASONING_CHAIN = [
-  { model: 'dpv4pro', provider: 'deepseek' },
   { model: 'qwen-3.5-plus', provider: 'qwen' },
+  { model: 'dpv4pro', provider: 'deepseek' },
 ];
 
 const FAST_CHAIN = [

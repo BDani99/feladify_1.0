@@ -34,9 +34,9 @@
 
 .diag-layout {
     display: grid;
-    grid-template-columns: 1fr 420px;
-    gap: 40px;
-    margin-top: 40px;
+    grid-template-columns: 1fr 400px;
+    gap: 36px;
+    margin-top: 32px;
     align-items: start;
 }
 
@@ -58,11 +58,11 @@
 }
 
 .diag-title {
-    font-size: 2.8rem;
+    font-size: 2.4rem;
     font-weight: 900;
     color: var(--color-text);
-    letter-spacing: -1px;
-    margin: 0 0 20px 0;
+    letter-spacing: -0.5px;
+    margin: 0 0 16px 0;
     line-height: 1.1;
 }
 
@@ -85,10 +85,13 @@
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-pill);
-    padding: 8px 16px;
-    font-size: 0.9rem;
+    padding: 7px 14px;
+    font-size: 0.85rem;
     font-weight: 700;
     color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .diag-steps {
@@ -128,12 +131,12 @@
 .diag-action-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 24px;
-    padding: 36px 32px;
+    border-radius: 20px;
+    padding: 28px 26px;
     box-shadow: var(--shadow-soft);
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
     position: sticky;
     top: 80px;
 }
@@ -228,7 +231,7 @@
 /* Hero */
 .lc-hero {
     text-align: center;
-    padding: 40px 0 36px;
+    padding: 28px 0 28px;
     position: relative;
 }
 
@@ -283,7 +286,7 @@
 
 .lc-subtitle {
     color: var(--color-text-dim);
-    font-size: 1.1rem;
+    font-size: 1rem;
     margin: 0;
 }
 
@@ -427,9 +430,9 @@
 /* Következő szint panel */
 .lc-next {
     background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(59,130,246,0.05));
-    border: 1.5px solid rgba(16,185,129,0.3);
-    border-radius: 20px;
-    padding: 32px;
+    border: 1.5px solid rgba(16,185,129,0.25);
+    border-radius: 18px;
+    padding: 26px;
 }
 
 .lc-next-label {
