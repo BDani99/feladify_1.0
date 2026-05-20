@@ -6,7 +6,37 @@ import LoadingSpinner from '../../components/LoadingSpinner';
 import { FaArrowLeft, FaBook, FaTrophy, FaStar, FaChevronDown, FaChevronUp, FaCheck, FaLock } from 'react-icons/fa';
 import '../../styles/Student/PracticeHub.css';
 
-const GRADE_OPTIONS = ['1. osztály','2. osztály','3. osztály','4. osztály','5. osztály','6. osztály','7. osztály','8. osztály'];
+const ALL_GRADE_OPTIONS = ['1. osztály','2. osztály','3. osztály','4. osztály','5. osztály','6. osztály','7. osztály','8. osztály'];
+
+// Tantárgyak, amelyek 7. osztálytól elérhetők
+const UPPER_GRADE_SUBJECTS = ['Fizika', 'Biológia', 'Földrajz'];
+// Tantárgyak, amelyek csak 5-6. osztályig elérhetők
+const LOWER_GRADE_SUBJECTS = ['Környezetismeret'];
+
+const getGradeOptions = (subject) => {
+  if (UPPER_GRADE_SUBJECTS.includes(subject)) {
+    return ['7. osztály', '8. osztály'];
+  }
+  if (LOWER_GRADE_SUBJECTS.includes(subject)) {
+    return ['5. osztály', '6. osztály'];
+  }
+  return ALL_GRADE_OPTIONS;
+};
+
+const getDefaultGrade = (subject, userClassName) => {
+  if (UPPER_GRADE_SUBJECTS.includes(subject)) {
+    // Ha a diák osztályfoka 7 alatti, automatikusan 7. osztály lesz
+    const gradeNum = parseInt((userClassName || '').match(/^(\d+)/)?.[1] || '0', 10);
+    if (gradeNum >= 7) return userClassName;
+    return '7. osztály';
+  }
+  if (LOWER_GRADE_SUBJECTS.includes(subject)) {
+    const gradeNum = parseInt((userClassName || '').match(/^(\d+)/)?.[1] || '0', 10);
+    if (gradeNum <= 6 && gradeNum >= 5) return userClassName;
+    return '6. osztály';
+  }
+  return userClassName || '4. osztály';
+};
 
 const PracticeHub = () => {
   const { subject } = useParams();
@@ -20,11 +50,13 @@ const PracticeHub = () => {
   const [totalXP, setTotalXP] = useState(0);
   const [loading, setLoading] = useState(true);
   const [startingDiagnostic, setStartingDiagnostic] = useState(false);
-  const [selectedGrade, setSelectedGrade] = useState(user?.className || '4. osztály');
+  const [selectedGrade, setSelectedGrade] = useState(() => getDefaultGrade(subject, user?.className));
   const [chaptersOpen, setChaptersOpen] = useState(false);
   const [natTopics, setNatTopics] = useState([]);
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [loadingTopics, setLoadingTopics] = useState(false);
+
+  const gradeOptions = getGradeOptions(subject);
 
   useEffect(() => { fetchSubjectStatus(); }, [subject]);
 
@@ -295,7 +327,7 @@ const PracticeHub = () => {
                   value={selectedGrade}
                   onChange={e => setSelectedGrade(e.target.value)}
                 >
-                  {GRADE_OPTIONS.map(g => <option key={g}>{g}</option>)}
+                  {gradeOptions.map(g => <option key={g}>{g}</option>)}
                 </select>
               </div>
 
@@ -367,8 +399,14 @@ const PracticeHub = () => {
                   value={selectedGrade}
                   onChange={e => setSelectedGrade(e.target.value)}
                 >
-                  {GRADE_OPTIONS.map(g => <option key={g}>{g}</option>)}
+                  {gradeOptions.map(g => <option key={g}>{g}</option>)}
                 </select>
+                {UPPER_GRADE_SUBJECTS.includes(subject) && (
+                  <span className="grade-selector-hint">📚 Ez a tantárgy 7-8. osztályosoknak szól</span>
+                )}
+                {LOWER_GRADE_SUBJECTS.includes(subject) && (
+                  <span className="grade-selector-hint">📚 Környezetismeret 5-6. osztályosoknak</span>
+                )}
               </div>
 
               {renderTopicSelector()}

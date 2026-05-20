@@ -151,7 +151,7 @@ router.get('/progress', authMiddleware, async (req, res) => {
     }
 
     // Biztosítjuk, hogy minden tantárgy létezik
-    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Környezetismeret', 'Történelem'];
+    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Környezetismeret', 'Történelem', 'Fizika', 'Biológia', 'Földrajz'];
     for (const subject of validSubjects) {
       if (!progress.subjectProgress.find(sp => sp.subject === subject)) {
         progress.subjectProgress.push({
@@ -180,7 +180,7 @@ router.get('/progress', authMiddleware, async (req, res) => {
 router.get('/progress/:subject', authMiddleware, async (req, res) => {
   try {
     const { subject } = req.params;
-    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Környezetismeret', 'Történelem'];
+    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Környezetismeret', 'Történelem', 'Fizika', 'Biológia', 'Földrajz'];
     if (!validSubjects.includes(subject)) {
       return res.status(400).json({ message: 'Érvénytelen tantárgy' });
     }
@@ -344,7 +344,7 @@ router.post('/tutor/question-set', authMiddleware, async (req, res) => {
 router.post('/diagnostic/start', authMiddleware, async (req, res) => {
   try {
     const { subject, grade, selectedTopics } = req.body;
-    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Környezetismeret', 'Történelem'];
+    const validSubjects = ['Matematika', 'Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Környezetismeret', 'Történelem', 'Fizika', 'Biológia', 'Földrajz'];
     if (!subject || !validSubjects.includes(subject)) {
       return res.status(400).json({ message: 'Érvénytelen vagy hiányzó tantárgy' });
     }

@@ -1,16 +1,16 @@
 {
   "month": "2026-05",
-  "callCount": 91,
-  "totalCostUSD": 0.049816448000000006,
-  "totalInputTokens": 95824,
-  "totalOutputTokens": 66488,
+  "callCount": 93,
+  "totalCostUSD": 0.051106268,
+  "totalInputTokens": 98481,
+  "totalOutputTokens": 69766,
   "totalCacheHitTokens": 18560,
   "byModel": {
     "deepseek-chat": {
-      "calls": 55,
-      "costUSD": 0.024866811200000002,
-      "inputTokens": 77086,
-      "outputTokens": 59236,
+      "calls": 57,
+      "costUSD": 0.026156631200000002,
+      "inputTokens": 79743,
+      "outputTokens": 62514,
       "cacheHitTokens": 18304
     },
     "deepseek-reasoner": {
@@ -44,10 +44,10 @@
       "cacheHitTokens": 256
     },
     "fast": {
-      "calls": 55,
-      "costUSD": 0.024866811200000002,
-      "inputTokens": 77086,
-      "outputTokens": 59236,
+      "calls": 57,
+      "costUSD": 0.026156631200000002,
+      "inputTokens": 79743,
+      "outputTokens": 62514,
       "cacheHitTokens": 18304
     }
   },
@@ -81,17 +81,17 @@
       "cacheHitTokens": 0
     },
     "DiagOutline": {
-      "calls": 2,
-      "costUSD": 0.00049588,
-      "inputTokens": 1484,
-      "outputTokens": 1029,
+      "calls": 3,
+      "costUSD": 0.00075866,
+      "inputTokens": 2515,
+      "outputTokens": 1452,
       "cacheHitTokens": 0
     },
     "DiagQuestions": {
-      "calls": 2,
-      "costUSD": 0.00162904,
-      "inputTokens": 2780,
-      "outputTokens": 4428,
+      "calls": 3,
+      "costUSD": 0.00265608,
+      "inputTokens": 4406,
+      "outputTokens": 7283,
       "cacheHitTokens": 0
     },
     "QuestionAnalysis": {
@@ -118,10 +118,10 @@
       "cacheHitTokens": 1024
     },
     "69f90cec2840e4a89a161a8a": {
-      "calls": 30,
-      "costUSD": 0.019997930400000002,
-      "inputTokens": 57399,
-      "outputTokens": 50938,
+      "calls": 32,
+      "costUSD": 0.021287750400000003,
+      "inputTokens": 60056,
+      "outputTokens": 54216,
       "cacheHitTokens": 16768
     }
   }

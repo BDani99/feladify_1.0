@@ -1310,7 +1310,11 @@ VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
             'Irodalom': ['Népköltészet', 'Műfajok', 'Verselemzés', 'Szövegértés', 'Cselekmény és Karakterek'],
             'Angol': ['Grammar', 'Vocabulary', 'Reading', 'Writing', 'Comprehension', 'Communication'],
             'Német': ['Grammatik', 'Wortschatz', 'Lesen', 'Schreiben', 'Verstehen', 'Kommunikation'],
-            'Környezetismeret': ['Földrajz', 'Biológia', 'Fizika', 'Kémia', 'Társadalomismeret', 'Környezetvédelem']
+            'Környezetismeret': ['Földrajz', 'Biológia', 'Fizika', 'Kémia', 'Társadalomismeret', 'Környezetvédelem'],
+            'Történelem': ['Ős- és ókor', 'Középkor', 'Újkor', 'Legújabb kor', 'Magyar történelem', 'Világtörténelem'],
+            'Fizika': ['Mechanika', 'Hőtan', 'Elektromosság', 'Optika', 'Három halmazállapot', 'Erők és mozgás'],
+            'Biológia': ['Sejtek és szövetek', 'Növények', 'Állatok', 'Emberi test', 'Ökoszisztéma', 'Evolúció'],
+            'Földrajz': ['Magyarország', 'Európa', 'Világrészek', 'Dómborzat és vizek', 'Éghajlat', 'Gazdaságföldrajz']
           };
           const categories = subjectCategories[subject] || ['Általános'];
           const mapped = questions.map((q, idx) => ({
@@ -1341,7 +1345,11 @@ VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
       'Irodalom': ['Népköltészet', 'Műfajok', 'Verselemzés', 'Szövegértés', 'Cselekmény és Karakterek'],
       'Angol': ['Grammar', 'Vocabulary', 'Reading', 'Writing', 'Comprehension', 'Communication'],
       'Német': ['Grammatik', 'Wortschatz', 'Lesen', 'Schreiben', 'Verstehen', 'Kommunikation'],
-      'Környezetismeret': ['Földrajz', 'Biológia', 'Fizika', 'Kémia', 'Társadalomismeret', 'Környezetvédelem']
+      'Környezetismeret': ['Földrajz', 'Biológia', 'Fizika', 'Kémia', 'Társadalomismeret', 'Környezetvédelem'],
+      'Történelem': ['Ős- és ókor', 'Középkor', 'Újkor', 'Legújabb kor', 'Magyar történelem', 'Világtörténelem'],
+      'Fizika': ['Mechanika', 'Hőtan', 'Elektromosság', 'Optika', 'Három halmazállapot', 'Erők és mozgás'],
+      'Biológia': ['Sejtek és szövetek', 'Növények', 'Állatok', 'Emberi test', 'Ökoszisztéma', 'Evolúció'],
+      'Földrajz': ['Magyarország', 'Európa', 'Világrészek', 'Dómborzat és vizek', 'Éghajlat', 'Gazdaságföldrajz']
     };
     const categories = subjectCategories[subject] || ['Általános'];
 
