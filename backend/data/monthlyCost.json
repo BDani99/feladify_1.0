@@ -1,23 +1,23 @@
 {
   "month": "2026-05",
-  "callCount": 93,
-  "totalCostUSD": 0.051106268,
-  "totalInputTokens": 98481,
-  "totalOutputTokens": 69766,
-  "totalCacheHitTokens": 18560,
+  "callCount": 116,
+  "totalCostUSD": 0.06584009880000001,
+  "totalInputTokens": 122425,
+  "totalOutputTokens": 89530,
+  "totalCacheHitTokens": 20096,
   "byModel": {
     "deepseek-chat": {
-      "calls": 57,
-      "costUSD": 0.026156631200000002,
-      "inputTokens": 79743,
-      "outputTokens": 62514,
-      "cacheHitTokens": 18304
+      "calls": 71,
+      "costUSD": 0.033504632,
+      "inputTokens": 98190,
+      "outputTokens": 80286,
+      "cacheHitTokens": 19840
     },
     "deepseek-reasoner": {
-      "calls": 31,
-      "costUSD": 0.023150436800000004,
-      "inputTokens": 16592,
-      "outputTokens": 6468,
+      "calls": 40,
+      "costUSD": 0.030536266800000007,
+      "inputTokens": 22089,
+      "outputTokens": 8460,
       "cacheHitTokens": 256
     },
     "qwen-plus": {
@@ -37,92 +37,99 @@
   },
   "byChain": {
     "reasoning": {
-      "calls": 36,
-      "costUSD": 0.024949636799999998,
-      "inputTokens": 18738,
-      "outputTokens": 7252,
+      "calls": 45,
+      "costUSD": 0.032335466800000004,
+      "inputTokens": 24235,
+      "outputTokens": 9244,
       "cacheHitTokens": 256
     },
     "fast": {
-      "calls": 57,
-      "costUSD": 0.026156631200000002,
-      "inputTokens": 79743,
-      "outputTokens": 62514,
-      "cacheHitTokens": 18304
+      "calls": 71,
+      "costUSD": 0.033504632,
+      "inputTokens": 98190,
+      "outputTokens": 80286,
+      "cacheHitTokens": 19840
     }
   },
   "byCaller": {
     "ExamOutline": {
-      "calls": 16,
-      "costUSD": 0.006766648,
-      "inputTokens": 11748,
-      "outputTokens": 21115,
+      "calls": 19,
+      "costUSD": 0.008060668,
+      "inputTokens": 14091,
+      "outputTokens": 24565,
       "cacheHitTokens": 5760
     },
     "ExamQuestions": {
-      "calls": 16,
-      "costUSD": 0.014042509600000003,
-      "inputTokens": 51881,
-      "outputTokens": 30107,
-      "cacheHitTokens": 12032
+      "calls": 19,
+      "costUSD": 0.016941450400000002,
+      "inputTokens": 61731,
+      "outputTokens": 36288,
+      "cacheHitTokens": 13568
     },
     "CheckAnswer": {
-      "calls": 15,
-      "costUSD": 0.0083082868,
-      "inputTokens": 6220,
-      "outputTokens": 2797,
+      "calls": 19,
+      "costUSD": 0.0101056068,
+      "inputTokens": 7923,
+      "outputTokens": 3190,
       "cacheHitTokens": 256
     },
     "StreamChat": {
-      "calls": 21,
-      "costUSD": 0.01664135,
-      "inputTokens": 12518,
-      "outputTokens": 4455,
+      "calls": 25,
+      "costUSD": 0.021848919999999997,
+      "inputTokens": 16141,
+      "outputTokens": 5923,
       "cacheHitTokens": 0
     },
     "DiagOutline": {
-      "calls": 3,
-      "costUSD": 0.00075866,
-      "inputTokens": 2515,
-      "outputTokens": 1452,
+      "calls": 5,
+      "costUSD": 0.00134134,
+      "inputTokens": 3837,
+      "outputTokens": 2872,
       "cacheHitTokens": 0
     },
     "DiagQuestions": {
-      "calls": 3,
-      "costUSD": 0.00265608,
-      "inputTokens": 4406,
-      "outputTokens": 7283,
+      "calls": 5,
+      "costUSD": 0.004809560000000001,
+      "inputTokens": 7422,
+      "outputTokens": 13466,
       "cacheHitTokens": 0
     },
     "QuestionAnalysis": {
-      "calls": 2,
-      "costUSD": 0.00025718,
-      "inputTokens": 665,
-      "outputTokens": 586,
+      "calls": 3,
+      "costUSD": 0.00038234,
+      "inputTokens": 1073,
+      "outputTokens": 829,
       "cacheHitTokens": 0
     },
     "CheckpointHint": {
-      "calls": 17,
-      "costUSD": 0.0016755536000000002,
-      "inputTokens": 8528,
-      "outputTokens": 1971,
+      "calls": 20,
+      "costUSD": 0.0019692736,
+      "inputTokens": 10036,
+      "outputTokens": 2266,
       "cacheHitTokens": 512
+    },
+    "generateChatWithHistory": {
+      "calls": 1,
+      "costUSD": 0.00038093999999999997,
+      "inputTokens": 171,
+      "outputTokens": 131,
+      "cacheHitTokens": 0
     }
   },
   "byUser": {
     "69f9084344e2198119e76fc7": {
-      "calls": 6,
-      "costUSD": 0.0029361471999999997,
-      "inputTokens": 10494,
-      "outputTokens": 5741,
-      "cacheHitTokens": 1024
+      "calls": 8,
+      "costUSD": 0.0041103608,
+      "inputTokens": 14829,
+      "outputTokens": 8018,
+      "cacheHitTokens": 1536
     },
     "69f90cec2840e4a89a161a8a": {
-      "calls": 32,
-      "costUSD": 0.021287750400000003,
-      "inputTokens": 60056,
-      "outputTokens": 54216,
-      "cacheHitTokens": 16768
+      "calls": 40,
+      "costUSD": 0.0270426576,
+      "inputTokens": 72252,
+      "outputTokens": 69173,
+      "cacheHitTokens": 17792
     }
   }
 }
