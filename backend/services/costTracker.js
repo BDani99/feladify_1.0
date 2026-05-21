@@ -5,13 +5,14 @@
  * Ha valós token adat érkezett (realTokens), azt használja.
  * Ha nem (pl. streaming, ai.js fallback), karakter/4 becsléssel dolgozik.
  *
- * Árképzés ($ / 1M token) – 2026-05, forrás: DeepSeek + DashScope docs:
- *   deepseek-chat     (V3/V4Flash non-thinking)  input: $0.14   output: $0.28
- *   deepseek-reasoner (V4Flash thinking / R1)    input: $0.55   output: $2.19
- *   qwen-plus                                    input: $0.40   output: $1.20
- *   qwen-turbo                                   input: $0.05   output: $0.20
+ * Modellek és árképzés ($ / 1M token) – 2026-05, forrás: DeepSeek + DashScope docs:
+ *   deepseek-chat     (DeepSeek V3-0324, fast chain fallback)   input: $0.14  output: $0.28  cacheHit: $0.0028
+ *   deepseek-reasoner (DeepSeek R1, reasoning chain fallback)   input: $0.55  output: $2.19  cacheHit: $0.0028
+ *   qwen-plus         (Qwen3.5-Plus, reasoning chain primary)   input: $0.40  output: $1.20
+ *   qwen-turbo        (Qwen3.5-Turbo, fast chain primary)       input: $0.05  output: $0.20
  *
- * DeepSeek cache hit ár: $0.0028/1M input (50x olcsóbb mint cache miss).
+ * Fast chain:      qwen-turbo → deepseek-chat
+ * Reasoning chain: qwen-plus  → deepseek-reasoner
  */
 
 const fs   = require('fs');
@@ -24,16 +25,6 @@ const PRICES = {
   'qwen-turbo':        { input: 0.05  / 1_000_000, output: 0.20  / 1_000_000, cacheHit: 0 },
 };
 
-// Meghatározza a tényleges modellt chainType + pozíció alapján
-const CHAIN_MODELS = {
-  reasoning: ['deepseek-reasoner', 'qwen-plus'],
-  fast:      ['deepseek-chat',     'qwen-turbo'],
-};
-
-function resolveModel(chainType, chainPosition) {
-  const chain = CHAIN_MODELS[chainType] || CHAIN_MODELS.fast;
-  return chain[Math.min(chainPosition ?? 0, chain.length - 1)];
-}
 
 function estimateTokens(text) {
   return Math.ceil((text || '').length / 4);
@@ -138,7 +129,7 @@ let monthly = loadCounter();
  * @param {object} params
  * @param {string}              params.caller        – hívó függvény neve
  * @param {'reasoning'|'fast'}  params.chainType     – melyik lánc futott
- * @param {number}              params.chainPosition  – 0 = elsődleges modell
+ * @param {string}              params.modelName     – konkrét API model név (pl. 'qwen-turbo', 'deepseek-chat')
  * @param {Array}               [params.messages]    – input token becsléhez (ha nincs realTokens)
  * @param {string}              [params.output]      – output token becsléshez (ha nincs realTokens)
  * @param {object}              [params.realTokens]  – valós token adat az API response-ból
@@ -147,7 +138,7 @@ let monthly = loadCounter();
  * @param {number}              [params.realTokens.cacheHit]
  * @param {string}              [params.userId]      – felhasználó azonosítója
  */
-function trackCall({ caller, chainType, chainPosition, messages, output, realTokens, userId }) {
+function trackCall({ caller, chainType, modelName, messages, output, realTokens, userId }) {
   if (monthly.month !== currentMonth()) {
     monthly = emptyCounter();
   }
@@ -158,7 +149,7 @@ function trackCall({ caller, chainType, chainPosition, messages, output, realTok
   const cacheHit   = realTokens ? (realTokens.cacheHit ?? 0) : 0;
   const cacheMiss  = inTok - cacheHit;
 
-  const model   = resolveModel(chainType, chainPosition);
+  const model   = modelName || 'deepseek-chat';
   const pricing = PRICES[model] || PRICES['deepseek-chat'];
 
   // Cache hit tokenek olcsóbbak

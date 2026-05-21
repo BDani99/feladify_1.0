@@ -878,3 +878,35 @@
     .action-buttons { justify-content: stretch; }
     .check-btn, .next-btn { width: 100%; justify-content: center; }
 }
+
+/* Progressive loading styles */
+.question-dot.loading {
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.question-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  color: rgba(255,255,255,0.7);
+  gap: 12px;
+}
+.loading-dots { display: flex; gap: 6px; }
+.loading-dots span {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: currentColor;
+  animation: bounce 1.2s ease-in-out infinite;
+}
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}

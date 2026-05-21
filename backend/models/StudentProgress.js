@@ -49,10 +49,11 @@ const diagnosticQuestionSchema = new mongoose.Schema({
 }, { _id: false });
 
 const diagnosticSessionSchema = new mongoose.Schema({
-  subject:    String,
-  grade:      String,
-  questions:  [diagnosticQuestionSchema],
-  startedAt:  { type: Date, default: Date.now }
+  subject:             String,
+  grade:               String,
+  questions:           [diagnosticQuestionSchema],
+  startedAt:           { type: Date, default: Date.now },
+  generationSessionId: { type: String, default: null }
 }, { _id: false });
 
 const subjectCheckpointSchema = new mongoose.Schema({

@@ -1,3 +1,5 @@
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
@@ -12,6 +14,51 @@ const DiagnosticResult = require('../models/DiagnosticResult');
 const aiService = require('../services/aiService');
 const { sendError } = require('../utils/errorResponse');
 const ParentGoal = require('../models/ParentGoal');
+const generationStore = require('../services/generationStore');
+
+// Kérdésminőség javítása: ordering felirat + true_false mondat
+const fixQuestionQuality = (questions) => questions.map(q => {
+  if (q.questionType === 'ordering' && Array.isArray(q.items) && q.items.length >= 2) {
+    // Keressük azt a kettőspontot, amelyet NEM szám előz meg (pl. "1:" nem, "alapján:" igen)
+    const colonMatch = q.questionText.match(/(?<!\d)\s*:/);
+    const colonIdx = colonMatch ? colonMatch.index : -1;
+    if (colonIdx !== -1) {
+      const afterColon = q.questionText.substring(colonIdx + 1);
+      const itemsInText = q.items.filter(item => afterColon.includes(String(item))).length;
+      if (itemsInText >= 2) {
+        const clean = q.questionText.substring(0, colonIdx).trim().replace(/[!?.,]*$/, '') + '!';
+        return { ...q, questionText: clean };
+      }
+    }
+    // Számozott lista formátum "(1. elem, 2. elem)" vagy "(1) elem" nélkül kettőspont
+    const listStart = q.questionText.search(/\(\s*\d+[.):\s]/);
+    if (listStart > 5) {
+      const beforeList = q.questionText.substring(0, listStart).trim().replace(/[!?.,]*$/, '');
+      if (beforeList.length > 5) return { ...q, questionText: beforeList + '!' };
+    }
+  }
+  if (q.questionType === 'true_false' && q.questionText.includes('?')) {
+    const sentences = q.questionText.split(/(?<=[.!])\s+/);
+    const stmt = sentences.find(s => !s.trim().endsWith('?'));
+    if (stmt) return { ...q, questionText: stmt.trim() };
+    const firstDot = q.questionText.indexOf('.');
+    if (firstDot > 10) return { ...q, questionText: q.questionText.substring(0, firstDot + 1).trim() };
+    // Nyílt kérdés true_false-ként → short_answer, az explanation legyen a helyes válasz referenciája
+    return { ...q, questionType: 'short_answer', options: [], correctAnswer: q.explanation || q.correctAnswer || '' };
+  }
+  return q;
+}).filter(q => q !== null);
+
+const sanitizeQuestion = q => ({
+  questionId:   q.questionId,
+  questionText: q.questionText,
+  questionType: q.questionType,
+  category:     q.category,
+  difficulty:   q.difficulty,
+  options:      q.options,
+  pairs:        q.pairs,
+  items:        q.items
+});
 
 // MCQ integritás-ellenőrzés: biztosítja, hogy correctAnswer mindig az options között legyen
 const ensureMcqIntegrity = (questions) => {
@@ -37,6 +84,40 @@ const ensureMcqIntegrity = (questions) => {
     return q;
   });
 };
+
+function getRandomCurriculumTopics(subject, grade, count = 3) {
+  const normSubject = String(subject).trim().toLowerCase();
+  const gradeMatch = String(grade).match(/^(\d+)/);
+  const gradeNum = gradeMatch ? parseInt(gradeMatch[1], 10) : null;
+  if (!gradeNum) return null;
+  const map = {
+    'matematika':      { file: 'curriculum_matematika.json', min: 5, max: 8 },
+    'nyelvtan':        { file: 'curriculum_nyelvtan.json',   min: 5, max: 8 },
+    'irodalom':        { file: 'curriculum_irodalom.json',   min: 5, max: 8 },
+    'történelem':      { file: 'curriculum_tortenelem.json', min: 5, max: 8 },
+    'tortenelem':      { file: 'curriculum_tortenelem.json', min: 5, max: 8 },
+    'környezetismeret':{ file: 'curriculum_kornyezet.json',  min: 5, max: 6 },
+    'fizika':          { file: 'curriculum_fizika.json',     min: 7, max: 8 },
+    'biológia':        { file: 'curriculum_biologia.json',   min: 7, max: 8 },
+    'biologia':        { file: 'curriculum_biologia.json',   min: 7, max: 8 },
+    'földrajz':        { file: 'curriculum_foldrajz.json',   min: 7, max: 8 },
+    'foldrajz':        { file: 'curriculum_foldrajz.json',   min: 7, max: 8 },
+    'angol':           { file: 'curriculum_angol.json',      min: 5, max: 8 },
+    'német':           { file: 'curriculum_nemet.json',      min: 5, max: 8 },
+    'nemet':           { file: 'curriculum_nemet.json',      min: 5, max: 8 },
+  };
+  const entry = map[normSubject];
+  if (!entry || gradeNum < entry.min || gradeNum > entry.max) return null;
+  try {
+    const filePath = path.join(__dirname, '../data', entry.file);
+    if (!fs.existsSync(filePath)) return null;
+    const curriculum = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    const topics = curriculum[String(gradeNum)] || [];
+    if (topics.length === 0) return null;
+    const shuffled = [...topics].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, Math.min(count, shuffled.length)).map(t => t.id);
+  } catch { return null; }
+}
 
 // Middleware to verify JWT token and get user
 const authMiddleware = async (req, res, next) => {
@@ -354,73 +435,113 @@ router.post('/diagnostic/start', authMiddleware, async (req, res) => {
       progress = new StudentProgress({ studentId: req.user._id });
     }
 
-    // Ha van folyamatban lévő teszt ugyanarra a tantárgyra, adjuk vissza azt
+    // Dedup: if async generation already in progress for this subject, return the same session
+    if (progress.diagnosticSession?.subject === subject && progress.diagnosticSession?.generationSessionId) {
+      const activeGen = generationStore.getSession(progress.diagnosticSession.generationSessionId);
+      if (activeGen && !activeGen.complete && !activeGen.error) {
+        const existingInProgress = await DiagnosticResult.findOne({ studentId: req.user._id, subject, status: 'in_progress' });
+        return res.json({
+          sessionId: progress.diagnosticSession.generationSessionId,
+          testId: existingInProgress?._id,
+          totalQuestions: activeGen.totalCount,
+          subject
+        });
+      }
+    }
+
+    // Resumed session: all questions already in DB
     const existingResult = await DiagnosticResult.findOne({
       studentId: req.user._id,
       subject,
       status: 'in_progress'
     });
-
-    if (existingResult && progress.diagnosticSession?.subject === subject) {
-      const sanitized = progress.diagnosticSession.questions.map(q => ({
-        questionId:   q.questionId,
-        questionText: q.questionText,
-        questionType: q.questionType,
-        category:     q.category,
-        difficulty:   q.difficulty,
-        options:      q.options,
-        pairs:        q.pairs,
-        items:        q.items
-      }));
+    if (existingResult && progress.diagnosticSession?.subject === subject && progress.diagnosticSession.questions?.length > 0) {
+      const sanitized = progress.diagnosticSession.questions.map(sanitizeQuestion);
       return res.json({ testId: existingResult._id, questions: sanitized, totalQuestions: sanitized.length, subject, resumed: true });
     }
 
-    // AI-val generálunk 10 kérdést (gyorsabb teszt)
+    // New generation: create DB records immediately, start async
     const subjectProg = progress.subjectProgress?.find(sp => sp.subject === subject);
     const currentLevel = subjectProg?.currentLevel || 1;
-    console.log(`[Diagnostic] Generating questions for ${subject} / ${grade || '4. osztály'} / level ${currentLevel}`);
-    const generatedQuestions = ensureMcqIntegrity(
-      await aiService.generateDiagnosticTest(subject, grade || '4. osztály', 10, currentLevel, selectedTopics, req.user._id)
-    );
+    const totalQuestions = 10;
+    const sessionGrade = grade || '4. osztály';
 
-    // Teljes kérdéssort (correctAnswer-rel) elmentjük a session-be
-    progress.diagnosticSession = {
-      subject,
-      grade: grade || '4. osztály',
-      questions: generatedQuestions,
-      startedAt: new Date()
-    };
-    progress.markModified('diagnosticSession');
-    await progress.save();
+    const effectiveTopics = (selectedTopics?.length > 0)
+      ? selectedTopics
+      : getRandomCurriculumTopics(subject, sessionGrade, 5);
 
-    // DiagnosticResult rekord létrehozása
+    const sessionId = generationStore.createSession(totalQuestions);
+
     const result = new DiagnosticResult({
-      studentId:     req.user._id,
+      studentId:      req.user._id,
       subject,
-      status:        'in_progress',
-      totalQuestions: generatedQuestions.length,
+      status:         'in_progress',
+      totalQuestions,
       scorePercentage: 0,
-      answers:       []
+      answers:        []
     });
     await result.save();
 
-    // Sanitizált kérdések (correctAnswer nélkül) a frontendnek
-    const sanitizedQuestions = generatedQuestions.map(q => ({
-      questionId:   q.questionId,
-      questionText: q.questionText,
-      questionType: q.questionType,
-      category:     q.category,
-      difficulty:   q.difficulty,
-      options:      q.options,
-      pairs:        q.pairs,
-      items:        q.items
-    }));
+    progress.diagnosticSession = { subject, grade: sessionGrade, questions: [], startedAt: new Date(), generationSessionId: sessionId };
+    progress.markModified('diagnosticSession');
+    await progress.save();
 
-    res.json({ testId: result._id, questions: sanitizedQuestions, totalQuestions: sanitizedQuestions.length, subject });
+    // Respond immediately
+    res.json({ sessionId, testId: result._id, totalQuestions, subject });
+
+    // Async generation (fire and forget)
+    const userId = req.user._id;
+    ;(async () => {
+      try {
+        const generatedQuestions = fixQuestionQuality(ensureMcqIntegrity(
+          await aiService.generateDiagnosticTest(
+            subject, sessionGrade, totalQuestions, currentLevel, effectiveTopics, userId,
+            (chunk) => {
+              const fixed = fixQuestionQuality(chunk);
+              const san = fixed.map(sanitizeQuestion);
+              generationStore.addChunk(sessionId, san, fixed);
+            }
+          )
+        ));
+        const freshProgress = await StudentProgress.findOne({ studentId: userId });
+        if (freshProgress) {
+          freshProgress.diagnosticSession = { subject, grade: sessionGrade, questions: generatedQuestions, startedAt: new Date() };
+          freshProgress.markModified('diagnosticSession');
+          await freshProgress.save();
+        }
+        generationStore.markComplete(sessionId);
+        console.log(`[Diagnostic] Async generation complete, session=${sessionId}`);
+      } catch (err) {
+        console.error('[Diagnostic] Async generation error:', err.message);
+        generationStore.markError(sessionId, 'A kérdések generálása sikertelen. Kérjük, próbálja újra.');
+        // Cleanup failed records
+        try {
+          await DiagnosticResult.findByIdAndDelete(result._id);
+          const fp = await StudentProgress.findOne({ studentId: userId });
+          if (fp && fp.diagnosticSession?.subject === subject) {
+            fp.diagnosticSession = undefined;
+            fp.markModified('diagnosticSession');
+            await fp.save();
+          }
+        } catch {}
+      }
+    })();
   } catch (error) {
     console.error('[Student API] Error in POST /diagnostic/start:', error);
     res.status(500).json({ message: 'Hiba történt a teszt indításakor', error: error.message });
   }
+});
+
+// GET /api/student/diagnostic/poll/:sessionId - Progressive question loading poll
+router.get('/diagnostic/poll/:sessionId', authMiddleware, (req, res) => {
+  const session = generationStore.getSession(req.params.sessionId);
+  if (!session) return res.status(404).json({ message: 'Session not found or expired' });
+  res.json({
+    questions: session.sanitized,
+    complete: session.complete,
+    totalQuestions: session.totalCount,
+    error: session.error || null
+  });
 });
 
 // GET /api/student/diagnostic/start/:subject - legacy redirect to POST
@@ -449,7 +570,20 @@ router.post('/diagnostic/submit', authMiddleware, async (req, res) => {
     const session = progress.diagnosticSession;
     const norm = s => String(s).toLowerCase().trim().replace(/[.,!?;:]/g, '');
 
-    // Kiértékelés és kategória-statisztikák gyűjtése
+    // Short/fill_blank kérdések párhuzamos AI ellenőrzése
+    const shortCheckPromises = session.questions.map(q => {
+      const studentAnswer = answers[q.questionId];
+      if (studentAnswer && (q.questionType === 'short_answer' || q.questionType === 'fill_blank')) {
+        return aiService.checkShortTextAnswer(session.subject, q.questionText, studentAnswer, q.correctAnswer)
+          .then(r => ({ questionId: q.questionId, correct: r.correct }))
+          .catch(() => ({ questionId: q.questionId, correct: false }));
+      }
+      return Promise.resolve({ questionId: q.questionId, correct: null });
+    });
+    const shortCheckResults = await Promise.all(shortCheckPromises);
+    const shortCheckMap = Object.fromEntries(shortCheckResults.map(r => [r.questionId, r.correct]));
+
+    // Kiértékelés
     const categoryResults = {};
     const perQuestionResults = [];
 
@@ -457,22 +591,15 @@ router.post('/diagnostic/submit', authMiddleware, async (req, res) => {
       const qid = question.questionId;
       const studentAnswer = answers[qid];
       const cat = question.category || 'Általános';
-
-      if (!categoryResults[cat]) {
-        categoryResults[cat] = { total: 0, correct: 0 };
-      }
+      if (!categoryResults[cat]) categoryResults[cat] = { total: 0, correct: 0 };
       categoryResults[cat].total++;
 
       let isCorrect = false;
-
       if (studentAnswer !== undefined && studentAnswer !== null && studentAnswer !== '') {
         if (question.questionType === 'mcq' || question.questionType === 'true_false') {
           isCorrect = norm(studentAnswer) === norm(question.correctAnswer);
         } else if (question.questionType === 'short_answer' || question.questionType === 'fill_blank') {
-          const aiResult = await aiService.checkShortTextAnswer(
-            session.subject, question.questionText, studentAnswer, question.correctAnswer
-          );
-          isCorrect = aiResult.correct;
+          isCorrect = shortCheckMap[qid] === true;
         } else if (question.questionType === 'matching') {
           if (typeof studentAnswer === 'object' && !Array.isArray(studentAnswer)) {
             const correct = question.correctAnswer || {};
@@ -489,13 +616,8 @@ router.post('/diagnostic/submit', authMiddleware, async (req, res) => {
 
       if (isCorrect) categoryResults[cat].correct++;
       perQuestionResults.push({
-        questionId: qid,
-        questionText: question.questionText,
-        questionType: question.questionType,
-        category: cat,
-        options: question.options || [],
-        pairs: question.pairs || [],
-        items: question.items || [],
+        questionId: qid, questionText: question.questionText, questionType: question.questionType,
+        category: cat, options: question.options || [], pairs: question.pairs || [], items: question.items || [],
         correctAnswer: question.correctAnswer,
         studentAnswer: studentAnswer !== undefined ? studentAnswer : null,
         isCorrect
@@ -506,61 +628,85 @@ router.post('/diagnostic/submit', authMiddleware, async (req, res) => {
     const correctCount = perQuestionResults.filter(r => r.isCorrect).length;
     const scorePercentage = totalCount > 0 ? (correctCount / totalCount) * 100 : 0;
 
-    // Kategória-elemzés összeállítása
     const categoryAnalysis = Object.entries(categoryResults).map(([category, data]) => ({
-      category,
-      totalQuestions: data.total,
-      correctAnswers: data.correct,
+      category, totalQuestions: data.total, correctAnswers: data.correct,
       score: data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0,
       weaknesses: (data.correct / data.total) < 0.5 ? ['Fejlesztésre szorul'] : [],
       strengths:  (data.correct / data.total) >= 0.7 ? ['Jó alapok'] : []
     }));
 
-    // AI elemzés (checkpoint-ajánlatok)
-    const aiAnalysisResult = await aiService.analyzeDiagnosticTest(
-      { subject: session.subject, grade: session.grade, scorePercentage, totalQuestions: totalCount, answers: perQuestionResults },
-      session.questions.map((q, i) => ({ category: q.category, questionText: q.questionText }))
-    );
-
-    // Eredmény mentése
+    // Azonnali mentés (AI elemzés nélkül)
     result.totalQuestions = totalCount;
     result.correctAnswers = correctCount;
     result.scorePercentage = scorePercentage;
     result.categoryAnalysis = categoryAnalysis;
     result.completedAt = new Date();
-    result.status = 'analyzed';
-    result.aiAnalysis = {
-      overallPerformance: aiAnalysisResult.overallPerformance || 'average',
-      personalizedFeedback: aiAnalysisResult.personalizedFeedback || '',
-      strengths: (aiAnalysisResult.strengths || []).map(s => ({ category: s.category, description: s.description, confidence: 0.8 })),
-      weaknesses: [],
-      learningPath: { recommendedOrder: [], estimatedTime: 0, focusAreas: [] },
-      recommendedCheckpoints: aiAnalysisResult.recommendedCheckpoints || []
-    };
+    result.status = 'completed';
     await result.save();
 
-    // Gyakorlóút létrehozása/frissítése – az AI raw eredményt adjuk át (recommendedCheckpoints megmarad)
-    await createOrUpdatePracticePath(req.user._id, { aiAnalysis: aiAnalysisResult }, session.subject);
-
-    // Session törlése – fresh fetch kell, mert a createOrUpdatePracticePath már elmentette a doc-ot
-    const freshProgress = await StudentProgress.findOne({ studentId: req.user._id });
-    if (freshProgress) {
-      freshProgress.diagnosticSession = null;
-      freshProgress.markModified('diagnosticSession');
-      await freshProgress.save();
-    }
-
+    // Azonnali válasz a frontendnek – AI elemzés aszinkron fut
     res.json({
       message: 'Sikeresen beküldve',
       resultId: result._id,
       score: scorePercentage,
       categoryAnalysis,
-      aiAnalysis: result.aiAnalysis,
+      aiAnalysis: null,
+      analyzing: true,
       perQuestionResults
     });
+
+    // AI elemzés + gyakorlóút aszinkron (nem blokkolja a választ)
+    const submittedUserId = req.user._id;
+    const submittedSubject = session.subject;
+    ;(async () => {
+      try {
+        const aiAnalysisResult = await aiService.analyzeDiagnosticTest(
+          { subject: submittedSubject, grade: session.grade, scorePercentage, totalQuestions: totalCount, answers: perQuestionResults },
+          session.questions.map(q => ({ category: q.category, questionText: q.questionText }))
+        );
+
+        result.status = 'analyzed';
+        result.aiAnalysis = {
+          overallPerformance: aiAnalysisResult.overallPerformance || 'average',
+          personalizedFeedback: aiAnalysisResult.personalizedFeedback || '',
+          strengths: (aiAnalysisResult.strengths || []).map(s => ({ category: s.category, description: s.description, confidence: 0.8 })),
+          weaknesses: [],
+          learningPath: { recommendedOrder: [], estimatedTime: 0, focusAreas: [] },
+          recommendedCheckpoints: aiAnalysisResult.recommendedCheckpoints || []
+        };
+        await result.save();
+
+        await createOrUpdatePracticePath(submittedUserId, { aiAnalysis: aiAnalysisResult }, submittedSubject);
+
+        const fp = await StudentProgress.findOne({ studentId: submittedUserId });
+        if (fp) {
+          fp.diagnosticSession = null;
+          fp.markModified('diagnosticSession');
+          await fp.save();
+        }
+        console.log(`[Diagnostic] Async analysis complete for result ${result._id}`);
+      } catch (err) {
+        console.error('[Diagnostic] Async analysis error:', err.message);
+      }
+    })();
   } catch (error) {
     console.error('[Student API] Error in /diagnostic/submit:', error);
     res.status(500).json({ message: 'Hiba történt a beküldéskor', error: error.message });
+  }
+});
+
+// GET /api/student/diagnostic/analysis/:resultId – AI elemzés polling (aszinkron submit után)
+router.get('/diagnostic/analysis/:resultId', authMiddleware, async (req, res) => {
+  try {
+    const result = await DiagnosticResult.findById(req.params.resultId);
+    if (!result) return res.status(404).json({ message: 'Eredmény nem található' });
+    if (result.studentId.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Nincs jogosultság' });
+    if (result.status === 'analyzed' && result.aiAnalysis) {
+      return res.json({ ready: true, aiAnalysis: result.aiAnalysis });
+    }
+    res.json({ ready: false });
+  } catch (error) {
+    res.status(500).json({ message: 'Hiba az elemzés lekérésekor', error: error.message });
   }
 });
 
@@ -1160,106 +1306,137 @@ router.post('/checkpoint/start', authMiddleware, async (req, res) => {
     const checkpoint = subjectData.checkpoints.find(c => c.checkpointId === checkpointId);
     if (!checkpoint) return res.status(404).json({ message: 'Checkpoint nem található' });
 
-    // Duplikált kérés-védelem: ha ugyanaz a checkpoint-session már létezik (<2 perc),
-    // visszaadjuk a meglévőt (React StrictMode és gyors újratöltés ellen)
-    if (
-      progress.checkpointSession?.checkpointId === checkpointId &&
+    const recentSession = progress.checkpointSession?.checkpointId === checkpointId &&
       progress.checkpointSession.startedAt &&
-      Date.now() - new Date(progress.checkpointSession.startedAt).getTime() < 120000
-    ) {
-      const existingQs = progress.checkpointSession.questions.map(q => ({
-        questionId:   q.questionId,
-        questionText: q.questionText,
-        questionType: q.questionType,
-        difficulty:   q.difficulty,
-        options:      q.options,
-        pairs:        q.pairs,
-        items:        q.items
-      }));
-      console.log('[Student API] Checkpoint/start: meglévő session visszaadva (duplikált kérés)');
-      return res.json({
-        checkpointId,
-        checkpointTitle: checkpoint.topic,
-        questions: existingQs,
-        difficulty: checkpoint.difficulty
-      });
+      Date.now() - new Date(progress.checkpointSession.startedAt).getTime() < 120000;
+
+    if (recentSession) {
+      const existingQs = progress.checkpointSession.questions || [];
+      if (existingQs.length > 0) {
+        // Already complete in DB
+        return res.json({
+          checkpointId,
+          checkpointTitle: checkpoint.topic,
+          questions: existingQs.map(q => ({
+            questionId: q.questionId, questionText: q.questionText, questionType: q.questionType,
+            difficulty: q.difficulty, options: q.options, pairs: q.pairs, items: q.items
+          })),
+          difficulty: checkpoint.difficulty
+        });
+      }
+      // Generation in progress - return existing sessionId
+      const existingSessionId = progress.checkpointSession.generationSessionId;
+      if (existingSessionId) {
+        console.log('[checkpoint/start] Returning existing generation session');
+        return res.json({
+          sessionId: existingSessionId,
+          checkpointId,
+          checkpointTitle: checkpoint.topic,
+          totalQuestions: 10,
+          difficulty: checkpoint.difficulty
+        });
+      }
     }
 
-    // Szint-alapú nehézség skálázás: alap + szintbónusz
     const student = await User.findById(req.user._id);
     const gradeNum = parseInt(student?.className) || 4;
     const currentLevel = subjectData.currentLevel || 1;
     const baseDifficulty = Math.max(1, Math.min(5, Math.ceil(gradeNum / 2)));
     const levelBonus = Math.floor((Math.max(1, Math.min(10, currentLevel)) - 1) / 3);
     const effectiveDifficulty = Math.max(1, Math.min(5, baseDifficulty + levelBonus));
-
     const weakQuestions = subjectData.weakQuestionsForNext || [];
+    const totalQuestions = 10;
 
-    // Kérdéssor generálása AI-val (6+ feladattípus)
+    const sessionId = generationStore.createSession(totalQuestions);
 
-    const rawQuestions = await aiService.generatePracticeQuestionSet(
-      subject, checkpoint.topic, effectiveDifficulty, 10, student?.className || '4. osztály', weakQuestions, [], req.user._id
-    );
-    const generatedQuestions = ensureMcqIntegrity(rawQuestions);
-
-    // Mentés robusztus módon (VersionError kezelésével)
+    // Save initial session to DB (with generationSessionId, empty questions)
     let saved = false;
     let attempts = 0;
     while (!saved && attempts < 2) {
       try {
         const freshProgress = await StudentProgress.findOne({ studentId: req.user._id });
-        if (!freshProgress) throw new Error('Progress document lost');
-
         const freshSubjectData = freshProgress.subjectProgress.find(s => s.subject === subject);
-        if (freshSubjectData) {
-          // Adaptív: felhasználás után töröljük
-          freshSubjectData.weakQuestionsForNext = null;
-        }
-
+        if (freshSubjectData) freshSubjectData.weakQuestionsForNext = null;
         freshProgress.checkpointSession = {
-          checkpointId,
-          subject,
-          topic: checkpoint.topic,
-          questions: generatedQuestions,
+          checkpointId, subject, topic: checkpoint.topic,
+          generationSessionId: sessionId,
+          questions: [],
           answers: [],
           startedAt: new Date()
         };
-
+        freshProgress.markModified('checkpointSession');
         freshProgress.markModified('subjectProgress');
         await freshProgress.save();
         saved = true;
       } catch (saveErr) {
         attempts++;
-        if (saveErr.name === 'VersionError' && attempts < 2) {
-          console.warn('[Student API] VersionError a checkpoint mentésekor, újrapróbálkozás...');
-          continue;
-        }
+        if (saveErr.name === 'VersionError' && attempts < 2) continue;
         throw saveErr;
       }
     }
 
+    // Respond immediately
+    res.json({ sessionId, checkpointId, checkpointTitle: checkpoint.topic, totalQuestions, difficulty: checkpoint.difficulty });
 
-    // Frontend csak sanitizált kérdéseket kap (correctAnswer nélkül)
-    const sanitizedQuestions = generatedQuestions.map(q => ({
-      questionId:   q.questionId,
-      questionText: q.questionText,
-      questionType: q.questionType,
-      difficulty:   q.difficulty,
-      options:      q.options,
-      pairs:        q.pairs,
-      items:        q.items
-    }));
+    // Async generation
+    const userId = req.user._id;
+    const topic = checkpoint.topic;
+    const studentGrade = student?.className || '4. osztály';
+    ;(async () => {
+      try {
+        const rawQuestions = await aiService.generatePracticeQuestionSet(
+          subject, topic, effectiveDifficulty, totalQuestions, studentGrade, weakQuestions, [], userId,
+          (chunk) => {
+            const fixed = fixQuestionQuality(chunk);
+            const san = fixed.map(q => ({
+              questionId: q.questionId, questionText: q.questionText, questionType: q.questionType,
+              difficulty: q.difficulty, options: q.options, pairs: q.pairs, items: q.items
+            }));
+            generationStore.addChunk(sessionId, san, fixed);
+          }
+        );
+        const generatedQuestions = fixQuestionQuality(ensureMcqIntegrity(rawQuestions));
 
-    res.json({
-      checkpointId,
-      checkpointTitle: checkpoint.topic,
-      questions: sanitizedQuestions,
-      difficulty: checkpoint.difficulty
-    });
+        let dbSaved = false;
+        let dbAttempts = 0;
+        while (!dbSaved && dbAttempts < 3) {
+          try {
+            const fp = await StudentProgress.findOne({ studentId: userId });
+            if (fp && fp.checkpointSession?.checkpointId === checkpointId) {
+              fp.checkpointSession.questions = generatedQuestions;
+              fp.markModified('checkpointSession');
+              await fp.save();
+            }
+            dbSaved = true;
+          } catch (e) {
+            dbAttempts++;
+            if (e.name === 'VersionError' && dbAttempts < 3) continue;
+            throw e;
+          }
+        }
+        generationStore.markComplete(sessionId);
+        console.log(`[Checkpoint] Async generation complete, session=${sessionId}`);
+      } catch (err) {
+        console.error('[Checkpoint] Async generation error:', err.message);
+        generationStore.markError(sessionId, 'A kérdések generálása sikertelen. Kérjük, próbálja újra.');
+      }
+    })();
   } catch (error) {
     console.error('[Student API] Error in checkpoint/start:', error);
     res.status(500).json({ message: 'Hiba a checkpoint indításakor', error: error.message });
   }
+});
+
+// GET /api/student/checkpoint/poll/:sessionId - Progressive question loading poll
+router.get('/checkpoint/poll/:sessionId', authMiddleware, (req, res) => {
+  const session = generationStore.getSession(req.params.sessionId);
+  if (!session) return res.status(404).json({ message: 'Session not found or expired' });
+  res.json({
+    questions: session.sanitized,
+    complete: session.complete,
+    totalQuestions: session.totalCount,
+    error: session.error || null
+  });
 });
 
 // POST /api/student/checkpoint/answer - Válasz valódi ellenőrzése
@@ -1280,7 +1457,14 @@ router.post('/checkpoint/answer', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: 'Checkpoint ID nem egyezik' });
     }
 
-    const question = session.questions.find(q => q.questionId === questionId);
+    let question = session.questions.find(q => q.questionId === questionId);
+    if (!question && session.generationSessionId) {
+      const genSession = generationStore.getSession(session.generationSessionId);
+      if (genSession) question = genSession.full.find(q => q.questionId === questionId);
+      if (!question && genSession && !genSession.complete) {
+        return res.status(202).json({ message: 'Ez a kérdés még generálódik, kérjük várj egy pillanatot!', stillGenerating: true });
+      }
+    }
     if (!question) {
       return res.status(404).json({ message: 'Kérdés nem található' });
     }

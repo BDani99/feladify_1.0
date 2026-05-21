@@ -144,26 +144,47 @@ const DiagnosticResult = () => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [questionsOpen, setQuestionsOpen] = useState(false);
+  const [analysisReady, setAnalysisReady] = useState(false);
 
-  const { resultId, score, categoryAnalysis, aiAnalysis, perQuestionResults } = location.state || {};
+  const { resultId, score, categoryAnalysis, aiAnalysis, perQuestionResults, analyzing } = location.state || {};
 
   useEffect(() => {
-    if (score !== undefined && categoryAnalysis && aiAnalysis) {
+    if (score !== undefined && categoryAnalysis) {
       setResult({
-        subject,
-        score,
-        categoryAnalysis,
-        aiAnalysis,
+        subject, score, categoryAnalysis,
+        aiAnalysis: aiAnalysis || null,
         perQuestionResults: perQuestionResults || [],
         totalQuestions: categoryAnalysis.reduce((sum, cat) => sum + cat.totalQuestions, 0),
         correctAnswers: categoryAnalysis.reduce((sum, cat) => sum + cat.correctAnswers, 0)
       });
+      setAnalysisReady(!!aiAnalysis);
       setLoading(false);
     } else {
       setError('Nem található eredmény adat. Kérlek, végezz el egy szintfelmérőt.');
       setLoading(false);
     }
   }, [subject, score, categoryAnalysis, aiAnalysis, perQuestionResults]);
+
+  // AI elemzés polling ha aszinkron fut a háttérben
+  useEffect(() => {
+    if (!analyzing || !resultId || analysisReady) return;
+    const token = localStorage.getItem('AccessToken');
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/student/diagnostic/analysis/${resultId}`, {
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.ready && data.aiAnalysis) {
+          setResult(prev => ({ ...prev, aiAnalysis: data.aiAnalysis }));
+          setAnalysisReady(true);
+          clearInterval(interval);
+        }
+      } catch {}
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [analyzing, resultId, analysisReady]);
 
   if (loading) {
     return (
@@ -230,6 +251,18 @@ const DiagnosticResult = () => {
         </div>
 
         {/* AI Analysis Summary */}
+        {!result.aiAnalysis && analyzing && !analysisReady && (
+          <div className="ai-analysis-summary analyzing">
+            <div className="ai-header">
+              <FaBrain className="ai-icon" />
+              <h2>AI Elemzés</h2>
+            </div>
+            <div className="ai-feedback" style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'rgba(255,255,255,0.6)' }}>
+              <div className="loading-dots"><span></span><span></span><span></span></div>
+              <p style={{ margin: 0 }}>Az AI személyre szabott elemzésedet készíti... Ez általában 15–30 másodpercet vesz igénybe.</p>
+            </div>
+          </div>
+        )}
         {result.aiAnalysis && (
           <div className="ai-analysis-summary">
             <div className="ai-header">

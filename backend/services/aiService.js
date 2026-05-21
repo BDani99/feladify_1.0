@@ -107,8 +107,8 @@ class AIService {
       { model: 'dpv4pro', provider: 'deepseek' },
     ];
     this.fastChain = [
-      { model: 'v4flash', provider: 'deepseek' },
       { model: 'qwen-3.5-flash', provider: 'qwen' },
+      { model: 'v4flash', provider: 'deepseek' },
     ];
 
     this.reasoningModel = this.reasoningChain[0].model;
@@ -257,7 +257,7 @@ class AIService {
         completionTokens: raw.completion_tokens ?? raw.output_tokens     ?? 0,
         cacheHitTokens:   raw.prompt_cache_hit_tokens                    ?? 0,
       };
-      return { content, usage };
+      return { content, usage, actualModel };
     } catch (error) {
       const status = error.response?.status;
       const errorData = error.response?.data?.error;
@@ -290,16 +290,16 @@ class AIService {
       const tag = caller ? `[AIService/${caller}]` : '[AIService]';
       console.log(`${tag} API hívás → ${model} (${i + 1}/${chain.length})`);
       try {
-        const { content, usage } = await this._callModel(model, messages, options);
+        const { content, usage, actualModel } = await this._callModel(model, messages, options);
         if (!content || content.trim().length === 0) {
           throw new Error('Üres válasz érkezett a modelltől');
         }
         if (validateFn) {
           validateFn(content);
         }
-        console.log(`${tag} ✓ Válasz kész: ${model} (${content.length} kar., in:${usage.promptTokens} out:${usage.completionTokens})`);
+        console.log(`${tag} ✓ Válasz kész: ${actualModel} (${content.length} kar., in:${usage.promptTokens} out:${usage.completionTokens})`);
         costTracker.trackCall({
-          caller, chainType, chainPosition: i,
+          caller, chainType, modelName: actualModel,
           realTokens: { input: usage.promptTokens, output: usage.completionTokens, cacheHit: usage.cacheHitTokens },
           userId,
         });
@@ -330,17 +330,17 @@ class AIService {
       const tag = caller ? `[AIService/${caller}]` : '[AIService]';
       console.log(`${tag} API hívás → ${currentModel} (${i + 1}/${chain.length})`);
       try {
-        const { content, usage } = await this._callModel(currentModel, allMessages, options);
+        const { content, usage, actualModel } = await this._callModel(currentModel, allMessages, options);
         if (!content || content.trim().length === 0) {
           throw new Error('Üres válasz érkezett a modelltől');
         }
         if (validateFn) {
           validateFn(content);
         }
-        console.log(`${tag} ✓ Válasz kész: ${currentModel} (${content.length} kar., in:${usage.promptTokens} out:${usage.completionTokens})`);
+        console.log(`${tag} ✓ Válasz kész: ${actualModel} (${content.length} kar., in:${usage.promptTokens} out:${usage.completionTokens})`);
         const chainType = useReasoning ? 'reasoning' : 'fast';
         costTracker.trackCall({
-          caller: caller || 'Chat', chainType, chainPosition: i,
+          caller: caller || 'Chat', chainType, modelName: actualModel,
           realTokens: { input: usage.promptTokens, output: usage.completionTokens, cacheHit: usage.cacheHitTokens },
         });
         return content;
@@ -570,7 +570,7 @@ SZIGORÚ SZABÁLY: A válaszod KIZÁRÓLAG egy érvényes JSON blokk legyen (\`\
 }`;
 
     try {
-      const raw = await this.generateResponse(prompt, [], { temperature: 0.3, max_tokens: 800 }, true, null, 'AnalyzeDiag', (res) => this._extractJSON(res));
+      const raw = await this.generateResponse(prompt, [], { temperature: 0.3, max_tokens: 1600 }, true, null, 'AnalyzeDiag', (res) => this._extractJSON(res));
       return this._extractJSON(raw);
     } catch (error) {
       console.warn('[AIService] analyzeDiagnosticTest parse hiba:', error.message);
@@ -700,7 +700,7 @@ ${exampleLine}`;
 {"questionText":"A fotoszintézis során a növények szén-dioxidot vesznek fel, és ___ bocsátanak ki.","questionType":"fill_blank","options":[],"pairs":[],"items":[],"correctAnswer":"oxigént","explanation":"A növények a fotoszintézis során oxigént termelnek és juttatnak a levegőbe."}`;
   }
 
-  async _generateQuestionsChunked(outline, subject, topic, diffDesc, typeSpecs, fewShotExamples, grade = 'általános iskola', curriculumSnippet = '', userId = null) {
+  async _generateQuestionsChunked(outline, subject, topic, diffDesc, typeSpecs, fewShotExamples, grade = 'általános iskola', curriculumSnippet = '', userId = null, onChunkReady = null) {
     const typeDescriptions = {
       mcq: '"mcq": feleletválasztós. A questionText KÉRDŐ MONDAT legyen (kérdőjellel végződjön!). TILOS: a questionText NEM tartalmazhatja a helyes választ és nem lehet a helyes válasz kijelentő átfogalmazása! 4 valódi szöveges lehetőség (NEM betűjelölők, NEM "A.", "B." előtagok!). PONTOSAN EGYETLEN helyes válasz! options: ["Első válasz","Második válasz","Harmadik válasz","Negyedik válasz"], correctAnswer: "Első válasz" (az options tömb PONTOS szövege, betű-előtag nélkül!)',
       true_false: '"true_false": igaz/hamis. KÖTELEZŐ: a questionText KIJELENTŐ MONDAT legyen (pl. "A fotoszintézis során a növények CO2-t vesznek fel.") – TILOS kérdőmondat, összehasonlítás, "melyik" kezdetű szöveg! options: ["Igaz","Hamis"], correctAnswer: "Igaz" vagy "Hamis"',
@@ -712,10 +712,15 @@ ${exampleLine}`;
 
     const typeQueue = typeSpecs.flatMap(s => Array(s.count).fill(s.type));
     const allQuestions = [];
-    const chunkSize = 10;
+    const FIRST_CHUNK = 2;
+    const REST_CHUNK = 4;
+    let firstChunkDone = false;
+    let questionOffset = 0;
 
     while (typeQueue.length > 0) {
-      const chunk = typeQueue.splice(0, chunkSize);
+      const currentChunkSize = firstChunkDone ? REST_CHUNK : FIRST_CHUNK;
+      firstChunkDone = true;
+      const chunk = typeQueue.splice(0, currentChunkSize);
       const chunkSpecs = chunk.reduce((acc, type) => {
         const existing = acc.find(a => a.type === type);
         if (existing) existing.count++;
@@ -724,7 +729,7 @@ ${exampleLine}`;
       }, []);
 
       const previousContext = allQuestions.length > 0
-        ? `\nEddig generált kérdések (KERÜLD a szóhasználatban és megközelítésben való ismétlést!):\n${JSON.stringify(allQuestions.map(q => ({ text: q.questionText, type: q.questionType })), null, 2)}\n`
+        ? `\nEDDIG GENERÁLT KÉRDÉSEK – TILOS MEGISMÉTELNI VAGY HASONLÓT FELTENNI:\n${allQuestions.map((q, idx) => `${idx + 1}. [${q.questionType.toUpperCase()}] "${q.questionText}"`).join('\n')}\n\nAz új kérdések TELJESEN MÁS témát és szituációt fedjenek le!\n`
         : '';
 
       const chunkTypeLines = chunkSpecs.map(s =>
@@ -743,6 +748,7 @@ ${curriculumSnippet ? `\nNAT CURRICULUM EMLÉKEZTETŐ (a kérdések ezeket a kö
 SZIGORÚ PEDAGÓGIAI SZABÁLYOK:
 1. Olyan kérdéseket készíts, amelyeket a diák egy valódi iskolai dolgozatban vagy felmérőben kapna. Kerüld az erőltetett modernkedést (Minecraft, streamer, Stardew Valley stb. TILOS). Helyette használj klasszikus mindennapi, természetbeli vagy tudományos megfigyeléseket.
 2. ${this._getAgeLanguageInstruction(grade)}
+3. ÖNÁLLÓ KÉRDÉSEK: Minden kérdés önmagában érthető legyen! TILOS konkrét versre, mesére, regényre, dalra hivatkozni anélkül, hogy a szövegrészletet/idézetet a kérdésben közölnéd. Ha elemzést kérdezel, add meg a szövegrészletet magában a kérdésben.
 
 VÁZLAT (szempontok – kövesd a fókuszokat!):
 ${outline}
@@ -752,7 +758,7 @@ ${chunkTypeLines}
 
 SZABÁLYOK:
 1. MCQ options SOHA ne tartalmazzon puszta betűket ("A","B","C","D") – valódi szöveges válaszok kellenek!
-2. matching options KIZÁRÓLAG a jobb oldali (right) értékeket tartalmazza keverve – SOHA a bal oldalit!
+2. matching: BAL oldal = fogalom/szereplő/esemény (1-4 szó), JOBB oldal = jellemvonás/magyarázat/következmény (min. 5 szó). TILOS: ha bal=szereplő neve, jobb NEM lehet másik szereplő neve – csakis jellemvonása/tulajdonsága/szerepe! A jobb oldal NEM tartalmazhatja a bal oldal szavait! options CSAK a jobb oldali értékek keverve.
 3. fill_blank kérdésben KÖTELEZŐ pontosan egy ___ jelölő, és a correctAnswer egyetlen válasz legyen, | jel nélkül!
 4. ordering items tömbje KEVEREDETT sorrendben legyen!
 5. MCQ ANTI-PATTERN TILOS: a questionText NEM lehet a helyes válasz kijelentő átfogalmazása (pl. TILOS: questionText="A patríciusok az előkelő... a plebejusok a köznép..." + option A = ua. szöveg)! A questionText MINDIG KÉRDŐ MONDAT legyen!
@@ -777,27 +783,35 @@ VÁLASZOLJ KIZÁRÓLAG ÉRVÉNYES JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!
 
         const parsed = this._extractJSONArray(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          allQuestions.push(...parsed);
-          console.log(`[AIService]   ✓ chunk kész (+${parsed.length} kérdés)`);
+          const parsedWithIds = parsed.map((q, i) => ({
+            ...q,
+            questionId: q.questionId || `q${questionOffset + i + 1}`
+          }));
+          allQuestions.push(...parsedWithIds);
+          if (onChunkReady) onChunkReady(parsedWithIds);
+          questionOffset += parsedWithIds.length;
+          console.log(`[AIService]   ✓ chunk kész (+${parsedWithIds.length} kérdés)`);
         }
       } catch (e) {
         console.warn(`[AIService]   ✗ chunk sikertelen (${chunk.join(',')}):`, e.message);
-        chunk.forEach(type => {
-          const fallbackTexts = {
-            true_false: `Igaz vagy hamis? A(z) "${topic}" témakör tananyagának részét képezi a kurzusnak.`,
-            mcq: `Melyik állítás igaz a(z) "${topic}" témával kapcsolatban?`,
-            fill_blank: `A(z) "${topic}" témában az egyik kulcsfogalom: ___.`,
-            matching: `Párosítsd a(z) "${topic}" témához kapcsolódó fogalmakat a definícióikkal:`,
-            ordering: `Rendezd sorba a(z) "${topic}" témához kapcsolódó fogalmakat:`,
-            short_answer: `Foglald össze röviden, mit tudsz a(z) "${topic}" témáról!`
-          };
-          const fallbackOrderingItems = [`${topic} alapfogalma`, `${topic} alkalmazása`, `${topic} ellenőrzése`];
-          const fallbackPairs = [
-            { left: 'Alapfogalom', right: `A(z) ${topic} témakör egyik kiinduló, megtanulandó eleme.` },
-            { left: 'Alkalmazás', right: `A tanult ismeret használata konkrét feladat vagy példa megoldásában.` },
-            { left: 'Ellenőrzés', right: `A megoldás átgondolása és összevetése a tanult szabályokkal.` }
-          ];
-          allQuestions.push({
+        const fallbackTexts = {
+          true_false: `Igaz vagy hamis? A(z) "${topic}" témakör tananyagának részét képezi a kurzusnak.`,
+          mcq: `Melyik állítás igaz a(z) "${topic}" témával kapcsolatban?`,
+          fill_blank: `A(z) "${topic}" témában az egyik kulcsfogalom: ___.`,
+          matching: `Párosítsd a(z) "${topic}" témához kapcsolódó fogalmakat a definícióikkal:`,
+          ordering: `Rendezd sorba a(z) "${topic}" témához kapcsolódó fogalmakat:`,
+          short_answer: `Foglald össze röviden, mit tudsz a(z) "${topic}" témáról!`
+        };
+        const fallbackOrderingItems = [`${topic} alapfogalma`, `${topic} alkalmazása`, `${topic} ellenőrzése`];
+        const fallbackPairs = [
+          { left: 'Alapfogalom', right: `A(z) ${topic} témakör egyik kiinduló, megtanulandó eleme.` },
+          { left: 'Alkalmazás', right: `A tanult ismeret használata konkrét feladat vagy példa megoldásában.` },
+          { left: 'Ellenőrzés', right: `A megoldás átgondolása és összevetése a tanult szabályokkal.` }
+        ];
+        const fallbackChunk = [];
+        chunk.forEach((type, j) => {
+          fallbackChunk.push({
+            questionId: `q${questionOffset + j + 1}`,
             questionText: fallbackTexts[type] || `Mit tudsz a(z) "${topic}" témáról?`,
             questionType: type,
             options: type === 'mcq'
@@ -806,13 +820,16 @@ VÁLASZOLJ KIZÁRÓLAG ÉRVÉNYES JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!
             pairs: type === 'matching' ? fallbackPairs : [],
             items: type === 'ordering' ? this._shuffle([...fallbackOrderingItems]) : [],
             correctAnswer: type === 'true_false' ? 'Igaz'
-              : type === 'mcq' ? 'Igaz állítás a témáról'
-                : type === 'ordering' ? fallbackOrderingItems
-                  : type === 'matching' ? Object.fromEntries(fallbackPairs.map(p => [p.left, p.right]))
-                    : 'Logikus, témába vágó válasz elfogadható.',
-            explanation: ''
+              : (type === 'mcq' ? 'Igaz állítás a témáról'
+                : (type === 'ordering' ? fallbackOrderingItems
+                  : (type === 'matching' ? { 'Alapfogalom': 'A témakör egyik kiinduló megtanulandó eleme.' }
+                    : `Alapismeretek a ${topic} témakörből.`))),
+            explanation: 'Tartalék kérdés.'
           });
         });
+        allQuestions.push(...fallbackChunk);
+        if (onChunkReady) onChunkReady(fallbackChunk);
+        questionOffset += fallbackChunk.length;
       }
     }
 
@@ -820,7 +837,7 @@ VÁLASZOLJ KIZÁRÓLAG ÉRVÉNYES JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!
   }
 
   // Dolgozat-specifikus generálás: kétfázisú AI pipeline (vázlat → JSON chunking)
-  async generateExamQuestionSet(subject, topic, diffDesc, typeSpecs, grade = 'általános iskola', selectedTopics = null, userId = null) {
+  async generateExamQuestionSet(subject, topic, diffDesc, typeSpecs, grade = 'általános iskola', selectedTopics = null, userId = null, onChunkReady = null) {
     // === 1. FÁZIS: Qwen 3 32B – kreatív szöveges vázlat ===
     let outline = '';
     try {
@@ -837,7 +854,7 @@ VÁLASZOLJ KIZÁRÓLAG ÉRVÉNYES JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!
       console.log('[AIService] 2. fázis: kérdések generálása AI chunkingban...');
       const fewShot = this._getFewShotExamples(subject);
       const curriculumSnippet = await getCurriculumSnippet(subject, grade, selectedTopics, userId);
-      const rawQuestions = await this._generateQuestionsChunked(outline, subject, topic, diffDesc, typeSpecs, fewShot, grade, curriculumSnippet, userId);
+      const rawQuestions = await this._generateQuestionsChunked(outline, subject, topic, diffDesc, typeSpecs, fewShot, grade, curriculumSnippet, userId, onChunkReady);
 
       if (rawQuestions.length > 0) {
         const mapped = rawQuestions.map((q, idx) => ({
@@ -1057,7 +1074,7 @@ A pairs és items mező MINDEN kérdésnél szerepeljen (üres tömb, ha nem rel
     }
   }
 
-  async generatePracticeQuestionSet(subject, topic, difficulty = 3, count = 10, grade = 'általános iskola', weakQuestions = [], excludeQuestions = [], userId = null) {
+  async generatePracticeQuestionSet(subject, topic, difficulty = 3, count = 10, grade = 'általános iskola', weakQuestions = [], excludeQuestions = [], userId = null, onChunkReady = null) {
     console.log(`[AIService] Gyakorlás generálás indul AI pipeline-nal: count=${count}`);
 
     const difficultyDescriptions = {
@@ -1153,7 +1170,7 @@ A pairs és items mező MINDEN kérdésnél szerepeljen (üres tömb, ha nem rel
     }
 
     // A generálás a kétfázisú AI pipeline-t fogja használni
-    return await this.generateExamQuestionSet(subject, topic, diffDesc, typeSpecs, grade, selectedTopics, userId);
+    return await this.generateExamQuestionSet(subject, topic, diffDesc, typeSpecs, grade, selectedTopics, userId, onChunkReady);
   }
 
   async _generateDiagnosticOutline(subject, grade, count, selectedTopics = null, userId = null) {
@@ -1163,9 +1180,9 @@ Tantárgy: ${subject} | Évfolyam/Szint: ${grade} | Kérdések száma: ${count}
 ${curriculumSnippet}
 
 FELADATOD:
-1. Bontsd fel a(z) ${subject} tantárgy ${grade} osztályos anyagát 10 SPECIFIKUS, az iskolai követelményeknek megfelelő mikro-képességre (pl. "Biológia: gerincesek és gerinctelenek megkülönböztetése", "Szövegértés: ok-okozati összefüggések felismerése").
-2. Véletlenszerűen válassz ki 3-at közülük.
-3. Minden kérdéshez tervezz: mikro-képesség + életszerű, a diák korosztályának megfelelő mindennapi helyzet (pl. otthoni teendők, természetjárás, egyszerű vásárlás, időjárás, iskolai élet - TILOS az erőltetett tech/gaming/streamer példák használata) + Bloom-szint (Emlékezés/Értés/Alkalmazás/Elemzés/Értékelés).
+1. Tervezz pontosan ${count} kérdést. ${curriculumSnippet ? `A megadott témakörök MINDEGYIKÉT egyenlően vonja be – max 2 kérdés témakörönként/irodalmi alkotásonként! A témakörök között egyenletesen oszd el a kérdéseket.` : `Bontsd fel a(z) ${subject} tantárgy ${grade} osztályos anyagát ${count} KÜLÖNBÖZŐ mikro-képességre – MINDEN kérdés teljesen eltérő témát/aspektust fedjen le!`}
+2. Minden kérdéshez tervezz: mikro-képesség + életszerű, a diák korosztályának megfelelő mindennapi helyzet (pl. otthoni teendők, természetjárás, egyszerű vásárlás, időjárás, iskolai élet - TILOS az erőltetett tech/gaming/streamer példák használata) + Bloom-szint (Emlékezés/Értés/Alkalmazás/Elemzés/Értékelés).
+3. SZIGORÚ DIVERZITÁS: Egyetlen témából/irodalmi műből/fogalomköréből MAXIMUM 2 kérdés lehet! Minden kérdés más szituációt és más ismeretet mérjen.
 
 SZIGORÚ SZABÁLY: A kérdések és témakörök elvárásai pontosan igazodjanak a(z) ${grade} szinthez! Olyan kérdések vázlatát tervezd meg, amelyeket a tanuló az iskolai számonkérések során is megkaphatna.
 ${this._getAgeLanguageInstruction(grade)}
@@ -1183,27 +1200,35 @@ KIMENET – sima szöveg (NEM JSON!), pl.:
 
   }
 
-  async _generateDiagnosticQuestionsChunked(outline, subject, grade, count, currentLevel, curriculumSnippet = '', userId = null) {
+  async _generateDiagnosticQuestionsChunked(outline, subject, grade, count, currentLevel, curriculumSnippet = '', userId = null, onChunkReady = null) {
     const gradeNum = parseInt(grade) || 4;
     const baseDifficulty = Math.max(1, Math.min(5, Math.ceil(gradeNum / 2)));
     const levelBonus = Math.floor((Math.max(1, Math.min(10, currentLevel)) - 1) / 3);
     const effectiveDifficulty = Math.max(1, Math.min(5, baseDifficulty + levelBonus));
 
     const typePool = ['mcq', 'true_false', 'short_answer', 'fill_blank', 'matching', 'ordering'];
-    const chunkSize = 10;
-    const totalChunks = Math.ceil(count / chunkSize);
+    const FIRST_CHUNK = 2;
+    const REST_CHUNK = 4;
     const allQuestions = [];
+    let chunkIndex = 0;
 
-    for (let i = 0; i < totalChunks; i++) {
-      const chunkCount = i === totalChunks - 1 ? count - allQuestions.length : chunkSize;
+    while (allQuestions.length < count) {
+      const chunkCount = Math.min(chunkIndex === 0 ? FIRST_CHUNK : REST_CHUNK, count - allQuestions.length);
       if (chunkCount <= 0) break;
+      chunkIndex++;
 
       const usedTypes = allQuestions.map(q => q.questionType);
       const preferredTypes = typePool.filter(t => !usedTypes.includes(t));
       const typeHint = preferredTypes.slice(0, chunkCount).join(', ') || 'mcq, short_answer';
 
+      const categoryCounts = allQuestions.reduce((acc, q) => {
+        if (q.category) acc[q.category] = (acc[q.category] || 0) + 1;
+        return acc;
+      }, {});
+      const fullCategories = Object.entries(categoryCounts).filter(([, c]) => c >= 2).map(([cat]) => cat);
+
       const prevContext = allQuestions.length > 0
-        ? `\nEddig generált kérdések (KERÜLD a szóhasználat és megközelítés ismétlését):\n${JSON.stringify(allQuestions.map(q => ({ text: q.questionText.substring(0, 60), type: q.questionType })))}\n`
+        ? `\nEDDIG GENERÁLT KÉRDÉSEK – TILOS MEGISMÉTELNI VAGY HASONLÓ KÉRDÉST FELTENNI:\n${allQuestions.map((q, idx) => `${idx + 1}. [${q.questionType.toUpperCase()}] [${q.category || 'N/A'}] "${q.questionText}"`).join('\n')}\n\nAz új kérdések TELJESEN MÁS témát, szituációt és megközelítést fedjenek le!${fullCategories.length > 0 ? `\n⛔ MAX 2 KÉRDÉS/TÉMA BETELT: ${fullCategories.join(', ')} – ezekből TILOS több kérdést generálni!` : ''}\n`
         : '';
 
       const prompt = `Te egy precíz magyar pedagógiai kérdés-generáló AI vagy.
@@ -1220,12 +1245,14 @@ Kötelező: minden kérdésnek legyen "category" mezője (a mikro-képesség nev
 SZIGORÚ PEDAGÓGIAI SZABÁLYOK:
 1. Olyan kérdéseket készíts, amelyeket a diák egy valódi iskolai dolgozatban vagy felmérőben kapna. Kerüld az erőltetett modernkedést (Minecraft, streamer, Stardew Valley stb. TILOS). Helyette használj klasszikus mindennapi, természetbeli vagy tudományos megfigyeléseket.
 2. ${this._getAgeLanguageInstruction(grade)}
+3. ÖNÁLLÓ KÉRDÉSEK: Minden kérdés önmagában érthető legyen! TILOS konkrét versre, mesére, regényre, dalra hivatkozni anélkül, hogy a szövegrészletet/idézetet magában a kérdésben közölnéd. Ha elemzést kérdezel, add meg a szövegrészletet a kérdésben. Ha nincs szöveg a kérdésben, a kérdés általános ismeretet mérjen (pl. "Mi a metafora?" – nem "Milyen képet használ a vers?").
+4. TÉMAELOSZTÁS: Ugyanahhoz a témához/kategóriához MAXIMUM 2 kérdés tartozhat. A kérdések minél több különböző témát/aspektust fedjenek le.
 
 FORMÁTUM SZABÁLYOK:
 - MCQ: questionText KÉRDŐ MONDAT (?-jel!), TILOS a questionText-be a helyes választ belefoglalni (NEM lehet: "A patríciusok előkelők, a plebejusok köznép" → majd option A = ua.)! 4 valódi szöveges option (NEM "A.", "B." betűjelölők!), PONTOSAN EGYETLEN helyes, correctAnswer = az adott option szövege PONTOS MÁSOLATA
 - true_false: KÖTELEZŐ KIJELENTŐ MONDAT (nem kérdés, nem összehasonlítás!), options: ["Igaz","Hamis"]
 - fill_blank: a szövegben kötelező a ___ jelölő (akár több is), correctAnswer több üres helynél "szó1|szó2"
-- matching: options CSAK a jobb oldali értékek (keverve), pairs: [{"left":"...","right":"..."}]
+- matching: BAL oldal = fogalom/szereplő/esemény (1-4 szó), JOBB oldal = jellemvonás/magyarázat/következmény (min. 5 szó). TILOS: ha bal=szereplő neve, jobb NEM lehet másik szereplő neve – csakis jellemvonása/tulajdonsága/szerepe legyen! A jobb oldal SOHA NEM TARTALMAZHATJA a bal oldal szavait! options CSAK a jobb oldali értékek (keverve).
 - ordering: items KEVEREDETT sorrendben, correctAnswer helyes sorrendként
 
 VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
@@ -1236,7 +1263,7 @@ VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
           await sleep(800); // Szünet a diagnosztika chunk-ok között (TPM kímélés)
         }
 
-        console.log(`[AIService]   → diagnosztika chunk ${i + 1}/${totalChunks} (${chunkCount} kérdés)`);
+        console.log(`[AIService]   → diagnosztika chunk ${chunkIndex} (${chunkCount} kérdés)`);
         const raw = await this._callModelWithFallback(
           this.fastChain,
           [{ role: 'system', content: prompt }],
@@ -1248,17 +1275,25 @@ VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
 
         const parsed = this._extractJSONArray(raw);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          allQuestions.push(...parsed.slice(0, chunkCount));
-          console.log(`[AIService]   ✓ diagnosztika chunk kész (+${parsed.length} kérdés)`);
+          const offset = allQuestions.length;
+          const parsedWithIds = parsed.slice(0, chunkCount).map((q, i) => ({
+            ...q,
+            questionId: q.questionId || `d${offset + i + 1}`
+          }));
+          allQuestions.push(...parsedWithIds);
+          if (onChunkReady) onChunkReady(parsedWithIds);
+          console.log(`[AIService]   ✓ diagnosztika chunk kész (+${parsedWithIds.length} kérdés)`);
         } else {
           throw new Error('Üres vagy érvénytelen válasz a chunk-ban.');
         }
       } catch (e) {
-        console.warn(`[AIService]   ✗ diagnosztika chunk ${i + 1} sikertelen:`, e.message);
+        console.warn(`[AIService]   ✗ diagnosztika chunk ${chunkIndex} sikertelen:`, e.message);
         // Fallback kérdések hozzáadása, hogy a folyamat ne szakadjon meg és a darabszám stimmeljen
+        const fallbackChunk = [];
         for (let j = 0; j < chunkCount; j++) {
           const type = typePool[j % typePool.length];
-          allQuestions.push({
+          fallbackChunk.push({
+            questionId: `d${allQuestions.length + j + 1}`,
             questionText: `Diagnosztikai kérdés (${subject}): Mi a véleményed a(z) ${subject} fontosságáról?`,
             questionType: type === 'mcq' ? 'mcq' : 'short_answer',
             category: 'Általános',
@@ -1270,13 +1305,15 @@ VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
             explanation: 'Tartalék kérdés technikai hiba esetén.'
           });
         }
+        allQuestions.push(...fallbackChunk);
+        if (onChunkReady) onChunkReady(fallbackChunk);
       }
     }
 
     return allQuestions;
   }
 
-  async generateDiagnosticTest(subject, grade, count = 20, currentLevel = 1, selectedTopics = null, userId = null) {
+  async generateDiagnosticTest(subject, grade, count = 20, currentLevel = 1, selectedTopics = null, userId = null, onChunkReady = null) {
     const gradeNum = parseInt(grade) || 4;
     const baseDifficulty = Math.max(1, Math.min(5, Math.ceil(gradeNum / 2)));
     const levelBonus = Math.floor((Math.max(1, Math.min(10, currentLevel)) - 1) / 3);
@@ -1302,7 +1339,7 @@ VÁLASZOLJ KIZÁRÓLAG JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!):
       try {
         console.log('[AIService] Diagnosztika 2. fázis: kérdések generálása (AI chunking)...');
         const diagCurriculumSnippet = await getCurriculumSnippet(subject, grade, selectedTopics, userId);
-        const questions = await this._generateDiagnosticQuestionsChunked(outline, subject, grade, count, currentLevel, diagCurriculumSnippet, userId);
+        const questions = await this._generateDiagnosticQuestionsChunked(outline, subject, grade, count, currentLevel, diagCurriculumSnippet, userId, onChunkReady);
         if (questions.length >= Math.floor(count * 0.7)) {
           const subjectCategories = {
             'Matematika': ['Algebra', 'Geometria', 'Statisztika', 'Függvények', 'Számelmélet', 'Mértékegységek'],
@@ -1996,11 +2033,28 @@ Adj JSON választ a következő szerkezetben:
       { topic: 'Komplex feladatok', difficulty: 5, reason: 'Kihívás', learningObjective: 'Mélyen érti az anyagot' }
     ];
 
+    const categoryScores = {};
+    (testResult.answers || []).forEach(a => {
+      if (!a.category) return;
+      if (!categoryScores[a.category]) categoryScores[a.category] = { correct: 0, total: 0 };
+      categoryScores[a.category].total++;
+      if (a.isCorrect) categoryScores[a.category].correct++;
+    });
+    const weakCats = Object.entries(categoryScores).filter(([, s]) => s.correct / s.total < 0.5).map(([c]) => c);
+    const strongCats = Object.entries(categoryScores).filter(([, s]) => s.correct / s.total >= 0.7).map(([c]) => c);
+    const score = testResult.scorePercentage;
+    const base = score >= 70 ? 'Jó munkát végzel!' : score >= 50 ? 'Szép haladás, de van még mit fejleszteni.' : 'Érdemes az alapoktól átnézni az anyagot.';
+    const weakPart = weakCats.length > 0 ? ` Fejlesztésre szorul: ${weakCats.slice(0, 2).join(', ')}.` : '';
+    const strongPart = strongCats.length > 0 ? ` Erősségeid: ${strongCats.slice(0, 2).join(', ')}.` : '';
+
     return {
       overallPerformance: overall,
-      personalizedFeedback: `Az eredményed ${testResult.scorePercentage.toFixed(0)}%. Kezdjük el a személyre szabott gyakorlást!`,
-      strengths: [],
-      recommendedCheckpoints: checkpoints
+      personalizedFeedback: `${base}${weakPart}${strongPart} Az alábbi fejezetekkel kezdd el a személyre szabott gyakorlást!`,
+      strengths: strongCats.map(c => ({ category: c, description: 'Jól teljesítettél ebben a témakörben.' })),
+      recommendedCheckpoints: checkpoints.map((cp, i) => ({
+        ...cp,
+        gamifiedTitle: `Küldetés: ${cp.topic.split(' ').slice(0, 3).join(' ')}`
+      }))
     };
   }
 }

@@ -21,6 +21,8 @@ const CheckpointPractice = () => {
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(true);
   const [checkpointTitle, setCheckpointTitle] = useState('');
+  const [sessionId, setSessionId] = useState(null);
+  const [generationComplete, setGenerationComplete] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [mentorInput, setMentorInput] = useState('');
   const [mentorLoading, setMentorLoading] = useState(false);
@@ -35,6 +37,7 @@ const CheckpointPractice = () => {
   const [scoreError, setScoreError] = useState(null);
   const [chatQuestionIndex, setChatQuestionIndex] = useState(0);
   const chatEndRef = useRef(null);
+  const firstBatchShownRef = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -43,8 +46,43 @@ const CheckpointPractice = () => {
   }, [subject, checkpointId]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatMessages]);
 
+  useEffect(() => {
+    if (!sessionId || generationComplete) return;
+    firstBatchShownRef.current = false;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`${API_BASE}/poll/${sessionId}`, { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.error) {
+          clearInterval(interval);
+          addBotMessage(`Hiba a kérdések generálásakor: ${data.error}`);
+          return;
+        }
+        if (data.questions?.length > 0) {
+          if (!firstBatchShownRef.current) {
+            firstBatchShownRef.current = true;
+            const total = data.totalQuestions || 10;
+            setQuestions(Array.from({ length: total }, (_, i) =>
+              data.questions[i] || { questionId: `placeholder_${i}`, isLoading: true }
+            ));
+            setLoading(false);
+          } else {
+            setQuestions(prev => prev.map((q, i) => data.questions[i] || q));
+          }
+        }
+        if (data.complete) {
+          setGenerationComplete(true);
+          clearInterval(interval);
+        }
+      } catch {}
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [sessionId, generationComplete]);
+
   const startCheckpoint = async (signal) => {
     setLoading(true);
+    let asyncGeneration = false;
     try {
       const res = await fetch(`${API_BASE}/start`, {
         method: 'POST',
@@ -55,10 +93,23 @@ const CheckpointPractice = () => {
       if (signal?.aborted) return;
       if (res.ok) {
         const data = await res.json();
-        setQuestions(data.questions || []);
-        setCheckpointTitle(data.checkpointTitle || '');
-        setScore({ correct: 0, total: data.questions?.length || 0 });
-        setChatMessages([{ role: 'bot', content: `Üdvözöllek a **"${data.checkpointTitle}"** fejezetben! ${data.questions?.length || 0} feladat vár rád. Legalább 80% kell a teljesítéshez. Sok sikert! 🎯`, timestamp: new Date() }]);
+        if (data.questions?.length > 0) {
+          // Completed session already in DB
+          setQuestions(data.questions);
+          setGenerationComplete(true);
+          setCheckpointTitle(data.checkpointTitle || '');
+          setScore({ correct: 0, total: data.questions.length });
+          setChatMessages([{ role: 'bot', content: `Üdvözöllek a **"${data.checkpointTitle}"** fejezetben! ${data.questions.length} feladat vár rád. Legalább 80% kell a teljesítéshez. Sok sikert! 🎯`, timestamp: new Date() }]);
+        } else if (data.sessionId) {
+          // New async generation — stay in loading state until first batch arrives
+          asyncGeneration = true;
+          firstBatchShownRef.current = false;
+          setSessionId(data.sessionId);
+          setCheckpointTitle(data.checkpointTitle || '');
+          const total = data.totalQuestions || 10;
+          setScore({ correct: 0, total });
+          setChatMessages([{ role: 'bot', content: `Üdvözöllek a **"${data.checkpointTitle}"** fejezetben! ${total} feladat vár rád. Legalább 80% kell a teljesítéshez. Sok sikert! 🎯`, timestamp: new Date() }]);
+        }
       } else {
         addBotMessage('Hiba a checkpoint betöltésekor. Kérlek, próbálj vissza navigálni.');
       }
@@ -66,7 +117,7 @@ const CheckpointPractice = () => {
       if (err.name === 'AbortError') return;
       console.error('Hiba a checkpoint indításakor:', err);
     } finally {
-      if (!signal?.aborted) setLoading(false);
+      if (!signal?.aborted && !asyncGeneration) setLoading(false);
     }
   };
 
@@ -115,6 +166,7 @@ const CheckpointPractice = () => {
   };
 
   const isAnswered = (question) => {
+    if (!question || question.isLoading) return false;
     const qid = question.questionId;
     if (question.questionType === 'matching') {
       return (question.pairs || []).every((_, idx) => answers[`${qid}-${idx}`]);
@@ -136,6 +188,10 @@ const CheckpointPractice = () => {
 
   const handleCheckAnswer = async () => {
     const question = questions[currentIndex];
+    if (question?.isLoading) {
+      addBotMessage('Ez a kérdés még generálódik. Kérjük, várj egy pillanatot!');
+      return;
+    }
     const answer = collectAnswer(question);
     if (answer === null || isChecking) return;
 
@@ -167,6 +223,8 @@ const CheckpointPractice = () => {
             : `❌ **Nem sikerült.** Gondold át még egyszer!`;
           addBotMessage(incorrectMsg);
         }
+      } else if (res.status === 202) {
+        addBotMessage('Ez a kérdés még generálódik. Kérjük, várj egy pillanatot és próbáld újra!');
       } else if (res.status === 503) {
         addBotMessage('⚠️ Az AI tanár jelenleg nem elérhető. Kérjük, próbáld újra később!');
       } else {
@@ -258,6 +316,11 @@ const CheckpointPractice = () => {
     setMentorLoading(true);
 
     const question = questions[currentIndex];
+    if (question?.isLoading) {
+      addBotMessage('Ez a kérdés még generálódik. Kérjük, várj egy pillanatot!');
+      setMentorLoading(false);
+      return;
+    }
     const answer = collectAnswer(question);
     const updatedHistory = [...chatMessages, { role: 'user', content: userMsg }];
 
@@ -336,11 +399,11 @@ const CheckpointPractice = () => {
   }
 
   const question = questions[currentIndex];
-  const qid = question.questionId;
+  const qid = question.isLoading ? null : question.questionId;
   const progressPct = ((currentIndex + 1) / questions.length) * 100;
   const answered = isAnswered(question);
-  const currentItems = answers[qid] || question.items || [];
-  const isCurrentCorrect = answeredCorrectly[qid];
+  const currentItems = question.isLoading ? [] : (answers[qid] || question.items || []);
+  const isCurrentCorrect = qid ? answeredCorrectly[qid] : false;
   const scorePct = score.total > 0 ? Math.round((score.correct / score.total) * 100) : 0;
   const isLastQuestion = currentIndex === questions.length - 1;
 
@@ -372,7 +435,7 @@ const CheckpointPractice = () => {
                   return (
                     <button
                       key={q.questionId}
-                      className={`question-dot ${idx === currentIndex ? 'active' : ''} ${status || ''}`}
+                      className={`question-dot ${idx === currentIndex ? 'active' : ''} ${status || ''} ${q.isLoading ? 'loading' : ''}`}
                       onClick={() => { if (!isChecking) { setCurrentIndex(idx); setScoreError(null); if (idx !== currentIndex) addSeparatorMessage(idx); } }}
                       disabled={isChecking}
                       title={`Kérdés ${idx + 1}`}
@@ -383,177 +446,186 @@ const CheckpointPractice = () => {
             </div>
 
             <div className="question-card">
-              {question.questionType === 'fill_blank' ? (
-                <h3>
-                  {question.questionText.split('___').map((part, idx, arr) => (
-                    <React.Fragment key={idx}>
-                      {part}
-                      {idx < arr.length - 1 && <span className="fill-blank-marker">[{idx + 1}]</span>}
-                    </React.Fragment>
-                  ))}
-                </h3>
+              {question.isLoading ? (
+                <div className="question-loading-state">
+                  <div className="loading-dots"><span></span><span></span><span></span></div>
+                  <p>Ez a kérdés még generálódik...</p>
+                </div>
               ) : (
-                <h3>{question.questionText}</h3>
-              )}
+                <>
+                  {question.questionType === 'fill_blank' ? (
+                    <h3>
+                      {question.questionText.split('___').map((part, idx, arr) => (
+                        <React.Fragment key={idx}>
+                          {part}
+                          {idx < arr.length - 1 && <span className="fill-blank-marker">[{idx + 1}]</span>}
+                        </React.Fragment>
+                      ))}
+                    </h3>
+                  ) : (
+                    <h3>{question.questionText}</h3>
+                  )}
 
-              {/* MCQ */}
-              {question.questionType === 'mcq' && (
-                <div className="options">
-                  {(question.options || []).map((opt, idx) => (
-                    <label key={idx} className={`option ${answers[qid] === opt ? 'selected' : ''}`}>
-                      <input
-                        type="radio"
-                        name={`q-${qid}`}
-                        value={opt}
-                        checked={answers[qid] === opt}
-                        onChange={() => handleAnswerChange(qid, opt)}
-                        disabled={isCurrentCorrect || isChecking}
-                      />
-                      <span>{String.fromCharCode(65 + idx)}. {opt}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
+                  {/* MCQ */}
+                  {question.questionType === 'mcq' && (
+                    <div className="options">
+                      {(question.options || []).map((opt, idx) => (
+                        <label key={idx} className={`option ${answers[qid] === opt ? 'selected' : ''}`}>
+                          <input
+                            type="radio"
+                            name={`q-${qid}`}
+                            value={opt}
+                            checked={answers[qid] === opt}
+                            onChange={() => handleAnswerChange(qid, opt)}
+                            disabled={isCurrentCorrect || isChecking}
+                          />
+                          <span>{String.fromCharCode(65 + idx)}. {opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
 
-              {/* Igaz / Hamis */}
-              {question.questionType === 'true_false' && (
-                <div className="true-false-btns">
-                  {['Igaz', 'Hamis'].map(val => (
-                    <button
-                      key={val}
-                      className={`tf-btn ${answers[qid] === val ? 'selected' : ''}`}
-                      onClick={() => handleAnswerChange(qid, val)}
-                      disabled={isCurrentCorrect || isChecking}
-                    >
-                      {val === 'Igaz' ? '✓ Igaz' : '✗ Hamis'}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Rövid válasz */}
-              {question.questionType === 'short_answer' && (
-                <textarea
-                  className="answer-input"
-                  placeholder="Írd le a válaszod..."
-                  value={answers[qid] || ''}
-                  onChange={e => handleAnswerChange(qid, e.target.value)}
-                  rows={4}
-                  disabled={isCurrentCorrect || isChecking}
-                />
-              )}
-
-              {/* Szövegkiegészítés */}
-              {question.questionType === 'fill_blank' && (() => {
-                const blankCount = (question.questionText.match(/___/g) || []).length || 1;
-                return (
-                  <div className="fill-blank-fields">
-                    {Array.from({ length: blankCount }, (_, i) => (
-                      <div key={i} className="fill-blank-row">
-                        {blankCount > 1 && <span className="fill-blank-num">[{i + 1}]</span>}
-                        <input
-                          type="text"
-                          className="answer-input fill-blank-input"
-                          placeholder={blankCount > 1 ? `${i + 1}. hiányzó szó...` : 'Hiányzó szó vagy kifejezés...'}
-                          value={answers[`${qid}_b${i}`] || ''}
-                          onChange={e => handleAnswerChange(`${qid}_b${i}`, e.target.value)}
+                  {/* Igaz / Hamis */}
+                  {question.questionType === 'true_false' && (
+                    <div className="true-false-btns">
+                      {['Igaz', 'Hamis'].map(val => (
+                        <button
+                          key={val}
+                          className={`tf-btn ${answers[qid] === val ? 'selected' : ''}`}
+                          onClick={() => handleAnswerChange(qid, val)}
                           disabled={isCurrentCorrect || isChecking}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                );
-              })()}
+                        >
+                          {val === 'Igaz' ? '✓ Igaz' : '✗ Hamis'}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
-              {/* Párosítás */}
-              {question.questionType === 'matching' && (
-                <div className="matching">
-                  {(question.pairs || []).map((pair, idx) => (
-                    <div key={idx} className="match-row">
-                      <span className="match-left">{pair.left}</span>
-                      <select
-                        className="match-select"
-                        value={answers[`${qid}-${idx}`] || ''}
-                        onChange={e => handleAnswerChange(`${qid}-${idx}`, e.target.value)}
-                        disabled={isCurrentCorrect || isChecking}
-                      >
-                        <option value="">Válassz...</option>
-                        {(question.options || question.pairs.map(p => p.right)).map((opt, oi) => (
-                          <option key={oi} value={opt}>{opt}</option>
+                  {/* Rövid válasz */}
+                  {question.questionType === 'short_answer' && (
+                    <textarea
+                      className="answer-input"
+                      placeholder="Írd le a válaszod..."
+                      value={answers[qid] || ''}
+                      onChange={e => handleAnswerChange(qid, e.target.value)}
+                      rows={4}
+                      disabled={isCurrentCorrect || isChecking}
+                    />
+                  )}
+
+                  {/* Szövegkiegészítés */}
+                  {question.questionType === 'fill_blank' && (() => {
+                    const blankCount = (question.questionText.match(/___/g) || []).length || 1;
+                    return (
+                      <div className="fill-blank-fields">
+                        {Array.from({ length: blankCount }, (_, i) => (
+                          <div key={i} className="fill-blank-row">
+                            {blankCount > 1 && <span className="fill-blank-num">[{i + 1}]</span>}
+                            <input
+                              type="text"
+                              className="answer-input fill-blank-input"
+                              placeholder={blankCount > 1 ? `${i + 1}. hiányzó szó...` : 'Hiányzó szó vagy kifejezés...'}
+                              value={answers[`${qid}_b${i}`] || ''}
+                              onChange={e => handleAnswerChange(`${qid}_b${i}`, e.target.value)}
+                              disabled={isCurrentCorrect || isChecking}
+                            />
+                          </div>
                         ))}
-                      </select>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Párosítás */}
+                  {question.questionType === 'matching' && (
+                    <div className="matching">
+                      {(question.pairs || []).map((pair, idx) => (
+                        <div key={idx} className="match-row">
+                          <span className="match-left">{pair.left}</span>
+                          <select
+                            className="match-select"
+                            value={answers[`${qid}-${idx}`] || ''}
+                            onChange={e => handleAnswerChange(`${qid}-${idx}`, e.target.value)}
+                            disabled={isCurrentCorrect || isChecking}
+                          >
+                            <option value="">Válassz...</option>
+                            {(question.options || question.pairs.map(p => p.right)).map((opt, oi) => (
+                              <option key={oi} value={opt}>{opt}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  )}
 
-              {/* Sorba rendezés – drag & drop */}
-              {question.questionType === 'ordering' && (
-                <div className="ordering">
-                  <p className="ordering-hint">Húzd a kívánt sorrendbe:</p>
-                  {currentItems.map((item, idx) => (
-                    <div
-                      key={`${qid}-${item}`}
-                      className={`order-item ${dragIdx === idx ? 'dragging' : ''} ${dragOverIdx === idx && dragIdx !== idx ? 'drag-over' : ''}`}
-                      draggable={!isCurrentCorrect && !isChecking}
-                      onDragStart={() => { if (!isCurrentCorrect && !isChecking) setDragIdx(idx); }}
-                      onDragOver={(e) => { e.preventDefault(); if (dragIdx !== idx) setDragOverIdx(idx); }}
-                      onDrop={() => {
-                        if (!isCurrentCorrect && !isChecking) handleOrderingDrop(qid, question.items, dragIdx, idx);
-                        setDragIdx(null);
-                        setDragOverIdx(null);
-                      }}
-                      onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
-                    >
-                      <span className="drag-handle">☰</span>
-                      <span className="order-num">{idx + 1}</span>
-                      <span className="order-text">{item}</span>
+                  {/* Sorba rendezés – drag & drop */}
+                  {question.questionType === 'ordering' && (
+                    <div className="ordering">
+                      <p className="ordering-hint">Húzd a kívánt sorrendbe:</p>
+                      {currentItems.map((item, idx) => (
+                        <div
+                          key={`${qid}-${item}`}
+                          className={`order-item ${dragIdx === idx ? 'dragging' : ''} ${dragOverIdx === idx && dragIdx !== idx ? 'drag-over' : ''}`}
+                          draggable={!isCurrentCorrect && !isChecking}
+                          onDragStart={() => { if (!isCurrentCorrect && !isChecking) setDragIdx(idx); }}
+                          onDragOver={(e) => { e.preventDefault(); if (dragIdx !== idx) setDragOverIdx(idx); }}
+                          onDrop={() => {
+                            if (!isCurrentCorrect && !isChecking) handleOrderingDrop(qid, question.items, dragIdx, idx);
+                            setDragIdx(null);
+                            setDragOverIdx(null);
+                          }}
+                          onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
+                        >
+                          <span className="drag-handle">☰</span>
+                          <span className="order-num">{idx + 1}</span>
+                          <span className="order-text">{item}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
+                  )}
 
-              {/* 80% hibaüzenet */}
-              {scoreError && (
-                <p className="error-message">
-                  <FaExclamationTriangle />{scoreError}
-                </p>
-              )}
+                  {/* 80% hibaüzenet */}
+                  {scoreError && (
+                    <p className="error-message">
+                      <FaExclamationTriangle />{scoreError}
+                    </p>
+                  )}
 
-              {/* Gombok */}
-              <div className="action-buttons">
-                {isCurrentCorrect ? (
-                  <button
-                    className="next-btn"
-                    onClick={handleNextQuestion}
-                    disabled={completing}
-                  >
-                    {completing
-                      ? 'Mentés...'
-                      : isLastQuestion
-                        ? (scorePct >= 80 ? '🏁 Fejezet befejezése' : `⚠️ Befejezés (${scorePct}% – min. 80% kell)`)
-                        : 'Következő kérdés →'}
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      className={`check-btn ${isChecking ? 'checking' : ''}`}
-                      onClick={handleCheckAnswer}
-                      disabled={!answered || isChecking}
-                    >
-                      {isChecking ? 'Ellenőrzés...' : 'Ellenőrzés'}
-                    </button>
-                    <button
-                      className="skip-btn"
-                      onClick={handleSkipQuestion}
-                      disabled={isChecking || completing}
-                      title="Kihagyás – a kérdés rossznak számít"
-                    >
-                      {isLastQuestion ? 'Kihagyás & befejezés →' : 'Kihagyás →'}
-                    </button>
-                  </>
-                )}
-              </div>
+                  {/* Gombok */}
+                  <div className="action-buttons">
+                    {isCurrentCorrect ? (
+                      <button
+                        className="next-btn"
+                        onClick={handleNextQuestion}
+                        disabled={completing}
+                      >
+                        {completing
+                          ? 'Mentés...'
+                          : isLastQuestion
+                            ? (scorePct >= 80 ? '🏁 Fejezet befejezése' : `⚠️ Befejezés (${scorePct}% – min. 80% kell)`)
+                            : 'Következő kérdés →'}
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          className={`check-btn ${isChecking ? 'checking' : ''}`}
+                          onClick={handleCheckAnswer}
+                          disabled={!answered || isChecking}
+                        >
+                          {isChecking ? 'Ellenőrzés...' : 'Ellenőrzés'}
+                        </button>
+                        <button
+                          className="skip-btn"
+                          onClick={handleSkipQuestion}
+                          disabled={isChecking || completing}
+                          title="Kihagyás – a kérdés rossznak számít"
+                        >
+                          {isLastQuestion ? 'Kihagyás & befejezés →' : 'Kihagyás →'}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

@@ -1,17 +1,17 @@
 {
   "month": "2026-05",
-  "callCount": 116,
-  "totalCostUSD": 0.06584009880000001,
-  "totalInputTokens": 122425,
-  "totalOutputTokens": 89530,
-  "totalCacheHitTokens": 20096,
+  "callCount": 177,
+  "totalCostUSD": 0.08183083280000002,
+  "totalInputTokens": 212541,
+  "totalOutputTokens": 127197,
+  "totalCacheHitTokens": 21376,
   "byModel": {
     "deepseek-chat": {
-      "calls": 71,
-      "costUSD": 0.033504632,
-      "inputTokens": 98190,
-      "outputTokens": 80286,
-      "cacheHitTokens": 19840
+      "calls": 77,
+      "costUSD": 0.036368416,
+      "inputTokens": 105404,
+      "outputTokens": 87534,
+      "cacheHitTokens": 21120
     },
     "deepseek-reasoner": {
       "calls": 40,
@@ -21,56 +21,56 @@
       "cacheHitTokens": 256
     },
     "qwen-plus": {
-      "calls": 5,
-      "costUSD": 0.0017992,
-      "inputTokens": 2146,
-      "outputTokens": 784,
+      "calls": 15,
+      "costUSD": 0.005197200000000001,
+      "inputTokens": 6129,
+      "outputTokens": 2288,
       "cacheHitTokens": 0
     },
     "qwen-turbo": {
-      "calls": 0,
-      "costUSD": 0,
-      "inputTokens": 0,
-      "outputTokens": 0,
+      "calls": 45,
+      "costUSD": 0.00972895,
+      "inputTokens": 78919,
+      "outputTokens": 28915,
       "cacheHitTokens": 0
     }
   },
   "byChain": {
     "reasoning": {
-      "calls": 45,
-      "costUSD": 0.032335466800000004,
-      "inputTokens": 24235,
-      "outputTokens": 9244,
+      "calls": 55,
+      "costUSD": 0.035733466799999995,
+      "inputTokens": 28218,
+      "outputTokens": 10748,
       "cacheHitTokens": 256
     },
     "fast": {
-      "calls": 71,
-      "costUSD": 0.033504632,
-      "inputTokens": 98190,
-      "outputTokens": 80286,
-      "cacheHitTokens": 19840
+      "calls": 122,
+      "costUSD": 0.04609736600000001,
+      "inputTokens": 184323,
+      "outputTokens": 116449,
+      "cacheHitTokens": 21120
     }
   },
   "byCaller": {
     "ExamOutline": {
-      "calls": 19,
-      "costUSD": 0.008060668,
-      "inputTokens": 14091,
-      "outputTokens": 24565,
+      "calls": 21,
+      "costUSD": 0.008367168,
+      "inputTokens": 15549,
+      "outputTokens": 25733,
       "cacheHitTokens": 5760
     },
     "ExamQuestions": {
-      "calls": 19,
-      "costUSD": 0.016941450400000002,
-      "inputTokens": 61731,
-      "outputTokens": 36288,
+      "calls": 21,
+      "costUSD": 0.0177238504,
+      "inputTokens": 67087,
+      "outputTokens": 38861,
       "cacheHitTokens": 13568
     },
     "CheckAnswer": {
-      "calls": 19,
-      "costUSD": 0.0101056068,
-      "inputTokens": 7923,
-      "outputTokens": 3190,
+      "calls": 29,
+      "costUSD": 0.013503606800000002,
+      "inputTokens": 11906,
+      "outputTokens": 4694,
       "cacheHitTokens": 256
     },
     "StreamChat": {
@@ -81,24 +81,24 @@
       "cacheHitTokens": 0
     },
     "DiagOutline": {
-      "calls": 5,
-      "costUSD": 0.00134134,
-      "inputTokens": 3837,
-      "outputTokens": 2872,
-      "cacheHitTokens": 0
+      "calls": 20,
+      "costUSD": 0.0035215540000000005,
+      "inputTokens": 20415,
+      "outputTokens": 9069,
+      "cacheHitTokens": 1280
     },
     "DiagQuestions": {
-      "calls": 5,
-      "costUSD": 0.004809560000000001,
-      "inputTokens": 7422,
-      "outputTokens": 13466,
+      "calls": 35,
+      "costUSD": 0.014004730000000002,
+      "inputTokens": 69382,
+      "outputTokens": 39244,
       "cacheHitTokens": 0
     },
     "QuestionAnalysis": {
-      "calls": 3,
-      "costUSD": 0.00038234,
-      "inputTokens": 1073,
-      "outputTokens": 829,
+      "calls": 5,
+      "costUSD": 0.00051079,
+      "inputTokens": 1854,
+      "outputTokens": 1276,
       "cacheHitTokens": 0
     },
     "CheckpointHint": {
@@ -125,11 +125,11 @@
       "cacheHitTokens": 1536
     },
     "69f90cec2840e4a89a161a8a": {
-      "calls": 40,
-      "costUSD": 0.0270426576,
-      "inputTokens": 72252,
-      "outputTokens": 69173,
-      "cacheHitTokens": 17792
+      "calls": 89,
+      "costUSD": 0.0395069416,
+      "inputTokens": 157604,
+      "outputTokens": 104889,
+      "cacheHitTokens": 19072
     }
   }
 }
