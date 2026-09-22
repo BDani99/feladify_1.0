@@ -203,4 +203,21 @@ function trackCall({ caller, chainType, modelName, messages, output, realTokens,
   saveCounter(monthly);
 }
 
-module.exports = { trackCall };
+// ─── Havi költségkeret ellenőrzés ────────────────────────────────────────────
+// Ha a MONTHLY_BUDGET_USD env változó be van állítva, ennél nagyobb havi
+// összköltség esetén az AI-hívásokat el kell utasítani, mielőtt a fizetős
+// szolgáltatóhoz egyáltalán eljutna a kérés. Nincs beállítva → nincs limit
+// (a korábbi, korlátlan viselkedés marad meg alapértelmezettként).
+function isOverBudget() {
+  const limit = Number(process.env.MONTHLY_BUDGET_USD);
+  if (!limit || limit <= 0) return false;
+  if (monthly.month !== currentMonth()) monthly = emptyCounter();
+  return monthly.totalCostUSD >= limit;
+}
+
+function getMonthlyTotalUSD() {
+  if (monthly.month !== currentMonth()) monthly = emptyCounter();
+  return monthly.totalCostUSD;
+}
+
+module.exports = { trackCall, isOverBudget, getMonthlyTotalUSD };

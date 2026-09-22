@@ -32,6 +32,9 @@ function stripThinking(text) {
 }
 
 async function _callModel(modelConfig, messages, temperature) {
+  if (costTracker.isOverBudget()) {
+    throw new Error('A havi AI költségkeret elérve. Kérjük, próbálja újra a következő hónapban, vagy keresse az adminisztrátort.');
+  }
   const { model, provider } = modelConfig;
   let client;
   let actualModel;

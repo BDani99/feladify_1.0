@@ -177,6 +177,7 @@ Majd töltsd ki a szükséges értékeket:
 | `QWEN_API_KEY` | ✅ | Qwen / DashScope API kulcs (AI funkciókhoz) |
 | `PORT` | – | Backend port (alapértelmezett: `5000`) |
 | `ALLOWED_ORIGINS` | – | Vesszővel elválasztott CORS engedélyezési lista (üresen: minden origin engedélyezett) |
+| `MONTHLY_BUDGET_USD` | ajánlott | Havi AI költségkeret dollárban; elérésekor minden AI-hívás elutasításra kerül a hónap végéig |
 | `ADMIN_USERNAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` | – | Az admin fiók létrehozó script paraméterei |
 
 > A `backend/.env` fájlt **soha ne** commitold — a `.gitignore` már kizárja.
@@ -253,10 +254,13 @@ A backend a következő védelmi rétegeket tartalmazza:
 
 - Szerepkör-alapú JWT hitelesítés (`teacher` / `student` / `parent` / `admin`), tulajdonjog-ellenőrzéssel minden erőforrás-hozzáférésnél
 - `bcrypt` jelszóhashelés, minimális jelszóhossz-követelmény
-- Rate limiting minden API végponton, szigorúbb korlátokkal a bejelentkezésen és az AI-hívásokat indító útvonalakon
+- Rate limiting minden API végponton — percenkénti és napi korlát felhasználónként (nem csak IP-nként) az AI-hívásokat indító útvonalakon, szigorúbb korlát a bejelentkezésen
+- Alkalmazás-szintű havi AI-költségkeret (`MONTHLY_BUDGET_USD`), ami a limit elérésekor leállítja az AI-hívásokat, még mielőtt a fizetős szolgáltatóhoz eljutnának
 - Bemenet-validáció és MIME-típus allowlist a fájlfeltöltésnél
 - XSS elleni védelem (escapelés) az admin panelben
 - Az AI-alapú javítás védve van a promptinjekció ellen (a diák válasza mindig adatként, nem utasításként kerül feldolgozásra)
+
+> 💡 **Az alkalmazás-szintű költségkeret csak egy második védelmi vonal.** A legmegbízhatóbb védelem a felesleges AI-kiadások ellen mindig a szolgáltatónál (DeepSeek, Alibaba DashScope) beállított **kemény havi költséglimit vagy értesítési küszöb** — ezt érdemes közvetlenül a szolgáltatói dashboardon is beállítani, mert az appon belüli hibáktól/bugoktól függetlenül is érvényesül.
 
 ## 📄 Licenc
 

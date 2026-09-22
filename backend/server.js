@@ -16,7 +16,7 @@ const announcementRoutes = require('./routes/announcements');
 const adminRoutes = require('./routes/admin');
 const curriculumRoutes = require('./routes/curriculum');
 const { startCleanupJob } = require('./jobs/cleanupAnnouncements');
-const { generalLimiter, aiLimiter } = require('./middleware/rateLimiters');
+const { generalLimiter, aiLimiter, aiDailyLimiter } = require('./middleware/rateLimiters');
 
 const app = express();
 
@@ -50,7 +50,7 @@ app.use([
   '/api/assignments/student/explain',
   '/api/assignments/chat',
   '/api/assignments/teacher/chat/send',
-], aiLimiter);
+], aiLimiter, aiDailyLimiter);
 
 const PORT = process.env.PORT || 5000;
 

@@ -228,6 +228,9 @@ class AIService {
 
 
   async _callModel(model, messages, options) {
+    if (costTracker.isOverBudget()) {
+      throw new Error('A havi AI költségkeret elérve. Kérjük, próbálja újra a következő hónapban, vagy keresse az adminisztrátort.');
+    }
     const { apiBase, apiKey, actualModel } = this._resolveProviderAndModel(model);
     try {
       const payload = {
@@ -287,6 +290,9 @@ class AIService {
   }
 
   async _callModelWithFallback(chain, messages, options, caller = '', validateFn = null, userId = null) {
+    if (costTracker.isOverBudget()) {
+      throw new Error('A havi AI költségkeret elérve. Kérjük, próbálja újra a következő hónapban, vagy keresse az adminisztrátort.');
+    }
     const chainType = chain === this.reasoningChain ? 'reasoning' : 'fast';
     for (let i = 0; i < chain.length; i++) {
       const { model } = chain[i];
@@ -320,6 +326,9 @@ class AIService {
     }
   }  async generateResponse(prompt, messages = [], options = {}, useReasoning = false, modelOverride = null, caller = 'Chat', validateFn = null) {
     if (!this.deepseekKey && !this.qwenKey) throw new Error('Az AI szolgáltatás jelenleg nem elérhető. Kérjük, próbálja újra.');
+    if (costTracker.isOverBudget()) {
+      throw new Error('A havi AI költségkeret elérve. Kérjük, próbálja újra a következő hónapban, vagy keresse az adminisztrátort.');
+    }
 
     const allMessages = [{ role: 'system', content: prompt }, ...messages];
     const targetModel = modelOverride?.model || (useReasoning ? this.reasoningModel : this.fastModel);
@@ -363,6 +372,10 @@ class AIService {
   async *generateResponseStream(prompt, messages = [], options = {}, useReasoning = false, modelOverride = null) {
     if (!this.deepseekKey && !this.qwenKey) {
       yield 'Az AI szolgáltatás jelenleg nem elérhető. Kérjük, próbálja újra.';
+      return;
+    }
+    if (costTracker.isOverBudget()) {
+      yield 'A havi AI költségkeret elérve. Kérjük, próbálja újra a következő hónapban, vagy keresse az adminisztrátort.';
       return;
     }
 
