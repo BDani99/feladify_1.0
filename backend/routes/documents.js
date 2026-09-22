@@ -4,11 +4,11 @@ const multer = require('multer');
 const authenticateUser = require('../middleware/authenticateUser');
 const documentController = require('../controllers/documentController');
 
-// Multer konfigurálása memóriatárhellyel és 250 MB-os fájlméret limittel
+// Multer konfigurálása memóriatárhellyel és 50 MB-os fájlméret limittel
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 250 * 1024 * 1024 // 250 MB
+    fileSize: 50 * 1024 * 1024 // 50 MB
   }
 });
 

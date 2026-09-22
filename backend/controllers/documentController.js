@@ -4,6 +4,32 @@ const { Readable } = require('stream');
 const Folder = require('../models/Folder');
 const File = require('../models/File');
 
+// Csak ezeket a MIME-típusokat fogadjuk el feltöltéskor — kizárja a böngészőben
+// futtatható tartalmakat (HTML, SVG, JS stb.), amelyek tárolt XSS-t okozhatnának,
+// ha valaha inline megjelenítésre kerülnének.
+const ALLOWED_MIME_TYPES = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'text/plain',
+  'text/csv',
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'application/zip',
+]);
+
+// Ezek jeleníthetők meg biztonságosan inline-ban; minden más letöltésre kényszerítve.
+const INLINE_SAFE_MIME_TYPES = new Set([
+  'application/pdf', 'text/plain', 'text/csv',
+  'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+]);
+
 let bucket;
 const getBucket = () => {
   if (!bucket) {
@@ -133,6 +159,9 @@ exports.uploadFile = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'Nem érkezett fájl a feltöltéshez.' });
     }
+    if (!ALLOWED_MIME_TYPES.has(req.file.mimetype)) {
+      return res.status(400).json({ message: 'Nem támogatott fájltípus.' });
+    }
 
     const decodedName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
 
@@ -183,12 +212,14 @@ exports.streamFile = async (req, res) => {
     }
 
     const gridFSBucket = getBucket();
-    
+
     // Fejlécek beállítása
     res.set('Content-Type', file.mimeType);
-    
+    res.set('X-Content-Type-Options', 'nosniff');
+
     const download = req.query.download === 'true';
-    if (download) {
+    const canInline = INLINE_SAFE_MIME_TYPES.has(file.mimeType);
+    if (download || !canInline) {
       res.set('Content-Disposition', `attachment; filename="${encodeURIComponent(file.name)}"`);
     } else {
       res.set('Content-Disposition', `inline; filename="${encodeURIComponent(file.name)}"`);
@@ -513,8 +544,9 @@ exports.streamSharedFile = async (req, res) => {
     }
 
     const gridFSBucket = getBucket();
-    
+
     res.set('Content-Type', file.mimeType);
+    res.set('X-Content-Type-Options', 'nosniff');
     res.set('Content-Disposition', `attachment; filename="${encodeURIComponent(file.name)}"`);
 
     const downloadStream = gridFSBucket.openDownloadStream(file.gridFSId);
