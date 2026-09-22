@@ -3,9 +3,10 @@ const { randomBytes } = require('crypto');
 const sessions = new Map();
 const TTL_MS = 20 * 60 * 1000;
 
-function createSession(totalCount) {
+function createSession(totalCount, userId = null) {
   const id = randomBytes(16).toString('hex');
   sessions.set(id, {
+    userId: userId ? String(userId) : null,
     sanitized: [],
     full: [],
     totalCount,
@@ -33,8 +34,17 @@ function markError(id, msg) {
   if (s) { s.error = msg; s.complete = true; }
 }
 
-function getSession(id) {
-  return sessions.get(id) || null;
+// requestingUserId megadása esetén csak akkor adjuk vissza a sessiont, ha az
+// a hívó felhasználóhoz tartozik — enélkül bárki, aki kitalálja/megszerzi egy
+// másik felhasználó session ID-ját, megnézhetné annak generálás alatt álló
+// kérdéssorát.
+function getSession(id, requestingUserId = null) {
+  const s = sessions.get(id);
+  if (!s) return null;
+  if (requestingUserId !== null && s.userId !== null && s.userId !== String(requestingUserId)) {
+    return null;
+  }
+  return s;
 }
 
 setInterval(() => {

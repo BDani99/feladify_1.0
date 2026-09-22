@@ -438,7 +438,7 @@ router.post('/diagnostic/start', authMiddleware, async (req, res) => {
 
     // Dedup: if async generation already in progress for this subject, return the same session
     if (progress.diagnosticSession?.subject === subject && progress.diagnosticSession?.generationSessionId) {
-      const activeGen = generationStore.getSession(progress.diagnosticSession.generationSessionId);
+      const activeGen = generationStore.getSession(progress.diagnosticSession.generationSessionId, req.user._id);
       if (activeGen && !activeGen.complete && !activeGen.error) {
         const existingInProgress = await DiagnosticResult.findOne({ studentId: req.user._id, subject, status: 'in_progress' });
         return res.json({
@@ -471,7 +471,7 @@ router.post('/diagnostic/start', authMiddleware, async (req, res) => {
       ? selectedTopics
       : getRandomCurriculumTopics(subject, sessionGrade, 5);
 
-    const sessionId = generationStore.createSession(totalQuestions);
+    const sessionId = generationStore.createSession(totalQuestions, req.user._id);
 
     const result = new DiagnosticResult({
       studentId:      req.user._id,
@@ -535,7 +535,7 @@ router.post('/diagnostic/start', authMiddleware, async (req, res) => {
 
 // GET /api/student/diagnostic/poll/:sessionId - Progressive question loading poll
 router.get('/diagnostic/poll/:sessionId', authMiddleware, (req, res) => {
-  const session = generationStore.getSession(req.params.sessionId);
+  const session = generationStore.getSession(req.params.sessionId, req.user._id);
   if (!session) return res.status(404).json({ message: 'Session not found or expired' });
   res.json({
     questions: session.sanitized,
@@ -1348,7 +1348,7 @@ router.post('/checkpoint/start', authMiddleware, async (req, res) => {
     const weakQuestions = subjectData.weakQuestionsForNext || [];
     const totalQuestions = 10;
 
-    const sessionId = generationStore.createSession(totalQuestions);
+    const sessionId = generationStore.createSession(totalQuestions, req.user._id);
 
     // Save initial session to DB (with generationSessionId, empty questions)
     let saved = false;
@@ -1430,7 +1430,7 @@ router.post('/checkpoint/start', authMiddleware, async (req, res) => {
 
 // GET /api/student/checkpoint/poll/:sessionId - Progressive question loading poll
 router.get('/checkpoint/poll/:sessionId', authMiddleware, (req, res) => {
-  const session = generationStore.getSession(req.params.sessionId);
+  const session = generationStore.getSession(req.params.sessionId, req.user._id);
   if (!session) return res.status(404).json({ message: 'Session not found or expired' });
   res.json({
     questions: session.sanitized,
