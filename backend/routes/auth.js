@@ -8,9 +8,24 @@ const router = express.Router();
 const authenticateUser = require('../middleware/authenticateUser');
 
 // Regisztráció végpont
+const REGISTERABLE_ROLES = ['teacher', 'student', 'parent'];
+
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, role, subjects, className, childEmails, classIds } = req.body;
+
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ message: 'A név megadása kötelező.' });
+    }
+    if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      return res.status(400).json({ message: 'Érvényes e-mail cím megadása kötelező.' });
+    }
+    if (!REGISTERABLE_ROLES.includes(role)) {
+      return res.status(400).json({ message: 'Érvénytelen szerepkör.' });
+    }
+    if (!password || typeof password !== 'string' || password.length < 8) {
+      return res.status(400).json({ message: 'A jelszónak legalább 8 karakter hosszúnak kell lennie.' });
+    }
 
     // Ellenőrzi, hogy az email cím már használatban van-e
     const existingUser = await User.findOne({ email });
