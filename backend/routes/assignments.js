@@ -211,6 +211,9 @@ router.post('/teacher/save', authenticateTeacher, async (req, res) => {
 
     const classData = await Class.findOne({ name: className });
     if (!classData) return res.status(400).json({ message: 'Az adott osztály nem található.' });
+    if (!classData.teacherIds.some(id => String(id) === String(req.userId))) {
+      return res.status(403).json({ message: 'Nincs jogosultságod ehhez az osztályhoz.' });
+    }
 
     const classStudents = await User.find({ role: 'student', className: classData.name }).select('_id');
     if (classStudents.length === 0) return res.status(400).json({ message: 'Nincs diák az adott osztályban.' });
@@ -276,6 +279,9 @@ router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
     const diffDesc = getDifficultyDescription(difficulty, className);
     const classData = await Class.findOne({ name: className });
     if (!classData) return res.status(400).json({ message: 'Az adott osztály nem található.' });
+    if (!classData.teacherIds.some(id => String(id) === String(req.userId))) {
+      return res.status(403).json({ message: 'Nincs jogosultságod ehhez az osztályhoz.' });
+    }
 
     const classStudents = await User.find({ role: 'student', className: classData.name }).select('_id');
     if (classStudents.length === 0) return res.status(400).json({ message: 'Nincs diák az adott osztályban.' });
@@ -627,6 +633,9 @@ router.post('/student/autosave/:assignmentId', authenticateStudent, async (req, 
     if (!assignment) {
       return res.status(404).json({ message: 'Dolgozat nem található.' });
     }
+    if (!assignment.studentIds.some(id => String(id) === String(studentId))) {
+      return res.status(403).json({ message: 'Ez a dolgozat nincs hozzád rendelve.' });
+    }
 
     // Ellenőrizzük, hogy van-e már véglegesített dolgozat
     const alreadyCompleted = await User.findOne({
@@ -703,6 +712,9 @@ router.post('/student/submit/:assignmentId', authenticateStudent, async (req, re
     const assignment = await Assignment.findById(assignmentId);
     if (!assignment) {
       return res.status(404).json({ message: 'Dolgozat nem található.' });
+    }
+    if (!assignment.studentIds.some(id => String(id) === String(studentId))) {
+      return res.status(403).json({ message: 'Ez a dolgozat nincs hozzád rendelve.' });
     }
 
     // Ellenőrizzük, hogy a diák már kitöltötte-e a dolgozatot véglegesen
@@ -926,7 +938,7 @@ router.patch('/student/flag-answer', authenticateStudent, async (req, res) => {
 router.get('/teacher/assignment-submissions/:assignmentId', authenticateTeacher, async (req, res) => {
   try {
     const { assignmentId } = req.params;
-    const assignment = await Assignment.findById(assignmentId);
+    const assignment = await Assignment.findOne({ _id: assignmentId, teacherId: req.userId });
     if (!assignment) return res.status(404).json({ message: 'Dolgozat nem található.' });
 
     const students = await User.find({ 'assignments.assignmentId': assignmentId }).select('name assignments');
@@ -1084,6 +1096,9 @@ router.put('/teacher/override-score', authenticateTeacher, async (req, res) => {
     const mongoose = require('mongoose');
     const aId = new mongoose.Types.ObjectId(assignmentId);
     const qId = new mongoose.Types.ObjectId(questionId);
+
+    const ownedAssignment = await Assignment.findOne({ _id: aId, teacherId: req.userId }).select('_id');
+    if (!ownedAssignment) return res.status(404).json({ message: 'Dolgozat nem található.' });
 
     await User.updateOne(
       { _id: studentId },
@@ -1560,13 +1575,16 @@ router.put('/teacher/finalize-grade', authenticateTeacher, async (req, res) => {
       return res.status(400).json({ message: 'Hiányzó mezők.' });
     }
 
+    const ownedAssignment = await Assignment.findOne({ _id: assignmentId, teacherId: req.userId }).select('title subject');
+    if (!ownedAssignment) return res.status(404).json({ message: 'Dolgozat nem található.' });
+
     await User.updateOne(
       { _id: studentId, 'assignments.assignmentId': assignmentId },
       { $set: { 'assignments.$.grade': Number(grade) } }
     );
 
     // Értesítés a diáknak és szüleinek
-    Assignment.findById(assignmentId).select('title subject').then(async asgn => {
+    Promise.resolve(ownedAssignment).then(async asgn => {
       notify(
         studentId,
         'assignment_graded',
