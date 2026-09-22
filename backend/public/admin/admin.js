@@ -4,6 +4,24 @@
 
 'use strict';
 
+/* ── HTML/attribute escaping ────────────────────────
+   All values that originate from the database or from user
+   input (names, emails, titles, class names, error messages …)
+   MUST be passed through esc() before being placed into an
+   innerHTML template, and through escAttr() when embedded as a
+   quoted string literal inside an inline onclick="..." handler. */
+function esc(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function escJs(str) {
+  return String(str ?? '').replace(/[\\'\n\r\u2028\u2029]/g, c => ({
+    '\\': '\\\\', "'": "\\'", '\n': '\\n', '\r': '\\r', '\u2028': '\\u2028', '\u2029': '\\u2029',
+  }[c]));
+}
+function escAttr(str) {
+  return esc(escJs(str));
+}
+
 /* ── API ─────────────────────────────────────────── */
 const API = {
   token: () => localStorage.getItem('AdminToken'),
@@ -57,7 +75,7 @@ const Toast = {
     const icons = { success: '✅', error: '⚠️', info: 'ℹ️' };
     const el = document.createElement('div');
     el.className = `toast ${type}`;
-    el.innerHTML = `<span>${icons[type] || '•'}</span><span>${msg}</span>`;
+    el.innerHTML = `<span>${icons[type] || '•'}</span><span>${esc(msg)}</span>`;
     root.appendChild(el);
     setTimeout(() => {
       el.style.animation = 'toastOut 0.3s forwards';
@@ -122,7 +140,7 @@ function renderShell() {
             </button>`).join('')}
         </nav>
         <div class="sidebar-footer">
-          <div class="sidebar-user">Bejelentkezve: <span>${user?.name || ''}</span></div>
+          <div class="sidebar-user">Bejelentkezve: <span>${esc(user?.name || '')}</span></div>
           <button class="logout-btn" onclick="App.logout()">
             <span class="icon">🚪</span>Kijelentkezés
           </button>
@@ -213,8 +231,8 @@ function confirmDelete(label, name, onConfirm) {
       </div>
       <div class="modal-body">
         <div class="confirm-icon">🗑️</div>
-        <p class="confirm-text">Biztosan törlöd ezt a(z) ${label}t?</p>
-        <p class="confirm-subject">${name}</p>
+        <p class="confirm-text">Biztosan törlöd ezt a(z) ${esc(label)}t?</p>
+        <p class="confirm-subject">${esc(name)}</p>
         <p class="confirm-warn">Ez a művelet nem visszavonható!</p>
       </div>
       <div class="modal-footer">
@@ -318,8 +336,8 @@ async function renderDashboard() {
 
     const recentRows = (s.recentUsers || []).map(u => `
       <tr>
-        <td style="font-weight:500;color:#e2e8f0">${u.name}</td>
-        <td style="color:#64748b;font-size:12px">${u.email}</td>
+        <td style="font-weight:500;color:#e2e8f0">${esc(u.name)}</td>
+        <td style="color:#64748b;font-size:12px">${esc(u.email)}</td>
         <td>${badge(u.role)}</td>
         <td style="color:#64748b;font-size:12px">${fmtDate(u.createdAt)}</td>
       </tr>`).join('') || `<tr><td colspan="4" style="text-align:center;color:#475569;padding:24px">Nincs adat</td></tr>`;
@@ -358,7 +376,7 @@ async function renderDashboard() {
         </div>
       </div>`);
   } catch (err) {
-    setContent(`<div class="card"><p style="color:#f87171;text-align:center">⚠️ ${err.message}</p></div>`);
+    setContent(`<div class="card"><p style="color:#f87171;text-align:center">⚠️ ${esc(err.message)}</p></div>`);
   }
 }
 
@@ -379,18 +397,18 @@ async function loadUsers() {
 
     const rows = d.users.map(u => `
       <tr>
-        <td style="font-weight:600;color:#e2e8f0">${u.name}</td>
-        <td style="color:#64748b;font-size:13px">${u.email}</td>
+        <td style="font-weight:600;color:#e2e8f0">${esc(u.name)}</td>
+        <td style="color:#64748b;font-size:13px">${esc(u.email)}</td>
         <td>${badge(u.role)}</td>
         <td style="font-size:12px;color:#64748b">
-          ${u.role === 'teacher' && u.subjects?.length ? u.subjects.slice(0,2).join(', ') + (u.subjects.length > 2 ? ' +' + (u.subjects.length - 2) : '') : ''}
-          ${u.role === 'student' && u.className ? u.className : ''}
+          ${u.role === 'teacher' && u.subjects?.length ? esc(u.subjects.slice(0,2).join(', ') + (u.subjects.length > 2 ? ' +' + (u.subjects.length - 2) : '')) : ''}
+          ${u.role === 'student' && u.className ? esc(u.className) : ''}
         </td>
         <td style="color:#64748b;font-size:12px">${fmtDate(u.createdAt)}</td>
         <td>
           <div style="display:flex;gap:5px">
-            <button class="btn btn-ghost btn-sm" title="Szerkesztés" onclick="openEditUser('${u._id}')">✏️</button>
-            ${u.role !== 'admin' ? `<button class="btn btn-danger btn-sm" title="Törlés" onclick="confirmDeleteUser('${u._id}','${u.name}')">🗑️</button>` : ''}
+            <button class="btn btn-ghost btn-sm" title="Szerkesztés" onclick="openEditUser('${escAttr(u._id)}')">✏️</button>
+            ${u.role !== 'admin' ? `<button class="btn btn-danger btn-sm" title="Törlés" onclick="confirmDeleteUser('${escAttr(u._id)}','${escAttr(u.name)}')">🗑️</button>` : ''}
           </div>
         </td>
       </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;padding:28px;color:#475569">Nincs találat</td></tr>`;
@@ -404,7 +422,7 @@ async function loadUsers() {
         <div class="toolbar">
           <div class="search-wrap" style="flex:1;min-width:180px">
             <span class="icon">🔍</span>
-            <input class="input" id="user-search" type="text" placeholder="Keresés névben vagy emailben..." value="${usersState.search}">
+            <input class="input" id="user-search" type="text" placeholder="Keresés névben vagy emailben..." value="${esc(usersState.search)}">
           </div>
           <select class="select" style="width:auto;min-width:140px" id="user-role-filter">
             <option value="">Összes szerep</option>
@@ -433,7 +451,7 @@ async function loadUsers() {
       btn.onclick = () => { usersState.page = parseInt(btn.dataset.page); loadUsers(); };
     });
   } catch (err) {
-    setContent(`<div class="card"><p style="color:#f87171;text-align:center">⚠️ ${err.message}</p></div>`);
+    setContent(`<div class="card"><p style="color:#f87171;text-align:center">⚠️ ${esc(err.message)}</p></div>`);
   }
 }
 
@@ -451,11 +469,11 @@ function userFormHtml(u = {}) {
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Név *</label>
-            <input class="input" id="uf-name" value="${u.name || ''}" placeholder="Teljes név">
+            <input class="input" id="uf-name" value="${esc(u.name || '')}" placeholder="Teljes név">
           </div>
           <div class="form-group">
             <label class="form-label">Email *</label>
-            <input class="input" id="uf-email" type="email" value="${u.email || ''}" placeholder="email@example.com">
+            <input class="input" id="uf-email" type="email" value="${esc(u.email || '')}" placeholder="email@example.com">
           </div>
         </div>
         <div class="form-row">
@@ -478,7 +496,7 @@ function userFormHtml(u = {}) {
         <div id="uf-student-fields" style="${(!u.role || u.role==='student') ? '' : 'display:none'}">
           <div class="form-group">
             <label class="form-label">Osztály</label>
-            <input class="input" id="uf-class" value="${u.className || ''}" placeholder="pl. 7. A">
+            <input class="input" id="uf-class" value="${esc(u.className || '')}" placeholder="pl. 7. A">
           </div>
         </div>
         <div id="uf-teacher-fields" style="${u.role==='teacher' ? '' : 'display:none'}">
@@ -490,7 +508,7 @@ function userFormHtml(u = {}) {
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" onclick="closeModal()">Mégse</button>
-        <button class="btn btn-primary" id="uf-save" onclick="saveUser('${u._id || ''}')">${isEdit ? 'Módosítás' : 'Létrehozás'}</button>
+        <button class="btn btn-primary" id="uf-save" onclick="saveUser('${escAttr(u._id || '')}')">${isEdit ? 'Módosítás' : 'Létrehozás'}</button>
       </div>
     </div>`;
 }
@@ -583,20 +601,20 @@ async function loadDataTab() {
       const d = await API.getDataAssignments({ page: dataState.aPage, limit: 20, search: dataState.aSearch });
       const rows = d.assignments.map(a => `
         <tr>
-          <td style="font-weight:500;color:#e2e8f0;max-width:200px">${a.title}</td>
-          <td><span class="badge badge-teacher">${a.subject}</span></td>
-          <td style="color:#94a3b8;font-size:13px">${a.difficulty}</td>
-          <td style="font-size:13px;color:#64748b">${a.teacherId?.name || '—'}</td>
+          <td style="font-weight:500;color:#e2e8f0;max-width:200px">${esc(a.title)}</td>
+          <td><span class="badge badge-teacher">${esc(a.subject)}</span></td>
+          <td style="color:#94a3b8;font-size:13px">${esc(a.difficulty)}</td>
+          <td style="font-size:13px;color:#64748b">${esc(a.teacherId?.name || '—')}</td>
           <td style="text-align:center;color:#64748b;font-size:13px">${a.completedCount}</td>
           <td style="color:#64748b;font-size:12px">${fmtDate(a.createdAt)}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="delDataItem('assignment','${a._id}','${a.title.replace(/'/g,"\\'")}')">🗑️</button></td>
+          <td><button class="btn btn-danger btn-sm" onclick="delDataItem('assignment','${escAttr(a._id)}','${escAttr(a.title)}')">🗑️</button></td>
         </tr>`).join('') || `<tr><td colspan="7" style="text-align:center;padding:24px;color:#475569">Nincs találat</td></tr>`;
 
       el.innerHTML = `
         <div class="toolbar">
           <div class="search-wrap" style="flex:1">
             <span class="icon">🔍</span>
-            <input class="input" id="a-search" placeholder="Keresés cím alapján..." value="${dataState.aSearch}">
+            <input class="input" id="a-search" placeholder="Keresés cím alapján..." value="${esc(dataState.aSearch)}">
           </div>
         </div>
         <div class="table-wrap">
@@ -614,10 +632,10 @@ async function loadDataTab() {
       const d = await API.getDataClasses();
       const rows = d.classes.map(c => `
         <tr>
-          <td style="font-weight:600;color:#e2e8f0">${c.name}</td>
-          <td style="font-size:13px;color:#64748b">${(c.teacherIds||[]).map(t=>t.name).join(', ') || '—'}</td>
+          <td style="font-weight:600;color:#e2e8f0">${esc(c.name)}</td>
+          <td style="font-size:13px;color:#64748b">${esc((c.teacherIds||[]).map(t=>t.name).join(', ')) || '—'}</td>
           <td style="text-align:center;color:#94a3b8">${c.studentCount}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="delDataItem('class','${c._id}','${c.name}')">🗑️</button></td>
+          <td><button class="btn btn-danger btn-sm" onclick="delDataItem('class','${escAttr(c._id)}','${escAttr(c.name)}')">🗑️</button></td>
         </tr>`).join('') || `<tr><td colspan="4" style="text-align:center;padding:24px;color:#475569">Nincsenek osztályok</td></tr>`;
       el.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Osztálynév</th><th>Tanárok</th><th>Diákok</th><th>Törlés</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 
@@ -625,12 +643,12 @@ async function loadDataTab() {
       const d = await API.getDataAnnouncements({ page: dataState.annPage, limit: 20 });
       const rows = d.announcements.map(a => `
         <tr>
-          <td style="font-weight:500;color:#e2e8f0">${a.title}</td>
-          <td style="font-size:13px;color:#64748b">${a.teacherId?.name || '—'}</td>
-          <td style="font-size:13px;color:#64748b">${a.classId?.name || '—'}</td>
+          <td style="font-weight:500;color:#e2e8f0">${esc(a.title)}</td>
+          <td style="font-size:13px;color:#64748b">${esc(a.teacherId?.name || '—')}</td>
+          <td style="font-size:13px;color:#64748b">${esc(a.classId?.name || '—')}</td>
           <td style="font-size:12px;color:${a.deadline ? '#fbbf24' : '#475569'}">${a.deadline ? fmtDate(a.deadline) : '—'}</td>
           <td style="color:#64748b;font-size:12px">${fmtDate(a.createdAt)}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="delDataItem('announcement','${a._id}','${a.title.replace(/'/g,"\\'")}')">🗑️</button></td>
+          <td><button class="btn btn-danger btn-sm" onclick="delDataItem('announcement','${escAttr(a._id)}','${escAttr(a.title)}')">🗑️</button></td>
         </tr>`).join('') || `<tr><td colspan="6" style="text-align:center;padding:24px;color:#475569">Nincsenek hirdetmények</td></tr>`;
       el.innerHTML = `
         <div class="table-wrap"><table><thead><tr><th>Cím</th><th>Tanár</th><th>Osztály</th><th>Határidő</th><th>Létrehozva</th><th>Törlés</th></tr></thead><tbody>${rows}</tbody></table></div>
@@ -638,7 +656,7 @@ async function loadDataTab() {
       document.querySelectorAll('[data-page]').forEach(b => { b.onclick = () => { dataState.annPage = parseInt(b.dataset.page); loadDataTab(); }; });
     }
   } catch (err) {
-    el.innerHTML = `<p style="color:#f87171;text-align:center">⚠️ ${err.message}</p>`;
+    el.innerHTML = `<p style="color:#f87171;text-align:center">⚠️ ${esc(err.message)}</p>`;
   }
 }
 
@@ -732,7 +750,7 @@ async function renderCosts() {
     if (callerEntries.length > 0) {
       callerEntries.forEach(([name, d]) => {
         callerRowsHtml += `<tr>
-          <td style="font-family:monospace;font-size:12px;font-weight:600;color:#e2e8f0">${name}</td>
+          <td style="font-family:monospace;font-size:12px;font-weight:600;color:#e2e8f0">${esc(name)}</td>
           <td style="text-align:right;color:#94a3b8;font-size:12px">${d.calls}×</td>
           <td style="text-align:right;color:#94a3b8;font-size:12px">${fmtTok(d.inputTokens)}</td>
           <td style="text-align:right;color:#94a3b8;font-size:12px">${fmtTok(d.outputTokens)}</td>
@@ -748,9 +766,9 @@ async function renderCosts() {
     let userRowsHtml = '';
     if (userEntries.length > 0) {
       userEntries.forEach(([uid, d]) => {
-        const roleSpan = d.role ? `<span style="margin-left:6px;font-size:11px;color:#64748b">[${d.role}]</span>` : '';
+        const roleSpan = d.role ? `<span style="margin-left:6px;font-size:11px;color:#64748b">[${esc(d.role)}]</span>` : '';
         userRowsHtml += `<tr>
-          <td><span style="font-weight:600;color:#e2e8f0">${d.name || uid}</span>${roleSpan}</td>
+          <td><span style="font-weight:600;color:#e2e8f0">${esc(d.name || uid)}</span>${roleSpan}</td>
           <td style="text-align:right;color:#94a3b8;font-size:12px">${d.calls}×</td>
           <td style="text-align:right;color:#94a3b8;font-size:12px">${fmtTok(d.inputTokens)}</td>
           <td style="text-align:right;color:#94a3b8;font-size:12px">${fmtTok(d.outputTokens)}</td>
@@ -828,7 +846,7 @@ async function renderCosts() {
       </div>`);
 
   } catch (err) {
-    setContent(`<div class="card"><p style="color:#f87171;text-align:center">⚠️ ${err.message}</p></div>`);
+    setContent(`<div class="card"><p style="color:#f87171;text-align:center">⚠️ ${esc(err.message)}</p></div>`);
   }
 }
 
@@ -841,10 +859,10 @@ async function renderStatistics() {
     const userItems = (act.recentUsers||[]).slice(0,8).map(u => `
       <div class="user-list-item">
         <div style="display:flex;align-items:center">
-          <div class="user-avatar">${(u.name||'?').charAt(0).toUpperCase()}</div>
+          <div class="user-avatar">${esc((u.name||'?').charAt(0).toUpperCase())}</div>
           <div class="user-info">
-            <div class="user-name">${u.name}</div>
-            <div class="user-email">${u.email}</div>
+            <div class="user-name">${esc(u.name)}</div>
+            <div class="user-email">${esc(u.email)}</div>
           </div>
         </div>
         <div class="user-meta">
@@ -927,7 +945,7 @@ async function renderStatistics() {
     });
 
   } catch (err) {
-    setContent(`<div class="card"><p style="color:#f87171;text-align:center">⚠️ ${err.message}</p></div>`);
+    setContent(`<div class="card"><p style="color:#f87171;text-align:center">⚠️ ${esc(err.message)}</p></div>`);
   }
 }
 
@@ -941,9 +959,9 @@ async function renderSystem() {
 
     const keyRows = Object.entries(info.apiKeys||{}).map(([name, val]) => `
       <div class="info-row">
-        <span class="info-key">${name}</span>
+        <span class="info-key">${esc(name)}</span>
         ${val
-          ? `<span class="info-val" style="color:#4ade80"><span class="dot dot-green"></span>${val}</span>`
+          ? `<span class="info-val" style="color:#4ade80"><span class="dot dot-green"></span>${esc(val)}</span>`
           : `<span style="font-size:13px;color:#f87171"><span class="dot dot-red"></span>Hiányzik</span>`}
       </div>`).join('');
 
@@ -980,14 +998,14 @@ async function renderSystem() {
             ['Uptime', uptime],
             ['Szerver idő', fmtDatetime(info.serverTime)],
             ['Cost hónap', info.costMonth||'—'],
-          ].map(([k,v])=>`<div class="info-row"><span class="info-key">${k}</span><span class="info-val" style="font-size:12px">${v}</span></div>`).join('')}
+          ].map(([k,v])=>`<div class="info-row"><span class="info-key">${esc(k)}</span><span class="info-val" style="font-size:12px">${esc(v)}</span></div>`).join('')}
         </div>
 
         <div class="card">
           <div class="card-header"><span class="card-title">🔐 Admin fiók</span></div>
           <div class="info-row">
             <span class="info-key">Felhasználónév</span>
-            <span class="info-val">${Auth.user()?.name||'—'}</span>
+            <span class="info-val">${esc(Auth.user()?.name||'—')}</span>
           </div>
           <div class="info-row">
             <span class="info-key">Szerepkör</span>
@@ -999,7 +1017,7 @@ async function renderSystem() {
         </div>
       </div>`);
   } catch (err) {
-    setContent(`<div class="card"><p style="color:#f87171;text-align:center">⚠️ ${err.message}</p></div>`);
+    setContent(`<div class="card"><p style="color:#f87171;text-align:center">⚠️ ${esc(err.message)}</p></div>`);
   }
 }
 
