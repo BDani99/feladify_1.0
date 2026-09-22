@@ -407,11 +407,12 @@ router.post('/tutor/question-set', authMiddleware, async (req, res) => {
     if (!subject || !topic) {
       return res.status(400).json({ message: 'Hiányos adatok' });
     }
+    const safeCount = Math.min(Math.max(Number(count) || 3, 1), 15);
 
     const student = await User.findById(req.user._id);
     const grade = student ? student.className : 'általános iskola';
 
-    const questions = await aiService.generatePracticeQuestionSet(subject, topic, difficulty || 3, count || 3, grade, [], [], req.user._id);
+    const questions = await aiService.generatePracticeQuestionSet(subject, topic, difficulty || 3, safeCount, grade, [], [], req.user._id);
     res.json({ questions });
   } catch (error) {
     console.error('[Student API] Error in /tutor/question-set:', error);

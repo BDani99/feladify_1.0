@@ -103,11 +103,23 @@ async function generateQuestions(subject, title, diffDesc, resolvedTypes, grade,
   })));
 }
 
+const MAX_TOTAL_QUESTIONS = 60;
+
 function resolveQuestionTypes(body) {
   if (Array.isArray(body.questionTypes) && body.questionTypes.length > 0) {
-    return body.questionTypes.filter(t => t.count >= 1 && t.count <= 20);
+    const types = body.questionTypes.slice(0, 10).filter(t => t.count >= 1 && t.count <= 20);
+    const total = types.reduce((sum, t) => sum + t.count, 0);
+    if (total > MAX_TOTAL_QUESTIONS) {
+      let remaining = MAX_TOTAL_QUESTIONS;
+      return types.map(t => {
+        const count = Math.max(0, Math.min(t.count, remaining));
+        remaining -= count;
+        return { ...t, count };
+      }).filter(t => t.count > 0);
+    }
+    return types;
   }
-  const count = Number(body.questionCount) || 5;
+  const count = Math.min(Math.max(Number(body.questionCount) || 5, 1), MAX_TOTAL_QUESTIONS);
   return [{ type: body.questionType || 'nyilt', count }];
 }
 
