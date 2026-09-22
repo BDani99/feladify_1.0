@@ -997,11 +997,10 @@ router.get('/chat/history', authMiddleware, async (req, res) => {
 router.post('/chat/send', authMiddleware, async (req, res) => {
   try {
     const { message } = req.body;
-    console.log('[Student API] Chat send - Üzenet:', message.substring(0, 50) + '...');
-
-    if (!message) {
+    if (!message || typeof message !== 'string') {
       return res.status(400).json({ message: 'Üzenet megadása kötelező' });
     }
+    console.log('[Student API] Chat send - Üzenet:', message.substring(0, 50) + '...');
 
     // Szűrés kikapcsolva a kérésnek megfelelően
 
@@ -1090,7 +1089,8 @@ FONTOS SZABÁLYOK ÉS KORLÁTOZÁSOK:
     }
 
     const streamMode = req.body.stream || req.query.stream === 'true';
-    const modelOverride = req.body.modelOverride || null;
+    const ALLOWED_MODELS = ['dpv4pro', 'deepseek-reasoner', 'v4flash', 'deepseek-chat', 'qwen-3.5-plus', 'qwen-plus', 'qwen-3.5-flash', 'qwen-turbo'];
+    const modelOverride = ALLOWED_MODELS.includes(req.body.modelOverride?.model) ? req.body.modelOverride : null;
 
     if (streamMode) {
       res.writeHead(200, {

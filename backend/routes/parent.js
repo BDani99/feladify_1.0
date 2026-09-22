@@ -904,9 +904,12 @@ router.put('/chat/session/:sessionId', authenticateParent, async (req, res) => {
 // POST /api/parent/chat/send - AI tanár üzenet küldése (streaming, modelOverride támogatással)
 router.post('/chat/send', authenticateParent, async (req, res) => {
   try {
-    const { message, childId, stream, modelOverride } = req.body;
+    const { message, childId, stream } = req.body;
     if (!message) return res.status(400).json({ message: 'Az üzenet megadása kötelező.' });
     if (!childId) return res.status(400).json({ message: 'A gyermek kiválasztása kötelező a kontextushoz.' });
+
+    const ALLOWED_MODELS = ['dpv4pro', 'deepseek-reasoner', 'v4flash', 'deepseek-chat', 'qwen-3.5-plus', 'qwen-plus', 'qwen-3.5-flash', 'qwen-turbo'];
+    const modelOverride = ALLOWED_MODELS.includes(req.body.modelOverride?.model) ? req.body.modelOverride : null;
 
     const parent = req.parentUser;
     if (!parent.children.includes(childId)) {
