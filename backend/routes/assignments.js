@@ -1167,7 +1167,8 @@ router.put('/teacher/override-score', authenticateTeacher, async (req, res) => {
 router.post('/student/explain', authenticateStudent, async (req, res) => {
   try {
     const { questionText, correctAnswer, studentAnswer } = req.body;
-    if (!questionText) return res.status(400).json({ message: 'questionText megadása kötelező.' });
+    if (!questionText || typeof questionText !== 'string') return res.status(400).json({ message: 'questionText megadása kötelező.' });
+    if (questionText.length > 2000) return res.status(400).json({ message: 'A kérdés szövege túl hosszú.' });
 
     const formatAnswer = (ans) => {
       if (ans === null || ans === undefined) return '(nem válaszolt)';
@@ -1267,6 +1268,12 @@ const TeacherChatHistory = require('../models/TeacherChatHistory');
 router.post('/chat', authenticateUser, async (req, res) => {
   try {
     const userMessage = req.body.message;
+    if (!userMessage || typeof userMessage !== 'string') {
+      return res.status(400).json({ message: 'Üzenet megadása kötelező.' });
+    }
+    if (userMessage.length > 4000) {
+      return res.status(400).json({ message: 'Az üzenet túl hosszú (max. 4000 karakter).' });
+    }
     const userObjectId = new mongoose.Types.ObjectId(req.userId);
 
     const [teacherAssignments, teacherClasses, teacherUser] = await Promise.all([
@@ -1355,7 +1362,8 @@ router.get('/teacher/chat/history', authenticateTeacher, async (req, res) => {
 router.post('/teacher/chat/send', authenticateTeacher, async (req, res) => {
   try {
     const { message } = req.body;
-    if (!message) return res.status(400).json({ message: 'Üzenet megadása kötelező' });
+    if (!message || typeof message !== 'string') return res.status(400).json({ message: 'Üzenet megadása kötelező' });
+    if (message.length > 4000) return res.status(400).json({ message: 'Az üzenet túl hosszú (max. 4000 karakter).' });
 
     const teacherId = req.userId;
     const userObjectId = new mongoose.Types.ObjectId(teacherId);

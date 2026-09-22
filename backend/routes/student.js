@@ -1000,6 +1000,9 @@ router.post('/chat/send', authMiddleware, async (req, res) => {
     if (!message || typeof message !== 'string') {
       return res.status(400).json({ message: 'Üzenet megadása kötelező' });
     }
+    if (message.length > 4000) {
+      return res.status(400).json({ message: 'Az üzenet túl hosszú (max. 4000 karakter).' });
+    }
     console.log('[Student API] Chat send - Üzenet:', message.substring(0, 50) + '...');
 
     // Szűrés kikapcsolva a kérésnek megfelelően
