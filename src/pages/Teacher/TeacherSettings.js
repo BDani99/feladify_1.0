@@ -31,6 +31,13 @@ const TeacherSettings = () => {
         theme: 'dark',
         fontSize: 'normal',
     });
+    const [showPasswordForm, setShowPasswordForm] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmNewPassword, setConfirmNewPassword] = useState('');
+    const [passwordMessage, setPasswordMessage] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSaving, setPasswordSaving] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
@@ -119,6 +126,52 @@ const TeacherSettings = () => {
         }
     };
 
+    const handleSavePassword = async (e) => {
+        e.preventDefault();
+        setPasswordError('');
+        setPasswordMessage('');
+        if (!currentPassword || !newPassword || !confirmNewPassword) {
+            setPasswordError('Minden mező kitöltése kötelező.');
+            return;
+        }
+        if (newPassword !== confirmNewPassword) {
+            setPasswordError('Az új jelszó és a megerősítés nem egyezik.');
+            return;
+        }
+        if (newPassword.length < 8) {
+            setPasswordError('Az új jelszónak legalább 8 karakterből kell állnia.');
+            return;
+        }
+        setPasswordSaving(true);
+        try {
+            const res = await fetch('/api/auth/update-password', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('AccessToken')}`
+                },
+                body: JSON.stringify({ currentPassword, newPassword, confirmNewPassword })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setPasswordMessage('Jelszó sikeresen megváltoztatva.');
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmNewPassword('');
+                setTimeout(() => {
+                    setShowPasswordForm(false);
+                    setPasswordMessage('');
+                }, 1500);
+            } else {
+                setPasswordError(data.message || 'Nem sikerült megváltoztatni a jelszót.');
+            }
+        } catch (err) {
+            setPasswordError('Hiba történt a jelszó módosítása során.');
+        } finally {
+            setPasswordSaving(false);
+        }
+    };
+
     const tabs = [
         { id: 'account', label: 'Fiók & Profil', icon: FaUser },
         { id: 'appearance', label: 'Megjelenés', icon: FaPalette },
@@ -179,10 +232,64 @@ const TeacherSettings = () => {
                                         placeholder="Add meg az email címed..."
                                     />
                                 </div>
-                                <div className="form-group">
-                                    <label>Jelszó</label>
-                                    <button type="button" className="btn btn-outline">Jelszó megváltoztatása</button>
-                                </div>
+                                <form onSubmit={handleSavePassword}>
+                                    <div className="form-group">
+                                        <label>Jelszó</label>
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline"
+                                            onClick={() => {
+                                                setShowPasswordForm(!showPasswordForm);
+                                                setPasswordMessage('');
+                                                setPasswordError('');
+                                            }}
+                                        >
+                                            Jelszó megváltoztatása
+                                        </button>
+                                    </div>
+
+                                    {showPasswordForm && (
+                                        <div className="password-change-fields">
+                                            <div className="form-group">
+                                                <label htmlFor="currentPassword">Jelenlegi jelszó</label>
+                                                <input
+                                                    type="password"
+                                                    id="currentPassword"
+                                                    value={currentPassword}
+                                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label htmlFor="newPassword">Új jelszó</label>
+                                                <input
+                                                    type="password"
+                                                    id="newPassword"
+                                                    value={newPassword}
+                                                    onChange={(e) => setNewPassword(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="form-group">
+                                                <label htmlFor="confirmNewPassword">Új jelszó megerősítése</label>
+                                                <input
+                                                    type="password"
+                                                    id="confirmNewPassword"
+                                                    value={confirmNewPassword}
+                                                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="settings-footer">
+                                                <button type="submit" className="btn btn-primary save-btn" disabled={passwordSaving}>
+                                                    <FaSave /> {passwordSaving ? 'Mentés...' : 'Jelszó mentése'}
+                                                </button>
+                                                {passwordMessage && <span className="save-status">{passwordMessage}</span>}
+                                                {passwordError && <span className="save-status" style={{ color: '#dc3545' }}>{passwordError}</span>}
+                                            </div>
+                                        </div>
+                                    )}
+                                </form>
                             </div>
                         )}
 
