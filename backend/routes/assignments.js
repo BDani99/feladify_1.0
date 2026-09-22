@@ -7,6 +7,7 @@ const Class = require('../models/Class');
 const { generateText, generateChat, generateChatWithHistory } = require('../services/ai');
 const aiService = require('../services/aiService');
 const Notification = require('../models/Notification');
+const { assertOwned, assertMemberOf } = require('../utils/assertOwned');
 
 async function notify(userId, type, title, message, data = {}) {
   try {
@@ -246,7 +247,7 @@ router.post('/teacher/save', authenticateTeacher, async (req, res) => {
 
     const classData = await Class.findOne({ name: className });
     if (!classData) return res.status(400).json({ message: 'Az adott osztály nem található.' });
-    if (!classData.teacherIds.some(id => String(id) === String(req.userId))) {
+    if (!assertMemberOf(classData, 'teacherIds', req.userId)) {
       return res.status(403).json({ message: 'Nincs jogosultságod ehhez az osztályhoz.' });
     }
 
@@ -317,7 +318,7 @@ router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
     const diffDesc = getDifficultyDescription(difficulty, className);
     const classData = await Class.findOne({ name: className });
     if (!classData) return res.status(400).json({ message: 'Az adott osztály nem található.' });
-    if (!classData.teacherIds.some(id => String(id) === String(req.userId))) {
+    if (!assertMemberOf(classData, 'teacherIds', req.userId)) {
       return res.status(403).json({ message: 'Nincs jogosultságod ehhez az osztályhoz.' });
     }
 
@@ -671,7 +672,7 @@ router.post('/student/autosave/:assignmentId', authenticateStudent, async (req, 
     if (!assignment) {
       return res.status(404).json({ message: 'Dolgozat nem található.' });
     }
-    if (!assignment.studentIds.some(id => String(id) === String(studentId))) {
+    if (!assertMemberOf(assignment, 'studentIds', studentId)) {
       return res.status(403).json({ message: 'Ez a dolgozat nincs hozzád rendelve.' });
     }
 
@@ -751,7 +752,7 @@ router.post('/student/submit/:assignmentId', authenticateStudent, async (req, re
     if (!assignment) {
       return res.status(404).json({ message: 'Dolgozat nem található.' });
     }
-    if (!assignment.studentIds.some(id => String(id) === String(studentId))) {
+    if (!assertMemberOf(assignment, 'studentIds', studentId)) {
       return res.status(403).json({ message: 'Ez a dolgozat nincs hozzád rendelve.' });
     }
 
@@ -976,7 +977,7 @@ router.patch('/student/flag-answer', authenticateStudent, async (req, res) => {
 router.get('/teacher/assignment-submissions/:assignmentId', authenticateTeacher, async (req, res) => {
   try {
     const { assignmentId } = req.params;
-    const assignment = await Assignment.findOne({ _id: assignmentId, teacherId: req.userId });
+    const assignment = await assertOwned(Assignment, assignmentId, 'teacherId', req.userId);
     if (!assignment) return res.status(404).json({ message: 'Dolgozat nem található.' });
 
     const students = await User.find({ 'assignments.assignmentId': assignmentId }).select('name assignments');
@@ -1135,7 +1136,7 @@ router.put('/teacher/override-score', authenticateTeacher, async (req, res) => {
     const aId = new mongoose.Types.ObjectId(assignmentId);
     const qId = new mongoose.Types.ObjectId(questionId);
 
-    const ownedAssignment = await Assignment.findOne({ _id: aId, teacherId: req.userId }).select('_id');
+    const ownedAssignment = await assertOwned(Assignment, aId, 'teacherId', req.userId, '_id');
     if (!ownedAssignment) return res.status(404).json({ message: 'Dolgozat nem található.' });
 
     await User.updateOne(
@@ -1613,7 +1614,7 @@ router.put('/teacher/finalize-grade', authenticateTeacher, async (req, res) => {
       return res.status(400).json({ message: 'Hiányzó mezők.' });
     }
 
-    const ownedAssignment = await Assignment.findOne({ _id: assignmentId, teacherId: req.userId }).select('title subject');
+    const ownedAssignment = await assertOwned(Assignment, assignmentId, 'teacherId', req.userId, 'title subject');
     if (!ownedAssignment) return res.status(404).json({ message: 'Dolgozat nem található.' });
 
     await User.updateOne(
