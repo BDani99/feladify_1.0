@@ -32,6 +32,9 @@ app.use(cors(allowedOrigins ? {
     callback(new Error('Not allowed by CORS'));
   },
 } : undefined));
+if (!allowedOrigins && process.env.NODE_ENV === 'production') {
+  console.warn('[Security] Figyelmeztetés: ALLOWED_ORIGINS nincs beállítva production környezetben — a CORS jelenleg minden origint enged. Állítsd be az ALLOWED_ORIGINS env változót a frontend pontos domainjére.');
+}
 app.use(express.json());
 app.use('/api', generalLimiter);
 
