@@ -16,10 +16,29 @@ const announcementRoutes = require('./routes/announcements');
 const adminRoutes = require('./routes/admin');
 const curriculumRoutes = require('./routes/curriculum');
 const { startCleanupJob } = require('./jobs/cleanupAnnouncements');
+const { generalLimiter, aiLimiter } = require('./middleware/rateLimiters');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/api', generalLimiter);
+
+// Szigorúbb limit az AI-hívást indító, drága végpontokon.
+app.use([
+  '/api/student/tutor/*',
+  '/api/student/diagnostic/*',
+  '/api/student/practice/submit',
+  '/api/student/chat/send',
+  '/api/student/checkpoint/start',
+  '/api/student/checkpoint/answer',
+  '/api/student/checkpoint/hint',
+  '/api/parent/chat/send',
+  '/api/assignments/teacher/preview',
+  '/api/assignments/teacher/generate',
+  '/api/assignments/student/explain',
+  '/api/assignments/chat',
+  '/api/assignments/teacher/chat/send',
+], aiLimiter);
 
 const PORT = process.env.PORT || 5000;
 

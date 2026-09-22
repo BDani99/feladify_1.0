@@ -6,11 +6,12 @@ const Class = require('../models/Class');
 const Assignment = require('../models/Assignment');
 const router = express.Router();
 const authenticateUser = require('../middleware/authenticateUser');
+const { authLimiter } = require('../middleware/rateLimiters');
 
 // Regisztráció végpont
 const REGISTERABLE_ROLES = ['teacher', 'student', 'parent'];
 
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   try {
     const { name, email, password, role, subjects, className, childEmails, classIds } = req.body;
 
@@ -131,7 +132,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Bejelentkezés végpont
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 

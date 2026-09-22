@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const authenticateAdmin = require('../middleware/authenticateAdmin');
+const { authLimiter } = require('../middleware/rateLimiters');
 const User = require('../models/User');
 const Assignment = require('../models/Assignment');
 const Class = require('../models/Class');
@@ -14,10 +15,10 @@ const router = express.Router();
 const COUNTER_FILE = path.join(__dirname, '../data/monthlyCost.json');
 
 // POST /api/admin/login
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) {
+    if (!username || typeof username !== 'string' || !password || typeof password !== 'string') {
       return res.status(400).json({ message: 'Felhasználónév és jelszó megadása kötelező.' });
     }
 
@@ -51,11 +52,12 @@ router.get('/users', authenticateAdmin, async (req, res) => {
   try {
     const { page = 1, limit = 20, role = '', search = '' } = req.query;
     const filter = {};
-    if (role) filter.role = role;
-    if (search) {
+    if (role && typeof role === 'string') filter.role = role;
+    if (search && typeof search === 'string') {
+      const escapedSearch = search.slice(0, 100).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
+        { name: { $regex: escapedSearch, $options: 'i' } },
+        { email: { $regex: escapedSearch, $options: 'i' } },
       ];
     }
 
@@ -333,8 +335,10 @@ router.get('/data/assignments', authenticateAdmin, async (req, res) => {
   try {
     const { page = 1, limit = 20, search = '', subject = '' } = req.query;
     const filter = {};
-    if (subject) filter.subject = subject;
-    if (search) filter.title = { $regex: search, $options: 'i' };
+    if (subject && typeof subject === 'string') filter.subject = subject;
+    if (search && typeof search === 'string') {
+      filter.title = { $regex: search.slice(0, 100).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
+    }
 
     const total = await Assignment.countDocuments(filter);
     const assignments = await Assignment.find(filter)
