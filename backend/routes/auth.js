@@ -7,6 +7,7 @@ const Assignment = require('../models/Assignment');
 const router = express.Router();
 const authenticateUser = require('../middleware/authenticateUser');
 const { authLimiter } = require('../middleware/rateLimiters');
+const { ALLOWED_SUBJECTS, EMAIL_REGEX } = require('../utils/constants');
 
 // Regisztráció végpont
 const REGISTERABLE_ROLES = ['teacher', 'student', 'parent'];
@@ -18,7 +19,7 @@ router.post('/register', authLimiter, async (req, res) => {
     if (!name || typeof name !== 'string' || !name.trim()) {
       return res.status(400).json({ message: 'A név megadása kötelező.' });
     }
-    if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    if (!email || typeof email !== 'string' || !EMAIL_REGEX.test(email.trim())) {
       return res.status(400).json({ message: 'Érvényes e-mail cím megadása kötelező.' });
     }
     if (!REGISTERABLE_ROLES.includes(role)) {
@@ -63,7 +64,7 @@ router.post('/register', authLimiter, async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      subjects: role === 'teacher' ? (subjects || []) : [],
+      subjects: role === 'teacher' && Array.isArray(subjects) ? subjects.filter(s => ALLOWED_SUBJECTS.includes(s)) : [],
       className: role === 'student' ? className : null,
       children: role === 'parent' ? childIds : [],
       parentSettings: role === 'parent' ? {
@@ -267,8 +268,6 @@ router.put('/update-password', authenticateUser, async (req, res) => {
   }
 });
 
-const ALLOWED_SUBJECTS = ['Nyelvtan', 'Irodalom', 'Angol', 'Német', 'Matematika', 'Környezetismeret', 'Történelem', 'Fizika', 'Biológia', 'Földrajz'];
-
 // Profil frissítése (név, email, tantárgyak)
 router.put('/update-profile', authenticateUser, async (req, res) => {
   try {
@@ -278,6 +277,9 @@ router.put('/update-profile', authenticateUser, async (req, res) => {
     const updateFields = {};
     if (name && name.trim()) updateFields.name = name.trim();
     if (email && email.trim()) {
+      if (!EMAIL_REGEX.test(email.trim())) {
+        return res.status(400).json({ message: 'Érvényes e-mail cím megadása kötelező.' });
+      }
       const existing = await User.findOne({ email: email.trim(), _id: { $ne: userId } });
       if (existing) return res.status(400).json({ message: 'Ez az e-mail cím már foglalt.' });
       updateFields.email = email.trim();

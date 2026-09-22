@@ -20,6 +20,7 @@ const authenticateTeacher = require('../middleware/authenticateTeacher');
 const authenticateStudent = require('../middleware/authenticateStudent');
 const authenticateUser = require('../middleware/authenticateUser');
 const realtimeService = require('../services/realtimeService');
+const { ALLOWED_SUBJECTS, ALLOWED_DIFFICULTIES } = require('../utils/constants');
 
 const DIFFICULTY_DESCRIPTIONS = {
   'Könnyű': 'egyszerű, egylépéses kérdések, amelyek közvetlen tényismeretet mérnek, 1-4. osztályos szinten',
@@ -123,6 +124,22 @@ function resolveQuestionTypes(body) {
   return [{ type: body.questionType || 'nyilt', count }];
 }
 
+// A subject/difficulty mindig zárt listából jöjjön (adatintegritás + AI
+// prompt-injekció elleni védelem), a title/topicSpecification viszont
+// szükségszerűen szabad szöveg marad — ezért csak hossz-korlátozzuk őket.
+function validateSubjectAndDifficulty(subject, difficulty) {
+  if (!ALLOWED_SUBJECTS.includes(subject)) return 'Érvénytelen tantárgy.';
+  if (!ALLOWED_DIFFICULTIES.includes(difficulty)) return 'Érvénytelen nehézségi szint.';
+  return null;
+}
+
+function capFreeTextInputs(body) {
+  return {
+    title: String(body.title ?? '').trim().slice(0, 150),
+    topicSpecification: body.topicSpecification ? String(body.topicSpecification).trim().slice(0, 500) : '',
+  };
+}
+
 function normalizeAndValidateQuestions(questions) {
   const sanitized = aiService._sanitizeQuestions(questions.map(q => ({
     questionText: (q.questionText || '').trim(),
@@ -186,9 +203,12 @@ function sanitizeAssignmentForStudent(assignment) {
 // Előnézet generálása (DB írás nélkül)
 router.post('/teacher/preview', authenticateTeacher, async (req, res) => {
   try {
-    const { title, subject, difficulty, className, selectedTopics, topicSpecification } = req.body;
+    const { subject, difficulty, className, selectedTopics } = req.body;
     const missing = ['title','subject','difficulty','className'].filter(f => !req.body[f]);
     if (missing.length > 0) return res.status(400).json({ message: `Hiányzó mezők: ${missing.join(', ')}.` });
+    const subjectError = validateSubjectAndDifficulty(subject, difficulty);
+    if (subjectError) return res.status(400).json({ message: subjectError });
+    const { title, topicSpecification } = capFreeTextInputs(req.body);
 
     const validTypes = resolveQuestionTypes(req.body);
     if (validTypes.length === 0) return res.status(400).json({ message: 'Legalább egy kérdéstípust meg kell adni.' });
@@ -214,9 +234,12 @@ router.post('/teacher/preview', authenticateTeacher, async (req, res) => {
 // Szerkesztett dolgozat mentése DB-be
 router.post('/teacher/save', authenticateTeacher, async (req, res) => {
   try {
-    const { title, subject, difficulty, className, questions, timeLimit, startDate, dueDate } = req.body;
+    const { subject, difficulty, className, questions, timeLimit, startDate, dueDate } = req.body;
     const missing = ['title','subject','difficulty','className'].filter(f => !req.body[f]);
     if (missing.length > 0) return res.status(400).json({ message: `Hiányzó mezők: ${missing.join(', ')}.` });
+    const subjectError = validateSubjectAndDifficulty(subject, difficulty);
+    if (subjectError) return res.status(400).json({ message: subjectError });
+    const { title } = capFreeTextInputs(req.body);
     if (!Array.isArray(questions) || questions.length === 0) {
       return res.status(400).json({ message: 'Nincsenek kérdések a mentéshez.' });
     }
@@ -281,9 +304,12 @@ router.post('/teacher/save', authenticateTeacher, async (req, res) => {
 // Feladatsor generálása, csak tanároknak (legacy - közvetlen mentés)
 router.post('/teacher/generate', authenticateTeacher, async (req, res) => {
   try {
-    const { title, subject, difficulty, className, selectedTopics, topicSpecification } = req.body;
+    const { subject, difficulty, className, selectedTopics } = req.body;
     const missing = ['title','subject','difficulty','className'].filter(f => !req.body[f]);
     if (missing.length > 0) return res.status(400).json({ message: `Hiányzó mezők: ${missing.join(', ')}.` });
+    const subjectError = validateSubjectAndDifficulty(subject, difficulty);
+    if (subjectError) return res.status(400).json({ message: subjectError });
+    const { title, topicSpecification } = capFreeTextInputs(req.body);
 
     const validTypes = resolveQuestionTypes(req.body);
     if (validTypes.length === 0) return res.status(400).json({ message: 'Legalább egy kérdéstípust meg kell adni.' });

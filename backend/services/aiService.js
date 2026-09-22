@@ -158,6 +158,17 @@ class AIService {
     return { apiBase, apiKey, actualModel };
   }
 
+  // A tanár/diák által szabadon megadható témakör-szöveg (topic/title) sok
+  // helyen, ismételten kerül a kérdésgeneráló promptokba. Itt, egyetlen
+  // belépési ponton korlátozzuk a hosszát és tömörítjük egy sorba — ez nem
+  // szűri ki a rosszindulatú tartalmat, de jelentősen megnehezíti a
+  // promptszerkezetet kihasználó injekciós kísérleteket (pl. több soros,
+  // "rendszerutasításnak" álcázott szöveg), miközben valódi rövid témaneveket
+  // nem korlátoz.
+  _sanitizeTopicInput(text) {
+    return String(text ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, 300);
+  }
+
   _getFallbackChain(modelName, useReasoning) {
     if (!modelName) {
       return useReasoning ? this.reasoningChain.map(c => c.model) : this.fastChain.map(c => c.model);
@@ -854,6 +865,7 @@ VÁLASZOLJ KIZÁRÓLAG ÉRVÉNYES JSON TÖMB FORMÁTUMBAN (semmi egyéb szöveg!
 
   // Dolgozat-specifikus generálás: kétfázisú AI pipeline (vázlat → JSON chunking)
   async generateExamQuestionSet(subject, topic, diffDesc, typeSpecs, grade = 'általános iskola', selectedTopics = null, userId = null, onChunkReady = null) {
+    topic = this._sanitizeTopicInput(topic);
     // === 1. FÁZIS: Qwen 3 32B – kreatív szöveges vázlat ===
     let outline = '';
     try {
@@ -1091,6 +1103,7 @@ A pairs és items mező MINDEN kérdésnél szerepeljen (üres tömb, ha nem rel
   }
 
   async generatePracticeQuestionSet(subject, topic, difficulty = 3, count = 10, grade = 'általános iskola', weakQuestions = [], excludeQuestions = [], userId = null, onChunkReady = null) {
+    topic = this._sanitizeTopicInput(topic);
     console.log(`[AIService] Gyakorlás generálás indul AI pipeline-nal: count=${count}`);
 
     const difficultyDescriptions = {
