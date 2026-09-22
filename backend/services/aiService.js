@@ -99,8 +99,11 @@ async function getCurriculumSnippet(subject, grade, selectedTopics, userId = nul
 
 class AIService {
   constructor() {
-    this.deepseekKey = process.env.DEEPSEEK_API_KEY || 'sk-a4ef2c5339b94ea4a1bcf0f28d59910d';
-    this.qwenKey = process.env.QWEN_API_KEY || 'sk-c5f4512e4eaa4d499397c7c4b627fb95';
+    if (!process.env.DEEPSEEK_API_KEY || !process.env.QWEN_API_KEY) {
+      throw new Error('DEEPSEEK_API_KEY és QWEN_API_KEY környezeti változók megadása kötelező.');
+    }
+    this.deepseekKey = process.env.DEEPSEEK_API_KEY;
+    this.qwenKey = process.env.QWEN_API_KEY;
 
     this.reasoningChain = [
       { model: 'qwen-3.5-plus', provider: 'qwen' },

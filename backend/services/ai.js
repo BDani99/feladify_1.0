@@ -2,13 +2,17 @@ const OpenAI = require('openai');
 require('dotenv').config();
 const costTracker = require('./costTracker');
 
+if (!process.env.DEEPSEEK_API_KEY || !process.env.QWEN_API_KEY) {
+  throw new Error('DEEPSEEK_API_KEY és QWEN_API_KEY környezeti változók megadása kötelező.');
+}
+
 const deepseekClient = new OpenAI({
-  apiKey: process.env.DEEPSEEK_API_KEY || 'sk-a4ef2c5339b94ea4a1bcf0f28d59910d',
+  apiKey: process.env.DEEPSEEK_API_KEY,
   baseURL: 'https://api.deepseek.com',
 });
 
 const qwenClient = new OpenAI({
-  apiKey: process.env.QWEN_API_KEY || 'sk-c5f4512e4eaa4d499397c7c4b627fb95',
+  apiKey: process.env.QWEN_API_KEY,
   baseURL: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
 });
 
