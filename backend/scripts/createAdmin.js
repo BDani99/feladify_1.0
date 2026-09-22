@@ -3,9 +3,11 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
-const ADMIN_USERNAME = 'feladifyadmin';
-const ADMIN_EMAIL = 'feladifyadmin@feladify.local';
-const ADMIN_PASSWORD = 'EZajelszo10_';
+const crypto = require('crypto');
+
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'feladifyadmin';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'feladifyadmin@feladify.local';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || crypto.randomBytes(12).toString('base64url');
 
 async function createAdmin() {
   try {
@@ -28,7 +30,11 @@ async function createAdmin() {
 
     console.log('Admin felhasználó sikeresen létrehozva!');
     console.log('  Felhasználónév:', ADMIN_USERNAME);
-    console.log('  Jelszó:', ADMIN_PASSWORD);
+    if (!process.env.ADMIN_PASSWORD) {
+      console.log('  Jelszó (generált, jegyezd fel most, nem lesz újra kiírva):', ADMIN_PASSWORD);
+    } else {
+      console.log('  Jelszó: az ADMIN_PASSWORD környezeti változóból beállítva.');
+    }
     process.exit(0);
   } catch (err) {
     console.error('Hiba az admin létrehozásakor:', err.message);
