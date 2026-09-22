@@ -13,6 +13,7 @@ const aiService = require('../services/aiService');
 const authenticateUser = require('../middleware/authenticateUser');
 const Notification = require('../models/Notification');
 const realtimeService = require('../services/realtimeService');
+const { ALLOWED_SUBJECTS } = require('../utils/constants');
 
 // Szülői jogosultság ellenőrzése middleware
 const authenticateParent = [
@@ -654,6 +655,12 @@ router.post('/child/:childId/goals', authenticateParent, async (req, res) => {
     const { type, subject, title, targetPercent, periodDays, targetXP, targetStreak, deadline } = req.body;
     if (!type || !subject || !title) {
       return res.status(400).json({ message: 'Hiányzó kötelező mezők (type, subject, title).' });
+    }
+    if (!['assignment_avg', 'practice_xp', 'practice_streak'].includes(type)) {
+      return res.status(400).json({ message: 'Érvénytelen célkitűzés-típus.' });
+    }
+    if (subject !== 'all' && !ALLOWED_SUBJECTS.includes(subject)) {
+      return res.status(400).json({ message: 'Érvénytelen tantárgy.' });
     }
 
     let startTotalXP = 0, startSubjectXP = 0;

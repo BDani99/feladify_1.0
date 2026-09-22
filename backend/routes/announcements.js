@@ -78,10 +78,13 @@ router.post('/', async (req, res) => {
       return res.status(403).json({ message: 'Csak tanárok tehetnek ki közleményt.' });
     }
 
-    const { title, content, classId } = req.body;
+    const { content, classId } = req.body;
+    let { title } = req.body;
     if (!title || !content || !classId) {
       return res.status(400).json({ message: 'Cím, tartalom és osztály megadása kötelező.' });
     }
+    title = String(title).trim().slice(0, 100);
+    const trimmedContent = String(content).trim().slice(0, 5000);
 
     // Ellenőrizzük, hogy a tanár tanít-e ebben az osztályban
     const targetClass = await Class.findOne({ _id: classId, teacherIds: req.userId });
@@ -92,8 +95,8 @@ router.post('/', async (req, res) => {
     const announcement = new Announcement({
       teacherId: req.userId,
       classId,
-      title: title.trim(),
-      content: content.trim()
+      title,
+      content: trimmedContent
     });
 
     await announcement.save();
