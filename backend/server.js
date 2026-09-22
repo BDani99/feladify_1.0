@@ -19,7 +19,19 @@ const { startCleanupJob } = require('./jobs/cleanupAnnouncements');
 const { generalLimiter, aiLimiter } = require('./middleware/rateLimiters');
 
 const app = express();
-app.use(cors());
+
+// Ha az ALLOWED_ORIGINS környezeti változó be van állítva (vesszővel elválasztott
+// lista), csak azokról az origin-ekről engedünk CORS kéréseket; egyébként (pl.
+// helyi fejlesztéskor) minden origin engedélyezett, mint korábban.
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+  : null;
+app.use(cors(allowedOrigins ? {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
+} : undefined));
 app.use(express.json());
 app.use('/api', generalLimiter);
 
