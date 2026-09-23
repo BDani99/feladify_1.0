@@ -96,7 +96,7 @@ A platformon **négy szerepkör** létezik, mindegyik saját felülettel és jog
 - **AI-költségkövetés**: modellenkénti, hívó-függvényenkénti és felhasználónkénti token- és dollárköltség kimutatás
 - Rendszerállapot (DB-kapcsolat, uptime, API-kulcsok maszkolt állapota)
 
-> ⚠️ Az `admin` szerepkör **nem** igényelhető a nyilvános regisztrációs űrlapon — admin fiókot csak a [`npm run create-admin`](#-elérhető-parancsok) paranccsal vagy egy meglévő admin a panelen keresztül hozhat létre.
+> ⚠️ Az `admin` szerepkör **nem** igényelhető a nyilvános regisztrációs űrlapon, és az alkalmazás kódja **semmilyen** végponton/scripten keresztül nem tud admin fiókot létrehozni — ez szándékos: nincs admin-létrehozási támadási felület. Új admin fiókot kizárólag egy **meglévő admin** hozhat létre a panelen keresztül, az első (bootstrap) admin fiókot pedig csak közvetlenül az adatbázisban lehet létrehozni — lásd [Admin fiók létrehozása](#5-admin-fiók-létrehozása-adatbázisban).
 
 ## 🛠 Technológiai stack
 
@@ -181,7 +181,6 @@ Majd töltsd ki a szükséges értékeket:
 | `PORT` | – | Backend port (alapértelmezett: `5000`) |
 | `ALLOWED_ORIGINS` | – | Vesszővel elválasztott CORS engedélyezési lista (üresen: minden origin engedélyezett) |
 | `MONTHLY_BUDGET_USD` | ajánlott | Havi AI költségkeret dollárban; elérésekor minden AI-hívás elutasításra kerül a hónap végéig |
-| `ADMIN_USERNAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD` | – | Az admin fiók létrehozó script paraméterei |
 
 > A `backend/.env` fájlt **soha ne** commitold — a `.gitignore` már kizárja.
 
@@ -204,14 +203,29 @@ npm start
 
 A React fejlesztői szerver a `http://localhost:3000` címen indul, és a `package.json`-ban beállított proxy miatt automatikusan a helyi backendhez irányítja az API hívásokat.
 
-### 5. Admin fiók létrehozása (opcionális)
+### 5. Admin fiók létrehozása (adatbázisban)
+
+Az alkalmazás **szándékosan** nem tartalmaz semmilyen admin-létrehozó végpontot vagy scriptet — nincs admin-igénylési támadási felület. Az első ("bootstrap") admin fiókot kizárólag közvetlenül az adatbázisban lehet létrehozni:
 
 ```bash
+# 1. Jelszó-hash generálása (a backend könyvtárából, ahol a bcryptjs telepítve van)
 cd backend
-npm run create-admin
+node -e "console.log(require('bcryptjs').hashSync('IDE_A_JELSZO', 10))"
 ```
 
-Ha nem adtál meg `ADMIN_PASSWORD` értéket a `.env`-ben, a script generál egyet és **egyszer** kiírja a konzolra — jegyezd fel! Az admin panel a `http://localhost:5000/admin` címen érhető el.
+```js
+// 2. Az így kapott hash beillesztése mongosh-ban (vagy MongoDB Atlas UI-ban)
+use feladify
+db.users.insertOne({
+  name: "admin-felhasznalonev",
+  email: "admin@example.com",
+  password: "<az előző lépésben generált hash>",
+  role: "admin",
+  createdAt: new Date()
+})
+```
+
+Ezután a `http://localhost:5000/admin` címen bejelentkezhetsz ezzel a fiókkal, és minden további admin fiókot már a panelen keresztül hozhatsz létre (lásd [Admin panel](#-admin-panel)).
 
 ## 📜 Elérhető parancsok
 
@@ -228,7 +242,6 @@ Ha nem adtál meg `ADMIN_PASSWORD` értéket a `.env`-ben, a script generál egy
 | Parancs | Leírás |
 |---|---|
 | `npm start` | Express szerver indítása |
-| `npm run create-admin` | Admin felhasználó létrehozása az adatbázisban |
 | `npm run db:heal` | Karbantartási script: hibásan kódolt fájl-/mappanevek javítása |
 
 ## 🖥 Admin panel
