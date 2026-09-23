@@ -28,6 +28,7 @@ Feladatsor-generálás, automatikus javítás, személyre szabott gyakorlás és
 - [Deployment](#-deployment)
 - [Biztonság](#-biztonság)
 - [Licenc](#-licenc)
+- [SECURITY.md](SECURITY.md) — kulcs-rotációs folyamat és biztonsági szokások
 
 ---
 
@@ -128,9 +129,11 @@ feladify_1.0/
 │   ├── middleware/            # JWT hitelesítés szerepkörönként, rate limiting
 │   ├── models/                 # Mongoose sémák
 │   ├── services/                # AI szolgáltatás-réteg, költségkövetés, realtime (SSE)
-│   ├── data/                     # Kerettanterv JSON adatok tantárgyanként
-│   ├── public/admin/              # Admin panel (statikus vanilla JS SPA)
-│   └── scripts/                    # Egyszeri/karbantartási scriptek (admin létrehozás, DB-javítás...)
+│   ├── utils/                    # Megosztott segédfüggvények (allowlist-ek, ownership-check)
+│   ├── jobs/                      # Időzített karbantartási feladatok (pl. lejárt hirdetmények törlése)
+│   ├── data/                       # Kerettanterv JSON adatok tantárgyanként
+│   ├── public/admin/                # Admin panel (statikus vanilla JS SPA)
+│   └── scripts/                      # Egyszeri/karbantartási scriptek (admin létrehozás, DB-javítás...)
 │
 └── public/                  # React statikus assetek
 ```
@@ -252,7 +255,7 @@ A projekt [Vercel](https://vercel.com/)-re van előkészítve, **két külön sz
 
 A backend a következő védelmi rétegeket tartalmazza:
 
-- Szerepkör-alapú JWT hitelesítés (`teacher` / `student` / `parent` / `admin`), tulajdonjog-ellenőrzéssel minden erőforrás-hozzáférésnél
+- Szerepkör-alapú JWT hitelesítés (`teacher` / `student` / `parent` / `admin`), központosított tulajdonjog-ellenőrző segédfüggvényekkel (`backend/utils/assertOwned.js`) minden erőforrás-hozzáférésnél
 - `bcrypt` jelszóhashelés, minimális jelszóhossz-követelmény
 - Rate limiting minden API végponton — percenkénti és napi korlát felhasználónként (nem csak IP-nként) az AI-hívásokat indító útvonalakon, szigorúbb korlát a bejelentkezésen
 - Alkalmazás-szintű havi AI-költségkeret (`MONTHLY_BUDGET_USD`), ami a limit elérésekor leállítja az AI-hívásokat, még mielőtt a fizetős szolgáltatóhoz eljutnának
@@ -261,6 +264,8 @@ A backend a következő védelmi rétegeket tartalmazza:
 - Az AI-alapú javítás védve van a promptinjekció ellen (a diák válasza mindig adatként, nem utasításként kerül feldolgozásra)
 
 > 💡 **Az alkalmazás-szintű költségkeret csak egy második védelmi vonal.** A legmegbízhatóbb védelem a felesleges AI-kiadások ellen mindig a szolgáltatónál (DeepSeek, Alibaba DashScope) beállított **kemény havi költséglimit vagy értesítési küszöb** — ezt érdemes közvetlenül a szolgáltatói dashboardon is beállítani, mert az appon belüli hibáktól/bugoktól függetlenül is érvényesül.
+
+Kulcs-/titok-kompromittálódás esetén követendő lépéseket, és az új route-ok írásakor betartandó biztonsági szokásokat lásd a [`SECURITY.md`](SECURITY.md)-ben.
 
 ## 📄 Licenc
 
